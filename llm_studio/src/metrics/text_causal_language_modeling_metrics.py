@@ -34,7 +34,6 @@ def rate_reply(question, reference_answer, assistant_answer, model):
         reference_answer=reference_answer,
         assistant_answer=assistant_answer,
     )
-    # print(template)
 
     for _ in range(3):
         try:
@@ -59,7 +58,6 @@ def rate_reply(question, reference_answer, assistant_answer, model):
             score = ret[0]
             score = score.lower().replace("score:", "").strip()
             score = float(score)
-            print(score)
             return score, " ".join(ret[1:]).strip()
         except Exception:
             pass

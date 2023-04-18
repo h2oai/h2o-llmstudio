@@ -67,8 +67,6 @@ class CustomDataset(Dataset):
 
         self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.prompts]
 
-        print(self.prompts[0])
-
     @staticmethod
     def parse_prompt(cfg: Any, prompt: str):
         prompt = (

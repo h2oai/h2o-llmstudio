@@ -15,7 +15,6 @@ class StoppingCriteriaSub(StoppingCriteria):
     def __init__(self, cfg, stops=[], encounters=1):
         super().__init__()
         self.stops = [stop.to(cfg.environment._device) for stop in stops]
-        print("self stops", self.stops)
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor):
         for stop in self.stops:
