@@ -1,0 +1,72 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[[source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu117"
+verify_ssl = false
+
+[requires]
+python_version = "3.10"
+
+[packages]
+torch = {index = "pytorch", version = "==2.0.0+cu117"}
+torchvision = {index = "pytorch", version = "==0.15.1+cu117"}
+torchaudio = {index = "pytorch", version = "==2.0.1+cu117"}
+tqdm = "==4.64.0"
+neptune-client = "==0.16.1"
+transformers = "==4.27.4"
+numpy = "==1.23.2"
+pandas = "==1.4.2"
+scikit-learn = "==1.0.2"
+boto3 = "==1.20.24"
+SQLAlchemy = "==1.4.36"
+dill = "==0.3.4"
+pyarrow = "==8.0.0"
+kaggle = "==1.5.12"
+coolname = "==1.1.0"
+bokeh = "==2.4.2"
+beautifulsoup4 = "==4.11.1"
+sqlitedict = "==1.7.0"
+sentencepiece = "==0.1.96"
+sacrebleu = "==2.0.0"
+toml = "==0.10.2"
+pyyaml = "==6.0"
+protobuf = "==3.20.3"
+fastparquet = "==0.8.1"
+gputil = "==1.4.0"
+onnx = "==1.13.1"
+onnxruntime-gpu = "==1.14.1"
+huggingface-hub = "==0.13.4"
+starlette= "==0.23.1"
+peft = {ref = "main", git = "https://github.com/huggingface/peft"}
+bitsandbytes = "==0.37.2"
+accelerate = "==0.18.0"
+openai = "==0.27.4"
+
+[dev-packages]
+pytest = "==7.1.2"
+black = "==22.3.0"
+coverage = "==6.3.2"
+flake8-black = "==0.3.2"
+flake8-isort = "==4.1.1"
+flake8 = "==4.0.1"
+isort = "==5.10.1"
+pytest-cov = "==3.0.0"
+cython = {file = "https://files.pythonhosted.org/packages/a2/36/0a72946ed4aade491570b08fc94d86576bf9b983d0ecd8234b68f185518c/Cython-3.0.0a9-cp38-cp38-manylinux1_x86_64.whl"}
+wheel = "==0.37.1"
+pytest-dependency = "==0.5.1"
+types-requests = "==2.27.25"
+types-toml = "==0.10.7"
+types-pyyaml = "==6.0.7"
+mypy = "==0.950"
+pytest-xprocess = "==0.18.1"
+mkdocs-material = "==8.2.14"
+mkdocs-macros-plugin = "==0.7.0"
+mike = "==1.1.2"
+termcolor = "==1.1.0"
+pip = "==22.0.4"
+pipenv = "==2022.5.2"
+setuptools = "62.1.0"
