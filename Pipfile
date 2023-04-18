@@ -55,7 +55,6 @@ flake8-isort = "==4.1.1"
 flake8 = "==4.0.1"
 isort = "==5.10.1"
 pytest-cov = "==3.0.0"
-cython = {file = "https://files.pythonhosted.org/packages/a2/36/0a72946ed4aade491570b08fc94d86576bf9b983d0ecd8234b68f185518c/Cython-3.0.0a9-cp38-cp38-manylinux1_x86_64.whl"}
 wheel = "==0.37.1"
 pytest-dependency = "==0.5.1"
 types-requests = "==2.27.25"
