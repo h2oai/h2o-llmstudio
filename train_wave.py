@@ -115,8 +115,7 @@ if __name__ == "__main__":
             logging.error(
                 "GPU Out-of-Memory (OOM) error occurred. "
                 "Please, reduce the batch size, or input data size, "
-                "or model size. Alternatively, use `Adjust Batch Size` "
-                "setting that is available starting from the `Expert` level.",
+                "or model size.",
                 exc_info=True,
             )
             write_flag(flag_path.format(local_rank), "info", "OOM error")
