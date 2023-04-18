@@ -55,7 +55,7 @@ async def initialize_app(q: Q) -> None:
 
     logger.info("Initializing app ...")
 
-    icons_pth = "app_utils/static/"
+    # icons_pth = "app_utils/static/"
     # (q.app["icon_path"],) = await q.site.upload([f"{icons_pth}/icon.png"])
 
     script_sources = []

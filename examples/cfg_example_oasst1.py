@@ -21,7 +21,7 @@ DATA_DIRECTORY = "examples/data_oasst1"
 
 @dataclass
 class Config(ConfigProblemBase):
-    output_directory: str = f"examples/output_oasst1/"
+    output_directory: str = "examples/output_oasst1/"
     experiment_name: str = "example_oasst1"
     llm_backbone: str = "EleutherAI/pythia-1b"
 
