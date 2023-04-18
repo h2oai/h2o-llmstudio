@@ -20,10 +20,10 @@
 
 
 ## Setup
-LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For langer models, we recommend at least 24GB of GPU memory.
+H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For langer models, we recommend at least 24GB of GPU memory.
 
 
-To get started with LLM Studio, you'll need to install Python 3.10 if you don't have it on your machine already.
+To get started with H2O LLM Studio, you'll need to install Python 3.10 if you don't have it on your machine already.
 ### System installs (Python 3.10)
 ```bash
 sudo add-apt-repository ppa:deadsnakes/ppa
@@ -37,18 +37,18 @@ The following command will create a virtual environment using pipenv and will in
 make setup
 ```
 
-## Run LLM Studio GUI
+## Run H2O LLM Studio GUI
 
-You can start LLM Studio using the following command:
+You can start H2O LLM Studio using the following command:
 ```bash
 make wave
 ```
 This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
-Navigate to http://localhost:10101/ (we recommend using Chrome) to access LLM Studio and start fine-tuning your models!
+Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
 
-## Run LLM Studio with command line interface (CLI)
-You can also use LLM Studio with the command line interface (CLI) and specify the configuration file that contains all the experiment parameters. 
-To finetune using LLM Studio with CLI, activate the pipenv environment by running `make shell`, and then use the following command:
+## Run H2O LLM Studio with command line interface (CLI)
+You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration file that contains all the experiment parameters. 
+To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`, and then use the following command:
 ```bash
 python train.py -C {path_to_config_file}
 ```
@@ -68,7 +68,7 @@ where `experiment_name` is the output folder of the experiment you want to chat 
 The interactive chat will also work with model that were finetuned using the UI.
 
 ## Data Format
-LLM studio expects a csv file with at least two columns, one being the instruct column, the other 
+H2O LLM studio expects a csv file with at least two columns, one being the instruct column, the other 
 being the answer that the model should generate. You can also provide an extra validation dataframe using the same format or use an automatic train/validation split to evaluate the model performacen. 
 
 
