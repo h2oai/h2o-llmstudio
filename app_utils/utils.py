@@ -448,7 +448,7 @@ async def kaggle_download(
         with zipfile.ZipFile(zip_file, "r") as zip_ref:
             zip_ref.extractall(kaggle_path)
         os.remove(zip_file)
-    except Exception as e:
+    except Exception:
         pass
 
     clean_macos_artifacts(kaggle_path)

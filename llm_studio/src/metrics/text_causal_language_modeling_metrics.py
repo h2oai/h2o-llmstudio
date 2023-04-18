@@ -61,7 +61,7 @@ def rate_reply(question, reference_answer, assistant_answer, model):
             score = float(score)
             print(score)
             return score, " ".join(ret[1:]).strip()
-        except Exception as e:
+        except Exception:
             pass
 
     logger.warning("error in api call")

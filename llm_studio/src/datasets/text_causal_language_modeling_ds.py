@@ -76,7 +76,10 @@ class CustomDataset(Dataset):
         )
         if cfg.dataset.add_eos_token_to_prompt:
             prompt += cfg._tokenizer_eos_token
-        prompt = f"{prompt}{codecs.decode(cfg.dataset.text_answer_separator, 'unicode_escape')}"
+        prompt = (
+            f"{prompt}"
+            f"{codecs.decode(cfg.dataset.text_answer_separator, 'unicode_escape')}"
+        )
         return prompt
 
     def __len__(self) -> int:

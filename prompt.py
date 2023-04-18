@@ -1,9 +1,5 @@
 import os
 
-import numpy as np
-
-from llm_studio.src.utils.modeling_utils import load_checkpoint
-
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -12,12 +8,15 @@ os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+
 import argparse
 
 import dill
+import numpy as np
 import torch
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.utils.modeling_utils import load_checkpoint
 
 
 def parse_param(cfg, prompt):

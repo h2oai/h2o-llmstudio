@@ -38,7 +38,7 @@ def set_environment(cfg):
     os.environ["OPENAI_API_KEY"] = cfg.environment.openai_api_token
 
     if "GPT" in cfg.prediction.metric and cfg.environment.openai_api_token == "":
-        logger.warning(f"No OpenAI API Key set. Setting metric to BLEU. ")
+        logger.warning("No OpenAI API Key set. Setting metric to BLEU. ")
         cfg.prediction.metric = "BLEU"
 
     return cfg
