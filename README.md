@@ -102,10 +102,8 @@ An overview of all parameters is given in the [parameter description](docs/param
 We provide several metric options for evaluating the performance of your model.
 In addition to the BLEU score, we offer the GPT3.5 and GPT4 metrics that utilize the OpenAI API to determine whether 
 the predicted answer is more favorable than the ground truth answer. 
-To use these metrics, you must export your OpenAI API key as an environment variable before starting LLM Studio with the following command:
-```bash
-export OPENAI_API_KEY=<your_api_key>
-```
+To use these metrics, you can either export your OpenAI API key as an environment variable before starting LLM Studio,
+or you can specify it in the Settings Menu within the UI.
 
 ### Monitoring the experiment
 During the experiment, you can monitor the training progress and model performance in several ways:
@@ -118,7 +116,7 @@ During the experiment, you can monitor the training progress and model performan
 
 ### Push to Huggingface 🤗
 If you want to publish your model, you can export it with a single click to the [Hugging Face Hub](https://huggingface.co/)
-and share it with the community.
+and share it with the community. To be able to push your model to the Hub, you need to have an API token with write access.
 
 ### Compare experiments
 In the **View Experiments** view, you can compare your experiments and see how different model parameters affect the model performance.
