@@ -133,6 +133,11 @@ First, get the data [here](https://www.kaggle.com/code/philippsinger/openassista
 kaggle kernels output philippsinger/openassistant-conversations-dataset-oasst1 -p examples/data_oasst1/
 ```
 
+First, go into the interactive shell:
+```bash
+make shell
+```
+
 Then, you can run the experiment via:
 ```bash
 python train.py -C examples/cfg_example_oasst1.py
