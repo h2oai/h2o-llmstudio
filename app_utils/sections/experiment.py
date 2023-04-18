@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 import yaml
+import huggingface_hub
 from h2o_wave import Q, data, ui
 from sqlitedict import SqliteDict
 
@@ -1543,6 +1544,8 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             # merges the LoRa layers into the base model.
             # This is needed if someone wants to use the base model as a standalone model.
             model.backbone = model.backbone.merge_and_unload()
+
+        huggingface_hub.login(q.client["experiment/display/push_to_huggingface/api_key"])
 
         model.backbone.push_to_hub(
             repo_id=q.client["experiment/display/push_to_huggingface/model_name"],
