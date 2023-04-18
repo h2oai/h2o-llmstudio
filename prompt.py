@@ -34,7 +34,11 @@ def parse_param(cfg, prompt):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Sample prompting.")
     parser.add_argument(
-        "-e", "--experiment", type=str, required=True, help="Name of the experiment output folder"
+        "-e",
+        "--experiment",
+        type=str,
+        required=True,
+        help="Name of the experiment output folder",
     )
     parser.add_argument(
         "-d", "--device", type=str, required=False, default="cuda:0", help="Device"
@@ -78,8 +82,8 @@ if __name__ == "__main__":
 
     with torch.device(DEVICE):
         model = cfg.architecture.model_class(cfg)
-        cfg.architecture.pretrained_weights = (
-            os.path.join(args.experiment, "checkpoint.pth")
+        cfg.architecture.pretrained_weights = os.path.join(
+            args.experiment, "checkpoint.pth"
         )
         load_checkpoint(cfg, model, strict=True)
 

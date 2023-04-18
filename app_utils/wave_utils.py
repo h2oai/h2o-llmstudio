@@ -203,27 +203,59 @@ def wave_utils_error_card(
     """
 
     q_app_str = (
-        "### q.app\n```" + "\n".join([f"{k}: {v}" for k, v in q_app.items()]) + "\n```"
+        "### q.app\n```"
+        + "\n".join(
+            [
+                f"{k}: {v}"
+                for k, v in q_app.items()
+                if "_key" not in k and "_token not in k"
+            ]
+        )
+        + "\n```"
     )
     q_user_str = (
         "### q.user\n```"
-        + "\n".join([f"{k}: {v}" for k, v in q_user.items()])
+        + "\n".join(
+            [
+                f"{k}: {v}"
+                for k, v in q_user.items()
+                if "_key" not in k and "_token" not in k
+            ]
+        )
         + "\n```"
     )
 
     q_client_str = (
         "### q.client\n```"
-        + "\n".join([f"{k}: {v}" for k, v in q_client.items()])
+        + "\n".join(
+            [
+                f"{k}: {v}"
+                for k, v in q_client.items()
+                if "_key" not in k and "_token" not in k
+            ]
+        )
         + "\n```"
     )
     q_events_str = (
         "### q.events\n```"
-        + "\n".join([f"{k}: {v}" for k, v in q_events.items()])
+        + "\n".join(
+            [
+                f"{k}: {v}"
+                for k, v in q_events.items()
+                if "_key" not in k and "_token" not in k
+            ]
+        )
         + "\n```"
     )
     q_args_str = (
         "### q.args\n```"
-        + "\n".join([f"{k}: {v}" for k, v in q_args.items()])
+        + "\n".join(
+            [
+                f"{k}: {v}"
+                for k, v in q_args.items()
+                if "_key" not in k and "_token" not in k
+            ]
+        )
         + "\n```"
     )
 
