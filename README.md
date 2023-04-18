@@ -7,7 +7,7 @@
 </h3>
 
 
-**With LLM Studio, you can**
+**With H2O LLM Studio, you can**
 
 - easily and effectively fine-tune LLMs **without the need for any coding experience**.
 - use a **graphic user interface (GUI)** specially designed for large language models.
