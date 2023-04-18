@@ -603,7 +603,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         )
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
-    print("dtype", kwargs["torch_dtype"])
+    logger.info("dtype: {dtype}".format(dtype=kwargs["torch_dtype"]))
 
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(

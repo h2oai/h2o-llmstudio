@@ -1058,12 +1058,12 @@ async def experiment_display(q: Q) -> None:
 
         await q.page.save()
 
-        print(torch.cuda.memory_allocated())
+        logger.info(torch.cuda.memory_allocated())
 
         cfg, model, tokenizer = load_cfg_model_tokenizer(
             q.client["experiment/display/experiment_path"]
         )
-        print(torch.cuda.memory_allocated())
+        logger.info(torch.cuda.memory_allocated())
 
         q.page["experiment/display/chat"].data[-1] = [
             "Model successfully loaded, how can I help you?",
@@ -1172,7 +1172,6 @@ async def experiment_chat(q: Q) -> None:
 
             full_prompt += prev_message
 
-    print(full_prompt)
     inputs = cfg.dataset.dataset_class.encode(
         tokenizer, full_prompt, cfg.tokenizer.max_length_prompt, "left"
     )
@@ -1190,7 +1189,6 @@ async def experiment_chat(q: Q) -> None:
         tokenizer.decode(ids, skip_special_tokens=True)
         for ids in output["predicted_answer_ids"]
     ]
-    print(predicted_text)
     output["predicted_text"] = np.array(predicted_text)
 
     output = cfg.dataset.dataset_class.clean_output(output, [full_prompt], cfg)
