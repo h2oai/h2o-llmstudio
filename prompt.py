@@ -1,5 +1,7 @@
 import os
 
+from llm_studio.src.utils.config_utils import load_config_yaml
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -46,8 +48,7 @@ if __name__ == "__main__":
     args, unknown = parser.parse_known_args()
     DEVICE = args.device
 
-    with open(os.path.join(args.experiment, "cfg.yaml"), "rb") as pickle_file:
-        cfg = dill.load(pickle_file)
+    cfg = load_config_yaml(os.path.join(args.experiment, "cfg.yaml"))
 
     cfg.training.epochs = 0
 

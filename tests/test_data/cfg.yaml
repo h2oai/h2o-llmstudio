@@ -9,7 +9,7 @@ dataset:
     add_eos_token_to_answer: true
     add_eos_token_to_prompt: true
     answer_column: output
-    data_sample: 0.05
+    data_sample: 0.1
     data_sample_choice:
     - Train
     - Validation
@@ -31,24 +31,25 @@ environment:
     number_of_workers: 8
     seed: -1
     use_fsdp: false
-experiment_name: laughing-ocelot.1
-llm_backbone: distilgpt2
+experiment_name: test
+llm_backbone: EleutherAI/pythia-12b-deduped
 logging:
     logger: None
     neptune_project: ''
     number_of_texts: 10
+output_directory: output/user/test/
 prediction:
     batch_size_inference: 0
     do_sample: false
     max_length_inference: 256
-    metric: BLEU
+    metric: GPT3.5
     min_length_inference: 2
     num_beams: 2
     repetition_penalty: 1.2
     stop_tokens: []
     temperature: 0.3
 tokenizer:
-    max_length: 512
+    max_length: 144
     max_length_answer: 256
     max_length_prompt: 256
     padding_quantile: 1.0
