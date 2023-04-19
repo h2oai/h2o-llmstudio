@@ -432,6 +432,11 @@ def run(cfg: Any) -> None:
     if cfg.training.epochs >= 0:
         do_run_train = True
 
+    # Force evaluation if user trains 0 epochs
+    cfg.training.evaluate_before_training = (
+        cfg.training.evaluate_before_training or cfg.training.epochs == 0
+    )
+
     # Set the random seed for reproducibility
     # either random seed when user set it -1 or deterministic user chosen seed
     if cfg.environment.seed < 0:
@@ -567,11 +572,6 @@ def run(cfg: Any) -> None:
     if cfg.training.save_best_checkpoint:
         cfg.training.evaluation_epochs = 1
         cfg.training.train_validation_data = False
-
-    # Force evaluation if user trains 0 epochs
-    cfg.training.evaluate_before_training = (
-        cfg.training.evaluate_before_training or cfg.training.epochs == 0
-    )
 
     # reset steps
     cfg.environment._curr_step = 0
