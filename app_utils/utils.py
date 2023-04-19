@@ -30,10 +30,15 @@ from sqlitedict import SqliteDict
 
 from app_utils.db import Experiment
 from llm_studio.src import possible_values
-from llm_studio.src.utils.config_utils import _get_type_annotation_error, make_label
+from llm_studio.src.utils.config_utils import (
+    _get_type_annotation_error,
+    copy_config,
+    load_config_yaml,
+    make_label,
+    save_config_yaml,
+)
 from llm_studio.src.utils.data_utils import is_valid_data_frame, read_dataframe
 from llm_studio.src.utils.export_utils import get_size_str
-from llm_studio.src.utils.utils import copy_config, save_config_yaml, load_config_yaml
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 
 from .config import default_cfg
@@ -1280,7 +1285,6 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
     info = defaultdict(list)
     for _, row in df.iterrows():
 
-
         try:
             cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
         except Exception:
@@ -1394,7 +1398,7 @@ def make_config_label(config_file: str) -> str:
         Label
     """
 
-    config_file = config_file.replace(".p", "")
+    config_file = config_file.replace(".yaml", "")
     if "_config_" in config_file:
         config_file_split = config_file.split("_config_")
         config_file = (
@@ -1565,7 +1569,7 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
 
     process_queue = list(set(all_process_queue))
 
-    save_config_yaml(cfg, f"{cfg.output_directory}/cfg.yaml")
+    save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
     # Start the training process
     p = start_process(cfg=cfg, gpu_list=gpu_list, process_queue=process_queue)

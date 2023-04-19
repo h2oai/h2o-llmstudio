@@ -1,10 +1,23 @@
 import dataclasses
 import importlib
 from types import ModuleType
-from typing import Any, Type, List
+from typing import Any, List, Type
 
-from h2o_wave import ui, StatListItem
+import dill
+import yaml
+from h2o_wave import StatListItem, ui
 
+from llm_studio.python_configs.text_causal_language_modeling_config import (
+    ConfigNLPAugmentation,
+    ConfigNLPCausalLMArchitecture,
+    ConfigNLPCausalLMDataset,
+    ConfigNLPCausalLMEnvironment,
+    ConfigNLPCausalLMLogging,
+    ConfigNLPCausalLMPrediction,
+    ConfigNLPCausalLMTokenizer,
+    ConfigNLPCausalLMTraining,
+    ConfigProblemBase,
+)
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 
 
@@ -194,3 +207,65 @@ def make_label(title: str, appendix: str = "") -> str:
     label = " ".join(w.capitalize() for w in title.split("_")) + appendix
     label = label.replace("Llm", "LLM")
     return label
+
+
+def copy_config(cfg: Any) -> Any:
+    """Makes a copy of the config
+
+    Args:
+        cfg: config object
+    Returns:
+        copy of the config
+    """
+
+    # cfg.environment._cpu_comm can't be copied
+    cpu_comm = None
+    if cfg.environment._cpu_comm is not None:
+        cpu_comm = cfg.environment._cpu_comm
+        cfg.environment._cpu_comm = None
+    cfg = dill.copy(cfg)
+    cfg.environment._cpu_comm = cpu_comm
+
+    return cfg
+
+
+def save_config_yaml(path: str, cfg: Any) -> None:
+    """Saves config as dill file
+
+    Args:
+        path: path of file to save to
+        cfg: config to save
+    """
+    cfg_dict = convert_cfg_to_nested_dictionary(cfg)
+    cfg_dict["experiment_name"] = cfg.experiment_name
+    cfg_dict["output_directory"] = cfg.output_directory
+    cfg_dict["llm_backbone"] = cfg.llm_backbone
+    with open(path, "w") as fp:
+        yaml.dump(cfg_dict, fp, indent=4)
+
+
+def load_config_yaml(path: str) -> Any:
+    """Loads config from yaml file
+
+    Args:
+        path: path of file to load from
+    Returns:
+        config object
+    """
+    with open(path, "r") as fp:
+        cfg_dict = yaml.load(fp, Loader=yaml.FullLoader)
+
+    cfg = ConfigProblemBase(
+        output_directory=cfg_dict["output_directory"],
+        experiment_name=cfg_dict["experiment_name"],
+        llm_backbone=cfg_dict["llm_backbone"],
+        dataset=ConfigNLPCausalLMDataset(**cfg_dict.get("dataset", {})),
+        tokenizer=ConfigNLPCausalLMTokenizer(**cfg_dict.get("tokenizer", {})),
+        augmentation=ConfigNLPAugmentation(**cfg_dict.get("augmentation", {})),
+        architecture=ConfigNLPCausalLMArchitecture(**cfg_dict.get("architecture", {})),
+        training=ConfigNLPCausalLMTraining(**cfg_dict.get("training", {})),
+        prediction=ConfigNLPCausalLMPrediction(**cfg_dict.get("prediction", {})),
+        environment=ConfigNLPCausalLMEnvironment(**cfg_dict.get("environment", {})),
+        logging=ConfigNLPCausalLMLogging(**cfg_dict.get("logging", {})),
+    )
+    return cfg

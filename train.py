@@ -24,7 +24,7 @@ from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from tqdm import tqdm
 
 from llm_studio.src.loggers import MainLogger
-from llm_studio.src.utils.config_utils import load_config
+from llm_studio.src.utils.config_utils import load_config, save_config_yaml
 from llm_studio.src.utils.data_utils import (
     get_data,
     get_inference_batch_size,
@@ -53,12 +53,7 @@ from llm_studio.src.utils.modeling_utils import (
     save_predictions,
     wrap_model_distributed,
 )
-from llm_studio.src.utils.utils import (
-    kill_ddp_processes,
-    save_config_yaml,
-    set_environment,
-    set_seed,
-)
+from llm_studio.src.utils.utils import kill_ddp_processes, set_environment, set_seed
 
 logger = logging.getLogger(__name__)
 

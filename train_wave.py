@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     import torch
 
-    from llm_studio.src.utils.config_utils import load_config
+    from llm_studio.src.utils.config_utils import load_config, load_config_yaml
     from llm_studio.src.utils.exceptions import (
         LLMAugmentationsException,
         LLMDataException,
@@ -91,8 +91,7 @@ if __name__ == "__main__":
     if "config" in parser_args:
         cfg = load_config(parser_args.config)
     elif "pickle" in parser_args:
-        with open(parser_args.pickle, "rb") as pickle_file:
-            cfg = dill.load(pickle_file)
+        cfg = load_config_yaml(parser_args.pickle)
 
     flag_path = os.path.join(cfg.output_directory, "flags{}.json")
 

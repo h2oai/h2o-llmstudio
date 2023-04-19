@@ -46,7 +46,7 @@ if __name__ == "__main__":
     args, unknown = parser.parse_known_args()
     DEVICE = args.device
 
-    with open(os.path.join(args.experiment, "cfg_last.p"), "rb") as pickle_file:
+    with open(os.path.join(args.experiment, "cfg.yaml"), "rb") as pickle_file:
         cfg = dill.load(pickle_file)
 
     cfg.training.epochs = 0

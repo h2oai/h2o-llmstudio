@@ -32,14 +32,19 @@ from app_utils.utils import (
     s3_file_options,
 )
 from app_utils.wave_utils import ui_table_from_df
-from llm_studio.src.utils.config_utils import load_config, make_label
+from llm_studio.src.utils.config_utils import (
+    load_config,
+    load_config_yaml,
+    make_label,
+    save_config_yaml,
+)
 from llm_studio.src.utils.data_utils import (
     get_fill_columns,
     read_dataframe,
     read_dataframe_drop_missing_labels,
     sanity_check,
 )
-from llm_studio.src.utils.utils import load_config_yaml, save_config_yaml
+
 from .common import clean_dashboard
 
 logger = logging.getLogger(__name__)
@@ -583,7 +588,9 @@ async def dataset_import(
                 # change the default validation strategy if validation df set
                 if cfg.dataset.validation_dataframe != "None":
                     cfg.dataset.validation_strategy = "custom"
-                save_config_yaml(f"{new_path}/{q.client['dataset/import/cfg_file']}.yaml", cfg)
+                save_config_yaml(
+                    f"{new_path}/{q.client['dataset/import/cfg_file']}.yaml", cfg
+                )
 
                 train_rows = None
                 if os.path.exists(cfg.dataset.train_dataframe):
@@ -600,7 +607,7 @@ async def dataset_import(
                     id=q.client["dataset/import/id"],
                     name=q.client["dataset/import/name"],
                     path=new_path,
-                    config_file=f"{new_path}/{q.client['dataset/import/cfg_file']}.p",
+                    config_file=f"{new_path}/{q.client['dataset/import/cfg_file']}.yaml",
                     train_rows=train_rows,
                     validation_rows=validation_rows,
                 )
@@ -678,7 +685,7 @@ async def dataset_merge(q: Q, step, error=""):
             has_experiment = False
 
         current_files = os.listdir(current_dir)
-        current_files = [x for x in current_files if not x.endswith(".p")]
+        current_files = [x for x in current_files if not x.endswith(".yaml")]
         target_files = os.listdir(target_dir)
         overlapping_files = list(set(current_files).intersection(set(target_files)))
         rename_map = {}
@@ -831,7 +838,7 @@ async def dataset_newexperiment(q: Q, dataset_id: int):
     dataset = q.client.app_db.get_dataset(dataset_id)
 
     q.client["experiment/start/cfg_file"] = dataset.config_file.split("/")[-1].replace(
-        ".p", ""
+        ".yaml", ""
     )
     q.client["experiment/start/cfg_category"] = q.client[
         "experiment/start/cfg_file"
@@ -874,7 +881,7 @@ async def dataset_edit(
     q.client["dataset/import/id"] = dataset_id
 
     q.client["dataset/import/cfg_file"] = dataset.config_file.split("/")[-1].replace(
-        ".p", ""
+        ".yaml", ""
     )
     q.client["dataset/import/cfg_category"] = q.client["dataset/import/cfg_file"].split(
         "_"

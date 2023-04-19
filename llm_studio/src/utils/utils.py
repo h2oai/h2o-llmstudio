@@ -5,13 +5,9 @@ import random
 import zipfile
 from typing import Any
 
-import dill
 import numpy as np
 import psutil
 import torch
-import yaml
-
-from llm_studio.src.utils.config_utils import convert_cfg_to_nested_dictionary
 
 logger = logging.getLogger(__name__)
 
@@ -121,49 +117,6 @@ def save_pickle(path: str, obj: Any, protocol: int = 4) -> None:
 
     with open(path, "wb") as pickle_file:
         pickle.dump(obj, pickle_file, protocol=protocol)
-
-
-def copy_config(cfg: Any) -> Any:
-    """Makes a copy of the config
-
-    Args:
-        cfg: config object
-    Returns:
-        copy of the config
-    """
-
-    # cfg.environment._cpu_comm can't be copied
-    cpu_comm = None
-    if cfg.environment._cpu_comm is not None:
-        cpu_comm = cfg.environment._cpu_comm
-        cfg.environment._cpu_comm = None
-    cfg = dill.copy(cfg)
-    cfg.environment._cpu_comm = cpu_comm
-
-    return cfg
-
-
-def save_config_yaml(path: str, cfg: Any) -> None:
-    """Saves config as dill file
-
-    Args:
-        path: path of file to save to
-        cfg: config to save
-    """
-    with open(path, "w") as fp:
-        yaml.dump(convert_cfg_to_nested_dictionary(cfg), fp, indent=4)
-
-def load_config_yaml(path: str) -> Any:
-    """Loads config from yaml file
-
-    Args:
-        path: path of file to load from
-    Returns:
-        config object
-    """
-    with open(path, "r") as fp:
-        cfg = yaml.load(fp, Loader=yaml.FullLoader)
-    return cfg
 
 
 class DisableLogger:

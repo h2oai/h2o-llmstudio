@@ -31,8 +31,15 @@ from app_utils.utils import (
 )
 from app_utils.wave_utils import ui_table_from_df, wave_theme
 from llm_studio.src.datasets.text_utils import get_tokenizer
-from llm_studio.src.utils.config_utils import load_config, convert_cfg_to_nested_dictionary, get_parent_element, \
-    get_cfg_elements, make_label
+from llm_studio.src.utils.config_utils import (
+    convert_cfg_to_nested_dictionary,
+    get_cfg_elements,
+    get_parent_element,
+    load_config,
+    load_config_yaml,
+    make_label,
+    save_config_yaml,
+)
 from llm_studio.src.utils.exceptions import LLMResourceException
 from llm_studio.src.utils.export_utils import (
     check_available_space,
@@ -45,7 +52,8 @@ from llm_studio.src.utils.export_utils import (
 )
 from llm_studio.src.utils.logging_utils import write_flag
 from llm_studio.src.utils.modeling_utils import load_checkpoint
-from llm_studio.src.utils.utils import kill_child_processes, load_config_yaml, save_config_yaml
+from llm_studio.src.utils.utils import kill_child_processes
+
 from .common import clean_dashboard
 
 logger = logging.getLogger(__name__)
@@ -122,7 +130,7 @@ async def experiment_start(q: Q) -> None:
         dataset = q.client.app_db.get_dataset(q.client["experiment/start/dataset"])
         if dataset is not None:
             problem_type = dataset.config_file.replace(dataset.path + "/", "").replace(
-                ".p", ""
+                ".yaml", ""
             )
         else:
             problem_type = default_cfg.cfg_file
