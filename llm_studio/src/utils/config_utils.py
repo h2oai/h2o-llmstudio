@@ -1,7 +1,7 @@
 import dataclasses
 import importlib
 from types import ModuleType
-from typing import Any, List, Type, Dict
+from typing import Any, Dict, List, Type
 
 import yaml
 

@@ -26,10 +26,11 @@ from app_utils.utils import (
     get_unique_dataset_name,
     kaggle_download,
     local_download,
+    make_label,
     parse_ui_elements,
     remove_temp_files,
     s3_download,
-    s3_file_options, make_label,
+    s3_file_options,
 )
 from app_utils.wave_utils import ui_table_from_df
 from llm_studio.src.utils.config_utils import (
