@@ -427,11 +427,6 @@ def run(cfg: Any) -> None:
 
     os.makedirs(cfg.output_directory, exist_ok=True)
 
-    # get run flags for routine
-    do_run_train = False
-    if cfg.training.epochs >= 0:
-        do_run_train = True
-
     # Set the random seed for reproducibility
     # either random seed when user set it -1 or deterministic user chosen seed
     if cfg.environment.seed < 0:
@@ -454,9 +449,8 @@ def run(cfg: Any) -> None:
         cfg.environment._world_size = torch.distributed.get_world_size()
         cfg.environment._rank = torch.distributed.get_rank()
         torch.cuda.set_device(cfg.environment._rank)
-        print_mode = "Training" if do_run_train else "Predicting"
         logger.info(
-            f"{print_mode} in distributed mode with multiple processes, "
+            f"Training in distributed mode with multiple processes, "
             f"1 GPU per process. Process {cfg.environment._rank}, "
             f"total: {cfg.environment._world_size} "
             f"local rank: {cfg.environment._local_rank}."
@@ -480,63 +474,58 @@ def run(cfg: Any) -> None:
     cfg = set_environment(cfg)
 
     # we need to get train dataframe and number of labels if not set or in training mode
-    if do_run_train:
-        if cfg.environment._local_rank == 0:
-            logger.info("Preparing the data...")
-        train_df, val_df = get_data(cfg)
+    if cfg.environment._local_rank == 0:
+        logger.info("Preparing the data...")
+    train_df, val_df = get_data(cfg)
 
-        if (
-            len(val_df) >= os.getenv("GPT_EVAL_MAX", 100)
-            and "GPT" in cfg.prediction.metric
-        ):
-            logger.warning(
-                f"More than {os.getenv('GPT_EVAL_MAX', 100)} validation records. "
-                "Safeguarding against OpenAI API costs. Setting metric to BLEU. "
-                "Change GPT_EVAL_MAX to run GPT validation."
-            )
-            cfg.prediction.metric = "BLEU"
+    if len(val_df) >= os.getenv("GPT_EVAL_MAX", 100) and "GPT" in cfg.prediction.metric:
+        logger.warning(
+            f"More than {os.getenv('GPT_EVAL_MAX', 100)} validation records. "
+            "Safeguarding against OpenAI API costs. Setting metric to BLEU. "
+            "Change GPT_EVAL_MAX to run GPT validation."
+        )
+        cfg.prediction.metric = "BLEU"
 
     if cfg.environment._local_rank == 0:
         cfg.logging._logger = MainLogger(cfg)
 
     # prepare data
-    if do_run_train:
-        if cfg.environment._local_rank == 0:
-            logger.info("Preparing train and validation data")
-        train_dataset = get_train_dataset(train_df=train_df, cfg=cfg)
-        val_dataset = get_val_dataset(val_df=val_df, cfg=cfg)
-        train_dataloader = get_train_dataloader(train_ds=train_dataset, cfg=cfg)
-        val_dataloader = get_val_dataloader(val_ds=val_dataset, cfg=cfg)
+    if cfg.environment._local_rank == 0:
+        logger.info("Preparing train and validation data")
+    train_dataset = get_train_dataset(train_df=train_df, cfg=cfg)
+    val_dataset = get_val_dataset(val_df=val_df, cfg=cfg)
+    train_dataloader = get_train_dataloader(train_ds=train_dataset, cfg=cfg)
+    val_dataloader = get_val_dataloader(val_ds=val_dataset, cfg=cfg)
 
-        if cfg.environment._local_rank == 0:
-            total_training_steps = (
-                cfg.training.epochs
-                * len(train_dataloader)
-                * cfg.training.batch_size
-                * cfg.environment._world_size
-            )
+    if cfg.environment._local_rank == 0:
+        total_training_steps = (
+            cfg.training.epochs
+            * len(train_dataloader)
+            * cfg.training.batch_size
+            * cfg.environment._world_size
+        )
 
-            num_eval_epochs = get_number_of_validation_epochs(
-                training_epochs=cfg.training.epochs,
-                evaluation_epochs=cfg.training.evaluation_epochs,
-            )
-            val_batch_size = get_inference_batch_size(cfg)
-            # if zero shot, validate once before training
-            total_validation_steps = (
-                len(val_dataloader)
-                * (num_eval_epochs + int(cfg.training.evaluate_before_training))
-                * val_batch_size
-                * cfg.environment._world_size
-            )
+        num_eval_epochs = get_number_of_validation_epochs(
+            training_epochs=cfg.training.epochs,
+            evaluation_epochs=cfg.training.evaluation_epochs,
+        )
+        val_batch_size = get_inference_batch_size(cfg)
+        # if zero shot, validate once before training
+        total_validation_steps = (
+            len(val_dataloader)
+            * (num_eval_epochs + int(cfg.training.evaluate_before_training))
+            * val_batch_size
+            * cfg.environment._world_size
+        )
 
-        if cfg.environment._local_rank == 0:
-            cfg.logging._logger.log(
-                "internal", "total_training_steps", total_training_steps, step=0
-            )
+    if cfg.environment._local_rank == 0:
+        cfg.logging._logger.log(
+            "internal", "total_training_steps", total_training_steps, step=0
+        )
 
-            cfg.logging._logger.log(
-                "internal", "total_validation_steps", total_validation_steps, step=0
-            )
+        cfg.logging._logger.log(
+            "internal", "total_validation_steps", total_validation_steps, step=0
+        )
 
     # Prepare model
     with torch.device(cfg.environment._device):
@@ -588,14 +577,13 @@ def run(cfg: Any) -> None:
             step=cfg.environment._curr_step,
         )
 
-    if do_run_train:
-        val_data, val_loss, val_metric, last_batch = run_train(
-            cfg=cfg,
-            model=model,
-            train_dataloader=train_dataloader,
-            val_dataloader=val_dataloader,
-            val_df=val_df,
-        )
+    val_data, val_loss, val_metric, last_batch = run_train(
+        cfg=cfg,
+        model=model,
+        train_dataloader=train_dataloader,
+        val_dataloader=val_dataloader,
+        val_df=val_df,
+    )
 
     # reset external logging
     if cfg.environment._local_rank == 0:
@@ -603,7 +591,7 @@ def run(cfg: Any) -> None:
 
     experiment_path = f"{cfg.output_directory}"
 
-    if cfg.environment._local_rank == 0 and do_run_train:
+    if cfg.environment._local_rank == 0:
 
         if not cfg.training.save_best_checkpoint:
             checkpoint_path = cfg.output_directory
