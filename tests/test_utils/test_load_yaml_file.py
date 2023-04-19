@@ -27,7 +27,7 @@ def test_load_config_yaml():
     assert cfg.dataset.data_sample == 0.1
     assert cfg.dataset.data_sample_choice == ["Train", "Validation"]
     assert cfg.dataset.mask_prompt_labels is False
-    assert cfg.dataset.prompt_column == ("instruction", )
+    assert cfg.dataset.prompt_column == ("instruction",)
     assert cfg.dataset.text_answer_separator == "\\n"
     assert cfg.dataset.text_prompt_start == ""
     assert cfg.dataset.train_dataframe == "data/user/train/train.csv"

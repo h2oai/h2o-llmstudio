@@ -5,7 +5,6 @@ import uuid
 from types import ModuleType
 from typing import Any, List, Type
 
-import dill
 import yaml
 from h2o_wave import StatListItem, ui
 
