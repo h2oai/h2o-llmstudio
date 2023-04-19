@@ -95,7 +95,7 @@ async def interface(q: Q) -> None:
         q.page["header"] = ui.header_card(
             box="header",
             title=default_cfg.name,
-            # image=q.app["icon_path"],
+            image=q.app["icon_path"],
             subtitle=f"v{default_cfg.version}",
         )
 
