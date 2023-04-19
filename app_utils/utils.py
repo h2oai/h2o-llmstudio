@@ -33,8 +33,7 @@ from llm_studio.src import possible_values
 from llm_studio.src.utils.config_utils import (
     _get_type_annotation_error,
     load_config_yaml,
-    make_label,
-    save_config_yaml,
+    save_config_yaml, parse_cfg_dataclass,
 )
 from llm_studio.src.utils.data_utils import is_valid_data_frame, read_dataframe
 from llm_studio.src.utils.export_utils import get_size_str
@@ -1854,3 +1853,28 @@ def copy_config(cfg: Any) -> Any:
     cfg = load_config_yaml(tmp_file)
     os.remove(tmp_file)
     return cfg
+
+
+def make_label(title: str, appendix: str = "") -> str:
+    """Cleans a label
+
+    Args:
+        title: title to clean
+        appendix: optional appendix
+
+    Returns:
+        Cleaned label
+
+    """
+    label = " ".join(w.capitalize() for w in title.split("_")) + appendix
+    label = label.replace("Llm", "LLM")
+    return label
+
+
+def get_cfg_list_items(cfg) -> List:
+    items = parse_cfg_dataclass(cfg)
+    x = []
+    for item in items:
+        for k, v in item.items():
+            x.append(ui.stat_list_item(label=make_label(k), value=str(v)))
+    return x

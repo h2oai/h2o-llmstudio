@@ -29,13 +29,12 @@ from app_utils.utils import (
     parse_ui_elements,
     remove_temp_files,
     s3_download,
-    s3_file_options,
+    s3_file_options, make_label,
 )
 from app_utils.wave_utils import ui_table_from_df
 from llm_studio.src.utils.config_utils import (
     load_config,
     load_config_yaml,
-    make_label,
     save_config_yaml,
 )
 from llm_studio.src.utils.data_utils import (

@@ -27,17 +27,15 @@ from app_utils.utils import (
     get_unique_name,
     parse_ui_elements,
     remove_model_type,
-    start_experiment,
+    start_experiment, make_label, get_cfg_list_items,
 )
 from app_utils.wave_utils import ui_table_from_df, wave_theme
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.utils.config_utils import (
     convert_cfg_to_nested_dictionary,
-    get_cfg_elements,
     get_parent_element,
     load_config,
     load_config_yaml,
-    make_label,
     save_config_yaml,
 )
 from llm_studio.src.utils.exceptions import LLMResourceException
@@ -53,7 +51,6 @@ from llm_studio.src.utils.export_utils import (
 from llm_studio.src.utils.logging_utils import write_flag
 from llm_studio.src.utils.modeling_utils import load_checkpoint
 from llm_studio.src.utils.utils import kill_child_processes
-
 from .common import clean_dashboard
 
 logger = logging.getLogger(__name__)
@@ -680,7 +677,7 @@ async def experiment_compare(q: Q, selected_rows: list):
             experiment = q.client.app_db.get_experiment(experiment_id)
             experiment_path = experiment.path
             experiment_cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
-            items = get_cfg_elements(experiment_cfg)
+            items = get_cfg_list_items(experiment_cfg)
             act_df = pd.Series({item.label: item.value for item in items})
             settings[experiment.name] = act_df
 
@@ -972,7 +969,7 @@ async def experiment_display(q: Q) -> None:
             os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
         )
 
-        parent_element = get_parent_element(cfg, True)
+        parent_element = get_parent_element(cfg)
         if parent_element:
             items.append(parent_element)
 
@@ -1005,7 +1002,7 @@ async def experiment_display(q: Q) -> None:
         experiment_cfg = load_config_yaml(
             os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
         )
-        items = get_cfg_elements(experiment_cfg)
+        items = get_cfg_list_items(experiment_cfg)
 
         q.page["experiment/display/config"] = ui.stat_list_card(
             box=box[cnt], items=items, title=""

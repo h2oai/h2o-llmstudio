@@ -1,10 +1,9 @@
 import dataclasses
 import importlib
 from types import ModuleType
-from typing import Any, List, Type
+from typing import Any, List, Type, Dict
 
 import yaml
-from h2o_wave import StatListItem, ui
 
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPAugmentation,
@@ -117,7 +116,7 @@ def convert_cfg_to_nested_dictionary(cfg: Any) -> dict:
         if type_annotation in KNOWN_TYPE_ANNOTATIONS:
             grouped_cfg_dict.update({k: v})
         elif dataclasses.is_dataclass(v):
-            group_items = get_cfg_elements(cfg=v, beautify=False)
+            group_items = parse_cfg_dataclass(cfg=v)
             group_items = {
                 k: list(v) if isinstance(v, tuple) else v
                 for d in group_items
@@ -130,33 +129,25 @@ def convert_cfg_to_nested_dictionary(cfg: Any) -> dict:
     return grouped_cfg_dict
 
 
-def get_parent_element(cfg: Any, beautify: bool = True):
+def get_parent_element(cfg: Any):
     if hasattr(cfg, "_parent_experiment"):
         key = "Parent Experiment"
         value = cfg._parent_experiment
-        if beautify:
-            return ui.stat_list_item(label=key, value=value)
         return {key: value}
 
     return None
 
 
-def get_cfg_elements(cfg: Any, beautify: bool = True) -> List[StatListItem]:
+def parse_cfg_dataclass(cfg: Any) -> List[Dict]:
     """Returns all single config settings for a given configuration
 
     Args:
         cfg: configuration
-        q: Q
-        beautify: flag if the output shall be ran through make_label()
-            strips underscores and Title uppercases.
-
-    Returns:
-        List of stat list items with configuration settings
     """
 
     items = []
 
-    parent_element = get_parent_element(cfg, beautify)
+    parent_element = get_parent_element(cfg)
     if parent_element:
         items.append(parent_element)
 
@@ -177,12 +168,9 @@ def get_cfg_elements(cfg: Any, beautify: bool = True) -> List[StatListItem]:
         if type_annotation in KNOWN_TYPE_ANNOTATIONS:
             if type_annotation == float:
                 v = float(v)
-            if beautify:
-                t = [ui.stat_list_item(label=make_label(k), value=str(v))]
-            else:
-                t = [{k: v}]
+            t = [{k: v}]
         elif dataclasses.is_dataclass(v):
-            elements_group = get_cfg_elements(cfg=v)
+            elements_group = parse_cfg_dataclass(cfg=v)
             t = elements_group
         else:
             raise _get_type_annotation_error(v, type_annotations[k])
@@ -190,22 +178,6 @@ def get_cfg_elements(cfg: Any, beautify: bool = True) -> List[StatListItem]:
         items += t
 
     return items
-
-
-def make_label(title: str, appendix: str = "") -> str:
-    """Cleans a label
-
-    Args:
-        title: title to clean
-        appendix: optional appendix
-
-    Returns:
-        Cleaned label
-
-    """
-    label = " ".join(w.capitalize() for w in title.split("_")) + appendix
-    label = label.replace("Llm", "LLM")
-    return label
 
 
 def save_config_yaml(path: str, cfg: Any) -> None:
