@@ -427,11 +427,6 @@ def run(cfg: Any) -> None:
 
     os.makedirs(cfg.output_directory, exist_ok=True)
 
-    # get run flags for routine
-    do_run_train = False
-    if cfg.training.epochs >= 0:
-        do_run_train = True
-
     # Force evaluation if user trains 0 epochs
     cfg.training.evaluate_before_training = (
         cfg.training.evaluate_before_training or cfg.training.epochs == 0
