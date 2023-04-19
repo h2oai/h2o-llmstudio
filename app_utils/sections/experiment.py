@@ -16,28 +16,23 @@ from app_utils.config import default_cfg
 from app_utils.utils import (
     add_model_type,
     flatten_dict,
-    get_cfg_elements,
     get_data_dir,
     get_download_link,
     get_experiment_status,
     get_experiments,
-    get_grouped_cfg_elements,
     get_model_types,
-    get_parent_element,
     get_problem_categories,
     get_problem_types,
     get_ui_elements,
     get_unique_name,
-    load_dill,
-    make_label,
     parse_ui_elements,
     remove_model_type,
-    save_dill,
     start_experiment,
 )
 from app_utils.wave_utils import ui_table_from_df, wave_theme
 from llm_studio.src.datasets.text_utils import get_tokenizer
-from llm_studio.src.utils.config_utils import load_config
+from llm_studio.src.utils.config_utils import load_config, convert_cfg_to_nested_dictionary, get_parent_element, \
+    get_cfg_elements, make_label
 from llm_studio.src.utils.exceptions import LLMResourceException
 from llm_studio.src.utils.export_utils import (
     check_available_space,
@@ -50,8 +45,7 @@ from llm_studio.src.utils.export_utils import (
 )
 from llm_studio.src.utils.logging_utils import write_flag
 from llm_studio.src.utils.modeling_utils import load_checkpoint
-from llm_studio.src.utils.utils import kill_child_processes
-
+from llm_studio.src.utils.utils import kill_child_processes, load_config_yaml, save_config_yaml
 from .common import clean_dashboard
 
 logger = logging.getLogger(__name__)
@@ -326,7 +320,7 @@ async def experiment_start(q: Q) -> None:
         parent_exp_name = parent_path.split("/")[-1]
         parent_experiment = f"{parent_exp_name}"
 
-        old_config = load_dill(f"{parent_path}/cfg.p")
+        old_config = load_config_yaml(f"{parent_path}/cfg.yaml")
         old_config._parent_experiment = parent_experiment
 
         q.client["experiment/start/cfg"] = old_config
@@ -677,8 +671,8 @@ async def experiment_compare(q: Q, selected_rows: list):
         for experiment_id in experiment_ids:
             experiment = q.client.app_db.get_experiment(experiment_id)
             experiment_path = experiment.path
-            experiment_cfg = load_dill(os.path.join(experiment_path, "cfg.p"))
-            items = get_cfg_elements(experiment_cfg, q)
+            experiment_cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
+            items = get_cfg_elements(experiment_cfg)
             act_df = pd.Series({item.label: item.value for item in items})
             settings[experiment.name] = act_df
 
@@ -766,13 +760,13 @@ async def experiment_rename_action(q, experiment, new_name):
         logger.info(f"Renaming {old_exp_path} to {exp_path}")
         shutil.move(os.path.abspath(old_exp_path), os.path.abspath(exp_path))
 
-        for config_file in ["cfg.p", "cfg_last.p"]:
+        for config_file in ["cfg.yaml"]:
             config_path = os.path.join(exp_path, config_file)
             if os.path.exists(config_path):
-                experiment_cfg = load_dill(config_path)
+                experiment_cfg = load_config_yaml(config_path)
                 experiment_cfg.experiment_name = new_name
                 experiment_cfg.output_directory = new_path
-                save_dill(config_path, experiment_cfg)
+                save_config_yaml(config_path, experiment_cfg)
 
         rename_files = ["preds"]
         for file in rename_files:
@@ -966,8 +960,8 @@ async def experiment_display(q: Q) -> None:
 
         items = []
 
-        cfg = load_dill(
-            os.path.join(q.client["experiment/display/experiment_path"], "cfg.p")
+        cfg = load_config_yaml(
+            os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
         )
 
         parent_element = get_parent_element(cfg, True)
@@ -1000,10 +994,10 @@ async def experiment_display(q: Q) -> None:
         q.client.delete_cards.add("experiment/display/summary")
 
     elif q.client["experiment/display/tab"] in ["experiment/display/config"]:
-        experiment_cfg = load_dill(
-            os.path.join(q.client["experiment/display/experiment_path"], "cfg.p")
+        experiment_cfg = load_config_yaml(
+            os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
         )
-        items = get_cfg_elements(experiment_cfg, q)
+        items = get_cfg_elements(experiment_cfg)
 
         q.page["experiment/display/config"] = ui.stat_list_card(
             box=box[cnt], items=items, title=""
@@ -1443,8 +1437,8 @@ async def experiment_download_logs(q: Q):
 
     if not os.path.exists(zip_path):
         logs = q.client["experiment/display/charts"]
-        experiment_cfg = load_dill(os.path.join(experiment_path, "cfg.p"))
-        experiment_cfg_dict = get_grouped_cfg_elements(experiment_cfg, q)
+        experiment_cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
+        experiment_cfg_dict = convert_cfg_to_nested_dictionary(experiment_cfg)
         logger.info(f"Creating {zip_path} on demand")
         zip_path = save_logs(
             experiment.name,
@@ -1574,7 +1568,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
 
 
 def load_cfg_model_tokenizer(experiment_path, device="cuda"):
-    cfg = load_dill(os.path.join(experiment_path, "cfg.p"))
+    cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
     cfg.architecture.pretrained = False
     cfg.tokenizer.padding_quantile = 0
 

@@ -1,6 +1,11 @@
+import dataclasses
 import importlib
 from types import ModuleType
-from typing import Any
+from typing import Any, Type, List
+
+from h2o_wave import ui, StatListItem
+
+from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 
 
 def rreload(module):
@@ -61,3 +66,131 @@ def load_config(config_path: str, config_name: str = "Config"):
     """
 
     return _load_cls(config_path, config_name)()
+
+
+def _get_type_annotation_error(v: Any, type_annotation: Type) -> ValueError:
+    return ValueError(
+        f"Cannot show {v}: not a dataclass"
+        f" and {type_annotation} is not a known type annotation."
+    )
+
+
+def convert_cfg_to_nested_dictionary(cfg: Any) -> dict:
+    """Returns a grouped config settings dict for a given configuration
+
+    Args:
+        cfg: configuration
+        q: Q
+
+    Returns:
+        Dict of configuration settings
+    """
+
+    cfg_dict = cfg.__dict__
+    type_annotations = cfg.get_annotations()
+    cfg_dict = {key: cfg_dict[key] for key in cfg._get_order()}
+
+    grouped_cfg_dict = {}
+
+    for k, v in cfg_dict.items():
+
+        if k.startswith("_") or cfg._get_visibility(k) < 0:
+            continue
+
+        if any([x in k for x in ["api"]]):
+            continue
+
+        type_annotation = type_annotations[k]
+
+        if type_annotation in KNOWN_TYPE_ANNOTATIONS:
+            grouped_cfg_dict.update({k: v})
+        elif dataclasses.is_dataclass(v):
+            group_items = get_cfg_elements(cfg=v, beautify=False)
+            group_items = {
+                k: list(v) if isinstance(v, tuple) else v
+                for d in group_items
+                for k, v in d.items()
+            }
+            grouped_cfg_dict.update({k: group_items})
+        else:
+            raise _get_type_annotation_error(v, type_annotations[k])
+
+    return grouped_cfg_dict
+
+
+def get_parent_element(cfg: Any, beautify: bool = True):
+    if hasattr(cfg, "_parent_experiment"):
+        key = "Parent Experiment"
+        value = cfg._parent_experiment
+        if beautify:
+            return ui.stat_list_item(label=key, value=value)
+        return {key: value}
+
+    return None
+
+
+def get_cfg_elements(cfg: Any, beautify: bool = True) -> List[StatListItem]:
+    """Returns all single config settings for a given configuration
+
+    Args:
+        cfg: configuration
+        q: Q
+        beautify: flag if the output shall be ran through make_label()
+            strips underscores and Title uppercases.
+
+    Returns:
+        List of stat list items with configuration settings
+    """
+
+    items = []
+
+    parent_element = get_parent_element(cfg, beautify)
+    if parent_element:
+        items.append(parent_element)
+
+    cfg_dict = cfg.__dict__
+    type_annotations = cfg.get_annotations()
+    cfg_dict = {key: cfg_dict[key] for key in cfg._get_order()}
+
+    for k, v in cfg_dict.items():
+
+        if k.startswith("_") or cfg._get_visibility(k) < 0:
+            continue
+
+        if any([x in k for x in ["api"]]):
+            continue
+
+        type_annotation = type_annotations[k]
+
+        if type_annotation in KNOWN_TYPE_ANNOTATIONS:
+            if type_annotation == float:
+                v = float(v)
+            if beautify:
+                t = [ui.stat_list_item(label=make_label(k), value=str(v))]
+            else:
+                t = [{k: v}]
+        elif dataclasses.is_dataclass(v):
+            elements_group = get_cfg_elements(cfg=v)
+            t = elements_group
+        else:
+            raise _get_type_annotation_error(v, type_annotations[k])
+
+        items += t
+
+    return items
+
+
+def make_label(title: str, appendix: str = "") -> str:
+    """Cleans a label
+
+    Args:
+        title: title to clean
+        appendix: optional appendix
+
+    Returns:
+        Cleaned label
+
+    """
+    label = " ".join(w.capitalize() for w in title.split("_")) + appendix
+    label = label.replace("Llm", "LLM")
+    return label

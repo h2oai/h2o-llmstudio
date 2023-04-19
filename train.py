@@ -55,7 +55,7 @@ from llm_studio.src.utils.modeling_utils import (
 )
 from llm_studio.src.utils.utils import (
     kill_ddp_processes,
-    save_config,
+    save_config_yaml,
     set_environment,
     set_seed,
 )
@@ -616,7 +616,7 @@ def run(cfg: Any) -> None:
 
             _ = save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
-        save_config(f"{cfg.output_directory}/cfg_last.p", cfg)
+        save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
     if cfg.environment._local_rank == 0:
         save_prediction_outputs(cfg.experiment_name, experiment_path)
