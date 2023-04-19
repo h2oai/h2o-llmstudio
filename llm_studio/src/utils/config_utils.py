@@ -1,7 +1,5 @@
 import dataclasses
 import importlib
-import os
-import uuid
 from types import ModuleType
 from typing import Any, List, Type
 
@@ -208,22 +206,6 @@ def make_label(title: str, appendix: str = "") -> str:
     label = " ".join(w.capitalize() for w in title.split("_")) + appendix
     label = label.replace("Llm", "LLM")
     return label
-
-
-def copy_config(cfg: Any) -> Any:
-    """Makes a copy of the config
-
-    Args:
-        cfg: config object
-    Returns:
-        copy of the config
-    """
-    # make unique yaml file using uuid
-    tmp_file = os.path.join(cfg.output_directory, str(uuid.uuid4()) + ".yaml")
-    save_config_yaml(tmp_file, cfg)
-    cfg = load_config_yaml(tmp_file)
-    os.remove(tmp_file)
-    return cfg
 
 
 def save_config_yaml(path: str, cfg: Any) -> None:

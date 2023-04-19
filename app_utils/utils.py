@@ -11,6 +11,7 @@ import shutil
 import socket
 import subprocess
 import time
+import uuid
 import zipfile
 from collections import defaultdict
 from contextlib import closing
@@ -31,7 +32,6 @@ from app_utils.db import Experiment
 from llm_studio.src import possible_values
 from llm_studio.src.utils.config_utils import (
     _get_type_annotation_error,
-    copy_config,
     load_config_yaml,
     make_label,
     save_config_yaml,
@@ -1838,3 +1838,19 @@ def get_single_gpu_usage(sig_figs=1, highlight=None):
             )
         )
     return items
+
+
+def copy_config(cfg: Any) -> Any:
+    """Makes a copy of the config
+
+    Args:
+        cfg: config object
+    Returns:
+        copy of the config
+    """
+    # make unique yaml file using uuid
+    tmp_file = os.path.join("output/", str(uuid.uuid4()) + ".yaml")
+    save_config_yaml(tmp_file, cfg)
+    cfg = load_config_yaml(tmp_file)
+    os.remove(tmp_file)
+    return cfg
