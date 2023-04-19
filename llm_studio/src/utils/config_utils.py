@@ -1,5 +1,7 @@
 import dataclasses
 import importlib
+import os
+import uuid
 from types import ModuleType
 from typing import Any, List, Type
 
@@ -217,15 +219,11 @@ def copy_config(cfg: Any) -> Any:
     Returns:
         copy of the config
     """
-
-    # cfg.environment._cpu_comm can't be copied
-    cpu_comm = None
-    if cfg.environment._cpu_comm is not None:
-        cpu_comm = cfg.environment._cpu_comm
-        cfg.environment._cpu_comm = None
-    cfg = dill.copy(cfg)
-    cfg.environment._cpu_comm = cpu_comm
-
+    # make unique yaml file using uuid
+    tmp_file = os.path.join(cfg.output_directory, str(uuid.uuid4()) + ".yaml")
+    save_config_yaml(tmp_file, cfg)
+    cfg = load_config_yaml(tmp_file)
+    os.remove(tmp_file)
     return cfg
 
 
