@@ -1,4 +1,5 @@
-<h1 align="center">H2O LLM Studio</h1>
+<p align="center"><img src="app_utils/static/llm-studio-logo-light.png#gh-dark-mode-only"></p>
+<p align="center"><img src="app_utils/static/llm-studio-logo.png#gh-light-mode-only"></p>
 
 <h3 align="center">
     <p>Welcome to H2O LLM Studio, a framework and no-code GUI designed for<br />
@@ -7,7 +8,7 @@
 </h3>
 
 
-**With H2O LLM Studio, you can**
+## With H2O LLM Studio, you can
 
 - easily and effectively fine-tune LLMs **without the need for any coding experience**.
 - use a **graphic user interface (GUI)** specially designed for large language models.
