@@ -1,4 +1,4 @@
-# H2O LLM Studio
+<h1 align="center">H2O LLM Studio</h1>
 
 <h3 align="center">
     <p>Welcome to H2O LLM Studio, a framework and no-code GUI designed for<br />
@@ -17,6 +17,15 @@
 - track and compare your model performance visually. In addition, [Neptune](https://neptune.ai/) integration can be used.
 - chat with your model and get instant feedback on your model performance.
 - easily export your model to the [Hugging Face Hub](https://huggingface.co/) and share it with the community.
+
+
+## Quickstart
+
+We offer several ways of getting started quickly.
+
+Using CLI for fine-tuning LLMs:
+
+[![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/philippsinger/h2o-llm-studio-cli/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1-OYccyTvmfa3r7cAquw8sioFFPJcn4R9?usp=sharing)
 
 
 ## Setup
@@ -147,6 +156,9 @@ You can then use the `prompt.py` script to chat with your model:
 python prompt.py -e examples/output_oasst1
 ```
 
+## Model checkpoints
+
+All open-source datasets and models are posted on [H2O.ai's Hugging Face page](https://huggingface.co/h2oai/).
 
 ## License
 H2O LLM Studio is licensed under the Apache 2.0 license. Please see the [LICENSE](LICENSE) file for more information.
