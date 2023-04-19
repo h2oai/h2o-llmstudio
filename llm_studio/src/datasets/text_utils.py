@@ -62,11 +62,18 @@ def get_tokenizer(cfg: Any):
 
     cfg.tokenizer._stop_words_ids = []
     if len(cfg.prediction.stop_tokens) > 0:
-        cfg.tokenizer._stop_words_ids = [
-            tokenizer(stop_word, return_tensors="pt", add_special_tokens=False)[
-                "input_ids"
-            ].squeeze()[:]
-            for stop_word in cfg.prediction.stop_tokens
-        ]
+        for stop_word in cfg.prediction.stop_tokens:
+            if stop_word in tokenizer.all_special_tokens:
+                cfg.tokenizer._stop_words_ids.append(
+                    tokenizer(stop_word, return_tensors="pt", add_special_tokens=True)[
+                        "input_ids"
+                    ][0]
+                )
+            else:
+                cfg.tokenizer._stop_words_ids.append(
+                    tokenizer(stop_word, return_tensors="pt", add_special_tokens=False)[
+                        "input_ids"
+                    ][0]
+                )
 
     return tokenizer

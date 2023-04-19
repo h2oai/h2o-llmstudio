@@ -140,7 +140,14 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._possible_values["temperature"] = (0, 10, 0.05)
         self._possible_values["repetition_penalty"] = (1, 10, 0.05)
         self._possible_values["stop_tokens"] = possible_values.String(
-            values=("<human>:", "<bot>:", "<|prompter|>", "<|assistant|>"),
+            values=(
+                "<human>:",
+                "<bot>:",
+                "<|prompter|>",
+                "<|assistant|>",
+                "<|USER|>",
+                "<|ASSISTANT|>",
+            ),
             allow_custom=False,
             placeholder="Select optional stop tokens...",
         )
@@ -383,6 +390,7 @@ class ConfigProblemBase(DefaultConfig):
                 "EleutherAI/pythia-1b",
                 "EleutherAI/pythia-6.9b-deduped",
                 "EleutherAI/pythia-12b-deduped",
+                "stabilityai/stablelm-base-alpha-7b",
                 "togethercomputer/GPT-NeoXT-Chat-Base-20B",
             ),
             allow_custom=True,
