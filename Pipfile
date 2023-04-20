@@ -17,7 +17,7 @@ torchvision = {index = "pytorch", version = "==0.15.1+cu117"}
 torchaudio = {index = "pytorch", version = "==2.0.1+cu117"}
 tqdm = "==4.64.0"
 neptune-client = "==0.16.1"
-transformers = "==4.27.4"
+transformers = "==4.28.1"
 numpy = "==1.23.2"
 pandas = "==1.4.2"
 scikit-learn = "==1.0.2"

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "154252502a8dd8ac97c8309b6f560fa9af49ed8eca1e603d9f86ba7efcb80730"
+            "sha256": "7fcf6546775c889fd1080462377a024832986e5c077e69d1bac83720423e8b56"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -207,7 +207,7 @@
                 "sha256:1bb6ef75d84140c851fffe6420baaee5037d840070cfe11d60913be6ab8e0530",
                 "sha256:8ac8bbb645e49607917a5c07808116c708521f51e80d9c29bc4a168ff4dd22c6"
             ],
-            "markers": "python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'",
+            "markers": "python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_full_version != '3.5.0'",
             "version": "==11.0.3"
         },
         "bravado-core": {
@@ -215,7 +215,7 @@
                 "sha256:0da9c6f3814734622a55db3f62d08db6e188b25f3ebd087de370c91afb66a7f4",
                 "sha256:e231567cdc471337d23dfc950c45c5914ade8a78cde7ccf2ebb9433fcda29f40"
             ],
-            "markers": "python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'",
+            "markers": "python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_full_version != '3.5.0'",
             "version": "==5.17.1"
         },
         "certifi": {
@@ -342,7 +342,7 @@
                 "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44",
                 "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.6' and python_full_version != '3.5.0'",
             "version": "==0.4.6"
         },
         "coolname": {
@@ -1934,11 +1934,11 @@
         },
         "transformers": {
             "hashes": [
-                "sha256:5f0f735e6fb081e16db9e412466dbfa32c38231a3edd00def8cdc384c90dde36",
-                "sha256:ee1979c643093005427a9233af738628cb6f4cd1eaca63a2a4d2228bd5396952"
+                "sha256:7334f8730cff7ac31d9ba5c12f2113fcb7a7a5b61eeb5dbbdb162117c3aaa2d1",
+                "sha256:f30a006220d0475789ac0e7c874f51bf5143956797616d89975b637883ce0be6"
             ],
             "index": "pypi",
-            "version": "==4.27.4"
+            "version": "==4.28.1"
         },
         "triton": {
             "hashes": [
@@ -1984,7 +1984,7 @@
                 "sha256:8a388717b9476f934a21484e8c8e61875ab60644d29b9b39e11e4b9dc1c6b305",
                 "sha256:aa751d169e23c7479ce47a0cb0da579e3ede798f994f5816a74e4f4500dcea42"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_full_version != '3.5.0'",
             "version": "==1.26.15"
         },
         "webcolors": {
