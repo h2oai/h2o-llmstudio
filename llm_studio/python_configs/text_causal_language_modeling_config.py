@@ -166,9 +166,9 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
     find_unused_parameters: bool = False
     sync_batch_normalization: bool = False
+    trust_remote_code: bool = False
     number_of_workers: int = 4
     seed: int = -1
-    trust_remote_code: bool = False
     openai_api_token: str = ""
 
     _seed: int = 0  # internal seed set in train.py (equals seed if seed is not -1)
