@@ -140,7 +140,14 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._possible_values["temperature"] = (0, 10, 0.05)
         self._possible_values["repetition_penalty"] = (1, 10, 0.05)
         self._possible_values["stop_tokens"] = possible_values.String(
-            values=("<human>:", "<bot>:", "<|prompter|>", "<|assistant|>"),
+            values=(
+                "<human>:",
+                "<bot>:",
+                "<|prompter|>",
+                "<|assistant|>",
+                "<|USER|>",
+                "<|ASSISTANT|>",
+            ),
             allow_custom=False,
             placeholder="Select optional stop tokens...",
         )
@@ -313,12 +320,12 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 class ConfigNLPCausalLMArchitecture(DefaultConfig):
     model_class: Any = text_causal_language_modeling_model.Model
     pretrained: bool = True
-    pretrained_weights: str = ""
 
     backbone_dtype: str = "float16"
     gradient_checkpointing: bool = False
     force_embedding_gradients: bool = False
     intermediate_dropout: float = 0
+    pretrained_weights: str = ""
 
     def __post_init__(self):
         super().__post_init__()
@@ -335,7 +342,6 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
 
         self._visibility["model_class"] = -1
         self._visibility["pretrained"] = -1
-        self._visibility["pretrained_weights"] = -1
 
 
 @dataclass
@@ -390,6 +396,7 @@ class ConfigProblemBase(DefaultConfig):
                 "EleutherAI/pythia-1b",
                 "EleutherAI/pythia-6.9b-deduped",
                 "EleutherAI/pythia-12b-deduped",
+                "stabilityai/stablelm-base-alpha-7b",
                 "togethercomputer/GPT-NeoXT-Chat-Base-20B",
             ),
             allow_custom=True,

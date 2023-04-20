@@ -571,6 +571,8 @@ def run(cfg: Any) -> None:
             global_start_time,
             step=cfg.environment._curr_step,
         )
+        # re-save config
+        save_config(f"{cfg.output_directory}/cfg.p", cfg)
 
     val_data, val_loss, val_metric, last_batch = run_train(
         cfg=cfg,

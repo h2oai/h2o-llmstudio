@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict
 
 import torch
@@ -10,11 +11,15 @@ from transformers.utils import logging as transformers_logging
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import create_nlp_backbone
 
+logger = logging.getLogger(__name__)
+
 
 class StoppingCriteriaSub(StoppingCriteria):
     def __init__(self, cfg, stops=[], encounters=1):
         super().__init__()
         self.stops = [stop.to(cfg.environment._device) for stop in stops]
+        if cfg.environment._local_rank == 0:
+            logger.info(f"Stopping criteria tokens: {self.stops}")
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor):
         for stop in self.stops:

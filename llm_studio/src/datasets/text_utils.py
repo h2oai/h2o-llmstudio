@@ -1,6 +1,9 @@
+import logging
 from typing import Any
 
 from transformers import AutoTokenizer
+
+logger = logging.getLogger(__name__)
 
 
 def get_texts(df, cfg, separator=None):
@@ -62,11 +65,16 @@ def get_tokenizer(cfg: Any):
 
     cfg.tokenizer._stop_words_ids = []
     if len(cfg.prediction.stop_tokens) > 0:
-        cfg.tokenizer._stop_words_ids = [
-            tokenizer(stop_word, return_tensors="pt", add_special_tokens=False)[
-                "input_ids"
-            ].squeeze()[:]
-            for stop_word in cfg.prediction.stop_tokens
-        ]
+        for stop_word in cfg.prediction.stop_tokens:
+            cfg.tokenizer._stop_words_ids.append(
+                tokenizer(stop_word, return_tensors="pt", add_special_tokens=False)[
+                    "input_ids"
+                ][0]
+            )
+
+        if hasattr(cfg.prediction, "batch_size_inference"):
+            cfg.prediction.batch_size_inference = 1
+            if cfg.environment._local_rank == 0:
+                logger.info("Forcing inference batch size to 1 due to stop tokens.")
 
     return tokenizer
