@@ -381,6 +381,7 @@ class ConfigProblemBase(DefaultConfig):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
+                "h2oai/h2ogpt-oasst1-512-20b",
                 "EleutherAI/gpt-neo-1.3B",
                 "EleutherAI/gpt-j-6B",
                 "facebook/opt-125m",
