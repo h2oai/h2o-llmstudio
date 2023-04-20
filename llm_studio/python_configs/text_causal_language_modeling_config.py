@@ -313,12 +313,12 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 class ConfigNLPCausalLMArchitecture(DefaultConfig):
     model_class: Any = text_causal_language_modeling_model.Model
     pretrained: bool = True
-    pretrained_weights: str = ""
 
     backbone_dtype: str = "float16"
     gradient_checkpointing: bool = False
     force_embedding_gradients: bool = False
     intermediate_dropout: float = 0
+    pretrained_weights: str = ""
 
     def __post_init__(self):
         super().__post_init__()
@@ -335,7 +335,6 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
 
         self._visibility["model_class"] = -1
         self._visibility["pretrained"] = -1
-        self._visibility["pretrained_weights"] = -1
 
 
 @dataclass
