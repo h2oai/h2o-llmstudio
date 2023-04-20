@@ -389,6 +389,7 @@ class ConfigProblemBase(DefaultConfig):
                 "EleutherAI/pythia-1b",
                 "EleutherAI/pythia-6.9b-deduped",
                 "EleutherAI/pythia-12b-deduped",
+                "cerebras/Cerebras-GPT-13B",
                 "stabilityai/stablelm-base-alpha-7b",
                 "togethercomputer/GPT-NeoXT-Chat-Base-20B",
             ),
