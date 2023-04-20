@@ -511,7 +511,7 @@ def get_experiment_table(
         "loss",
         "eta",
         "epoch",
-        "config_file"
+        "config_file",
     ]
     if predictions:
         col_remove += ["epoch", "val metric"]
@@ -535,7 +535,7 @@ def get_experiment_table(
     min_widths = {
         "name": "350",
         "dataset": "150",
-        #"problem type": "190",
+        # "problem type": "190",
         "metric": "75",
         "val metric": "102",
         "progress": "85",
