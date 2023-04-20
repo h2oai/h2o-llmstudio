@@ -1547,6 +1547,12 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             q.client["experiment/display/push_to_huggingface/api_key"]
         )
 
+        tokenizer.push_to_hub(
+            repo_id=q.client["experiment/display/push_to_huggingface/model_name"],
+            token=q.client["experiment/display/push_to_huggingface/api_key"],
+            private=True,
+        )
+
         model.backbone.push_to_hub(
             repo_id=q.client["experiment/display/push_to_huggingface/model_name"],
             token=q.client["experiment/display/push_to_huggingface/api_key"],
