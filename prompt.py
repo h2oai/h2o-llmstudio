@@ -92,7 +92,8 @@ if __name__ == "__main__":
     print()
     print("=============")
     print(
-        "You can change inference parameters on the fly by typing --param value, such as --num_beams 4. You can also chain them such as --num_beams 4 --top_k 30."
+        "You can change inference parameters on the fly by typing --param value, "
+        "such as --num_beams 4. You can also chain them such as --num_beams 4 --top_k 30."
     )
     print()
 
