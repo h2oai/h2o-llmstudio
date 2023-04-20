@@ -30,7 +30,7 @@ Using CLI for fine-tuning LLMs:
 
 
 ## Setup
-H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For langer models, we recommend at least 24GB of GPU memory.
+H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
 
 
 To get started with H2O LLM Studio, you'll need to install Python 3.10 if you don't have it on your machine already.
