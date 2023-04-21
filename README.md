@@ -79,7 +79,7 @@ The interactive chat will also work with model that were finetuned using the UI.
 
 ## Data Format
 H2O LLM studio expects a csv file with at least two columns, one being the instruct column, the other 
-being the answer that the model should generate. You can also provide an extra validation dataframe using the same format or use an automatic train/validation split to evaluate the model performacen. 
+being the answer that the model should generate. You can also provide an extra validation dataframe using the same format or use an automatic train/validation split to evaluate the model performance. 
 
 
 During an experiment you can adapt the data representation with the following settings 
