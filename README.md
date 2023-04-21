@@ -124,7 +124,7 @@ During the experiment, you can monitor the training progress and model performan
 - **Logs** and **Config** show the logs and the configuration of the experiment.
 - **Chat** tab lets you chat with your model and get instant feedback on its performance. This tab becomes available after the training is completed.
 
-### Push to Huggingface 🤗
+### Push to Hugging Face 🤗
 If you want to publish your model, you can export it with a single click to the [Hugging Face Hub](https://huggingface.co/)
 and share it with the community. To be able to push your model to the Hub, you need to have an API token with write access.
 
