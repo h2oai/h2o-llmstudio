@@ -1010,7 +1010,6 @@ def get_ui_elements(
     cfg_dict = {key: cfg_dict[key] for key in cfg._get_order()}
 
     for k, v in cfg_dict.items():
-
         if "api" in k:
             password = True
         else:

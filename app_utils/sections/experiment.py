@@ -341,6 +341,9 @@ async def experiment_start(q: Q) -> None:
                 q.client[
                     "experiment/start/cfg"
                 ].architecture.pretrained_weights = prev_weights
+                q.client["experiment/start/cfg"].architecture._visibility[
+                    "pretrained_weights"
+                ] = -1
 
         experiments_df = q.client.app_db.get_experiments_df()
         output_dir = os.path.abspath(
