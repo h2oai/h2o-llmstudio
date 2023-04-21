@@ -36,6 +36,7 @@ def get_tokenizer(cfg: Any):
         cfg.llm_backbone,
         add_prefix_space=cfg.tokenizer.add_prefix_space,
         use_fast=True,
+        trust_remote_code=cfg.environment.trust_remote_code,
     )
     tokenizer.padding_side = getattr(
         cfg.tokenizer, "_padding_side", tokenizer.padding_side

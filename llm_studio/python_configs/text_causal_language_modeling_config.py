@@ -166,6 +166,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
     find_unused_parameters: bool = False
     sync_batch_normalization: bool = False
+    trust_remote_code: bool = False
     number_of_workers: int = 4
     seed: int = -1
     openai_api_token: str = ""
@@ -380,6 +381,7 @@ class ConfigProblemBase(DefaultConfig):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
+                "h2oai/h2ogpt-oasst1-512-20b",
                 "EleutherAI/gpt-neo-1.3B",
                 "EleutherAI/gpt-j-6B",
                 "facebook/opt-125m",
@@ -389,6 +391,7 @@ class ConfigProblemBase(DefaultConfig):
                 "EleutherAI/pythia-1b",
                 "EleutherAI/pythia-6.9b-deduped",
                 "EleutherAI/pythia-12b-deduped",
+                "cerebras/Cerebras-GPT-13B",
                 "stabilityai/stablelm-base-alpha-7b",
                 "togethercomputer/GPT-NeoXT-Chat-Base-20B",
             ),
