@@ -619,6 +619,10 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     else:
         backbone = model_class.from_config(config, **kwargs)
 
+    if cfg.tokenizer._vocab_length > config.vocab_size:
+        logger.info(f"Resizing token embeddings to {cfg.tokenizer._vocab_length}")
+        backbone.resize_token_embeddings(cfg.tokenizer._vocab_length)
+
     if cfg.training.lora:
         backbone = prepare_model_for_lora_training(backbone, layer_norm_names=[])
     else:
