@@ -67,8 +67,6 @@ def get_tokenizer(cfg: Any):
 
     cfg.tokenizer._stop_words = list(filter(None, cfg.prediction.stop_tokens.split(',')))
 
-    print("LENGTH 1", len(tokenizer.vocab))
-
     text_prompt_start = codecs.decode(cfg.dataset.text_prompt_start, 'unicode_escape').strip()
     if text_prompt_start != "":
         if text_prompt_start not in tokenizer.get_vocab():
@@ -93,8 +91,6 @@ def get_tokenizer(cfg: Any):
                 logger.info("Forcing inference batch size to 1 due to stop tokens.")
 
     cfg.tokenizer._vocab_length = len(tokenizer.vocab)
-
-    print("LENGTH 2", len(tokenizer.vocab))
 
     cfg.tokenizer._stop_words_ids = []
     for stop_word in set(cfg.tokenizer._stop_words):
