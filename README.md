@@ -56,6 +56,17 @@ make wave
 This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
 Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
 
+## Run H2O LLM Studio GUI using Docker
+
+Install Docker first by following instructions from [NVIDIA Containers](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker).
+
+This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
+Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
+```bash
+docker build -t h2o-llmstudio .
+docker run --runtime=nvidia --shm-size=64g -p 10101:10101 --rm h2o-llmstudio
+```
+
 ## Run H2O LLM Studio with command line interface (CLI)
 You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration file that contains all the experiment parameters. 
 To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`, and then use the following command:
