@@ -30,7 +30,7 @@ Using CLI for fine-tuning LLMs:
 
 
 ## Setup
-H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For langer models, we recommend at least 24GB of GPU memory.
+H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
 
 
 To get started with H2O LLM Studio, you'll need to install Python 3.10 if you don't have it on your machine already.
@@ -79,7 +79,7 @@ The interactive chat will also work with model that were finetuned using the UI.
 
 ## Data Format
 H2O LLM studio expects a csv file with at least two columns, one being the instruct column, the other 
-being the answer that the model should generate. You can also provide an extra validation dataframe using the same format or use an automatic train/validation split to evaluate the model performacen. 
+being the answer that the model should generate. You can also provide an extra validation dataframe using the same format or use an automatic train/validation split to evaluate the model performance. 
 
 
 During an experiment you can adapt the data representation with the following settings 
@@ -124,7 +124,7 @@ During the experiment, you can monitor the training progress and model performan
 - **Logs** and **Config** show the logs and the configuration of the experiment.
 - **Chat** tab lets you chat with your model and get instant feedback on its performance. This tab becomes available after the training is completed.
 
-### Push to Huggingface 🤗
+### Push to Hugging Face 🤗
 If you want to publish your model, you can export it with a single click to the [Hugging Face Hub](https://huggingface.co/)
 and share it with the community. To be able to push your model to the Hub, you need to have an API token with write access.
 

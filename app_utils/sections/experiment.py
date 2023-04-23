@@ -343,6 +343,9 @@ async def experiment_start(q: Q) -> None:
                 q.client[
                     "experiment/start/cfg"
                 ].architecture.pretrained_weights = prev_weights
+                q.client["experiment/start/cfg"].architecture._visibility[
+                    "pretrained_weights"
+                ] = -1
 
         experiments_df = q.client.app_db.get_experiments_df()
         output_dir = os.path.abspath(
@@ -500,10 +503,6 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> None:
     start_experiment(cfg=cfg, q=q, pre=pre)
 
 
-async def experiment_list_table(q: Q, reset: bool = True) -> None:
-    """Prepare experiment list form card"""
-
-
 def get_experiment_table(
     q, df_viz, predictions, height="calc(100vh - 245px)", actions=None
 ):
@@ -517,6 +516,7 @@ def get_experiment_table(
         "loss",
         "eta",
         "epoch",
+        "config_file",
     ]
     if predictions:
         col_remove += ["epoch", "val metric"]
@@ -524,8 +524,8 @@ def get_experiment_table(
     for col in col_remove:
         if col in df_viz:
             del df_viz[col]
-    df_viz = df_viz.rename(columns={"process_id": "pid", "config_file": "problem type"})
-    df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
+    # df_viz = df_viz.rename(columns={"process_id": "pid", "config_file": "problem type"})
+    # df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
 
     if actions == "experiment" and q.client["experiment/list/mode"] == "train":
         actions_dict = {
@@ -538,9 +538,9 @@ def get_experiment_table(
         actions_dict = {}
 
     min_widths = {
-        "name": "150",
+        "name": "350",
         "dataset": "150",
-        "problem type": "190",
+        # "problem type": "190",
         "metric": "75",
         "val metric": "102",
         "progress": "85",
@@ -1547,6 +1547,12 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
 
         huggingface_hub.login(
             q.client["experiment/display/push_to_huggingface/api_key"]
+        )
+
+        tokenizer.push_to_hub(
+            repo_id=q.client["experiment/display/push_to_huggingface/model_name"],
+            token=q.client["experiment/display/push_to_huggingface/api_key"],
+            private=True,
         )
 
         model.backbone.push_to_hub(
