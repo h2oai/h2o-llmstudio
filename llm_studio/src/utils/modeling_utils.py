@@ -603,6 +603,8 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
             load_in_8bit=True,
             llm_int8_threshold=0.0,
         )
+        # need to force pretrained
+        cfg.architecture.pretrained = True
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
     logger.info("dtype: {dtype}".format(dtype=kwargs["torch_dtype"]))
@@ -615,7 +617,6 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
             quantization_config=quantization_config,
             **kwargs,
         )
-
     else:
         backbone = model_class.from_config(config, **kwargs)
 
