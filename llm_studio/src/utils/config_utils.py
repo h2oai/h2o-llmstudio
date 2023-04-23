@@ -86,7 +86,7 @@ def _get_type_annotation_error(v: Any, type_annotation: Type) -> ValueError:
     )
 
 
-def convert_cfg_to_nested_dictionary(cfg: Any) -> dict:
+def convert_cfg_to_nested_dictionary(cfg: ConfigProblemBase) -> dict:
     """Returns a grouped config settings dict for a given configuration
 
     Args:
@@ -129,7 +129,7 @@ def convert_cfg_to_nested_dictionary(cfg: Any) -> dict:
     return grouped_cfg_dict
 
 
-def get_parent_element(cfg: Any):
+def get_parent_element(cfg: ConfigProblemBase):
     if hasattr(cfg, "_parent_experiment"):
         key = "Parent Experiment"
         value = cfg._parent_experiment
@@ -138,7 +138,7 @@ def get_parent_element(cfg: Any):
     return None
 
 
-def parse_cfg_dataclass(cfg: Any) -> List[Dict]:
+def parse_cfg_dataclass(cfg: ConfigProblemBase) -> List[Dict]:
     """Returns all single config settings for a given configuration
 
     Args:
@@ -180,7 +180,7 @@ def parse_cfg_dataclass(cfg: Any) -> List[Dict]:
     return items
 
 
-def save_config_yaml(path: str, cfg: Any) -> None:
+def save_config_yaml(path: str, cfg: ConfigProblemBase) -> None:
     """Saves config as dill file
 
     Args:
@@ -195,7 +195,7 @@ def save_config_yaml(path: str, cfg: Any) -> None:
         yaml.dump(cfg_dict, fp, indent=4)
 
 
-def load_config_yaml(path: str) -> Any:
+def load_config_yaml(path: str) -> ConfigProblemBase:
     """Loads config from yaml file
 
     Args:
