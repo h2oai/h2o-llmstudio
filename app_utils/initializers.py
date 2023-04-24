@@ -7,7 +7,7 @@ from bokeh.resources import Resources as BokehResources
 from h2o_wave import Q
 
 from app_utils.sections.common import interface
-from llm_studio.src.utils.config_utils import load_config
+from llm_studio.src.utils.config_utils import load_config_yaml, save_config_yaml, load_config_py
 
 from .config import default_cfg
 from .db import Database, Dataset
@@ -17,7 +17,6 @@ from .utils import (
     get_user_name,
     load_user_settings,
     prepare_default_dataset,
-    save_dill,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,7 +39,7 @@ def import_data(q: Q):
 
             df.to_csv(os.path.join(path, "train_full.csv"), index=False)
 
-            cfg = load_config(
+            cfg = load_config_py(
                 config_path=os.path.join(
                     "llm_studio/python_configs", default_cfg.cfg_file
                 ),
@@ -48,12 +47,12 @@ def import_data(q: Q):
             )
 
             cfg.dataset.train_dataframe = os.path.join(path, "train_full.csv")
-            cfg.dataset.prompt_column = "instruction"
+            cfg.dataset.prompt_column = "instruction",
             cfg.dataset.answer_column = "output"
 
-            cfg_path = os.path.join(path, f"{default_cfg.cfg_file}.p")
+            cfg_path = os.path.join(path, f"{default_cfg.cfg_file}.yaml")
 
-            save_dill(cfg_path, cfg)
+            save_config_yaml(cfg_path, cfg)
 
             dataset = Dataset(
                 id=1,
