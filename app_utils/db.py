@@ -149,3 +149,6 @@ class Database:
         experiment.name = new_name
         experiment.path = new_path
         self._session.commit()
+
+    def update(self) -> None:
+        self._session.commit()

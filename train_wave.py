@@ -45,9 +45,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-C", "--config", help="config filename", default=argparse.SUPPRESS
     )
-    parser.add_argument(
-        "-Y", "--yaml", help="yaml filename", default=argparse.SUPPRESS
-    )
+    parser.add_argument("-Y", "--yaml", help="yaml filename", default=argparse.SUPPRESS)
     parser.add_argument(
         "-Q",
         "--process-queue",

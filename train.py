@@ -24,7 +24,11 @@ from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from tqdm import tqdm
 
 from llm_studio.src.loggers import MainLogger
-from llm_studio.src.utils.config_utils import load_config, save_config_yaml, load_config_yaml
+from llm_studio.src.utils.config_utils import (
+    load_config,
+    load_config_yaml,
+    save_config_yaml,
+)
 from llm_studio.src.utils.data_utils import (
     get_data,
     get_inference_batch_size,
@@ -627,9 +631,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-C", "--config", help="config filename", default=argparse.SUPPRESS
     )
-    parser.add_argument(
-        "-Y", "--yaml", help="yaml filename", default=argparse.SUPPRESS
-    )
+    parser.add_argument("-Y", "--yaml", help="yaml filename", default=argparse.SUPPRESS)
     parser_args, unknown = parser.parse_known_args(sys.argv)
 
     if "config" in parser_args:
