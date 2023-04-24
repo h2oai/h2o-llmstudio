@@ -25,7 +25,7 @@ from tqdm import tqdm
 
 from llm_studio.src.loggers import MainLogger
 from llm_studio.src.utils.config_utils import (
-    load_config,
+    load_config_py,
     load_config_yaml,
     save_config_yaml,
 )
@@ -635,7 +635,7 @@ if __name__ == "__main__":
     parser_args, unknown = parser.parse_known_args(sys.argv)
 
     if "config" in parser_args:
-        cfg = load_config(parser_args.config)
+        cfg = load_config_py(parser_args.config)
     elif "yaml" in parser_args:
         cfg = load_config_yaml(parser_args.yaml)
     else:

@@ -36,7 +36,7 @@ from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.utils.config_utils import (
     convert_cfg_to_nested_dictionary,
     get_parent_element,
-    load_config,
+    load_config_py,
     load_config_yaml,
     save_config_yaml,
 )
@@ -430,7 +430,7 @@ async def experiment_start(q: Q) -> None:
             f"llm_studio/python_configs/{q.client['experiment/start/cfg_file']}"
         )
 
-        q.client["experiment/start/cfg"] = load_config(
+        q.client["experiment/start/cfg"] = load_config_py(
             config_path=config_path, config_name="ConfigProblemBase"
         )
 

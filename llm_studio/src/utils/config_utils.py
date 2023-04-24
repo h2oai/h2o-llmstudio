@@ -65,7 +65,7 @@ def _load_cls(module_path: str, cls_name: str) -> Any:
     return cls
 
 
-def load_config(config_path: str, config_name: str = "Config"):
+def load_config_py(config_path: str, config_name: str = "Config"):
     """Loads the config class.
 
     Args:
@@ -210,13 +210,19 @@ def load_config_yaml(path: str) -> ConfigProblemBase:
         output_directory=cfg_dict["output_directory"],
         experiment_name=cfg_dict["experiment_name"],
         llm_backbone=cfg_dict["llm_backbone"],
-        dataset=ConfigNLPCausalLMDataset(**cfg_dict.get("dataset", {})),
-        tokenizer=ConfigNLPCausalLMTokenizer(**cfg_dict.get("tokenizer", {})),
-        augmentation=ConfigNLPAugmentation(**cfg_dict.get("augmentation", {})),
-        architecture=ConfigNLPCausalLMArchitecture(**cfg_dict.get("architecture", {})),
-        training=ConfigNLPCausalLMTraining(**cfg_dict.get("training", {})),
-        prediction=ConfigNLPCausalLMPrediction(**cfg_dict.get("prediction", {})),
-        environment=ConfigNLPCausalLMEnvironment(**cfg_dict.get("environment", {})),
-        logging=ConfigNLPCausalLMLogging(**cfg_dict.get("logging", {})),
+        dataset=ConfigNLPCausalLMDataset.from_dict(cfg_dict.get("dataset", {})),
+        tokenizer=ConfigNLPCausalLMTokenizer.from_dict(cfg_dict.get("tokenizer", {})),
+        augmentation=ConfigNLPAugmentation.from_dict(cfg_dict.get("augmentation", {})),
+        architecture=ConfigNLPCausalLMArchitecture.from_dict(
+            cfg_dict.get("architecture", {})
+        ),
+        training=ConfigNLPCausalLMTraining.from_dict(cfg_dict.get("training", {})),
+        prediction=ConfigNLPCausalLMPrediction.from_dict(
+            cfg_dict.get("prediction", {})
+        ),
+        environment=ConfigNLPCausalLMEnvironment.from_dict(
+            cfg_dict.get("environment", {})
+        ),
+        logging=ConfigNLPCausalLMLogging.from_dict(cfg_dict.get("logging", {})),
     )
     return cfg

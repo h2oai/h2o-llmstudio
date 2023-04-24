@@ -3,6 +3,7 @@ architecture:
     force_embedding_gradients: false
     gradient_checkpointing: false
     intermediate_dropout: 0.0
+    config_item_that_is_not_used: 0
 augmentation:
     token_mask_probability: 0.0
 dataset:

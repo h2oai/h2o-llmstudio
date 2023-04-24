@@ -34,7 +34,7 @@ from app_utils.utils import (
 )
 from app_utils.wave_utils import ui_table_from_df
 from llm_studio.src.utils.config_utils import (
-    load_config,
+    load_config_py,
     load_config_yaml,
     save_config_yaml,
 )
@@ -419,7 +419,7 @@ async def dataset_import(
                     q.client["dataset/import/cfg_file"], model_types[0][0]
                 )
             if not edit:
-                q.client["dataset/import/cfg"] = load_config(
+                q.client["dataset/import/cfg"] = load_config_py(
                     config_path=(
                         f"llm_studio/python_configs/"
                         f"{q.client['dataset/import/cfg_file']}"

@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     import torch
 
-    from llm_studio.src.utils.config_utils import load_config, load_config_yaml
+    from llm_studio.src.utils.config_utils import load_config_py, load_config_yaml
     from llm_studio.src.utils.exceptions import (
         LLMAugmentationsException,
         LLMDataException,
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     from train import run
 
     if "config" in parser_args:
-        cfg = load_config(parser_args.config)
+        cfg = load_config_py(parser_args.config)
     elif "yaml" in parser_args:
         cfg = load_config_yaml(parser_args.yaml)
 
