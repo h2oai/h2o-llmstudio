@@ -12,11 +12,18 @@ logger = logging.getLogger(__name__)
 
 
 async def migrate_app(q: Q) -> None:
+    """
+    Migration scripts for the app.
+    """
     migrate_pickle_to_yaml(q)
-    migrate_database(q)
+    migrate_database_pickle_to_yaml(q)
 
 
 def migrate_pickle_to_yaml(q: Q) -> None:
+    """
+    Change from pickle -> yaml for config files.
+    introduced in https://github.com/h2oai/h2o-llmstudio/pull/12
+    """
     data_dir = get_data_dir(q)
     output_dir = get_output_dir(q)
 
@@ -43,7 +50,11 @@ def migrate_pickle_to_yaml(q: Q) -> None:
                             )
 
 
-def migrate_database(q: Q) -> None:
+def migrate_database_pickle_to_yaml(q: Q) -> None:
+    """
+    Change from pickle -> yaml for config files.
+    introduced in https://github.com/h2oai/h2o-llmstudio/pull/12
+    """
     db: Database = q.client.app_db
     for dataset_id in db.get_datasets_df()["id"]:
         dataset = db.get_dataset(dataset_id)
