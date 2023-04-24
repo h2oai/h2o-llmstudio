@@ -88,14 +88,11 @@ During an experiment you can adapt the data representation with the following se
 
 - **Prompt Column:** The column in the dataset containing the user prompt.
 - **Answer Column:** The column in the dataset containing the expected output.
-- **Text Prompt Start:** Text to be added before the user prompt.
-- **Text Answer Separator:** The separator used between the prompt and the answer in the dataset.
-- **Prepend Column Name:** Whether to add the column name to the text input from the left. As an example, if the prompt and answer columns are named "Question" and "Answer" enabling this option would add "Question: " before the question and "Answer: " before the answer. 
-- **Add Eos Token To Answer:** Whether to add an explicit end-of-sequence token at the end of the answer.
+- **Parent Column:** An optional column specifying the parent id to be used for chained conversations. The value of this column needs to match an additional column with the name `id`. If provided, the prompt will be concatenated after preceeding parent rows.
 
 ### Example data:
 We provide an example dataset (converted dataset from [OpenAssistant/oasst1](https://huggingface.co/datasets/OpenAssistant/oasst1))
-that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=126228752). It is recommended to use `train_full.csv` for training. This dataset is also downloaded and prepared by default when first starting the GUI.
+that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=127047926). It is recommended to use `train_full.csv` for training. This dataset is also downloaded and prepared by default when first starting the GUI.
 
 ## Training your model
 

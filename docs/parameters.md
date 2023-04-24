@@ -22,6 +22,8 @@ It is possible to tune the following parameters:
 
 ### **Augmentation Parameters**
 - **Token Mask Probability:** The probability of masking each token during training.
+- **Skip Parent Probability:** If `Parent Column` is set, this random augmentation will skip parent concatenation during training at each parent with this specified probability.
+- **Random Parent Probability:** While training, each sample will be concatenated to a random other sample simulating unrelated chained conversations. Can be specified without using a `Parent Column`.
 
 ### **Architecture Parameters**
 - **Backbone Dtype:** The datatype of the weights in the LLM backbone.
