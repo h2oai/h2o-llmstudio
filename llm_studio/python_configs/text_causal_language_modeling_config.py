@@ -239,6 +239,8 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
 
     prompt_column: Tuple[str, ...] = ("instruction", "input")
     answer_column: str = "output"
+    parent_column: str = "None"
+
     text_prompt_start: str = ""
     text_answer_separator: str = "\\n"
 
@@ -268,10 +270,13 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
         self._possible_values["data_sample"] = (0.05, 1, 0.05)
         self._possible_values["data_sample_choice"] = ["Train", "Validation"]
         self._possible_values["prompt_column"] = possible_values.Columns(
-            prefer_with=lambda column: column in ("Instruction", "prompt")
+            prefer_with=lambda column: column in ("instruction", "prompt")
         )
         self._possible_values["answer_column"] = possible_values.Columns(
             prefer_with=lambda column: column in ("answer", "output")
+        )
+        self._possible_values["parent_column"] = possible_values.Columns(
+            prefer_with=lambda column: column in ("parent"), add_none=True
         )
 
         self._nesting.add(
@@ -342,10 +347,12 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
 class ConfigNLPAugmentation(DefaultConfig):
     nlp_augmentations_class: Any = BaseNLPAug
     token_mask_probability: float = 0
+    random_parent_sample_probability: float = 0
 
     def __post_init__(self):
         super().__post_init__()
         self._possible_values["token_mask_probability"] = (0, 0.9, 0.05)
+        self._possible_values["random_parent_sample_probability"] = (0, 1.0, 0.05)
         self._visibility["nlp_augmentations_class"] = -1
 
 

@@ -64,6 +64,7 @@ default_cfg = {
         "validation_dataframe",
         "prompt_column",
         "answer_column",
+        "parent_column",
     ],
     "dataset_trigger_keys": [
         "train_dataframe",

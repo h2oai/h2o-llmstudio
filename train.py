@@ -251,17 +251,18 @@ def run_train(
                 cfg.training.batch_size * cfg.environment._world_size
             )
 
-            try:
-                data = next(tr_it)
-            except Exception:
-                failed_batches += 1
-                logger.warning("Data reading error. Skipping batch for training.")
-                if failed_batches >= epoch_steps * 0.05:
-                    raise LLMDataException(
-                        "Multiple observations in the dataset are broken, "
-                        "aborting training. Please, check the dataset."
-                    )
-                continue
+            data = next(tr_it)
+            # try:
+            #     data = next(tr_it)
+            # except Exception:
+            #     failed_batches += 1
+            #     logger.warning("Data reading error. Skipping batch for training.")
+            #     if failed_batches >= epoch_steps * 0.05:
+            #         raise LLMDataException(
+            #             "Multiple observations in the dataset are broken, "
+            #             "aborting training. Please, check the dataset."
+            #         )
+            #     continue
 
             # Batch to device
             batch = cfg.dataset.dataset_class.batch_to_device(

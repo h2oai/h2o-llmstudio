@@ -2059,14 +2059,19 @@ def prepare_default_dataset():
     df_assistant["output"] = df_assistant["text"].values
 
     inputs = []
+    parent_ids = []
     for _, row in df_assistant.iterrows():
         input = df_prompter.loc[row.parent_id]
         inputs.append(input.text)
+        parent_ids.append(input.parent_id)
 
     df_assistant["instruction"] = inputs
+    df_assistant["parent_id"] = parent_ids
 
     df_assistant = df_assistant[df_assistant.lang == "en"]
 
-    df_assistant = df_assistant[["instruction", "output"]]
+    df_assistant = df_assistant[
+        ["instruction", "output", "message_id", "parent_id"]
+    ].rename(columns={"message_id": "id"})
 
     return df_assistant

@@ -65,6 +65,17 @@ class CustomDataset(Dataset):
             self.df[self.cfg.dataset.answer_column].astype(str).values.tolist()
         )
 
+        if self.cfg.dataset.parent_column != "None":
+            if "id" not in self.df.columns:
+                logger.warning(
+                    "When using parent column, the dataframe requires an 'id' column. "
+                    "Disabling functionality."
+                )
+                self.cfg.dataset.parent_column = "None"
+            else:
+                self.parent_ids = self.df[self.cfg.dataset.parent_column].values
+                self.id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
+
         self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.prompts]
 
     @staticmethod
@@ -261,11 +272,33 @@ class CustomDataset(Dataset):
 
         return sample
 
+    def _concat_samples(self, prompt, idx):
+        rnd_parent = self.prompts[idx] + self.answers[idx]
+        if self.cfg.dataset.add_eos_token_to_answer:
+            rnd_parent += self.cfg._tokenizer_eos_token
+        prompt = rnd_parent + prompt
+        return prompt
+
     def _read_data(self, idx: int, sample: Dict) -> Dict:
         """Reads a single text observation."""
 
         prompt = self.prompts[idx]
         answer = self.answers[idx]
+
+        if self.mode == "train" and self.cfg.dataset.parent_column != "None":
+            parent_idx = self.id_to_idx.get(self.parent_ids[idx], None)
+            if parent_idx is not None:
+                prompt = self._concat_samples(prompt, int(parent_idx))
+                print(prompt)
+                print("================")
+
+        if (
+            self.mode == "train"
+            and np.random.random()
+            < self.cfg.augmentation.random_parent_sample_probability
+        ):
+            rnd_idx = np.random.randint(len(self))
+            prompt = self._concat_samples(prompt, rnd_idx)
 
         prompt_encodings = self.encode(
             self.tokenizer, prompt, self.cfg.tokenizer.max_length_prompt, "left"
