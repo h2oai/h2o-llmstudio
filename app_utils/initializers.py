@@ -1,15 +1,18 @@
 import logging
 import os
+import pickle
 from tempfile import NamedTemporaryFile
 
+import dill
 from bokeh.resources import Resources as BokehResources
 from h2o_wave import Q
 
 from app_utils.sections.common import interface
+from llm_studio.src.utils.config_utils import save_config_yaml
 
 from .config import default_cfg
 from .db import Database
-from .utils import get_data_dir, get_db_path, get_user_name, load_user_settings
+from .utils import get_data_dir, get_db_path, get_user_name, load_user_settings, get_output_dir
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +49,24 @@ async def initialize_client(q: Q) -> None:
     return
 
 
+def migrate_pickle_to_yaml(q: Q) -> None:
+    data_dir = get_data_dir(q)
+    output_dir = get_output_dir(q)
+
+    for dir in [data_dir, output_dir]:
+        if os.path.exists(dir):
+            for root, dirs, files in os.walk(dir):
+                for file in files:
+                    if file.endswith(".p") and not os.path.exists(os.path.join(root, file.replace(".p", ".yml"))):
+                        try:
+                            with open(os.path.join(root, file), "rb") as f:
+                                cfg = dill.load(f)
+                                save_config_yaml(os.path.join(root, file.replace(".p", ".yml")), cfg)
+                                logger.info(f"migrated {os.path.join(root, file)} to yaml")
+                        except Exception as e:
+                            logger.error(f"Could not migrate {os.path.join(root, file)} to yaml: {e}")
+
+
 async def initialize_app(q: Q) -> None:
     """
     Initialize the app.
@@ -71,6 +92,8 @@ async def initialize_app(q: Q) -> None:
         script_sources.append(url)
 
     q.app["script_sources"] = script_sources
+
+    migrate_pickle_to_yaml(q)
 
     q.app["initialized"] = True
 
