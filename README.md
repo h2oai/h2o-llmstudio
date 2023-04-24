@@ -95,7 +95,7 @@ During an experiment you can adapt the data representation with the following se
 
 ### Example data:
 We provide an example dataset (converted dataset from [OpenAssistant/oasst1](https://huggingface.co/datasets/OpenAssistant/oasst1))
-that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=126228752). It is recommended to use `train_full.csv` for training.
+that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=126228752). It is recommended to use `train_full.csv` for training. This dataset is also downloaded and prepared by default when first starting the GUI.
 
 ## Training your model
 
