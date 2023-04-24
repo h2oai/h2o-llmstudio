@@ -108,7 +108,7 @@ def start_process(cfg: Any, gpu_list: List, process_queue: List) -> subprocess.P
             [
                 "python",
                 "train_wave.py",
-                "-P",
+                "-Y",
                 config_name,
                 "-Q",
                 ",".join([str(x) for x in process_queue]),
@@ -139,7 +139,7 @@ def start_process(cfg: Any, gpu_list: List, process_queue: List) -> subprocess.P
                 f"--nproc_per_node={str(num_gpus)}",
                 f"--master_port={str(free_port)}",
                 "train_wave.py",
-                "-P",
+                "-Y",
                 config_name,
                 "-Q",
                 ",".join([str(x) for x in process_queue]),

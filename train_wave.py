@@ -46,7 +46,7 @@ if __name__ == "__main__":
         "-C", "--config", help="config filename", default=argparse.SUPPRESS
     )
     parser.add_argument(
-        "-P", "--pickle", help="pickle filename", default=argparse.SUPPRESS
+        "-Y", "--yaml", help="yaml filename", default=argparse.SUPPRESS
     )
     parser.add_argument(
         "-Q",
@@ -89,8 +89,8 @@ if __name__ == "__main__":
 
     if "config" in parser_args:
         cfg = load_config(parser_args.config)
-    elif "pickle" in parser_args:
-        cfg = load_config_yaml(parser_args.pickle)
+    elif "yaml" in parser_args:
+        cfg = load_config_yaml(parser_args.yaml)
 
     flag_path = os.path.join(cfg.output_directory, "flags{}.json")
 

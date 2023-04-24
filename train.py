@@ -24,7 +24,7 @@ from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from tqdm import tqdm
 
 from llm_studio.src.loggers import MainLogger
-from llm_studio.src.utils.config_utils import load_config, save_config_yaml
+from llm_studio.src.utils.config_utils import load_config, save_config_yaml, load_config_yaml
 from llm_studio.src.utils.data_utils import (
     get_data,
     get_inference_batch_size,
@@ -628,15 +628,14 @@ if __name__ == "__main__":
         "-C", "--config", help="config filename", default=argparse.SUPPRESS
     )
     parser.add_argument(
-        "-P", "--pickle", help="pickle filename", default=argparse.SUPPRESS
+        "-Y", "--yaml", help="yaml filename", default=argparse.SUPPRESS
     )
     parser_args, unknown = parser.parse_known_args(sys.argv)
 
     if "config" in parser_args:
         cfg = load_config(parser_args.config)
-    elif "pickle" in parser_args:
-        with open(parser_args.pickle, "rb") as pickle_file:
-            cfg = dill.load(pickle_file)
+    elif "yaml" in parser_args:
+        cfg = load_config_yaml(parser_args.yaml)
     else:
         raise ValueError("Please, provide a configuration file")
 
