@@ -38,7 +38,7 @@ protobuf = "==3.20.3"
 fastparquet = "==0.8.1"
 gputil = "==1.4.0"
 huggingface-hub = "==0.13.4"
-starlette= "==0.23.1"
+starlette= "==0.25.0"
 peft = {ref = "main", git = "https://github.com/huggingface/peft"}
 bitsandbytes = "==0.37.2"
 accelerate = "==0.18.0"
