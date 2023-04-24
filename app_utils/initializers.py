@@ -11,9 +11,17 @@ from llm_studio.src.utils.config_utils import load_config
 
 from .config import default_cfg
 from .db import Database, Dataset
-from .utils import get_data_dir, get_db_path, get_user_name, load_user_settings, prepare_default_dataset, save_dill
+from .utils import (
+    get_data_dir,
+    get_db_path,
+    get_user_name,
+    load_user_settings,
+    prepare_default_dataset,
+    save_dill,
+)
 
 logger = logging.getLogger(__name__)
+
 
 def import_data(q: Q):
     """Imports default data"""
@@ -30,24 +38,28 @@ def import_data(q: Q):
 
             df = prepare_default_dataset()
 
-            df.to_csv(f"{path}/train_full.csv", index=False)
+            df.to_csv(os.path.join(path, "train_full.csv"), index=False)
 
             cfg = load_config(
-                config_path=f"llm_studio/python_configs/{default_cfg.cfg_file}",
+                config_path=os.path.join(
+                    "llm_studio/python_configs", default_cfg.cfg_file
+                ),
                 config_name="ConfigProblemBase",
             )
 
-            cfg.dataset.train_dataframe = f"{path}/train_full.csv"
+            cfg.dataset.train_dataframe = os.path.join(path, "train_full.csv")
             cfg.dataset.prompt_column = "instruction"
             cfg.dataset.answer_column = "output"
 
-            save_dill(f"{path}/{default_cfg.cfg_file}.p", cfg)
+            cfg_path = os.path.join(path, f"{default_cfg.cfg_file}.p")
+
+            save_dill(cfg_path, cfg)
 
             dataset = Dataset(
                 id=1,
                 name="oasst",
                 path=path,
-                config_file=f"{path}/{default_cfg.cfg_file}.p",
+                config_file=cfg_path,
                 train_rows=df.shape[0],
             )
 
@@ -56,6 +68,7 @@ def import_data(q: Q):
         q.client.app_db._session.rollback()
         logger.warning(f"Could not download default dataset: {e}")
         pass
+
 
 async def initialize_client(q: Q) -> None:
     """Initialize the client."""
