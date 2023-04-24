@@ -290,15 +290,20 @@ class CustomDataset(Dataset):
 
         if self.cfg.dataset.parent_column != "None":
             parent_idx = idx
-            while (parent_idx := self.id_to_idx.get(self.parent_ids[parent_idx], None)) is not None:
-                if self.mode == "train" and np.random.random() < self.cfg.augmentation.skip_parent_probability:
+            while (
+                parent_idx := self.id_to_idx.get(self.parent_ids[parent_idx], None)
+            ) is not None:
+                if (
+                    self.mode == "train"
+                    and np.random.random()
+                    < self.cfg.augmentation.skip_parent_probability
+                ):
                     break
                 prompt = self._concat_samples(prompt, int(parent_idx))
 
         if (
             self.mode == "train"
-            and np.random.random()
-            < self.cfg.augmentation.random_parent_probability
+            and np.random.random() < self.cfg.augmentation.random_parent_probability
         ):
             rnd_idx = np.random.randint(len(self))
             prompt = self._concat_samples(prompt, rnd_idx)
