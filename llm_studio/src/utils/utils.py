@@ -6,6 +6,7 @@ import zipfile
 from typing import Any
 
 import numpy as np
+import openai
 import psutil
 import torch
 
@@ -32,6 +33,7 @@ def set_environment(cfg):
     """Sets and checks environment settings"""
 
     os.environ["OPENAI_API_KEY"] = cfg.environment.openai_api_token
+    openai.api_key = cfg.environment.openai_api_token
 
     if "GPT" in cfg.prediction.metric and cfg.environment.openai_api_token == "":
         logger.warning("No OpenAI API Key set. Setting metric to BLEU. ")

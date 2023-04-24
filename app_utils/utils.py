@@ -24,6 +24,7 @@ import pandas as pd
 import psutil
 from boto3.session import Session
 from botocore.handlers import disable_signing
+from datasets import load_dataset
 from h2o_wave import Q, ui
 from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
@@ -1879,3 +1880,29 @@ def get_cfg_list_items(cfg) -> List:
         for k, v in item.items():
             x.append(ui.stat_list_item(label=make_label(k), value=str(v)))
     return x
+
+
+def prepare_default_dataset():
+    ds = load_dataset("OpenAssistant/oasst1")
+    train = ds["train"].to_pandas()
+    val = ds["validation"].to_pandas()
+
+    df = pd.concat([train, val], axis=0).reset_index(drop=True)
+
+    df_assistant = df[(df.role == "assistant") & (df["rank"] == 0.0)].copy()
+    df_prompter = df[(df.role == "prompter")].copy()
+    df_prompter = df_prompter.set_index("message_id")
+    df_assistant["output"] = df_assistant["text"].values
+
+    inputs = []
+    for _, row in df_assistant.iterrows():
+        input = df_prompter.loc[row.parent_id]
+        inputs.append(input.text)
+
+    df_assistant["instruction"] = inputs
+
+    df_assistant = df_assistant[df_assistant.lang == "en"]
+
+    df_assistant = df_assistant[["instruction", "output"]]
+
+    return df_assistant

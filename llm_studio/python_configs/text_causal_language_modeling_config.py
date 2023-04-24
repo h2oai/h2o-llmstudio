@@ -114,117 +114,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
 
 
 @dataclass
-class ConfigNLPCausalLMPrediction(DefaultConfig):
-    metric_class: Any = text_causal_language_modeling_metrics.Metrics
-    metric: str = "GPT3.5"
-
-    min_length_inference: int = 2
-    max_length_inference: int = 256
-    batch_size_inference: int = 0
-
-    do_sample: bool = False
-    num_beams: int = 2
-    temperature: float = 0.3
-    repetition_penalty: float = 1.2
-    stop_tokens: Tuple[str, ...] = ()
-
-    def __post_init__(self):
-        super().__post_init__()
-        self._possible_values["metric"] = self.metric_class.names()
-
-        self._possible_values["batch_size_inference"] = (0, 512, 1)
-        self._possible_values["min_length_inference"] = (0, 1024, 1)
-        self._possible_values["max_length_inference"] = (1, 1024, 1)
-
-        self._possible_values["num_beams"] = (1, 10, 1)
-        self._possible_values["temperature"] = (0, 10, 0.05)
-        self._possible_values["repetition_penalty"] = (1, 10, 0.05)
-        self._possible_values["stop_tokens"] = possible_values.String(
-            values=(
-                "<human>:",
-                "<bot>:",
-                "<|prompter|>",
-                "<|assistant|>",
-                "<|USER|>",
-                "<|ASSISTANT|>",
-            ),
-            allow_custom=False,
-            placeholder="Select optional stop tokens...",
-        )
-
-        self._visibility["metric_class"] = -1
-
-
-@dataclass
-class ConfigNLPCausalLMEnvironment(DefaultConfig):
-    gpus: Tuple[str, ...] = tuple(str(x) for x in range(torch.cuda.device_count()))
-
-    mixed_precision: bool = True
-
-    compile_model: bool = False
-    use_fsdp: bool = False
-
-    find_unused_parameters: bool = False
-    sync_batch_normalization: bool = False
-    trust_remote_code: bool = False
-    number_of_workers: int = 4
-    seed: int = -1
-    openai_api_token: str = ""
-
-    _seed: int = 0  # internal seed set in train.py (equals seed if seed is not -1)
-    _distributed: bool = False
-    _distributed_inference: bool = True
-    _local_rank: int = 0
-    _world_size: int = 1
-    _curr_step: int = 0
-    _curr_val_step: int = 0
-    _rank: int = 0  # global rank
-    _device: str = "cuda"
-    _cpu_comm: Any = None
-
-    def __post_init__(self):
-        super().__post_init__()
-        self._possible_values["gpus"] = possible_values.String(
-            values=tuple(
-                [(str(x), f"GPU #{x+1}") for x in range(torch.cuda.device_count())]
-            ),
-            allow_custom=False,
-        )
-
-        self._possible_values["number_of_workers"] = (1, multiprocessing.cpu_count(), 1)
-        self._possible_values["seed"] = possible_values.Number(step=1, min=-1)
-
-        if torch.cuda.device_count() <= 1:
-            self._visibility["sync_batch_normalization"] = -1
-
-
-@dataclass
-class ConfigNLPCausalLMLogging(DefaultConfig):
-    logger: str = "None"
-    neptune_api_token: str = ""
-    neptune_project: str = ""
-    _neptune_debug: bool = False
-
-    plots_class: Any = text_causal_language_modeling_plots.Plots
-    number_of_texts: int = 10
-
-    # the actual logger, will be set dynamically at runtime
-    _logger: Any = None
-
-    def __post_init__(self):
-        super().__post_init__()
-        self._possible_values["logger"] = Loggers.names()
-        self._possible_values["number_of_texts"] = (0, 20, 2)
-
-        self._nesting.add(
-            ["neptune_api_token", "neptune_project"],
-            [Dependency(key="logger", value="Neptune", is_set=True)],
-        )
-
-        self._visibility["plots_class"] = -1
-
-
-@dataclass
 class ConfigNLPCausalLMDataset(DefaultConfig):
     dataset_class: Any = (
         llm_studio.src.datasets.text_causal_language_modeling_ds.CustomDataset
@@ -239,12 +128,12 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
 
     prompt_column: Tuple[str, ...] = ("instruction", "input")
     answer_column: str = "output"
-    text_prompt_start: str = ""
-    text_answer_separator: str = "\\n"
+    text_prompt_start: str = "<|prompt|>"
+    text_answer_separator: str = "<|answer|>"
 
     add_eos_token_to_prompt: bool = True
     add_eos_token_to_answer: bool = True
-    mask_prompt_labels: bool = False
+    mask_prompt_labels: bool = True
 
     _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq")
 
@@ -354,6 +243,105 @@ class ConfigNLPAugmentation(DefaultConfig):
         super().__post_init__()
         self._possible_values["token_mask_probability"] = (0, 0.9, 0.05)
         self._visibility["nlp_augmentations_class"] = -1
+
+
+@dataclass
+class ConfigNLPCausalLMPrediction(DefaultConfig):
+    metric_class: Any = text_causal_language_modeling_metrics.Metrics
+    metric: str = "GPT3.5"
+
+    min_length_inference: int = 2
+    max_length_inference: int = 256
+    batch_size_inference: int = 0
+
+    do_sample: bool = False
+    num_beams: int = 2
+    temperature: float = 0.3
+    repetition_penalty: float = 1.2
+    stop_tokens: str = ""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self._possible_values["metric"] = self.metric_class.names()
+
+        self._possible_values["batch_size_inference"] = (0, 512, 1)
+        self._possible_values["min_length_inference"] = (0, 1024, 1)
+        self._possible_values["max_length_inference"] = (1, 1024, 1)
+
+        self._possible_values["num_beams"] = (1, 10, 1)
+        self._possible_values["temperature"] = (0, 10, 0.05)
+        self._possible_values["repetition_penalty"] = (1, 10, 0.05)
+
+        self._visibility["metric_class"] = -1
+
+
+@dataclass
+class ConfigNLPCausalLMEnvironment(DefaultConfig):
+    gpus: Tuple[str, ...] = tuple(str(x) for x in range(torch.cuda.device_count()))
+
+    mixed_precision: bool = True
+
+    compile_model: bool = False
+    use_fsdp: bool = False
+
+    find_unused_parameters: bool = False
+    sync_batch_normalization: bool = False
+    trust_remote_code: bool = False
+    number_of_workers: int = 4
+    seed: int = -1
+    openai_api_token: str = ""
+
+    _seed: int = 0  # internal seed set in train.py (equals seed if seed is not -1)
+    _distributed: bool = False
+    _distributed_inference: bool = True
+    _local_rank: int = 0
+    _world_size: int = 1
+    _curr_step: int = 0
+    _curr_val_step: int = 0
+    _rank: int = 0  # global rank
+    _device: str = "cuda"
+    _cpu_comm: Any = None
+
+    def __post_init__(self):
+        super().__post_init__()
+        self._possible_values["gpus"] = possible_values.String(
+            values=tuple(
+                [(str(x), f"GPU #{x+1}") for x in range(torch.cuda.device_count())]
+            ),
+            allow_custom=False,
+        )
+
+        self._possible_values["number_of_workers"] = (1, multiprocessing.cpu_count(), 1)
+        self._possible_values["seed"] = possible_values.Number(step=1, min=-1)
+
+        if torch.cuda.device_count() <= 1:
+            self._visibility["sync_batch_normalization"] = -1
+
+
+@dataclass
+class ConfigNLPCausalLMLogging(DefaultConfig):
+    logger: str = "None"
+    neptune_api_token: str = ""
+    neptune_project: str = ""
+    _neptune_debug: bool = False
+
+    plots_class: Any = text_causal_language_modeling_plots.Plots
+    number_of_texts: int = 10
+
+    # the actual logger, will be set dynamically at runtime
+    _logger: Any = None
+
+    def __post_init__(self):
+        super().__post_init__()
+        self._possible_values["logger"] = Loggers.names()
+        self._possible_values["number_of_texts"] = (0, 20, 2)
+
+        self._nesting.add(
+            ["neptune_api_token", "neptune_project"],
+            [Dependency(key="logger", value="Neptune", is_set=True)],
+        )
+
+        self._visibility["plots_class"] = -1
 
 
 @dataclass
