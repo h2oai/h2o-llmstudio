@@ -289,8 +289,6 @@ class CustomDataset(Dataset):
             parent_idx = self.id_to_idx.get(self.parent_ids[idx], None)
             if parent_idx is not None:
                 prompt = self._concat_samples(prompt, int(parent_idx))
-                print(prompt)
-                print("================")
 
         if (
             self.mode == "train"
