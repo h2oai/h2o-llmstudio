@@ -185,16 +185,11 @@ class CustomDataset(Dataset):
         cfg: Any,
     ):
         output["predicted_text"] = output["predicted_text"].tolist()
-        # output["predicted_text"] = [
-        #     predicted_text[len(prompt) :].strip()
-        #     for predicted_text, prompt in zip(output["predicted_text"], prompts)
-        # ]
-
         for j in range(len(output["predicted_text"])):
             curr_text = output["predicted_text"][j].strip()
             for stop_token in cfg.tokenizer._stop_words:
-                if curr_text.endswith(stop_token):
-                    curr_text = curr_text[: -len(stop_token)]
+                if curr_text.find(stop_token) != -1:
+                    curr_text = curr_text[: curr_text.find(stop_token)]
             output["predicted_text"][j] = curr_text.strip()
 
         return output
