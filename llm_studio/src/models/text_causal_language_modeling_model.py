@@ -28,14 +28,19 @@ class TokenStoppingCriteria(StoppingCriteria):
         self.stop_word_ids = stop_word_ids
 
     def should_stop(
-            self, generated_ids: torch.LongTensor, stop_word_id: torch.Tensor,
+        self,
+        generated_ids: torch.LongTensor,
+        stop_word_id: torch.Tensor,
     ):
         if len(stop_word_id.shape) == 0:
             return (
-                    torch.mean(((generated_ids == stop_word_id).sum(1) > 0).float()) == 1
+                torch.mean(((generated_ids == stop_word_id).sum(1) > 0).float()) == 1
             ).item()
         else:
-            return self.get_num_vector_found_in_matrix_rows(stop_word_id, generated_ids) == generated_ids.shape[0]
+            return (
+                self.get_num_vector_found_in_matrix_rows(stop_word_id, generated_ids)
+                == generated_ids.shape[0]
+            )
 
     @staticmethod
     def get_num_vector_found_in_matrix_rows(vector, matrix):
@@ -51,16 +56,16 @@ class TokenStoppingCriteria(StoppingCriteria):
             # stride through the vector
             for i in range(len(row) - len(vector) + 1):
                 # check if the vector contains the tensor
-                if torch.all(row[i:i + len(vector)] == vector):
+                if torch.all(row[i : i + len(vector)] == vector):
                     found += 1
                     break
 
         return found
 
     def __call__(
-            self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
+        self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
     ):
-        generated_ids = input_ids[:, self.prompt_input_ids_len:]
+        generated_ids = input_ids[:, self.prompt_input_ids_len :]
         for stop_word_id in self.stop_word_ids:
             if self.should_stop(generated_ids, stop_word_id.to(generated_ids.device)):
                 return True
@@ -107,7 +112,7 @@ class Model(nn.Module):
 
     def generate(self, batch: Dict, cfg: Any):
         pad_token_id = (
-                self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
+            self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
         )
 
         batch = batch_padding(
@@ -158,9 +163,9 @@ class Model(nn.Module):
         return output
 
     def forward(
-            self,
-            batch: Dict,
-            calculate_loss: bool = True,
+        self,
+        batch: Dict,
+        calculate_loss: bool = True,
     ) -> Dict:
         outputs: Dict = {}
 
