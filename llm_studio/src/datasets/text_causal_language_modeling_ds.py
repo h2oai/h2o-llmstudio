@@ -74,7 +74,7 @@ class CustomDataset(Dataset):
                 )
             else:
                 self.parent_ids = self.df[self.cfg.dataset.parent_column].values
-                self.id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
+                self.df_id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
 
         self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.prompts]
 
@@ -291,7 +291,7 @@ class CustomDataset(Dataset):
         if self.parent_ids is not None:
             parent_idx = idx
             while (
-                parent_idx := self.id_to_idx.get(self.parent_ids[parent_idx], None)
+                parent_idx := self.df_id_to_idx.get(self.parent_ids[parent_idx], None)
             ) is not None:
                 if (
                     self.mode == "train"
