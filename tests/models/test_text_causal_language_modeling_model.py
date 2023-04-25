@@ -41,3 +41,11 @@ def test_token_stopping_criteria():
     assert not token_stopping_criteria(input_ids=input_ids[:, :6], scores=None)
     assert not token_stopping_criteria(input_ids=input_ids[:, :7], scores=None)
     assert token_stopping_criteria(input_ids=input_ids[:, :8], scores=None)
+
+    # Test stopping criteria with stop word ids being longer than generated text
+    token_stopping_criteria = TokenStoppingCriteria(
+        stop_word_ids=torch.tensor([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]]),
+        prompt_input_ids_len=0,
+    )
+
+    assert not token_stopping_criteria(input_ids=input_ids, scores=None)
