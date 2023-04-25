@@ -71,7 +71,7 @@ class CustomDataset(Dataset):
                 logger.warning(
                     f"When using parent column, the dataframe requires an 'id' column. "
                     f"Disabling functionality for mode {self.mode}."
-                )  
+                )
             else:
                 self.parent_ids = self.df[self.cfg.dataset.parent_column].values
                 self.id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}

@@ -2072,20 +2072,20 @@ def prepare_default_dataset(path):
         ["instruction", "output", "message_id", "parent_id", "lang", "rank"]
     ].rename(columns={"message_id": "id"})
 
-    df_assistant[(df_assistant["rank"]==0.0) & (df_assistant["lang"]=="en")][
+    df_assistant[(df_assistant["rank"] == 0.0) & (df_assistant["lang"] == "en")][
         ["instruction", "output", "id", "parent_id"]
     ].to_parquet(os.path.join(path, "train_full.pq"), index=False)
 
-    df_assistant[df_assistant["lang"]=="en"][
+    df_assistant[df_assistant["lang"] == "en"][
         ["instruction", "output", "id", "parent_id"]
     ].to_parquet(os.path.join(path, "train_full_allrank.pq"), index=False)
 
-    df_assistant[df_assistant["rank"]==0.0][
+    df_assistant[df_assistant["rank"] == 0.0][
         ["instruction", "output", "id", "parent_id"]
     ].to_parquet(os.path.join(path, "train_full_multilang.pq"), index=False)
-    
-    df_assistant[
-        ["instruction", "output", "id", "parent_id"]
-    ].to_parquet(os.path.join(path, "train_full_multilang_allrank.pq"), index=False)
 
-    return df_assistant[(df_assistant["rank"]==0.0) & (df_assistant["lang"]=="en")]
+    df_assistant[["instruction", "output", "id", "parent_id"]].to_parquet(
+        os.path.join(path, "train_full_multilang_allrank.pq"), index=False
+    )
+
+    return df_assistant[(df_assistant["rank"] == 0.0) & (df_assistant["lang"] == "en")]

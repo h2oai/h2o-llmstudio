@@ -1,5 +1,5 @@
-from copy import copy
 import os
+from copy import copy
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -550,10 +550,6 @@ def run(cfg: Any) -> None:
                 for param in module.parameters():
                     param.requires_grad = True
                     param.data = param.data.float()
-
-    for name, param in model.named_parameters():
-        trainable_status = "trainable" if param.requires_grad else "not trainable"
-        print(f"{name}: {trainable_status}")
 
     if cfg.environment._distributed:
         model = wrap_model_distributed(model, cfg, cfg.environment.use_fsdp)

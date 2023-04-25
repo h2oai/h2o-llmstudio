@@ -19,6 +19,7 @@ It is possible to tune the following parameters:
 - **Max Length Answer:** The maximum sequence length of the answer to use during training.
 - **Max Length:** The maximum sequence length of both prompt and answer to use during training.
 - **Padding Quantile:** Truncates batches to the maximum sequence length based on specified quantile; setting to 0 disables this functionality.
+- **Add Prompt Answer Tokens:** Adds prompt and answer tokens as new tokens to the tokenizer. It is recommended to also set `Force Embedding Gradients` in this case.
 
 ### **Augmentation Parameters**
 - **Token Mask Probability:** The probability of masking each token during training.
