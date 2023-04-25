@@ -16,6 +16,7 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMTraining,
     ConfigProblemBase,
 )
+from llm_studio.src.utils.modeling_utils import generate_experiment_name
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 
 
@@ -207,9 +208,9 @@ def load_config_yaml(path: str) -> ConfigProblemBase:
         cfg_dict = yaml.load(fp, Loader=yaml.FullLoader)
 
     cfg = ConfigProblemBase(
-        output_directory=cfg_dict["output_directory"],
-        experiment_name=cfg_dict["experiment_name"],
-        llm_backbone=cfg_dict["llm_backbone"],
+        output_directory=cfg_dict.get("output_directory", ConfigProblemBase.output_directory),
+        experiment_name=cfg_dict.get("experiment_name", generate_experiment_name()),
+        llm_backbone=cfg_dict.get("llm_backbone", ConfigProblemBase.llm_backbone),
         dataset=ConfigNLPCausalLMDataset.from_dict(cfg_dict.get("dataset", {})),
         tokenizer=ConfigNLPCausalLMTokenizer.from_dict(cfg_dict.get("tokenizer", {})),
         augmentation=ConfigNLPAugmentation.from_dict(cfg_dict.get("augmentation", {})),
