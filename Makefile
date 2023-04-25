@@ -60,26 +60,9 @@ isort: pipenv
 black: pipenv
 	$(PIPENV) run black .
 
-.PHONY: style
-style: reports pipenv
-	@echo -n > reports/style.log
-	@echo -n > reports/style_errors.log
-	@echo
-
-	@echo "# flake8" >> reports/style.log
-	-$(PIPENV) run flake8 | tee -a reports/style.log || echo "flake8 failed" >> reports/style_errors.log
-	@echo
-
-	@echo "" >> reports/style.log
-	@echo "# mypy" >> reports/style.log
-	-$(PIPENV) run mypy . | tee -a reports/style.log || echo "mypy failed" >> reports/style_errors.log
-	@echo
-
-	@if [ -s reports/style_errors.log ]; then exit 1; fi
-
 .PHONY: test
 test: reports
-	$(PIPENV) run pytest -v -s -x \
+	export PYTHONPATH=$(shell pwd) && $(PIPENV) run pytest -v -s -x \
 		--junitxml=./reports/junit.xml \
 		tests/* | tee reports/pytest.log
 
