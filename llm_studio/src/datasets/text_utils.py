@@ -88,5 +88,7 @@ def get_tokenizer(cfg: Any):
                 "input_ids"
             ][0]
         )
+    if cfg.environment._local_rank == 0:
+        logger.info(f"Stop token ids: {cfg.tokenizer._stop_words_ids}")
 
     return tokenizer
