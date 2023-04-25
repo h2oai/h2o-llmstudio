@@ -182,8 +182,10 @@ class CustomDataset(Dataset):
         for j in range(len(output["predicted_text"])):
             curr_text = output["predicted_text"][j].strip()
             for stop_token in cfg.tokenizer._stop_words:
-                if curr_text.endswith(stop_token):
-                    curr_text = curr_text[: -len(stop_token)]
+                # Do not trim if stop token happens to be part of a regular word
+                stop_token_expanded = f" {stop_token} "
+                if curr_text.find(stop_token_expanded) != -1:
+                    curr_text = curr_text[: curr_text.find(stop_token_expanded)]
             output["predicted_text"][j] = curr_text.strip()
 
         return output

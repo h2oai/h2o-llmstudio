@@ -14,18 +14,33 @@ from llm_studio.src.utils.modeling_utils import create_nlp_backbone
 logger = logging.getLogger(__name__)
 
 
-class StoppingCriteriaSub(StoppingCriteria):
-    def __init__(self, cfg, stops=[], encounters=1):
+class TokenStoppingCriteria(StoppingCriteria):
+    """
+    Stopping criteria based on tokens.
+    Will stop generation when each generated sample contains at least one of the stop_word_ids.
+    """
+
+    def __init__(self, stop_word_ids, prompt_input_ids_len):
         super().__init__()
-        self.stops = [stop.to(cfg.environment._device) for stop in stops]
-        if cfg.environment._local_rank == 0:
-            logger.info(f"Stopping criteria tokens: {self.stops}")
+        self.prompt_input_ids_len = prompt_input_ids_len
+        if stop_word_ids is None:
+            stop_word_ids = []
+        self.stop_word_ids = stop_word_ids
 
-    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor):
-        for stop in self.stops:
-            if torch.all((stop == input_ids[0][-len(stop) :])).item():
+    def should_stop(
+        self, generated_ids: torch.LongTensor, stop_word_id: torch.FloatTensor
+    ):
+        return (
+            torch.mean(((generated_ids == stop_word_id).sum(1) > 0).float()) == 1
+        ).item()
+
+    def __call__(
+        self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
+    ):
+        generated_ids = input_ids[:, len(self.prompt_input_ids_len)]
+        for stop_word_id in self.stop_word_ids:
+            if self.should_stop(generated_ids, stop_word_id.to(generated_ids.device)):
                 return True
-
         return False
 
 
@@ -67,16 +82,6 @@ class Model(nn.Module):
 
         self.loss_fn = self.cfg.training.loss_class.get(self.cfg.training.loss_function)
 
-        if (
-            hasattr(self.cfg.tokenizer, "_stop_words_ids")
-            and len(self.cfg.tokenizer._stop_words_ids) > 0
-        ):
-            self.stopping_criteria = StoppingCriteriaList(
-                [StoppingCriteriaSub(cfg=cfg, stops=self.cfg.tokenizer._stop_words_ids)]
-            )
-        else:
-            self.stopping_criteria = None
-
     def generate(self, batch: Dict, cfg: Any):
         pad_token_id = (
             self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
@@ -97,6 +102,11 @@ class Model(nn.Module):
         generation_function: GenerationMixin.generate = self.backbone.generate
 
         verbosity = transformers_logging.get_verbosity()
+        stopping_criteria = TokenStoppingCriteria(
+            stop_word_ids=self.cfg.tokenizer._stop_words_ids,
+            prompt_input_ids_len=batch["prompt_input_ids"].shape[1],
+        )
+
         transformers_logging.set_verbosity_error()
         output = generation_function(
             inputs=batch["prompt_input_ids"],
@@ -108,13 +118,14 @@ class Model(nn.Module):
             num_beams=cfg.prediction.num_beams,
             temperature=float(cfg.prediction.temperature),
             repetition_penalty=float(cfg.prediction.repetition_penalty),
-            stopping_criteria=self.stopping_criteria,
+            stopping_criteria=stopping_criteria,
             renormalize_logits=True,
             return_dict_in_generate=False,
             use_cache=True,
         )
         transformers_logging.set_verbosity(verbosity)
 
+        # Mask the prompt tokens
         output[:, : batch["prompt_input_ids"].shape[1]] = pad_token_id
 
         return output
@@ -150,9 +161,6 @@ class Model(nn.Module):
                 outputs["loss"] = output.loss
 
         if not self.training:
-            # if `return_dict_in_generate` is false, `generate` just returns
-            # a LongTensor, so we have to ignore the type annotation of the method.
-
             outputs["predicted_answer_ids"] = self.generate(batch, self.cfg)
 
         return outputs
