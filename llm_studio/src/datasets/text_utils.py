@@ -73,7 +73,10 @@ def get_tokenizer(cfg: Any):
         cfg.dataset.text_prompt_start, "unicode_escape"
     ).strip()
     if text_prompt_start != "":
-        if text_prompt_start not in tokenizer.get_vocab():
+        if (
+            cfg.tokenizer.add_prompt_answer_tokens
+            and text_prompt_start not in tokenizer.get_vocab()
+        ):
             tokenizer.add_tokens([text_prompt_start])
 
         cfg.tokenizer._stop_words.append(text_prompt_start)
@@ -89,7 +92,10 @@ def get_tokenizer(cfg: Any):
         cfg.dataset.text_answer_separator, "unicode_escape"
     ).strip()
     if text_answer_separator != "":
-        if text_answer_separator not in tokenizer.get_vocab():
+        if (
+            cfg.tokenizer.add_prompt_answer_tokens
+            and text_answer_separator not in tokenizer.get_vocab()
+        ):
             tokenizer.add_tokens([text_answer_separator])
 
         cfg.tokenizer._stop_words.append(text_answer_separator)
