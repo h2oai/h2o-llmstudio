@@ -1,7 +1,6 @@
 import logging
 import os
 
-from app_utils.migration import migrate_app
 from llm_studio.src.utils.logging_utils import initialize_logging
 
 os.environ["MKL_THREADING_LAYER"] = "GNU"
@@ -30,7 +29,6 @@ async def serve(q: Q):
     copy_expando(q.args, q.client)
 
     await initialize_client(q)
-    await migrate_app(q)
     await handle(q)
 
     if not q.args["experiment/display/chat/chatbot"]:
