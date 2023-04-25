@@ -26,6 +26,7 @@ from app_utils.sections.experiment import (
     experiment_download_predictions,
     experiment_list,
     experiment_push_to_huggingface_dialog,
+    experiment_download_model,
     experiment_rename_ui_workflow,
     experiment_run,
     experiment_start,
@@ -297,6 +298,8 @@ async def handle(q: Q) -> None:
             await experiment_display(q)
         elif q.args["experiment/display/push_to_huggingface"]:
             await experiment_push_to_huggingface_dialog(q)
+        elif q.args["experiment/display/download_model"]:
+            await experiment_download_model(q)
         elif q.args["experiment/display/push_to_huggingface_submit"]:
             await experiment_push_to_huggingface_dialog(q)
 
