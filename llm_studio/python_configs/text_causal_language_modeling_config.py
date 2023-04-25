@@ -21,6 +21,78 @@ from llm_studio.src.utils.modeling_utils import generate_experiment_name
 
 
 @dataclass
+class ConfigNLPCausalLMDataset(DefaultConfig):
+    dataset_class: Any = (
+        llm_studio.src.datasets.text_causal_language_modeling_ds.CustomDataset
+    )
+    train_dataframe: str = "/path/to/train.csv"
+    validation_strategy: str = "automatic"
+    validation_dataframe: str = ""
+    validation_size: float = 0.01
+
+    data_sample: float = 1.0
+    data_sample_choice: Tuple[str, ...] = ("Train", "Validation")
+
+    prompt_column: Tuple[str, ...] = ("instruction", "input")
+    answer_column: str = "output"
+    parent_id_column: str = "None"
+
+    text_prompt_start: str = "<|prompt|>"
+    text_answer_separator: str = "<|answer|>"
+
+    add_eos_token_to_prompt: bool = True
+    add_eos_token_to_answer: bool = True
+    mask_prompt_labels: bool = True
+
+    _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq")
+
+    def __post_init__(self):
+        super().__post_init__()
+
+        self._possible_values["train_dataframe"] = possible_values.Files(
+            prefer_with=lambda path: "train" in path
+        )
+        self._possible_values["validation_strategy"] = possible_values.String(
+            values=(
+                ("custom", "Custom holdout validation"),
+                ("automatic", "Automatic holdout validation"),
+            ),
+            allow_custom=False,
+        )
+        self._possible_values["validation_dataframe"] = possible_values.Files(
+            add_none=True, prefer_with=lambda path: "val" in path
+        )
+        self._possible_values["validation_size"] = (0.01, 0.95, 0.01)
+        self._possible_values["data_sample"] = (0.05, 1, 0.05)
+        self._possible_values["data_sample_choice"] = ["Train", "Validation"]
+        self._possible_values["prompt_column"] = possible_values.Columns(
+            prefer_with=lambda column: column in ("instruction", "prompt")
+        )
+        self._possible_values["answer_column"] = possible_values.Columns(
+            prefer_with=lambda column: column in ("answer", "output")
+        )
+        self._possible_values["parent_id_column"] = possible_values.Columns(
+            prefer_with=lambda column: column in ("parent",), add_none=True
+        )
+
+        self._nesting.add(
+            ["validation_dataframe"],
+            [Dependency(key="validation_strategy", value="custom", is_set=True)],
+        )
+
+        self._nesting.add(
+            ["validation_size"],
+            [Dependency(key="validation_strategy", value="automatic", is_set=True)],
+        )
+        self._nesting.add(
+            ["data_sample_choice"],
+            [Dependency(key="data_sample", value=1, is_set=False)],
+        )
+
+        self._visibility["dataset_class"] = -1
+
+
+@dataclass
 class ConfigNLPCausalLMTraining(DefaultConfig):
     loss_class: Any = classification_losses.Losses
     loss_function: str = "CrossEntropy"
@@ -114,85 +186,12 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
 
 
 @dataclass
-class ConfigNLPCausalLMDataset(DefaultConfig):
-    dataset_class: Any = (
-        llm_studio.src.datasets.text_causal_language_modeling_ds.CustomDataset
-    )
-    train_dataframe: str = "/path/to/train.csv"
-    validation_strategy: str = "automatic"
-    validation_dataframe: str = ""
-    validation_size: float = 0.01
-
-    data_sample: float = 1.0
-    data_sample_choice: Tuple[str, ...] = ("Train", "Validation")
-
-    prompt_column: Tuple[str, ...] = ("instruction", "input")
-    answer_column: str = "output"
-    text_prompt_start: str = "<|prompt|>"
-    text_answer_separator: str = "<|answer|>"
-
-    add_eos_token_to_prompt: bool = True
-    add_eos_token_to_answer: bool = True
-    mask_prompt_labels: bool = True
-
-    _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq")
-
-    def __post_init__(self):
-        self.prompt_column = (
-            tuple(
-                self.prompt_column,
-            )
-            if isinstance(self.prompt_column, str)
-            else tuple(self.prompt_column)
-        )
-        super().__post_init__()
-
-        self._possible_values["train_dataframe"] = possible_values.Files(
-            prefer_with=lambda path: "train" in path
-        )
-        self._possible_values["validation_strategy"] = possible_values.String(
-            values=(
-                ("custom", "Custom holdout validation"),
-                ("automatic", "Automatic holdout validation"),
-            ),
-            allow_custom=False,
-        )
-        self._possible_values["validation_dataframe"] = possible_values.Files(
-            add_none=True, prefer_with=lambda path: "val" in path
-        )
-        self._possible_values["validation_size"] = (0.01, 0.95, 0.01)
-        self._possible_values["data_sample"] = (0.05, 1, 0.05)
-        self._possible_values["data_sample_choice"] = ["Train", "Validation"]
-        self._possible_values["prompt_column"] = possible_values.Columns(
-            prefer_with=lambda column: column in ("Instruction", "prompt")
-        )
-        self._possible_values["answer_column"] = possible_values.Columns(
-            prefer_with=lambda column: column in ("answer", "output")
-        )
-
-        self._nesting.add(
-            ["validation_dataframe"],
-            [Dependency(key="validation_strategy", value="custom", is_set=True)],
-        )
-
-        self._nesting.add(
-            ["validation_size"],
-            [Dependency(key="validation_strategy", value="automatic", is_set=True)],
-        )
-        self._nesting.add(
-            ["data_sample_choice"],
-            [Dependency(key="data_sample", value=1, is_set=False)],
-        )
-
-        self._visibility["dataset_class"] = -1
-
-
-@dataclass
 class ConfigNLPCausalLMTokenizer(DefaultConfig):
     max_length_prompt: int = 256
     max_length_answer: int = 256
     max_length: int = 512
     padding_quantile: float = 1.0
+    add_prompt_answer_tokens: bool = False
     add_prefix_space: bool = False
 
     def __post_init__(self):
@@ -238,10 +237,14 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
 class ConfigNLPAugmentation(DefaultConfig):
     nlp_augmentations_class: Any = BaseNLPAug
     token_mask_probability: float = 0
+    skip_parent_probability: float = 0
+    random_parent_probability: float = 0
 
     def __post_init__(self):
         super().__post_init__()
         self._possible_values["token_mask_probability"] = (0, 0.9, 0.05)
+        self._possible_values["skip_parent_probability"] = (0, 1.0, 0.05)
+        self._possible_values["random_parent_probability"] = (0, 1.0, 0.05)
         self._visibility["nlp_augmentations_class"] = -1
 
 
@@ -354,13 +357,13 @@ class ConfigProblemBase(DefaultConfig):
     tokenizer: ConfigNLPCausalLMTokenizer = field(
         default_factory=ConfigNLPCausalLMTokenizer
     )
-    augmentation: ConfigNLPAugmentation = field(default_factory=ConfigNLPAugmentation)
     architecture: ConfigNLPCausalLMArchitecture = field(
         default_factory=ConfigNLPCausalLMArchitecture
     )
     training: ConfigNLPCausalLMTraining = field(
         default_factory=ConfigNLPCausalLMTraining
     )
+    augmentation: ConfigNLPAugmentation = field(default_factory=ConfigNLPAugmentation)
     prediction: ConfigNLPCausalLMPrediction = field(
         default_factory=ConfigNLPCausalLMPrediction
     )
