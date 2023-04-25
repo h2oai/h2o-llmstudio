@@ -2,6 +2,7 @@ import gc
 import logging
 import os
 import shutil
+import zipfile
 from typing import Callable, List, Optional
 
 import huggingface_hub
@@ -11,7 +12,6 @@ import torch
 import yaml
 from h2o_wave import Q, data, ui
 from sqlitedict import SqliteDict
-import zipfile
 
 from app_utils.config import default_cfg
 from app_utils.utils import (
@@ -44,15 +44,15 @@ from llm_studio.src.utils.export_utils import (
     check_available_space,
     get_artifact_path_path,
     get_logs_path,
-    get_predictions_path,
     get_model_path,
+    get_predictions_path,
     get_size_str,
     save_logs,
     save_prediction_outputs,
 )
 from llm_studio.src.utils.logging_utils import write_flag
 from llm_studio.src.utils.modeling_utils import load_checkpoint, unwrap_model
-from llm_studio.src.utils.utils import kill_child_processes, add_file_to_zip
+from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
 
 from .common import clean_dashboard
 
@@ -1524,7 +1524,8 @@ async def experiment_download_model(q: Q, error: str = ""):
         cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path, device="cpu")
         if hasattr(cfg.training, "lora") and cfg.training.lora:
             # merges the LoRa layers into the base model.
-            # This is needed if someone wants to use the base model as a standalone model.
+            # This is needed if someone wants to use the base model as a standalone
+            # model.
             model.backbone = model.backbone.merge_and_unload()
 
         model = unwrap_model(model)
@@ -1592,7 +1593,8 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path, device="cpu")
         if hasattr(cfg.training, "lora") and cfg.training.lora:
             # merges the LoRa layers into the base model.
-            # This is needed if someone wants to use the base model as a standalone model.
+            # This is needed if someone wants to use the base model as a standalone
+            # model.
             model.backbone = model.backbone.merge_and_unload()
 
         huggingface_hub.login(

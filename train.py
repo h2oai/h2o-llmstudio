@@ -392,9 +392,7 @@ def run_train(
                                 f"{val_metric:.5} to {checkpoint_path}"
                             )
 
-                            save_checkpoint(
-                                model=model, path=checkpoint_path, cfg=cfg
-                            )
+                            save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
                         best_val_metric = val_metric
 
                 model.train()
