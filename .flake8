@@ -1,5 +1,5 @@
 [flake8]
-exclude=.cache, .local, server.wave, llm_studio/src/models/segmentation_models_pytorch
+exclude=.cache, .local, server.wave
 max-line-length = 88
 # E203, W503 - black-compatible config
 extend-ignore = E203, W503
