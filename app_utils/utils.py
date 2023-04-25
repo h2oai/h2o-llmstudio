@@ -1841,7 +1841,6 @@ def get_single_gpu_usage(sig_figs=1, highlight=None):
     return items
 
 
-def prepare_default_dataset(path):
 def copy_config(cfg: Any) -> Any:
     """Makes a copy of the config
 
@@ -1883,7 +1882,7 @@ def get_cfg_list_items(cfg) -> List:
     return x
 
 
-def prepare_default_dataset():
+def prepare_default_dataset(path):
     ds = load_dataset("OpenAssistant/oasst1")
     train = ds["train"].to_pandas()
     val = ds["validation"].to_pandas()

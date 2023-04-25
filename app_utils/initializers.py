@@ -45,7 +45,7 @@ def import_data(q: Q):
             )
 
             cfg.dataset.train_dataframe = os.path.join(path, "train_full.pq")
-            cfg.dataset.prompt_column = "instruction"
+            cfg.dataset.prompt_column = "instruction",
             cfg.dataset.answer_column = "output"
             cfg.dataset.parent_id_column = "None"
 
