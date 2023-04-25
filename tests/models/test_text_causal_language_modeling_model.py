@@ -23,3 +23,11 @@ def test_token_stopping_criteria():
     # first item reads [ 0,  1,  2,  3,  4,  5], so do not trigger stopping criteria
     assert not token_stopping_criteria(input_ids=input_ids[:, :6], scores=None)
     assert token_stopping_criteria(input_ids=input_ids[:, :7], scores=None)
+
+    # Test stopping criteria with compound tokens
+    token_stopping_criteria = TokenStoppingCriteria(stop_word_ids=torch.tensor([[6, 7]]), prompt_input_ids_len=0)
+
+    # first item reads [ 0,  1,  2,  3,  4,  5], so do not trigger stopping criteria
+    assert not token_stopping_criteria(input_ids=input_ids[:, :6], scores=None)
+    assert not token_stopping_criteria(input_ids=input_ids[:, :7], scores=None)
+    assert token_stopping_criteria(input_ids=input_ids[:, :8], scores=None)
