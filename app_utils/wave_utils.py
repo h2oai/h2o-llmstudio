@@ -361,7 +361,9 @@ async def report_error(q: Q):
     await q.page.save()
 
 
-async def busy_dialog(q: Q, title: str = "", text: str = "") -> None:
+async def busy_dialog(
+    q: Q, title: str = "", text: str = "", force_wait: bool = False
+) -> None:
     """Creates busy dialog"""
 
     q.page["meta"].dialog = ui.dialog(
@@ -373,5 +375,6 @@ async def busy_dialog(q: Q, title: str = "", text: str = "") -> None:
         blocking=True,
     )
     await q.page.save()
-    await q.sleep(0.1)
+    if force_wait:
+        await q.sleep(1)
     q.page["meta"].dialog = None
