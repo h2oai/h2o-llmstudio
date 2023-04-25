@@ -47,7 +47,7 @@ prediction:
     min_length_inference: 2
     num_beams: 2
     repetition_penalty: 1.2
-    stop_tokens: []
+    stop_tokens: ""
     temperature: 0.3
 tokenizer:
     max_length: 144

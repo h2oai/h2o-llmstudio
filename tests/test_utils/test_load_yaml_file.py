@@ -53,7 +53,7 @@ def test_load_config_yaml():
     assert cfg.prediction.min_length_inference == 2
     assert cfg.prediction.num_beams == 2
     assert cfg.prediction.repetition_penalty == 1.2
-    assert cfg.prediction.stop_tokens == []
+    assert cfg.prediction.stop_tokens == ""
     assert cfg.prediction.temperature == 0.3
 
     assert cfg.tokenizer.max_length == 144
