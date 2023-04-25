@@ -186,18 +186,10 @@ class CustomDataset(Dataset):
     ):
         output["predicted_text"] = output["predicted_text"].tolist()
         for j in range(len(output["predicted_text"])):
-            # Add " " at beginning and end to not miss stop tokens at beginning and end
-            curr_text = " " + output["predicted_text"][j].strip() + " "
+            curr_text = output["predicted_text"][j].strip()
             for stop_token in cfg.tokenizer._stop_words:
-                # Do not trim if stop token happens to be part of a regular word
-                seperators = [" ", "\n"]
-                for sep1 in seperators:
-                    for sep2 in seperators:
-                        stop_token_expanded = f"{sep1}{stop_token}{sep2}"
-                        if curr_text.find(stop_token_expanded) != -1:
-                            curr_text = (
-                                curr_text[: curr_text.find(stop_token_expanded)] + " "
-                            )
+                if curr_text.find(stop_token) != -1:
+                    curr_text = curr_text[: curr_text.find(stop_token)]
             output["predicted_text"][j] = curr_text.strip()
 
         return output
