@@ -15,6 +15,9 @@ def test_clean_output():
                 "This is a test <stop3> <stop> This is a test",
                 "<stop2> <stop> This is a test",
                 "This is a test <stop>",
+                "Hello\n<stop> This is a test",
+                "Hello \n<stop>\n This is a test",
+                "This is a test \n<stop>\n",
             ]
         )
     }
@@ -32,4 +35,7 @@ def test_clean_output():
         "This is a test",
         "",
         "This is a test",
+        "Hello",
+        "Hello",
+        "This is a test"
     ]

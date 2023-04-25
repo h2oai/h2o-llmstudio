@@ -190,9 +190,14 @@ class CustomDataset(Dataset):
             curr_text = " " + output["predicted_text"][j].strip() + " "
             for stop_token in cfg.tokenizer._stop_words:
                 # Do not trim if stop token happens to be part of a regular word
-                stop_token_expanded = f" {stop_token} "
-                if curr_text.find(stop_token_expanded) != -1:
-                    curr_text = curr_text[: curr_text.find(stop_token_expanded)] + " "
+                seperators = [" ", "\n"]
+                for sep1 in seperators:
+                    for sep2 in seperators:
+                        stop_token_expanded = f"{sep1}{stop_token}{sep2}"
+                        if curr_text.find(stop_token_expanded) != -1:
+                            curr_text = (
+                                curr_text[: curr_text.find(stop_token_expanded)] + " "
+                            )
             output["predicted_text"][j] = curr_text.strip()
 
         return output
