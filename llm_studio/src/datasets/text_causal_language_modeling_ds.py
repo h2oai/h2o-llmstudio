@@ -65,13 +65,13 @@ class CustomDataset(Dataset):
             self.df[self.cfg.dataset.answer_column].astype(str).values.tolist()
         )
 
+        self.parent_ids = None
         if self.cfg.dataset.parent_column != "None":
             if "id" not in self.df.columns:
                 logger.warning(
-                    "When using parent column, the dataframe requires an 'id' column. "
-                    "Disabling functionality."
-                )
-                self.cfg.dataset.parent_column = "None"
+                    f"When using parent column, the dataframe requires an 'id' column. "
+                    f"Disabling functionality for mode {self.mode}."
+                )  
             else:
                 self.parent_ids = self.df[self.cfg.dataset.parent_column].values
                 self.id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
@@ -288,7 +288,7 @@ class CustomDataset(Dataset):
         prompt = self.prompts[idx]
         answer = self.answers[idx]
 
-        if self.cfg.dataset.parent_column != "None":
+        if self.parent_ids is not None:
             parent_idx = idx
             while (
                 parent_idx := self.id_to_idx.get(self.parent_ids[parent_idx], None)

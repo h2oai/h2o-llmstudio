@@ -545,9 +545,15 @@ def run(cfg: Any) -> None:
     model.to(cfg.environment._device)
 
     if cfg.architecture.force_embedding_gradients:
-        for param in model.backbone.base_model.get_input_embeddings().parameters():
-            param = param.float()
-            param.requires_grad = True
+        for module in model.modules():
+            if isinstance(module, torch.nn.Embedding):
+                for param in module.parameters():
+                    param.requires_grad = True
+                    param.data = param.data.float()
+
+    for name, param in model.named_parameters():
+        trainable_status = "trainable" if param.requires_grad else "not trainable"
+        print(f"{name}: {trainable_status}")
 
     if cfg.environment._distributed:
         model = wrap_model_distributed(model, cfg, cfg.environment.use_fsdp)
