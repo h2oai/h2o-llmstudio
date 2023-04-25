@@ -490,10 +490,7 @@ def run(cfg: Any) -> None:
             "Safeguarding against OpenAI API costs. Setting metric to BLEU. "
             "Change GPT_EVAL_MAX to run GPT validation."
         )
-        cfg.prediction.metric = "BLEU"
-
-    if cfg.environment._local_rank == 0:
-        cfg.logging._logger = MainLogger(cfg)
+        cfg.prediction.metric = "BLEU"        
 
     # prepare data
     if cfg.environment._local_rank == 0:
@@ -522,16 +519,7 @@ def run(cfg: Any) -> None:
             * (num_eval_epochs + int(cfg.training.evaluate_before_training))
             * val_batch_size
             * cfg.environment._world_size
-        )
-
-    if cfg.environment._local_rank == 0:
-        cfg.logging._logger.log(
-            "internal", "total_training_steps", total_training_steps, step=0
-        )
-
-        cfg.logging._logger.log(
-            "internal", "total_validation_steps", total_validation_steps, step=0
-        )
+        )        
 
     # Prepare model
     with torch.device(cfg.environment._device):
@@ -573,16 +561,25 @@ def run(cfg: Any) -> None:
 
     global_start_time = time.time()
     if cfg.environment._local_rank == 0:
+        # re-save cfg
+        save_config(f"{cfg.output_directory}/cfg.p", cfg)
+
+        cfg.logging._logger = MainLogger(cfg)
+
+        cfg.logging._logger.log(
+            "internal", "total_training_steps", total_training_steps, step=0
+        )
+
+        cfg.logging._logger.log(
+            "internal", "total_validation_steps", total_validation_steps, step=0
+        )
+
         cfg.logging._logger.log(
             "internal",
             "global_start_time",
             global_start_time,
             step=cfg.environment._curr_step,
         )
-        # re-save config
-        cfg_to_save = copy(cfg)
-        cfg_to_save.logging._logger.reset_external()
-        save_config(f"{cfg.output_directory}/cfg.p", cfg_to_save)
 
     val_data, val_loss, val_metric, last_batch = run_train(
         cfg=cfg,
