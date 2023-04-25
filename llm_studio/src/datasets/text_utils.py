@@ -79,4 +79,14 @@ def get_tokenizer(cfg: Any):
                 tokenizer.add_tokens([stop_word])
             cfg.tokenizer._stop_words.append(stop_word)
 
+    cfg.tokenizer._vocab_length = len(tokenizer.vocab)
+
+    cfg.tokenizer._stop_words_ids = []
+    for stop_word in set(cfg.tokenizer._stop_words):
+        cfg.tokenizer._stop_words_ids.append(
+            tokenizer(stop_word, return_tensors="pt", add_special_tokens=False)[
+                "input_ids"
+            ][0]
+        )
+
     return tokenizer
