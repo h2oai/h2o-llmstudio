@@ -37,7 +37,7 @@ class TokenStoppingCriteria(StoppingCriteria):
     def __call__(
         self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
     ):
-        generated_ids = input_ids[:, len(self.prompt_input_ids_len)]
+        generated_ids = input_ids[:, self.prompt_input_ids_len:]
         for stop_word_id in self.stop_word_ids:
             if self.should_stop(generated_ids, stop_word_id.to(generated_ids.device)):
                 return True
