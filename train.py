@@ -1,3 +1,4 @@
+from copy import copy
 import os
 
 os.environ["OMP_NUM_THREADS"] = "1"
@@ -577,7 +578,9 @@ def run(cfg: Any) -> None:
             step=cfg.environment._curr_step,
         )
         # re-save config
-        save_config(f"{cfg.output_directory}/cfg.p", cfg)
+        cfg_to_save = copy(cfg)
+        cfg_to_save.logging._logger.reset_external()
+        save_config(f"{cfg.output_directory}/cfg.p", cfg_to_save)
 
     val_data, val_loss, val_metric, last_batch = run_train(
         cfg=cfg,

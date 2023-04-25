@@ -2046,14 +2046,14 @@ def get_single_gpu_usage(sig_figs=1, highlight=None):
     return items
 
 
-def prepare_default_dataset():
+def prepare_default_dataset(path):
     ds = load_dataset("OpenAssistant/oasst1")
     train = ds["train"].to_pandas()
     val = ds["validation"].to_pandas()
 
     df = pd.concat([train, val], axis=0).reset_index(drop=True)
 
-    df_assistant = df[(df.role == "assistant") & (df["rank"] == 0.0)].copy()
+    df_assistant = df[(df.role == "assistant")].copy()
     df_prompter = df[(df.role == "prompter")].copy()
     df_prompter = df_prompter.set_index("message_id")
     df_assistant["output"] = df_assistant["text"].values
@@ -2068,11 +2068,24 @@ def prepare_default_dataset():
     df_assistant["instruction"] = inputs
     df_assistant["parent_id"] = parent_ids
 
-    df_assistant = df_assistant[df_assistant.lang == "en"]
-
     df_assistant = df_assistant[
-        ["instruction", "output", "message_id", "parent_id"]
+        ["instruction", "output", "message_id", "parent_id", "lang", "rank"]
     ].rename(columns={"message_id": "id"})
 
+    df_assistant[(df_assistant["rank"]==0.0) & (df_assistant["lang"]=="en")][
+        ["instruction", "output", "id", "parent_id"]
+    ].to_parquet(os.path.join(path, "train_full.pq"), index=False)
 
-    return df_assistant
+    df_assistant[df_assistant["lang"]=="en"][
+        ["instruction", "output", "id", "parent_id"]
+    ].to_parquet(os.path.join(path, "train_full_allrank.pq"), index=False)
+
+    df_assistant[df_assistant["rank"]==0.0][
+        ["instruction", "output", "id", "parent_id"]
+    ].to_parquet(os.path.join(path, "train_full_multilang.pq"), index=False)
+    
+    df_assistant[
+        ["instruction", "output", "id", "parent_id"]
+    ].to_parquet(os.path.join(path, "train_full_multilang_allrank.pq"), index=False)
+
+    return df_assistant[(df_assistant["rank"]==0.0) & (df_assistant["lang"]=="en")]
