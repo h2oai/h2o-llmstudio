@@ -102,12 +102,14 @@ class Model(nn.Module):
         generation_function: GenerationMixin.generate = self.backbone.generate
 
         verbosity = transformers_logging.get_verbosity()
-        stopping_criteria = StoppingCriteriaList[
-            TokenStoppingCriteria(
-                stop_word_ids=self.cfg.tokenizer._stop_words_ids,
-                prompt_input_ids_len=batch["prompt_input_ids"].shape[1],
-            )
-        ]
+        stopping_criteria = StoppingCriteriaList(
+            [
+                TokenStoppingCriteria(
+                    stop_word_ids=self.cfg.tokenizer._stop_words_ids,
+                    prompt_input_ids_len=batch["prompt_input_ids"].shape[1],
+                )
+            ]
+        )
 
         transformers_logging.set_verbosity_error()
         output = generation_function(
