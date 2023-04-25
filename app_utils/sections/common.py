@@ -91,7 +91,6 @@ async def interface(q: Q) -> None:
 
     # just to avoid flickering
     if q.client["init_interface"] is None:
-
         q.page["header"] = ui.header_card(
             box="header",
             title=default_cfg.name,

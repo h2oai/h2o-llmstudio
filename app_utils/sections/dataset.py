@@ -86,7 +86,6 @@ async def dataset_import(
     await clean_dashboard(q, mode="full")
     q.client["nav/active"] = "dataset/import"
     if step == 1:  # select import data source
-
         q.page["dataset/import"] = ui.form_card(box="content", items=[])
         q.client.delete_cards.add("dataset/import")
 
@@ -200,7 +199,6 @@ async def dataset_import(
             ]
 
         elif q.client["dataset/import/source"] == "Local":
-
             current_path = (
                 q.client["dataset/import/local_path_current"]
                 if q.client["dataset/import/local_path_current"] is not None
@@ -240,7 +238,6 @@ async def dataset_import(
             ]
 
         elif q.client["dataset/import/source"] == "Kaggle":
-
             if q.client["dataset/import/kaggle_access_key"] is None:
                 q.client["dataset/import/kaggle_access_key"] = q.client[
                     "default_kaggle_username"
@@ -555,20 +552,17 @@ async def dataset_import(
         q.client.delete_cards.add("dataset/import/footer")
 
     elif step == 6:  # create dataset
-
         if q.client["dataset/import/name"] == "":
             await clean_dashboard(q, mode="full")
             await dataset_import(q, step=2, error="Please enter all required fields!")
 
         else:
-
             folder_name = q.client["dataset/import/path"].split("/")[-1]
             new_folder = q.client["dataset/import/name"]
             act_path = q.client["dataset/import/path"]
             new_path = new_folder.join(act_path.rsplit(folder_name, 1))
 
             try:
-
                 shutil.move(q.client["dataset/import/path"], new_path)
 
                 cfg = q.client["dataset/import/cfg"]
@@ -1032,7 +1026,6 @@ async def dataset_display(q: Q) -> None:
         q.client.delete_cards.add("dataset/display/data")
 
     elif q.client["dataset/display/tab"] == "dataset/display/visualization":
-
         try:
             plot = cfg.logging.plots_class.plot_data(cfg)
         except Exception as error:
@@ -1079,7 +1072,6 @@ async def dataset_display(q: Q) -> None:
         q.client.delete_cards.add("dataset/display/statistics")
 
     elif q.client["dataset/display/tab"] == "dataset/display/summary":
-
         dataset_df = get_datasets(q)
         dataset_df = dataset_df[dataset_df.id == dataset_id]
 

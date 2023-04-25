@@ -164,7 +164,6 @@ async def handle(q: Q) -> None:
             q.client["experiment/list/mode"] = "train"
             await list_current_experiments(q)
         elif q.args["experiment/start_experiment"] or q.args["experiment/list/new"]:
-
             if q.client["experiment/list/df_experiments"] is not None:
                 selected_idx = int(q.args["experiment/list/new"])
                 experiment_id = q.client["experiment/list/df_experiments"]["id"].iloc[
@@ -352,7 +351,6 @@ async def handle(q: Q) -> None:
 
 
 async def experiment_delete_all_artifacts(q: Q, experiment_ids: List[int]):
-
     await experiment_stop(q, experiment_ids)
     await experiment_delete(q, experiment_ids)
     await list_current_experiments(q)

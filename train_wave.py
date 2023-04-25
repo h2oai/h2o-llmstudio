@@ -41,7 +41,6 @@ def check_for_done(process_queue):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="")
     parser.add_argument(
         "-C", "--config", help="config filename", default=argparse.SUPPRESS

@@ -128,7 +128,6 @@ class Model(nn.Module):
 
         # model's forward only works with labels
         if "labels" in batch:
-
             batch = batch_padding(
                 self.cfg,
                 batch,

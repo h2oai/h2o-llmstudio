@@ -75,7 +75,6 @@ async def initialize_client(q: Q) -> None:
     logger.info(f"Initializing client {q.client.client_initialized}")
 
     if not q.client.client_initialized:
-
         q.client.delete_cards = set()
         q.client.delete_cards.add("init_app")
 

@@ -179,9 +179,7 @@ class CustomDataset(Dataset):
     @staticmethod
     def clean_output(
         output: Dict,
-        prompts: List[
-            str,
-        ],
+        prompts: List[str,],
         cfg: Any,
     ):
         output["predicted_text"] = output["predicted_text"].tolist()
@@ -200,7 +198,6 @@ class CustomDataset(Dataset):
         return output
 
     def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
-
         output = self.clean_output(output, self.prompts, cfg)
 
         output["target_text"] = self.answers

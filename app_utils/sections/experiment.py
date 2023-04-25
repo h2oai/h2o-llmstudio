@@ -173,7 +173,6 @@ async def experiment_start(q: Q) -> None:
     )
 
     if len(df_experiments["id"]) > 0:
-
         if q.client["experiment/start/cfg_experiment"] is None:
             q.client["experiment/start/cfg_experiment"] = str(
                 df_experiments["id"].iloc[0]
@@ -815,7 +814,6 @@ async def experiment_stop(q: Q, experiment_ids: List[int]) -> None:
     """
 
     for experiment_id in experiment_ids:
-
         experiment = q.client.app_db.get_experiment(experiment_id)
 
         try:
@@ -960,7 +958,6 @@ async def experiment_display(q: Q) -> None:
                     q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
                     continue
     elif q.client["experiment/display/tab"] in ["experiment/display/summary"]:
-
         experiment_df = get_experiments(q)
         experiment_df = experiment_df[experiment_df.id == experiment_id]
 
@@ -1132,7 +1129,6 @@ async def parse_param(q: Q, cfg, prompt):
 
 
 async def experiment_chat(q: Q) -> None:
-
     prompt = q.client["experiment/display/chat/chatbot"]
 
     if prompt.lower().startswith("--"):
@@ -1505,7 +1501,6 @@ def get_experiment_list_message_bar(q):
 
 
 async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
-
     if q.args["experiment/display/push_to_huggingface"] or error:
         dialog_items = [
             ui.message_bar("error", error, visible=True if error else False),
