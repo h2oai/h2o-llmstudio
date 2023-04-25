@@ -36,9 +36,7 @@ def import_data(q: Q):
                 shutil.rmtree(path)
             os.makedirs(path, exist_ok=True)
 
-            df = prepare_default_dataset()
-
-            df.to_csv(os.path.join(path, "train_full.csv"), index=False)
+            df = prepare_default_dataset(path)
 
             cfg = load_config(
                 config_path=os.path.join(
@@ -47,9 +45,10 @@ def import_data(q: Q):
                 config_name="ConfigProblemBase",
             )
 
-            cfg.dataset.train_dataframe = os.path.join(path, "train_full.csv")
+            cfg.dataset.train_dataframe = os.path.join(path, "train_full.pq")
             cfg.dataset.prompt_column = "instruction"
             cfg.dataset.answer_column = "output"
+            cfg.dataset.parent_id_column = "None"
 
             cfg_path = os.path.join(path, f"{default_cfg.cfg_file}.p")
 

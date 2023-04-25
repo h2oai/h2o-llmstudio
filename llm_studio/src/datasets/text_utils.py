@@ -72,17 +72,11 @@ def get_tokenizer(cfg: Any):
     for stop_word in [cfg.dataset.text_prompt_start, cfg.dataset.text_answer_separator]:
         stop_word = codecs.decode(stop_word, "unicode_escape").strip()
         if stop_word != "":
-            tokenizer.add_tokens([stop_word])
+            if (
+                cfg.tokenizer.add_prompt_answer_tokens
+                and stop_word not in tokenizer.get_vocab()
+            ):
+                tokenizer.add_tokens([stop_word])
             cfg.tokenizer._stop_words.append(stop_word)
-
-    cfg.tokenizer._vocab_length = len(tokenizer.vocab)
-
-    cfg.tokenizer._stop_words_ids = []
-    for stop_word in set(cfg.tokenizer._stop_words):
-        cfg.tokenizer._stop_words_ids.append(
-            tokenizer(stop_word, return_tensors="pt", add_special_tokens=False)[
-                "input_ids"
-            ][0]
-        )
 
     return tokenizer
