@@ -69,38 +69,11 @@ def get_tokenizer(cfg: Any):
         filter(None, cfg.prediction.stop_tokens.split(","))
     )
 
-    text_prompt_start = codecs.decode(
-        cfg.dataset.text_prompt_start, "unicode_escape"
-    ).strip()
-    if text_prompt_start != "":
-        if text_prompt_start not in tokenizer.get_vocab():
-            tokenizer.add_tokens([text_prompt_start])
-
-        cfg.tokenizer._stop_words.append(text_prompt_start)
-
-        if (
-            hasattr(cfg.prediction, "batch_size_inference")
-            and cfg.prediction.batch_size_inference != 1
-        ):
-            cfg.prediction.batch_size_inference = 1
-            if cfg.environment._local_rank == 0:
-                logger.info("Forcing inference batch size to 1 due to stop tokens.")
-    text_answer_separator = codecs.decode(
-        cfg.dataset.text_answer_separator, "unicode_escape"
-    ).strip()
-    if text_answer_separator != "":
-        if text_answer_separator not in tokenizer.get_vocab():
-            tokenizer.add_tokens([text_answer_separator])
-
-        cfg.tokenizer._stop_words.append(text_answer_separator)
-
-        if (
-            hasattr(cfg.prediction, "batch_size_inference")
-            and cfg.prediction.batch_size_inference != 1
-        ):
-            cfg.prediction.batch_size_inference = 1
-            if cfg.environment._local_rank == 0:
-                logger.info("Forcing inference batch size to 1 due to stop tokens.")
+    for stop_word in [cfg.dataset.text_prompt_start, cfg.dataset.text_answer_separator]:
+        stop_word = codecs.decode(stop_word, "unicode_escape").strip()
+        if stop_word != "":
+            tokenizer.add_tokens([stop_word])
+            cfg.tokenizer._stop_words.append(stop_word)
 
     cfg.tokenizer._vocab_length = len(tokenizer.vocab)
 
