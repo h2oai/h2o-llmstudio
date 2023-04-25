@@ -31,6 +31,12 @@ Using CLI for fine-tuning LLMs:
 [![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/philippsinger/h2o-llm-studio-cli/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1-OYccyTvmfa3r7cAquw8sioFFPJcn4R9?usp=sharing)
 
 
+## What's New
+
+- April 25, 2023 Added functionality for supporting nested conversations in data. A new `parent_id_column` can be selected for datasets to support tree-like structures in your conversational data. Additional `augmentation` settings have been added for this feature.
+
+Please note that due to current rapid development we cannot guarantee full backwards compatibility of new functionality. Please either reset your `data` and `output` folders when upgrading and running into compatibility issues.
+
 ## Setup
 H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
 
@@ -88,7 +94,7 @@ During an experiment you can adapt the data representation with the following se
 
 - **Prompt Column:** The column in the dataset containing the user prompt.
 - **Answer Column:** The column in the dataset containing the expected output.
-- **Parent Column:** An optional column specifying the parent id to be used for chained conversations. The value of this column needs to match an additional column with the name `id`. If provided, the prompt will be concatenated after preceeding parent rows.
+- **Parent Id Column:** An optional column specifying the parent id to be used for chained conversations. The value of this column needs to match an additional column with the name `id`. If provided, the prompt will be concatenated after preceeding parent rows.
 
 ### Example data:
 We provide an example dataset (converted dataset from [OpenAssistant/oasst1](https://huggingface.co/datasets/OpenAssistant/oasst1))

@@ -35,7 +35,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
 
     prompt_column: Tuple[str, ...] = ("instruction", "input")
     answer_column: str = "output"
-    parent_column: str = "None"
+    parent_id_column: str = "None"
 
     text_prompt_start: str = "<|prompt|>"
     text_answer_separator: str = "<|answer|>"
@@ -71,8 +71,8 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
         self._possible_values["answer_column"] = possible_values.Columns(
             prefer_with=lambda column: column in ("answer", "output")
         )
-        self._possible_values["parent_column"] = possible_values.Columns(
-            prefer_with=lambda column: column in ("parent"), add_none=True
+        self._possible_values["parent_id_column"] = possible_values.Columns(
+            prefer_with=lambda column: column in ("parent",), add_none=True
         )
 
         self._nesting.add(

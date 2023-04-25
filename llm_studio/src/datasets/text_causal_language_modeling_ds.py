@@ -66,14 +66,14 @@ class CustomDataset(Dataset):
         )
 
         self.parent_ids = None
-        if self.cfg.dataset.parent_column != "None":
+        if self.cfg.dataset.parent_id_column != "None":
             if "id" not in self.df.columns:
                 logger.warning(
                     f"When using parent column, the dataframe requires an 'id' column. "
                     f"Disabling functionality for mode {self.mode}."
                 )
             else:
-                self.parent_ids = self.df[self.cfg.dataset.parent_column].values
+                self.parent_ids = self.df[self.cfg.dataset.parent_id_column].values
                 self.df_id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
 
         self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.prompts]
@@ -276,10 +276,10 @@ class CustomDataset(Dataset):
         return sample
 
     def _concat_samples(self, prompt, idx):
-        rnd_parent = self.prompts[idx] + self.answers[idx]
+        parent = self.prompts[idx] + self.answers[idx]
         if self.cfg.dataset.add_eos_token_to_answer:
-            rnd_parent += self.cfg._tokenizer_eos_token
-        prompt = rnd_parent + prompt
+            parent += self.cfg._tokenizer_eos_token
+        prompt = parent + prompt
         return prompt
 
     def _read_data(self, idx: int, sample: Dict) -> Dict:
