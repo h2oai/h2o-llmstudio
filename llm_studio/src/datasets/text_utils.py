@@ -20,10 +20,7 @@ def get_texts(df, cfg, separator=None):
             df[column] = df[column].astype(str)
 
         if separator is None:
-            if hasattr(cfg.dataset, "separator") and len(cfg.dataset.separator):
-                separator = cfg.dataset.separator
-            else:
-                separator = getattr(cfg, "_tokenizer_sep_token", "<SEPARATOR>")
+            separator = getattr(cfg, "_tokenizer_sep_token", "<SEPARATOR>")
 
         join_str = f" {separator} "
         texts = df[columns].astype(str)
@@ -44,14 +41,13 @@ def get_tokenizer(cfg: Any):
     )
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.pad_token_id = tokenizer.eos_token_id
     if tokenizer.cls_token is None:
         tokenizer.cls_token = tokenizer.eos_token
-    if tokenizer.sep_token is None:
-        tokenizer.sep_token = " "
-    if hasattr(cfg.dataset, "separator") and len(cfg.dataset.separator):
-        cfg._tokenizer_sep_token = cfg.dataset.separator
-    else:
-        cfg._tokenizer_sep_token = tokenizer.sep_token
+        tokenizer.cls_token_id = tokenizer.eos_token_id
+
+    cfg._tokenizer_sep_token = tokenizer.eos_token
+
     if tokenizer.unk_token_id is not None:
         cfg._tokenizer_mask_token_id = tokenizer.unk_token_id
     elif tokenizer.mask_token_id is not None:

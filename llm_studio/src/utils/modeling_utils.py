@@ -73,8 +73,15 @@ def load_model_weights(
     model: torch.nn.Module, model_weights: Dict, strict: bool, cfg: Any
 ):
     orig_num_items = len(model_weights)
+    model_state_dict = model.state_dict()
+
+    # needed to load models trained in int8 with other dtypes
     model_weights = {
-        k: v for k, v in model_weights.items() if v.dtype is not torch.int8
+        k: v
+        if not (v.dtype is torch.int8 and cfg.architecture.backbone_dtype != "int8")
+        else model_state_dict[k]
+        for k, v in model_weights.items()
+        if not ("SCB" in k and cfg.architecture.backbone_dtype != "int8")
     }
 
     # Need to ignore int8 weights so undo strict loading requirement
@@ -547,7 +554,8 @@ def prepare_model_for_lora_training(
     model, output_embedding_layer_name="lm_head", layer_norm_names=["layer_norm"]
 ):
 
-    loaded_in_8bit = getattr(model, "is_loaded_in_8bit", False)
+    # loaded_in_8bit = getattr(model, "is_loaded_in_8bit", False)
+    loaded_in_8bit = False
 
     for name, param in model.named_parameters():
         # freeze base model's layers
@@ -599,6 +607,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     if cfg.architecture.backbone_dtype == "int8":
         kwargs["device_map"] = {"": cfg.environment._device}
         kwargs["torch_dtype"] = torch.float16
+        kwargs["load_in_8bit"] = True
         quantization_config = BitsAndBytesConfig(
             load_in_8bit=True,
             llm_int8_threshold=0.0,
