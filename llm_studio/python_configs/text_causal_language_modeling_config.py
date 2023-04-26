@@ -190,8 +190,8 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
     max_length_prompt: int = 256
     max_length_answer: int = 256
     max_length: int = 512
-    padding_quantile: float = 1.0
     add_prompt_answer_tokens: bool = False
+    padding_quantile: float = 1.0
     add_prefix_space: bool = False
 
     def __post_init__(self):
