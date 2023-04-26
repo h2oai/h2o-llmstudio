@@ -561,7 +561,7 @@ def run(cfg: Any) -> None:
     global_start_time = time.time()
     if cfg.environment._local_rank == 0:
         # re-save cfg
-        save_config(f"{cfg.output_directory}/cfg.p", cfg)
+        save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
         cfg.logging._logger = MainLogger(cfg)
 
