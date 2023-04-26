@@ -204,6 +204,21 @@ async def settings(q: Q) -> None:
             ),
             ui.inline(
                 items=[
+                    ui.label("Huggingface API Token", width=label_width),
+                    ui.textbox(
+                        name="default_huggingface_api_token",
+                        label=None,
+                        value=q.client["default_huggingface_api_token"],
+                        width=textbox_width,
+                        password=True,
+                        trigger=False,
+                        tooltip="Set the value for the Huggingface API token \
+                            in the experiment setup.",
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
                     ui.label("OpenAI API Token", width=label_width),
                     ui.textbox(
                         name="default_openai_api_token",
@@ -219,16 +234,19 @@ async def settings(q: Q) -> None:
             ),
             ui.inline(
                 items=[
-                    ui.label("Huggingface API Token", width=label_width),
-                    ui.textbox(
-                        name="default_huggingface_api_token",
+                    ui.label("GPT evaluation max samples", width=label_width),
+                    ui.spinbox(
+                        name="default_gpt_eval_max",
                         label=None,
-                        value=q.client["default_huggingface_api_token"],
+                        value=q.client["default_gpt_eval_max"],
                         width=textbox_width,
-                        password=True,
+                        min=1,
+                        max=10000,
+                        step=1,
                         trigger=False,
-                        tooltip="Set the value for the Huggingface API token \
-                            in the experiment setup.",
+                        tooltip="Set the maximum samples for GPT evaluation. \
+                            This is used to prevent unexpected high API costs. \
+                            Increase at your own risk.",
                     ),
                 ]
             ),

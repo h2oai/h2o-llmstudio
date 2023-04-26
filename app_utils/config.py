@@ -101,6 +101,7 @@ default_cfg = {
         "default_huggingface_api_token": os.getenv("HUGGINGFACE_TOKEN", ""),
         "delete_dialogs": True,
         "chart_plot_max_points": 1000,
+        "default_gpt_eval_max": os.getenv("GPT_EVAL_MAX", 100),
     },
 }
 
