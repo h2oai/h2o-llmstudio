@@ -1144,7 +1144,6 @@ async def parse_param(q: Q, cfg, prompt):
 
 async def experiment_chat(q: Q) -> None:
 
-    await busy_dialog(q=q, title="Chat", text="Getting the answer...")
     prompt = q.client["experiment/display/chat/chatbot"]
 
     if prompt.lower().startswith("--"):
