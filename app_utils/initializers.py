@@ -7,7 +7,11 @@ from bokeh.resources import Resources as BokehResources
 from h2o_wave import Q
 
 from app_utils.sections.common import interface
-from llm_studio.src.utils.config_utils import load_config_yaml, save_config_yaml, load_config_py
+from llm_studio.src.utils.config_utils import (
+    load_config_py,
+    load_config_yaml,
+    save_config_yaml,
+)
 
 from .config import default_cfg
 from .db import Database, Dataset
@@ -46,7 +50,7 @@ def import_data(q: Q):
             )
 
             cfg.dataset.train_dataframe = os.path.join(path, "train_full.pq")
-            cfg.dataset.prompt_column = "instruction",
+            cfg.dataset.prompt_column = ("instruction",)
             cfg.dataset.answer_column = "output"
             cfg.dataset.parent_id_column = "None"
 
