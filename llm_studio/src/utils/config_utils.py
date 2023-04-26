@@ -182,7 +182,7 @@ def parse_cfg_dataclass(cfg: ConfigProblemBase) -> List[Dict]:
 
 
 def save_config_yaml(path: str, cfg: ConfigProblemBase) -> None:
-    """Saves config as dill file
+    """Saves config as yaml file
 
     Args:
         path: path of file to save to
