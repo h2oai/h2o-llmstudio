@@ -8,8 +8,8 @@ The **LLM Backbone** option is the most important setting as it sets the pretrai
 It is possible to tune the following parameters:
 
 ### **Dataset Parameters**
-- **Text Prompt Start:** Optional text to prepend to each prompt.
-- **Text Answer Separator:** Optional text to append to each prompt / prepend to each answer.
+- **Text Prompt Start:** Optional text to prepend to each prompt. A new token will be added to the tokenizer and to the stop conditions.
+- **Text Answer Separator:** Optional text to append to each prompt / prepend to each answer. A new token will be added to the tokenizer and to the stop conditions.
 - **Add Eos Token to Prompt:** Adds EOS token at end of prompt.
 - **Add Eos Token to Answer:** Adds EOS token at end of answer.
 - **Mask Prompt Labels:** Whether to mask the prompt labels during training and only train on the loss of the answer.
@@ -19,9 +19,12 @@ It is possible to tune the following parameters:
 - **Max Length Answer:** The maximum sequence length of the answer to use during training.
 - **Max Length:** The maximum sequence length of both prompt and answer to use during training.
 - **Padding Quantile:** Truncates batches to the maximum sequence length based on specified quantile; setting to 0 disables this functionality.
+- **Add Prompt Answer Tokens:** Adds prompt and answer tokens as new tokens to the tokenizer. It is recommended to also set `Force Embedding Gradients` in this case.
 
 ### **Augmentation Parameters**
 - **Token Mask Probability:** The probability of masking each token during training.
+- **Skip Parent Probability:** If `Parent Column` is set, this random augmentation will skip parent concatenation during training at each parent with this specified probability.
+- **Random Parent Probability:** While training, each sample will be concatenated to a random other sample simulating unrelated chained conversations. Can be specified without using a `Parent Column`.
 
 ### **Architecture Parameters**
 - **Backbone Dtype:** The datatype of the weights in the LLM backbone.
@@ -59,7 +62,7 @@ It is possible to tune the following parameters:
 - **Max Length Inference:** The maximum sequence length to use during inference.
 - **Batch Size Inference:** Can be chosen independent of training batch size.
 - **Generate Parameters:** Typical generate parameters including e.g., num beams, temperature, repetition penalty.
-- **Stop Tokens:** Will stop generation at occurrence of these tokens.
+- **Stop Tokens:** Will stop generation at occurrence of these additional tokens; multiple tokens should be split by comma `,`.
 
 ### **Environment Parameters**
 - **Gpus:** Will train on selected GPUs.

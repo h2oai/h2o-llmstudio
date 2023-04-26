@@ -29,7 +29,6 @@ async def serve(q: Q):
     copy_expando(q.args, q.client)
 
     await initialize_client(q)
-
     await handle(q)
 
     if not q.args["experiment/display/chat/chatbot"]:

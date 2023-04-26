@@ -45,8 +45,8 @@ def unwrap_model(model: torch.nn.Module):
 
 
 # TODO: currently not saving optimizer
-def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> Dict:
-    """Saves a model checkpoint if the path is provided and returns it back.
+def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
+    """Saves a model checkpoint if the path is provided.
 
     Args:
         model: model to save
@@ -65,8 +65,6 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> Dict:
 
     if path is not None:
         torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
-
-    return checkpoint
 
 
 def load_model_weights(
@@ -603,6 +601,8 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
             load_in_8bit=True,
             llm_int8_threshold=0.0,
         )
+        # need to force pretrained
+        cfg.architecture.pretrained = True
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
     logger.info("dtype: {dtype}".format(dtype=kwargs["torch_dtype"]))
@@ -615,9 +615,12 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
             quantization_config=quantization_config,
             **kwargs,
         )
-
     else:
         backbone = model_class.from_config(config, **kwargs)
+
+    if cfg.tokenizer._vocab_length > config.vocab_size:
+        logger.info(f"Resizing token embeddings to {cfg.tokenizer._vocab_length}")
+        backbone.resize_token_embeddings(cfg.tokenizer._vocab_length)
 
     if cfg.training.lora:
         backbone = prepare_model_for_lora_training(backbone, layer_norm_names=[])

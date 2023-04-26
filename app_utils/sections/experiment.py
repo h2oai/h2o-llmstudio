@@ -2,6 +2,7 @@ import gc
 import logging
 import os
 import shutil
+import zipfile
 from typing import Callable, List, Optional
 
 import huggingface_hub
@@ -16,41 +17,44 @@ from app_utils.config import default_cfg
 from app_utils.utils import (
     add_model_type,
     flatten_dict,
-    get_cfg_elements,
+    get_cfg_list_items,
     get_data_dir,
     get_download_link,
     get_experiment_status,
     get_experiments,
-    get_grouped_cfg_elements,
     get_model_types,
-    get_parent_element,
     get_problem_categories,
     get_problem_types,
     get_ui_elements,
     get_unique_name,
-    load_dill,
     make_label,
     parse_ui_elements,
     remove_model_type,
-    save_dill,
     start_experiment,
 )
 from app_utils.wave_utils import ui_table_from_df, wave_theme
 from llm_studio.src.datasets.text_utils import get_tokenizer
-from llm_studio.src.utils.config_utils import load_config
+from llm_studio.src.utils.config_utils import (
+    convert_cfg_to_nested_dictionary,
+    get_parent_element,
+    load_config_py,
+    load_config_yaml,
+    save_config_yaml,
+)
 from llm_studio.src.utils.exceptions import LLMResourceException
 from llm_studio.src.utils.export_utils import (
     check_available_space,
     get_artifact_path_path,
     get_logs_path,
+    get_model_path,
     get_predictions_path,
     get_size_str,
     save_logs,
     save_prediction_outputs,
 )
 from llm_studio.src.utils.logging_utils import write_flag
-from llm_studio.src.utils.modeling_utils import load_checkpoint
-from llm_studio.src.utils.utils import kill_child_processes
+from llm_studio.src.utils.modeling_utils import load_checkpoint, unwrap_model
+from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
 
 from .common import clean_dashboard
 
@@ -128,7 +132,7 @@ async def experiment_start(q: Q) -> None:
         dataset = q.client.app_db.get_dataset(q.client["experiment/start/dataset"])
         if dataset is not None:
             problem_type = dataset.config_file.replace(dataset.path + "/", "").replace(
-                ".p", ""
+                ".yaml", ""
             )
         else:
             problem_type = default_cfg.cfg_file
@@ -326,7 +330,7 @@ async def experiment_start(q: Q) -> None:
         parent_exp_name = parent_path.split("/")[-1]
         parent_experiment = f"{parent_exp_name}"
 
-        old_config = load_dill(f"{parent_path}/cfg.p")
+        old_config = load_config_yaml(f"{parent_path}/cfg.yaml")
         old_config._parent_experiment = parent_experiment
 
         q.client["experiment/start/cfg"] = old_config
@@ -428,7 +432,7 @@ async def experiment_start(q: Q) -> None:
             f"llm_studio/python_configs/{q.client['experiment/start/cfg_file']}"
         )
 
-        q.client["experiment/start/cfg"] = load_config(
+        q.client["experiment/start/cfg"] = load_config_py(
             config_path=config_path, config_name="ConfigProblemBase"
         )
 
@@ -677,8 +681,8 @@ async def experiment_compare(q: Q, selected_rows: list):
         for experiment_id in experiment_ids:
             experiment = q.client.app_db.get_experiment(experiment_id)
             experiment_path = experiment.path
-            experiment_cfg = load_dill(os.path.join(experiment_path, "cfg.p"))
-            items = get_cfg_elements(experiment_cfg, q)
+            experiment_cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
+            items = get_cfg_list_items(experiment_cfg)
             act_df = pd.Series({item.label: item.value for item in items})
             settings[experiment.name] = act_df
 
@@ -766,13 +770,13 @@ async def experiment_rename_action(q, experiment, new_name):
         logger.info(f"Renaming {old_exp_path} to {exp_path}")
         shutil.move(os.path.abspath(old_exp_path), os.path.abspath(exp_path))
 
-        for config_file in ["cfg.p", "cfg_last.p"]:
+        for config_file in ["cfg.yaml"]:
             config_path = os.path.join(exp_path, config_file)
             if os.path.exists(config_path):
-                experiment_cfg = load_dill(config_path)
+                experiment_cfg = load_config_yaml(config_path)
                 experiment_cfg.experiment_name = new_name
                 experiment_cfg.output_directory = new_path
-                save_dill(config_path, experiment_cfg)
+                save_config_yaml(config_path, experiment_cfg)
 
         rename_files = ["preds"]
         for file in rename_files:
@@ -966,11 +970,11 @@ async def experiment_display(q: Q) -> None:
 
         items = []
 
-        cfg = load_dill(
-            os.path.join(q.client["experiment/display/experiment_path"], "cfg.p")
+        cfg = load_config_yaml(
+            os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
         )
 
-        parent_element = get_parent_element(cfg, True)
+        parent_element = get_parent_element(cfg)
         if parent_element:
             items.append(parent_element)
 
@@ -1000,10 +1004,10 @@ async def experiment_display(q: Q) -> None:
         q.client.delete_cards.add("experiment/display/summary")
 
     elif q.client["experiment/display/tab"] in ["experiment/display/config"]:
-        experiment_cfg = load_dill(
-            os.path.join(q.client["experiment/display/experiment_path"], "cfg.p")
+        experiment_cfg = load_config_yaml(
+            os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
         )
-        items = get_cfg_elements(experiment_cfg, q)
+        items = get_cfg_list_items(experiment_cfg)
 
         q.page["experiment/display/config"] = ui.stat_list_card(
             box=box[cnt], items=items, title=""
@@ -1093,6 +1097,13 @@ async def experiment_display(q: Q) -> None:
             ui.button(
                 name="experiment/display/download_predictions",
                 label="Download predictions",
+                primary=False,
+                disabled=False,
+                tooltip=None,
+            ),
+            ui.button(
+                name="experiment/display/download_model",
+                label="Download model",
                 primary=False,
                 disabled=False,
                 tooltip=None,
@@ -1443,8 +1454,8 @@ async def experiment_download_logs(q: Q):
 
     if not os.path.exists(zip_path):
         logs = q.client["experiment/display/charts"]
-        experiment_cfg = load_dill(os.path.join(experiment_path, "cfg.p"))
-        experiment_cfg_dict = get_grouped_cfg_elements(experiment_cfg, q)
+        experiment_cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
+        experiment_cfg_dict = convert_cfg_to_nested_dictionary(experiment_cfg)
         logger.info(f"Creating {zip_path} on demand")
         zip_path = save_logs(
             experiment.name,
@@ -1504,6 +1515,55 @@ def get_experiment_list_message_bar(q):
     return msg_bar
 
 
+async def experiment_download_model(q: Q, error: str = ""):
+    experiment = q.client["experiment/display/experiment"]
+    experiment_path = q.client["experiment/display/experiment_path"]
+    zip_path = get_model_path(experiment.name, experiment_path)
+
+    if not os.path.exists(zip_path):
+        logger.info(f"Creating {zip_path} on demand")
+
+        cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path, device="cpu")
+        if hasattr(cfg.training, "lora") and cfg.training.lora:
+            # merges the LoRa layers into the base model.
+            # This is needed if someone wants to use the base model as a standalone
+            # model.
+            model.backbone = model.backbone.merge_and_unload()
+
+        model = unwrap_model(model)
+        checkpoint_path = cfg.output_directory
+
+        model.backbone.save_pretrained(checkpoint_path)
+        tokenizer.save_pretrained(checkpoint_path)
+
+        zf = zipfile.ZipFile(zip_path, "w")
+
+        FILES_TO_PUSH = [
+            "pytorch_model.bin",
+            "vocab.json",
+            "tokenizer_config.json",
+            "tokenizer.json",
+            "special_tokens_map.json",
+            "merges.txt",
+            "generation_config.json",
+            "config.json",
+            "added_tokens.json",
+        ]
+
+        for file in FILES_TO_PUSH:
+            add_file_to_zip(zf=zf, path=f"{experiment_path}/{file}")
+
+        zf.close()
+
+    download_url = get_download_link(q, zip_path)
+    logger.info(f"Logs URL: {download_url}")
+
+    q.page["meta"].script = ui.inline_script(
+        f'window.open("{download_url}", "_blank");'
+    )
+    await q.page.save()
+
+
 async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
 
     if q.args["experiment/display/push_to_huggingface"] or error:
@@ -1537,10 +1597,11 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         ]
     elif q.args["experiment/display/push_to_huggingface_submit"]:
         experiment_path = q.client["experiment/display/experiment_path"]
-        cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path)
+        cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path, device="cpu")
         if hasattr(cfg.training, "lora") and cfg.training.lora:
             # merges the LoRa layers into the base model.
-            # This is needed if someone wants to use the base model as a standalone model.
+            # This is needed if someone wants to use the base model as a standalone
+            # model.
             model.backbone = model.backbone.merge_and_unload()
 
         huggingface_hub.login(
@@ -1580,7 +1641,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
 
 
 def load_cfg_model_tokenizer(experiment_path, device="cuda"):
-    cfg = load_dill(os.path.join(experiment_path, "cfg.p"))
+    cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
     cfg.architecture.pretrained = False
     cfg.tokenizer.padding_quantile = 0
 

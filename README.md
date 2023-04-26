@@ -31,6 +31,12 @@ Using CLI for fine-tuning LLMs:
 [![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/philippsinger/h2o-llm-studio-cli/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1-OYccyTvmfa3r7cAquw8sioFFPJcn4R9?usp=sharing)
 
 
+## What's New
+
+- April 25, 2023 Added functionality for supporting nested conversations in data. A new `parent_id_column` can be selected for datasets to support tree-like structures in your conversational data. Additional `augmentation` settings have been added for this feature.
+
+Please note that due to current rapid development we cannot guarantee full backwards compatibility of new functionality. Please either reset your `data` and `output` folders when upgrading and running into compatibility issues.
+
 ## Setup
 H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
 
@@ -88,14 +94,11 @@ During an experiment you can adapt the data representation with the following se
 
 - **Prompt Column:** The column in the dataset containing the user prompt.
 - **Answer Column:** The column in the dataset containing the expected output.
-- **Text Prompt Start:** Text to be added before the user prompt.
-- **Text Answer Separator:** The separator used between the prompt and the answer in the dataset.
-- **Prepend Column Name:** Whether to add the column name to the text input from the left. As an example, if the prompt and answer columns are named "Question" and "Answer" enabling this option would add "Question: " before the question and "Answer: " before the answer. 
-- **Add Eos Token To Answer:** Whether to add an explicit end-of-sequence token at the end of the answer.
+- **Parent Id Column:** An optional column specifying the parent id to be used for chained conversations. The value of this column needs to match an additional column with the name `id`. If provided, the prompt will be concatenated after preceeding parent rows.
 
 ### Example data:
 We provide an example dataset (converted dataset from [OpenAssistant/oasst1](https://huggingface.co/datasets/OpenAssistant/oasst1))
-that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=126228752). It is recommended to use `train_full.csv` for training.
+that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=127047926). It is recommended to use `train_full.csv` for training. This dataset is also downloaded and prepared by default when first starting the GUI.
 
 ## Training your model
 
@@ -162,6 +165,16 @@ python prompt.py -e examples/output_oasst1
 ## Model checkpoints
 
 All open-source datasets and models are posted on [H2O.ai's Hugging Face page](https://huggingface.co/h2oai/).
+
+
+## Changelog
+The field is rapidly evolving, and we are constantly adding new features and fixing bugs.
+While we are striving to converge to a stable framework, at this early point of development certain changes may break your existing experiments. 
+We thus recommend to pin the version of the framework to the one you used for your experiments. 
+Below, we list a summary of the changes that may affect older experiments:
+- [PR 12](https://github.com/h2oai/h2o-llmstudio/pull/12). Experiment configurations are now stored in yaml format,
+allowing for more flexibility in the configuration while making it much easier to be backward compatible. Old experiment configurations that are stored in pickle format will be converted to yaml format automatically.
+- [PR 40](https://github.com/h2oai/h2o-llmstudio/pull/40). Datasets can now use past chat history as input. This feature can be enabled by setting `Parent Id Column` in the dataset configuration.
 
 ## License
 H2O LLM Studio is licensed under the Apache 2.0 license. Please see the [LICENSE](LICENSE) file for more information.

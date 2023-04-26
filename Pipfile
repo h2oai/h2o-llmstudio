@@ -16,7 +16,6 @@ torch = {index = "pytorch", version = "==2.0.0+cu117"}
 torchvision = {index = "pytorch", version = "==0.15.1+cu117"}
 torchaudio = {index = "pytorch", version = "==2.0.1+cu117"}
 tqdm = "==4.64.0"
-neptune-client = "==0.16.1"
 transformers = "==4.28.1"
 numpy = "==1.23.2"
 pandas = "==1.4.2"
@@ -38,12 +37,14 @@ protobuf = "==3.20.3"
 fastparquet = "==0.8.1"
 gputil = "==1.4.0"
 huggingface-hub = "==0.13.4"
-starlette= "==0.23.1"
+starlette= "==0.25.0"
 peft = {ref = "main", git = "https://github.com/huggingface/peft"}
 bitsandbytes = "==0.37.2"
 accelerate = "==0.18.0"
 openai = "==0.27.4"
-einops = "*"
+einops = "==0.6.1"
+datasets = "==2.11.0"
+neptune = "==1.1.1"
 
 [dev-packages]
 pytest = "==7.1.2"
@@ -54,7 +55,7 @@ flake8-isort = "==4.1.1"
 flake8 = "==4.0.1"
 isort = "==5.10.1"
 pytest-cov = "==3.0.0"
-wheel = "==0.37.1"
+wheel = "==0.38.1"
 pytest-dependency = "==0.5.1"
 types-requests = "==2.27.25"
 types-toml = "==0.10.7"
