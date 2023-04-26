@@ -33,10 +33,8 @@ def set_environment(cfg):
     """Sets and checks environment settings"""
     if not cfg.environment.openai_api_token:
         cfg.environment.openai_api_token = os.getenv("OPENAI_API_KEY", "")
-        print("OPENAI_API_KEY", cfg.environment.openai_api_token)
     if not cfg.logging.neptune_api_token:
         cfg.logging.neptune_api_token = os.getenv("NEPTUNE_API_TOKEN", "")
-        print("NEPTUNE_API_TOKEN", cfg.logging.neptune_api_token)
     os.environ["OPENAI_API_KEY"] = cfg.environment.openai_api_token
     openai.api_key = cfg.environment.openai_api_token
 
