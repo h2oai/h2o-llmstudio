@@ -89,7 +89,6 @@ The interactive chat will also work with model that were finetuned using the UI.
 H2O LLM studio expects a csv file with at least two columns, one being the instruct column, the other 
 being the answer that the model should generate. You can also provide an extra validation dataframe using the same format or use an automatic train/validation split to evaluate the model performance. 
 
-
 During an experiment you can adapt the data representation with the following settings 
 
 - **Prompt Column:** The column in the dataset containing the user prompt.
@@ -106,12 +105,13 @@ With H2O LLM Studio, training your large language model is easy and intuitive.
 First, upload your dataset and then start training your model.
 
 ### Starting an experiment
-H2O LLM Studio provides various parameters to set for a given experiment, with some of the most important being:
+H2O LLM Studio allows to tune a variety of parameters and enables fast iterations to be able to explore different hyperparameters easily.
+The default settings are chosen with care and should give a good baseline. The most important parameters are:
 
 - **LLM Backbone**: This parameter determines the LLM architecture to use.
 - **Mask Prompt Labels**: This option controls whether to mask the prompt labels during training and only train on the loss of the answer.
 - **Hyperparameters** such as learning rate, batch size, and number of epochs determine the training process.
-An overview of all parameters is given in the [parameter description](docs/parameters.md).
+Please consult the tooltips of each hyperparameter to learn more about it.
 - **Evaluate Before Training** This option lets you evaluate the model before training, which can help you judge the quality of the LLM backbone before fine-tuning.
 
 We provide several metric options for evaluating the performance of your model.

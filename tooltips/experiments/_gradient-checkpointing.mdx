@@ -1,0 +1,6 @@
+Determines whether H2O LLM Studio activates gradient checkpointing (GC) when training the model. Starting GC reduces the video random access memory (VRAM) footprint at the cost of a longer runtime (an additional forward pass). Turning **On** GC enables it during the training process.
+
+**Caution**
+Gradient checkpointing is an experimental setting that is not compatible with all backbones or all other settings.
+
+Activating *GC* comes at the cost of a longer training time; for that reason, try training without *GC* first and only activate when experiencing *GPU out-of-memory (OOM)* errors.

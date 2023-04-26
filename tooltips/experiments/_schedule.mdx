@@ -1,0 +1,10 @@
+Defines the learning rate schedule H2O LLM Studio utilizes during model training. Specifying a learning rate schedule prevents the learning rate from staying the same. Instead, a learning rate schedule causes the learning rate to change over iterations, typically decreasing the learning rate to achieve a better model performance and training convergence.
+
+
+Options
+- **Constant**
+    - H2O LLM Studio applies a constant learning rate during the training process.
+- **Cosine**
+    - H2O LLM Studio applies a cosine learning rate that follows the values of the cosine function.
+- **Linear**
+    - H2O LLM Studio applies a linear learning rate that decreases the learning rate linearly.

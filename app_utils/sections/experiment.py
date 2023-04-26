@@ -12,6 +12,7 @@ import torch
 import yaml
 from h2o_wave import Q, data, ui
 from sqlitedict import SqliteDict
+from llm_studio.src.tooltips import tooltips
 
 from app_utils.config import default_cfg
 from app_utils.utils import (
@@ -111,6 +112,7 @@ async def experiment_start(q: Q) -> None:
                 for _, row in df_datasets.iterrows()
             ],
             trigger=True,
+            tooltip=tooltips["experiments_dataset"],
         ),
     ]
 
@@ -198,6 +200,7 @@ async def experiment_start(q: Q) -> None:
                 choices=choices_problem_types,
                 value=q.client["experiment/start/cfg_file"],
                 trigger=True,
+                tooltip=tooltips["experiments_problem_type"],
             )
         ]
 
@@ -286,6 +289,7 @@ async def experiment_start(q: Q) -> None:
                 label="Import config from YAML",
                 value=False,
                 trigger=True,
+                tooltip=tooltips["experiments_import_config_from_yaml"],
             )
         ]
 
