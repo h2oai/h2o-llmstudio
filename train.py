@@ -491,9 +491,6 @@ def run(cfg: Any) -> None:
         )
         cfg.prediction.metric = "BLEU"
 
-    if cfg.environment._local_rank == 0:
-        cfg.logging._logger = MainLogger(cfg)
-
     # prepare data
     if cfg.environment._local_rank == 0:
         logger.info("Preparing train and validation data")
@@ -521,15 +518,6 @@ def run(cfg: Any) -> None:
             * (num_eval_epochs + int(cfg.training.evaluate_before_training))
             * val_batch_size
             * cfg.environment._world_size
-        )
-
-    if cfg.environment._local_rank == 0:
-        cfg.logging._logger.log(
-            "internal", "total_training_steps", total_training_steps, step=0
-        )
-
-        cfg.logging._logger.log(
-            "internal", "total_validation_steps", total_validation_steps, step=0
         )
 
     # Prepare model
@@ -572,6 +560,19 @@ def run(cfg: Any) -> None:
 
     global_start_time = time.time()
     if cfg.environment._local_rank == 0:
+        # re-save cfg
+        save_config(f"{cfg.output_directory}/cfg.p", cfg)
+
+        cfg.logging._logger = MainLogger(cfg)
+
+        cfg.logging._logger.log(
+            "internal", "total_training_steps", total_training_steps, step=0
+        )
+
+        cfg.logging._logger.log(
+            "internal", "total_validation_steps", total_validation_steps, step=0
+        )
+
         cfg.logging._logger.log(
             "internal",
             "global_start_time",
