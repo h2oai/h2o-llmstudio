@@ -32,7 +32,7 @@ from app_utils.utils import (
     remove_model_type,
     start_experiment,
 )
-from app_utils.wave_utils import ui_table_from_df, wave_theme
+from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.utils.config_utils import (
     convert_cfg_to_nested_dictionary,
@@ -1596,6 +1596,13 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             ),
         ]
     elif q.args["experiment/display/push_to_huggingface_submit"]:
+
+        await busy_dialog(
+            q=q,
+            title="Exporting to HuggingFace ",
+            text="Model size can affect the export time significantly.",
+        )
+
         experiment_path = q.client["experiment/display/experiment_path"]
         cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path, device="cpu")
         if hasattr(cfg.training, "lora") and cfg.training.lora:

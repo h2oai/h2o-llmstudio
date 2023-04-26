@@ -32,12 +32,14 @@ from app_utils.utils import (
     s3_download,
     s3_file_options,
 )
-from app_utils.wave_utils import ui_table_from_df
+
+from app_utils.wave_utils import busy_dialog, ui_table_from_df
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,
     save_config_yaml,
 )
+
 from llm_studio.src.utils.data_utils import (
     get_fill_columns,
     read_dataframe,
@@ -507,12 +509,11 @@ async def dataset_import(
             items = [ui.markup(content=header), ui.message_bar(text=text), plot_item]
             valid_visualization = True
 
-            q.page["meta"].dialog = ui.dialog(
+            await busy_dialog(
+                q=q,
                 title="Performing sanity checks on the data",
-                blocking=True,
-                items=[ui.progress(label="Please be patient...")],
+                text="Please be patient...",
             )
-            await q.page.save()
             # add one-second delay for datasets where sanity check is instant
             # to avoid flickering dialog
             time.sleep(1)
