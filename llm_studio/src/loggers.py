@@ -142,12 +142,12 @@ class MainLogger:
 
         try:
             self.loggers["external"] = self.loggers["external"](cfg)
-        except Exception:
+        except Exception as e:
             logger.warning(
-                "Error when initializing logger. "
-                "Disabling custom logging functionality. "
-                "Please ensure logger configuration is correct and "
-                "you have a stable Internet connection."
+                f"Error when initializing logger. "
+                f"Disabling custom logging functionality. "
+                f"Please ensure logger configuration is correct and "
+                f"you have a stable Internet connection: {e}"
             )
             self.loggers["external"] = DummyLogger(cfg)
 
