@@ -1,3 +1,4 @@
+import codecs
 import logging
 from typing import Any
 
@@ -64,18 +65,30 @@ def get_tokenizer(cfg: Any):
 
     cfg._tokenizer_eos_token = tokenizer.eos_token
 
-    cfg.tokenizer._stop_words_ids = []
-    if len(cfg.prediction.stop_tokens) > 0:
-        for stop_word in cfg.prediction.stop_tokens:
-            cfg.tokenizer._stop_words_ids.append(
-                tokenizer(stop_word, return_tensors="pt", add_special_tokens=False)[
-                    "input_ids"
-                ][0]
-            )
+    cfg.tokenizer._stop_words = list(
+        filter(None, cfg.prediction.stop_tokens.split(","))
+    )
 
-        if hasattr(cfg.prediction, "batch_size_inference"):
-            cfg.prediction.batch_size_inference = 1
-            if cfg.environment._local_rank == 0:
-                logger.info("Forcing inference batch size to 1 due to stop tokens.")
+    for stop_word in [cfg.dataset.text_prompt_start, cfg.dataset.text_answer_separator]:
+        stop_word = codecs.decode(stop_word, "unicode_escape").strip()
+        if (
+            stop_word != ""
+            and cfg.tokenizer.add_prompt_answer_tokens
+            and (stop_word not in tokenizer.get_vocab())
+        ):
+            tokenizer.add_tokens([stop_word])
+        cfg.tokenizer._stop_words.append(stop_word)
+
+    cfg.tokenizer._vocab_length = len(tokenizer.vocab)
+
+    cfg.tokenizer._stop_words_ids = []
+    for stop_word in set(cfg.tokenizer._stop_words):
+        cfg.tokenizer._stop_words_ids.append(
+            tokenizer(stop_word, return_tensors="pt", add_special_tokens=False)[
+                "input_ids"
+            ][0]
+        )
+    if cfg.environment._local_rank == 0:
+        logger.info(f"Stop token ids: {cfg.tokenizer._stop_words_ids}")
 
     return tokenizer

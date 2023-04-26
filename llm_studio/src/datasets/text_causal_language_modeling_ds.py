@@ -65,7 +65,21 @@ class CustomDataset(Dataset):
             self.df[self.cfg.dataset.answer_column].astype(str).values.tolist()
         )
 
+        self.parent_ids = None
+        if self.cfg.dataset.parent_id_column != "None":
+            if "id" not in self.df.columns:
+                logger.warning(
+                    f"When using parent column, the dataframe requires an 'id' column. "
+                    f"Disabling functionality for mode {self.mode}."
+                )
+            else:
+                self.parent_ids = self.df[self.cfg.dataset.parent_id_column].values
+                self.df_id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
+
         self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.prompts]
+
+        if self.cfg.environment._local_rank == 0:
+            logger.info(f"Sample prompt: {self.prompts[0]}")
 
     @staticmethod
     def parse_prompt(cfg: Any, prompt: str):
@@ -171,16 +185,11 @@ class CustomDataset(Dataset):
         cfg: Any,
     ):
         output["predicted_text"] = output["predicted_text"].tolist()
-        # output["predicted_text"] = [
-        #     predicted_text[len(prompt) :].strip()
-        #     for predicted_text, prompt in zip(output["predicted_text"], prompts)
-        # ]
-
         for j in range(len(output["predicted_text"])):
             curr_text = output["predicted_text"][j].strip()
-            for stop_token in cfg.prediction.stop_tokens:
-                if curr_text.endswith(stop_token):
-                    curr_text = curr_text[: -len(stop_token)]
+            for stop_token in cfg.tokenizer._stop_words:
+                if curr_text.find(stop_token) != -1:
+                    curr_text = curr_text[: curr_text.find(stop_token)]
             output["predicted_text"][j] = curr_text.strip()
 
         return output
@@ -261,11 +270,38 @@ class CustomDataset(Dataset):
 
         return sample
 
+    def _concat_samples(self, prompt, idx):
+        parent = self.prompts[idx] + self.answers[idx]
+        if self.cfg.dataset.add_eos_token_to_answer:
+            parent += self.cfg._tokenizer_eos_token
+        prompt = parent + prompt
+        return prompt
+
     def _read_data(self, idx: int, sample: Dict) -> Dict:
         """Reads a single text observation."""
 
         prompt = self.prompts[idx]
         answer = self.answers[idx]
+
+        if self.parent_ids is not None:
+            parent_idx = idx
+            while (
+                parent_idx := self.df_id_to_idx.get(self.parent_ids[parent_idx], None)
+            ) is not None:
+                if (
+                    self.mode == "train"
+                    and np.random.random()
+                    < self.cfg.augmentation.skip_parent_probability
+                ):
+                    break
+                prompt = self._concat_samples(prompt, int(parent_idx))
+
+        if (
+            self.mode == "train"
+            and np.random.random() < self.cfg.augmentation.random_parent_probability
+        ):
+            rnd_idx = np.random.randint(len(self))
+            prompt = self._concat_samples(prompt, rnd_idx)
 
         prompt_encodings = self.encode(
             self.tokenizer, prompt, self.cfg.tokenizer.max_length_prompt, "left"

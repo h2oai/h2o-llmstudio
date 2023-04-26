@@ -1,4 +1,5 @@
 import os
+from copy import copy
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -544,9 +545,11 @@ def run(cfg: Any) -> None:
     model.to(cfg.environment._device)
 
     if cfg.architecture.force_embedding_gradients:
-        for param in model.backbone.base_model.get_input_embeddings().parameters():
-            param = param.float()
-            param.requires_grad = True
+        for module in model.modules():
+            if isinstance(module, torch.nn.Embedding):
+                for param in module.parameters():
+                    param.requires_grad = True
+                    param.data = param.data.float()
 
     if cfg.environment._distributed:
         model = wrap_model_distributed(model, cfg, cfg.environment.use_fsdp)
@@ -577,7 +580,9 @@ def run(cfg: Any) -> None:
             step=cfg.environment._curr_step,
         )
         # re-save config
-        save_config(f"{cfg.output_directory}/cfg.p", cfg)
+        cfg_to_save = copy(cfg)
+        cfg_to_save.logging._logger.reset_external()
+        save_config(f"{cfg.output_directory}/cfg.p", cfg_to_save)
 
     val_data, val_loss, val_metric, last_batch = run_train(
         cfg=cfg,
