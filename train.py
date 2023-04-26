@@ -490,7 +490,7 @@ def run(cfg: Any) -> None:
             "Safeguarding against OpenAI API costs. Setting metric to BLEU. "
             "Change GPT_EVAL_MAX to run GPT validation."
         )
-        cfg.prediction.metric = "BLEU"        
+        cfg.prediction.metric = "BLEU"
 
     # prepare data
     if cfg.environment._local_rank == 0:
@@ -519,7 +519,7 @@ def run(cfg: Any) -> None:
             * (num_eval_epochs + int(cfg.training.evaluate_before_training))
             * val_batch_size
             * cfg.environment._world_size
-        )        
+        )
 
     # Prepare model
     with torch.device(cfg.environment._device):
