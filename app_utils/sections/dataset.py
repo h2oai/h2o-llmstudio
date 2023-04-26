@@ -25,17 +25,19 @@ from app_utils.utils import (
     get_problem_types,
     get_unique_dataset_name,
     kaggle_download,
-    load_dill,
     local_download,
     make_label,
     parse_ui_elements,
     remove_temp_files,
     s3_download,
     s3_file_options,
-    save_dill,
 )
 from app_utils.wave_utils import ui_table_from_df
-from llm_studio.src.utils.config_utils import load_config
+from llm_studio.src.utils.config_utils import (
+    load_config_py,
+    load_config_yaml,
+    save_config_yaml,
+)
 from llm_studio.src.utils.data_utils import (
     get_fill_columns,
     read_dataframe,
@@ -417,7 +419,7 @@ async def dataset_import(
                     q.client["dataset/import/cfg_file"], model_types[0][0]
                 )
             if not edit:
-                q.client["dataset/import/cfg"] = load_config(
+                q.client["dataset/import/cfg"] = load_config_py(
                     config_path=(
                         f"llm_studio/python_configs/"
                         f"{q.client['dataset/import/cfg_file']}"
@@ -586,7 +588,9 @@ async def dataset_import(
                 # change the default validation strategy if validation df set
                 if cfg.dataset.validation_dataframe != "None":
                     cfg.dataset.validation_strategy = "custom"
-                save_dill(f"{new_path}/{q.client['dataset/import/cfg_file']}.p", cfg)
+                save_config_yaml(
+                    f"{new_path}/{q.client['dataset/import/cfg_file']}.yaml", cfg
+                )
 
                 train_rows = None
                 if os.path.exists(cfg.dataset.train_dataframe):
@@ -603,7 +607,7 @@ async def dataset_import(
                     id=q.client["dataset/import/id"],
                     name=q.client["dataset/import/name"],
                     path=new_path,
-                    config_file=f"{new_path}/{q.client['dataset/import/cfg_file']}.p",
+                    config_file=f"{new_path}/{q.client['dataset/import/cfg_file']}.yaml",
                     train_rows=train_rows,
                     validation_rows=validation_rows,
                 )
@@ -681,7 +685,7 @@ async def dataset_merge(q: Q, step, error=""):
             has_experiment = False
 
         current_files = os.listdir(current_dir)
-        current_files = [x for x in current_files if not x.endswith(".p")]
+        current_files = [x for x in current_files if not x.endswith(".yaml")]
         target_files = os.listdir(target_dir)
         overlapping_files = list(set(current_files).intersection(set(target_files)))
         rename_map = {}
@@ -834,7 +838,7 @@ async def dataset_newexperiment(q: Q, dataset_id: int):
     dataset = q.client.app_db.get_dataset(dataset_id)
 
     q.client["experiment/start/cfg_file"] = dataset.config_file.split("/")[-1].replace(
-        ".p", ""
+        ".yaml", ""
     )
     q.client["experiment/start/cfg_category"] = q.client[
         "experiment/start/cfg_file"
@@ -877,7 +881,7 @@ async def dataset_edit(
     q.client["dataset/import/id"] = dataset_id
 
     q.client["dataset/import/cfg_file"] = dataset.config_file.split("/")[-1].replace(
-        ".p", ""
+        ".yaml", ""
     )
     q.client["dataset/import/cfg_category"] = q.client["dataset/import/cfg_file"].split(
         "_"
@@ -885,7 +889,7 @@ async def dataset_edit(
     q.client["dataset/import/path"] = dataset.path
     q.client["dataset/import/name"] = dataset.name
     q.client["dataset/import/original_name"] = dataset.name
-    q.client["dataset/import/cfg"] = load_dill(dataset.config_file)
+    q.client["dataset/import/cfg"] = load_config_yaml(dataset.config_file)
 
     if allow_merge and experiments_df.shape[0]:
         allow_merge = False
@@ -961,8 +965,7 @@ async def dataset_display(q: Q) -> None:
         q.client["dataset/display/id"]
     ]
     dataset = q.client.app_db.get_dataset(dataset_id)
-    config_file = dataset.config_file
-    cfg = load_dill(config_file)
+    cfg = load_config_yaml(dataset.config_file)
 
     has_train_df = cfg.dataset.train_dataframe != "None"
 

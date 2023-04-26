@@ -68,7 +68,7 @@ class Config(ConfigProblemBase):
         num_beams=2,
         temperature=0.3,
         repetition_penalty=1.2,
-        stop_tokens=(),
+        stop_tokens="",
     )
     environment: ConfigNLPCausalLMEnvironment = ConfigNLPCausalLMEnvironment(
         mixed_precision=True, number_of_workers=8, seed=1

@@ -47,6 +47,13 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq")
 
     def __post_init__(self):
+        self.prompt_column = (
+            tuple(
+                self.prompt_column,
+            )
+            if isinstance(self.prompt_column, str)
+            else tuple(self.prompt_column)
+        )
         super().__post_init__()
 
         self._possible_values["train_dataframe"] = possible_values.Files(

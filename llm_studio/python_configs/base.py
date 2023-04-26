@@ -165,3 +165,13 @@ class DefaultConfig:
                 # object, at least, has no __annotations__ attribute.
                 pass
         return d
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        """Creates a config object from a dictionary"""
+        d_filtered = {k: v for k, v in d.items() if k in cls.get_annotations()}
+        if len(d) != len(d_filtered):
+            logger.warning(
+                f"Keys {set(d.keys()) - set(d_filtered.keys())} are not in the config."
+            )
+        return cls(**d_filtered)  # mypy: ignore

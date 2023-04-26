@@ -11,13 +11,13 @@ import shutil
 import socket
 import subprocess
 import time
+import uuid
 import zipfile
 from collections import defaultdict
 from contextlib import closing
 from functools import partial
-from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, DefaultDict, List, Optional, Tuple, Type, Union
 
-import dill
 import GPUtil
 import numpy as np
 import pandas as pd
@@ -26,15 +26,20 @@ from boto3.session import Session
 from botocore.handlers import disable_signing
 from datasets import load_dataset
 from h2o_wave import Q, ui
-from h2o_wave.types import StatListItem
 from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
 
 from app_utils.db import Experiment
 from llm_studio.src import possible_values
+from llm_studio.src.utils.config_utils import (
+    _get_type_annotation_error,
+    load_config_yaml,
+    parse_cfg_dataclass,
+    save_config_yaml,
+)
 from llm_studio.src.utils.data_utils import is_valid_data_frame, read_dataframe
 from llm_studio.src.utils.export_utils import get_size_str
-from llm_studio.src.utils.utils import KNOWN_TYPE_ANNOTATIONS, copy_config
+from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 
 from .config import default_cfg
 
@@ -77,13 +82,6 @@ def get_settings_path(q):
     return f"{default_cfg.dbs_path}/{get_user_id(q)}.settings"
 
 
-def _get_type_annotation_error(v: Any, type_annotation: Type) -> ValueError:
-    return ValueError(
-        f"Cannot show {v}: not a dataclass"
-        f" and {type_annotation} is not a known type annotation."
-    )
-
-
 def find_free_port():
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         s.bind(("", 0))
@@ -104,14 +102,14 @@ def start_process(cfg: Any, gpu_list: List, process_queue: List) -> subprocess.P
     """
 
     num_gpus = len(gpu_list)
-    config_name = f"{cfg.output_directory}/cfg.p"
+    config_name = f"{cfg.output_directory}/cfg.yaml"
 
     if num_gpus == 0:
         p = subprocess.Popen(
             [
                 "python",
                 "train_wave.py",
-                "-P",
+                "-Y",
                 config_name,
                 "-Q",
                 ",".join([str(x) for x in process_queue]),
@@ -142,7 +140,7 @@ def start_process(cfg: Any, gpu_list: List, process_queue: List) -> subprocess.P
                 f"--nproc_per_node={str(num_gpus)}",
                 f"--master_port={str(free_port)}",
                 "train_wave.py",
-                "-P",
+                "-Y",
                 config_name,
                 "-Q",
                 ",".join([str(x) for x in process_queue]),
@@ -484,22 +482,6 @@ def clean_error(error: str):
     return error
 
 
-def make_label(title: str, appendix: str = "") -> str:
-    """Cleans a label
-
-    Args:
-        title: title to clean
-        appendix: optional appendix
-
-    Returns:
-        Cleaned label
-
-    """
-    label = " ".join(w.capitalize() for w in title.split("_")) + appendix
-    label = label.replace("Llm", "LLM")
-    return label
-
-
 def remove_model_type(problem_type: str) -> str:
     """Removes model type from problem type
 
@@ -623,7 +605,7 @@ def get_dataset(
 
     dataset = dataset.__dict__
 
-    dataset_cfg = load_dill(dataset["config_file"]).dataset.__dict__
+    dataset_cfg = load_config_yaml(dataset["config_file"]).dataset.__dict__
 
     for kk, vv in dataset_cfg.items():
         dataset[kk] = vv
@@ -1178,111 +1160,6 @@ def parse_ui_elements(
     return cfg
 
 
-def get_parent_element(cfg: Any, beautify: bool = True):
-    if hasattr(cfg, "_parent_experiment"):
-        key = "Parent Experiment"
-        value = cfg._parent_experiment
-        if beautify:
-            return ui.stat_list_item(label=key, value=value)
-        return {key: value}
-
-    return None
-
-
-def get_cfg_elements(cfg: Any, q: Q, beautify: bool = True) -> List[StatListItem]:
-    """Returns all single config settings for a given configuration
-
-    Args:
-        cfg: configuration
-        q: Q
-        beautify: flag if the output shall be ran through make_label()
-            strips underscores and Title uppercases.
-
-    Returns:
-        List of stat list items with configuration settings
-    """
-
-    items = []
-
-    parent_element = get_parent_element(cfg, beautify)
-    if parent_element:
-        items.append(parent_element)
-
-    cfg_dict = cfg.__dict__
-    type_annotations = cfg.get_annotations()
-    cfg_dict = {key: cfg_dict[key] for key in cfg._get_order()}
-
-    for k, v in cfg_dict.items():
-
-        if k.startswith("_") or cfg._get_visibility(k) < 0:
-            continue
-
-        if any([x in k for x in ["api"]]):
-            continue
-
-        type_annotation = type_annotations[k]
-
-        if type_annotation in KNOWN_TYPE_ANNOTATIONS:
-            if type_annotation == float:
-                v = float(v)
-            if beautify:
-                t = [ui.stat_list_item(label=make_label(k), value=str(v))]
-            else:
-                t = [{k: v}]
-        elif dataclasses.is_dataclass(v):
-            elements_group = get_cfg_elements(cfg=v, q=q)
-            t = elements_group
-        else:
-            raise _get_type_annotation_error(v, type_annotations[k])
-
-        items += t
-
-    return items
-
-
-def get_grouped_cfg_elements(cfg: Any, q: Q) -> dict:
-    """Returns a grouped config settings dict for a given configuration
-
-    Args:
-        cfg: configuration
-        q: Q
-
-    Returns:
-        Dict of configuration settings
-    """
-
-    cfg_dict = cfg.__dict__
-    type_annotations = cfg.get_annotations()
-    cfg_dict = {key: cfg_dict[key] for key in cfg._get_order()}
-
-    grouped_cfg_dict = {}
-
-    for k, v in cfg_dict.items():
-
-        if k.startswith("_") or cfg._get_visibility(k) < 0:
-            continue
-
-        if any([x in k for x in ["api"]]):
-            continue
-
-        type_annotation = type_annotations[k]
-
-        if type_annotation in KNOWN_TYPE_ANNOTATIONS:
-            grouped_cfg_dict.update({k: v})
-        elif dataclasses.is_dataclass(v):
-            group_items = get_cfg_elements(cfg=v, q=q, beautify=False)
-            group_items = {
-                k: list(v) if isinstance(v, tuple) else v
-                for d in group_items
-                for k, v in d.items()
-            }
-            grouped_cfg_dict.update({k: group_items})
-        else:
-            raise _get_type_annotation_error(v, type_annotations[k])
-
-    return grouped_cfg_dict
-
-
 def get_experiment_status(path: str) -> Tuple[str, str]:
     """Get status information from experiment.
 
@@ -1393,85 +1270,6 @@ def get_experiments_status(df: DataFrame) -> Tuple[List[str], List[str]]:
     return status_all, info_all
 
 
-def load_binary(path: str, backend: Any) -> Any:
-    """Loads a binary file
-
-    Args:
-        path: path of file to load
-        backend: loading backend
-
-    Returns:
-        Loaded object
-    """
-
-    with open(path, "rb") as binary_file:
-        f = backend.load(binary_file)
-        return f
-
-
-def load_dill(path: str) -> Any:
-    """Loads a dill file
-
-    Args:
-        path: path of file to load
-
-    Returns:
-        Loaded dill object
-    """
-
-    return load_binary(path, dill)
-
-
-def load_pickle(path: str) -> Any:
-    """Loads a pickle file
-
-    Args:
-        path: path of file to load
-
-    Returns:
-        Loaded object
-    """
-
-    return load_binary(path, pickle)
-
-
-def save_binary(path: str, obj: Any, backend: Any, kwargs: Dict = {}) -> None:
-    """Saves object as binary file
-
-    Args:
-        path: path of file to save
-        obj: object to save
-        backend: saving backend
-        kwargs: backend kwargs
-    """
-
-    with open(path, "wb") as pickle_file:
-        backend.dump(obj, pickle_file, **kwargs)
-
-
-def save_dill(path: str, obj: Any) -> None:
-    """Saves object as dill file
-
-    Args:
-        path: path of file to save
-        obj: object to save
-    """
-
-    save_binary(path, obj, dill)
-
-
-def save_pickle(path: str, obj: Any, protocol: int = 4) -> None:
-    """Saves object as pickle file
-
-    Args:
-        path: path of file to save
-        obj: object to save
-        protocol: protocol to use when saving pickle
-    """
-
-    save_binary(path, obj, pickle, {"protocol": protocol})
-
-
 def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
     """For each experiment in given dataframe, return certain configuration settings
 
@@ -1487,12 +1285,9 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
     for _, row in df.iterrows():
 
         try:
-            cfg = load_dill(f"{row.path}/cfg_last.p").__dict__
+            cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
         except Exception:
-            try:
-                cfg = load_dill(f"{row.path}/cfg.p").__dict__
-            except Exception:
-                cfg = None
+            cfg = None
 
         metric = ""
         loss = ""
@@ -1602,7 +1397,7 @@ def make_config_label(config_file: str) -> str:
         Label
     """
 
-    config_file = config_file.replace(".p", "")
+    config_file = config_file.replace(".yaml", "")
     if "_config_" in config_file:
         config_file_split = config_file.split("_config_")
         config_file = (
@@ -1633,7 +1428,7 @@ def get_datasets_info(df: DataFrame, q: Q) -> DefaultDict:
         path = row.path + "/"
 
         try:
-            cfg = load_dill(config_file)
+            cfg = load_config_yaml(config_file)
         except Exception:
             cfg = None
 
@@ -1773,7 +1568,7 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
 
     process_queue = list(set(all_process_queue))
 
-    save_dill(f"{cfg.output_directory}/cfg.p", cfg)
+    save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
     # Start the training process
     p = start_process(cfg=cfg, gpu_list=gpu_list, process_queue=process_queue)
@@ -2044,6 +1839,48 @@ def get_single_gpu_usage(sig_figs=1, highlight=None):
             )
         )
     return items
+
+
+def copy_config(cfg: Any) -> Any:
+    """Makes a copy of the config
+
+    Args:
+        cfg: config object
+    Returns:
+        copy of the config
+    """
+    # make unique yaml file using uuid
+    os.makedirs("output", exist_ok=True)
+    tmp_file = os.path.join("output/", str(uuid.uuid4()) + ".yaml")
+    save_config_yaml(tmp_file, cfg)
+    cfg = load_config_yaml(tmp_file)
+    os.remove(tmp_file)
+    return cfg
+
+
+def make_label(title: str, appendix: str = "") -> str:
+    """Cleans a label
+
+    Args:
+        title: title to clean
+        appendix: optional appendix
+
+    Returns:
+        Cleaned label
+
+    """
+    label = " ".join(w.capitalize() for w in title.split("_")) + appendix
+    label = label.replace("Llm", "LLM")
+    return label
+
+
+def get_cfg_list_items(cfg) -> List:
+    items = parse_cfg_dataclass(cfg)
+    x = []
+    for item in items:
+        for k, v in item.items():
+            x.append(ui.stat_list_item(label=make_label(k), value=str(v)))
+    return x
 
 
 def prepare_default_dataset(path):

@@ -27,6 +27,9 @@ clean-env:
 clean-data:
 	rm -rf data
 
+clean-output:
+	rm -rf output
+
 reports:
 	mkdir -p reports
 
