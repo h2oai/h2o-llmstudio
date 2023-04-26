@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "79905262e1bc13bd133ef22d25de6ab7a99425629044326f5c2254326460afe5"
+            "sha256": "edca75d5ad686df1debd2dd0031456d719119400a149d3dd8d3e655de87ceec6"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1001,12 +1001,13 @@
             ],
             "version": "==0.70.12.2"
         },
-        "neptune-client": {
+        "neptune": {
             "hashes": [
-                "sha256:821238f510486feacd87c745f4646916259a416545ab678b47195729c071f249"
+                "sha256:83053aaa297fa1827e0ce17d533294b84a53a61522f5337e80c85e827549b4ba",
+                "sha256:eac0e80e8c4e144b3f58834e36a469cc852f67a95f402df511a039bf1d797ab0"
             ],
             "index": "pypi",
-            "version": "==0.16.1"
+            "version": "==1.1.1"
         },
         "networkx": {
             "hashes": [
@@ -1450,7 +1451,7 @@
                 "sha256:64299f4909223da747622c030b781c0d7811e359c37124b4bd368fb8c6518baa",
                 "sha256:98b1b2782e3c6c4904938b84c0eb932721069dfdb9134313beff7c83c2df24bf"
             ],
-            "markers": "python_version >= '3.7' and python_version < '4'",
+            "markers": "python_version >= '3.7' and python_version < '4.0'",
             "version": "==2.28.2"
         },
         "requests-oauthlib": {
@@ -2569,11 +2570,11 @@
         },
         "platformdirs": {
             "hashes": [
-                "sha256:d5b638ca397f25f979350ff789db335903d7ea010ab28903f57b27e1b16c2b08",
-                "sha256:ebe11c0d7a805086e99506aa331612429a72ca7cd52a1f0d277dc4adc20cb10e"
+                "sha256:64370d47dc3fca65b4879f89bdead8197e93e05d696d6d1816243ebae8595da5",
+                "sha256:ea61fd7b85554beecbbd3e9b37fb26689b227ffae38f73353cbcc1cf8bd01878"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==3.2.0"
+            "version": "==3.3.0"
         },
         "pluggy": {
             "hashes": [

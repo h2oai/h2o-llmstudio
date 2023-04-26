@@ -60,6 +60,12 @@ isort: pipenv
 black: pipenv
 	$(PIPENV) run black .
 
+.PHONY: test
+test: reports
+	export PYTHONPATH=$(shell pwd) && $(PIPENV) run pytest -v -s -x \
+		--junitxml=./reports/junit.xml \
+		tests/* | tee reports/pytest.log
+
 .PHONY: wave
 wave:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
