@@ -19,6 +19,7 @@ from functools import partial
 from typing import Any, DefaultDict, List, Optional, Tuple, Type, Union
 
 import GPUtil
+import dill
 import numpy as np
 import pandas as pd
 import psutil
@@ -1851,9 +1852,11 @@ def copy_config(cfg: Any) -> Any:
     """
     # make unique yaml file using uuid
     os.makedirs("output", exist_ok=True)
-    tmp_file = os.path.join("output/", str(uuid.uuid4()) + ".yaml")
-    save_config_yaml(tmp_file, cfg)
-    cfg = load_config_yaml(tmp_file)
+    tmp_file = os.path.join("output/", str(uuid.uuid4()) + ".p")
+    with open(tmp_file, "wb") as f:
+        dill.dump(cfg, f)
+    with open(tmp_file, "rb") as f:
+        cfg = dill.load(f)
     os.remove(tmp_file)
     return cfg
 
