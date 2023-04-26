@@ -1536,15 +1536,20 @@ async def experiment_download_model(q: Q, error: str = ""):
 
         zf = zipfile.ZipFile(zip_path, "w")
 
-        add_file_to_zip(zf=zf, path=f"{experiment_path}/pytorch_model.bin")
-        add_file_to_zip(zf=zf, path=f"{experiment_path}/vocab.json")
-        add_file_to_zip(zf=zf, path=f"{experiment_path}/tokenizer_config.json")
-        add_file_to_zip(zf=zf, path=f"{experiment_path}/tokenizer.json")
-        add_file_to_zip(zf=zf, path=f"{experiment_path}/special_tokens_map.json")
-        add_file_to_zip(zf=zf, path=f"{experiment_path}/merges.txt")
-        add_file_to_zip(zf=zf, path=f"{experiment_path}/generation_config.json")
-        add_file_to_zip(zf=zf, path=f"{experiment_path}/config.json")
-        add_file_to_zip(zf=zf, path=f"{experiment_path}/added_tokens.jsonn")
+        FILES_TO_PUSH = [
+            "pytorch_model.bin",
+            "vocab.json",
+            "tokenizer_config.json",
+            "tokenizer.json",
+            "special_tokens_map.json",
+            "merges.txt",
+            "generation_config.json",
+            "config.json",
+            "added_tokens.json",
+        ]
+
+        for file in FILES_TO_PUSH:
+            add_file_to_zip(zf=zf, path=f"{experiment_path}/{file}")
 
         zf.close()
 
