@@ -1850,6 +1850,7 @@ def copy_config(cfg: Any) -> Any:
         copy of the config
     """
     # make unique yaml file using uuid
+    os.makedirs("output", exist_ok=True)
     tmp_file = os.path.join("output/", str(uuid.uuid4()) + ".yaml")
     save_config_yaml(tmp_file, cfg)
     cfg = load_config_yaml(tmp_file)
