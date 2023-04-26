@@ -192,6 +192,7 @@ def save_config_yaml(path: str, cfg: ConfigProblemBase) -> None:
     cfg_dict["experiment_name"] = cfg.experiment_name
     cfg_dict["output_directory"] = cfg.output_directory
     cfg_dict["llm_backbone"] = cfg.llm_backbone
+    cfg_dict["problem_type"] = "text_causal_language_modeling"
     with open(path, "w") as fp:
         yaml.dump(cfg_dict, fp, indent=4)
 

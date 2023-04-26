@@ -9,10 +9,8 @@ from h2o_wave import Q
 from app_utils.sections.common import interface
 from llm_studio.src.utils.config_utils import (
     load_config_py,
-    load_config_yaml,
     save_config_yaml,
 )
-
 from .config import default_cfg
 from .db import Database, Dataset
 from .migration import migrate_app
