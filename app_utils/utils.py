@@ -99,7 +99,8 @@ def start_process(
     Args:
         cfg: config
         gpu_list: list of GPUs to use for the training
-
+        process_queue: list of processes to wait for before starting the training
+        secrets: dictionary of secrets to pass to the training process
     Returns:
         Process
 
