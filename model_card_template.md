@@ -66,7 +66,7 @@ This model was trained using H2O LLM Studio and the configuration in [cfg.yaml](
 Model validation results using [EleutherAI lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness).
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python main.py --model hf-causal-experimental --model_args pretrained=THIS_MODEL_REPO --tasks openbookqa,arc_easy,winogrande,hellaswag,arc_challenge,piqa,boolq --device cuda &> eval.log
+CUDA_VISIBLE_DEVICES=0 python main.py --model hf-causal-experimental --model_args pretrained={{repo_id}} --tasks openbookqa,arc_easy,winogrande,hellaswag,arc_challenge,piqa,boolq --device cuda &> eval.log
 ```
 
 
