@@ -32,17 +32,14 @@ from app_utils.utils import (
     s3_download,
     s3_file_options,
 )
-<<<<<<< HEAD
-from app_utils.wave_utils import ui_table_from_df
+
+from app_utils.wave_utils import busy_dialog, ui_table_from_df
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,
     save_config_yaml,
 )
-=======
-from app_utils.wave_utils import busy_dialog, ui_table_from_df
-from llm_studio.src.utils.config_utils import load_config
->>>>>>> e68f144 (no dialog for chat)
+
 from llm_studio.src.utils.data_utils import (
     get_fill_columns,
     read_dataframe,
