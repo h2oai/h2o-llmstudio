@@ -1614,17 +1614,50 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         huggingface_hub.login(
             q.client["experiment/display/push_to_huggingface/api_key"]
         )
+        user_id = huggingface_hub.whoami()['name']
+        repo_id = f"{user_id}/{q.client['experiment/display/push_to_huggingface/model_name']}"
 
+        # push tokenizer to hub
         tokenizer.push_to_hub(
-            repo_id=q.client["experiment/display/push_to_huggingface/model_name"],
-            token=q.client["experiment/display/push_to_huggingface/api_key"],
+            repo_id=repo_id,
             private=True,
         )
 
+        # push model card to hub
+        card_data = huggingface_hub.ModelCardData(
+            language='en',
+            library_name='transformers',
+            tags=['gpt', 'llm', 'large language model'],
+        )
+        card = huggingface_hub.ModelCard.from_template(
+            card_data,
+            template_path='model_card_template.md',
+            base_model=cfg.llm_backbone,  # will be replaced in template if it exists
+            repo_id=repo_id,
+            model_architecture=model.backbone.__repr__(),
+            config=cfg.__repr__(),
+        )
+        card.push_to_hub(
+            repo_id=repo_id,
+            repo_type="model",
+            commit_message="Upload model card",
+        )
+
+        # push config to hub
+        api = huggingface_hub.HfApi()
+        api.upload_file(
+            path_or_fileobj=f"{experiment_path}/cfg.yaml",
+            path_in_repo="cfg.yaml",
+            repo_id=repo_id,
+            repo_type="model",
+            commit_message="Upload cfg.yaml",
+        )
+
+        # push model to hub
         model.backbone.push_to_hub(
-            repo_id=q.client["experiment/display/push_to_huggingface/model_name"],
-            token=q.client["experiment/display/push_to_huggingface/api_key"],
+            repo_id=repo_id,
             private=True,
+            commit_message="Upload model",
         )
 
         dialog_items = [
@@ -1675,3 +1708,67 @@ def load_cfg_model_tokenizer(experiment_path, device="cuda"):
     model.backbone.use_cache = True
 
     return cfg, model, tokenizer
+
+
+def create_model_cards(model_name, base_model, training_logs, eval):
+    model_size = model_name.split("-")[-1].upper()
+    assert "B" == model_size[-1]
+    assert int(model_size[-2]) >= 0
+    assert os.path.exists("README-template.md"), "must be running this test from the model dir."
+    shutil.rmtree(model_name, ignore_errors=True)
+    try:
+        repo = huggingface_hub.Repository(
+            local_dir=model_name,
+            clone_from="h2oai/%s" % model_name,
+            skip_lfs_files=True,
+            token=True,
+        )
+        repo.git_pull()
+    except:
+        print("call 'huggingface_cli login' first and provide access token with write permission")
+    model = AutoModelForCausalLM.from_pretrained("h2oai/%s" % model_name,
+                                                 local_files_only=False,
+                                                 torch_dtype=torch.float16,
+                                                 device_map="auto")
+    model_arch = str(model)
+    model_config = str(model.config)
+    with open("README-template.md", "r") as f:
+        content = f.read()
+        assert "<<MODEL_NAME>>" in content
+        content = content.replace("<<MODEL_NAME>>", model_name)
+
+        assert "<<MODEL_SIZE>>" in content
+        content = content.replace("<<MODEL_SIZE>>", model_size[:-1])
+
+        assert "<<BASE_MODEL>>" in content
+        content = content.replace("<<BASE_MODEL>>", f"[{base_model}](https://huggingface.co/{base_model})")
+
+        assert "<<DATASET>>" in content
+        assert "<<DATASET_NAME>>" in content
+        if not isinstance(dataset, list):
+            dataset = [dataset]
+        content = content.replace("<<DATASET>>", " and ".join([f"[{d}](https://huggingface.co/datasets/{d})" for d in dataset]))
+        content = content.replace("<<DATASET_NAME>>", "\n".join([f"- {d}" for d in dataset]))
+
+        assert "<<MODEL_ARCH>>" in content
+        content = content.replace("<<MODEL_ARCH>>", model_arch)
+
+        assert "<<MODEL_CONFIG>>" in content
+        content = content.replace("<<MODEL_CONFIG>>", model_config)
+
+        assert "<<TRAINING_LOGS>>" in content
+        if not isinstance(training_logs, list):
+            training_logs = [training_logs]
+        content = content.replace("<<TRAINING_LOGS>>", " and ".join(f"[zip]({t})" for t in training_logs))
+        content = content.replace("<<MODEL_EVAL>>", eval)
+
+        assert "<<" not in content
+        assert ">>" not in content
+
+    with open(os.path.join(model_name, "README.md"), "w") as f:
+        f.write(content)
+    try:
+        repo.commit("Update README.md")
+        repo.push_to_hub()
+    except Exception as e:
+        print(str(e))
