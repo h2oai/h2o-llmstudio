@@ -2,6 +2,7 @@ import gc
 import logging
 import os
 import shutil
+import zipfile
 from typing import Callable, List, Optional
 
 import huggingface_hub
@@ -45,14 +46,15 @@ from llm_studio.src.utils.export_utils import (
     check_available_space,
     get_artifact_path_path,
     get_logs_path,
+    get_model_path,
     get_predictions_path,
     get_size_str,
     save_logs,
     save_prediction_outputs,
 )
 from llm_studio.src.utils.logging_utils import write_flag
-from llm_studio.src.utils.modeling_utils import load_checkpoint
-from llm_studio.src.utils.utils import kill_child_processes
+from llm_studio.src.utils.modeling_utils import load_checkpoint, unwrap_model
+from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
 
 from .common import clean_dashboard
 
@@ -1100,6 +1102,13 @@ async def experiment_display(q: Q) -> None:
                 tooltip=None,
             ),
             ui.button(
+                name="experiment/display/download_model",
+                label="Download model",
+                primary=False,
+                disabled=False,
+                tooltip=None,
+            ),
+            ui.button(
                 name="experiment/display/push_to_huggingface",
                 label="Push checkpoint to huggingface",
                 primary=False,
@@ -1506,6 +1515,55 @@ def get_experiment_list_message_bar(q):
     return msg_bar
 
 
+async def experiment_download_model(q: Q, error: str = ""):
+    experiment = q.client["experiment/display/experiment"]
+    experiment_path = q.client["experiment/display/experiment_path"]
+    zip_path = get_model_path(experiment.name, experiment_path)
+
+    if not os.path.exists(zip_path):
+        logger.info(f"Creating {zip_path} on demand")
+
+        cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path, device="cpu")
+        if hasattr(cfg.training, "lora") and cfg.training.lora:
+            # merges the LoRa layers into the base model.
+            # This is needed if someone wants to use the base model as a standalone
+            # model.
+            model.backbone = model.backbone.merge_and_unload()
+
+        model = unwrap_model(model)
+        checkpoint_path = cfg.output_directory
+
+        model.backbone.save_pretrained(checkpoint_path)
+        tokenizer.save_pretrained(checkpoint_path)
+
+        zf = zipfile.ZipFile(zip_path, "w")
+
+        FILES_TO_PUSH = [
+            "pytorch_model.bin",
+            "vocab.json",
+            "tokenizer_config.json",
+            "tokenizer.json",
+            "special_tokens_map.json",
+            "merges.txt",
+            "generation_config.json",
+            "config.json",
+            "added_tokens.json",
+        ]
+
+        for file in FILES_TO_PUSH:
+            add_file_to_zip(zf=zf, path=f"{experiment_path}/{file}")
+
+        zf.close()
+
+    download_url = get_download_link(q, zip_path)
+    logger.info(f"Logs URL: {download_url}")
+
+    q.page["meta"].script = ui.inline_script(
+        f'window.open("{download_url}", "_blank");'
+    )
+    await q.page.save()
+
+
 async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
 
     if q.args["experiment/display/push_to_huggingface"] or error:
@@ -1539,10 +1597,11 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         ]
     elif q.args["experiment/display/push_to_huggingface_submit"]:
         experiment_path = q.client["experiment/display/experiment_path"]
-        cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path)
+        cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path, device="cpu")
         if hasattr(cfg.training, "lora") and cfg.training.lora:
             # merges the LoRa layers into the base model.
-            # This is needed if someone wants to use the base model as a standalone model.
+            # This is needed if someone wants to use the base model as a standalone
+            # model.
             model.backbone = model.backbone.merge_and_unload()
 
         huggingface_hub.login(
