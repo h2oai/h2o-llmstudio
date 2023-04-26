@@ -109,6 +109,7 @@ def start_process(
 
     num_gpus = len(gpu_list)
     config_name = os.path.join(cfg.output_directory, "cfg.yaml")
+    env = {**os.environ, **secrets}
 
     if num_gpus == 0:
         p = subprocess.Popen(
@@ -120,7 +121,7 @@ def start_process(
                 "-Q",
                 ",".join([str(x) for x in process_queue]),
             ],
-            env={**os.environ, **secrets},
+            env=env,
         )
     # Do not delete for debug purposes
     # elif num_gpus == 1:
@@ -142,6 +143,7 @@ def start_process(
         p = subprocess.Popen(
             [
                 "env",
+                f"CUDA_VISIBLE_DEVICES={','.join(gpu_list)}",
                 "torchrun",
                 f"--nproc_per_node={str(num_gpus)}",
                 f"--master_port={str(free_port)}",
@@ -151,11 +153,7 @@ def start_process(
                 "-Q",
                 ",".join([str(x) for x in process_queue]),
             ],
-            env={
-                **os.environ,
-                **secrets,
-                "CUDA_VISIBLE_DEVICES" " ": ",".join(gpu_list),
-            },
+            env=env,
         )
     logger.info(f"Percentage of RAM memory used: {psutil.virtual_memory().percent}")
 
