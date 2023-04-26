@@ -16,10 +16,10 @@ import zipfile
 from collections import defaultdict
 from contextlib import closing
 from functools import partial
-from typing import Any, DefaultDict, List, Optional, Tuple, Type, Union
+from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
 
-import GPUtil
 import dill
+import GPUtil
 import numpy as np
 import pandas as pd
 import psutil
@@ -31,6 +31,9 @@ from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
 
 from app_utils.db import Experiment
+from llm_studio.python_configs.text_causal_language_modeling_config import (
+    ConfigProblemBase,
+)
 from llm_studio.src import possible_values
 from llm_studio.src.utils.config_utils import (
     _get_type_annotation_error,
@@ -90,7 +93,9 @@ def find_free_port():
         return s.getsockname()[1]
 
 
-def start_process(cfg: Any, gpu_list: List, process_queue: List) -> subprocess.Popen:
+def start_process(
+    cfg: ConfigProblemBase, gpu_list: List, process_queue: List, secrets: Dict
+) -> subprocess.Popen:
     """Starts train.py for a given configuration setting
 
     Args:
@@ -103,7 +108,7 @@ def start_process(cfg: Any, gpu_list: List, process_queue: List) -> subprocess.P
     """
 
     num_gpus = len(gpu_list)
-    config_name = f"{cfg.output_directory}/cfg.yaml"
+    config_name = os.path.join(cfg.output_directory, "cfg.yaml")
 
     if num_gpus == 0:
         p = subprocess.Popen(
@@ -114,7 +119,8 @@ def start_process(cfg: Any, gpu_list: List, process_queue: List) -> subprocess.P
                 config_name,
                 "-Q",
                 ",".join([str(x) for x in process_queue]),
-            ]
+            ],
+            env={**os.environ, **secrets},
         )
     # Do not delete for debug purposes
     # elif num_gpus == 1:
@@ -136,7 +142,6 @@ def start_process(cfg: Any, gpu_list: List, process_queue: List) -> subprocess.P
         p = subprocess.Popen(
             [
                 "env",
-                f"CUDA_VISIBLE_DEVICES={','.join(gpu_list)}",
                 "torchrun",
                 f"--nproc_per_node={str(num_gpus)}",
                 f"--master_port={str(free_port)}",
@@ -145,7 +150,12 @@ def start_process(cfg: Any, gpu_list: List, process_queue: List) -> subprocess.P
                 config_name,
                 "-Q",
                 ",".join([str(x) for x in process_queue]),
-            ]
+            ],
+            env={
+                **os.environ,
+                **secrets,
+                "CUDA_VISIBLE_DEVICES" " ": ",".join(gpu_list),
+            },
         )
     logger.info(f"Percentage of RAM memory used: {psutil.virtual_memory().percent}")
 
@@ -1547,14 +1557,8 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
         pre: prefix for client keys
         gpu_list: list of GPUs available
     """
-    cfg = copy_config(cfg)
     if gpu_list is None:
         gpu_list = cfg.environment.gpus
-
-    mode = "train"
-
-    cfg.output_directory = f"{get_output_dir(q)}/{cfg.experiment_name}/"
-    os.makedirs(cfg.output_directory)
 
     # Get queue of the processes to wait for
     running_experiments = get_experiments(q=q)
@@ -1569,16 +1573,25 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
 
     process_queue = list(set(all_process_queue))
 
+    secrets = {
+        "NEPTUNE_API_TOKEN": cfg.logging.neptune_api_token,
+        "OPENAI_API_KEY": cfg.environment.openai_api_token,
+    }
+    cfg = copy_config(cfg)
+    cfg.output_directory = f"{get_output_dir(q)}/{cfg.experiment_name}/"
+    os.makedirs(cfg.output_directory)
     save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
     # Start the training process
-    p = start_process(cfg=cfg, gpu_list=gpu_list, process_queue=process_queue)
+    p = start_process(
+        cfg=cfg, gpu_list=gpu_list, process_queue=process_queue, secrets=secrets
+    )
 
     logger.info(f"Process: {p.pid}, Queue: {process_queue}, GPUs: {gpu_list}")
 
     experiment = Experiment(
         name=cfg.experiment_name,
-        mode=mode,
+        mode="train",
         dataset=q.client[f"{pre}/dataset"],
         config_file=q.client[f"{pre}/cfg_file"],
         path=cfg.output_directory,
@@ -1852,11 +1865,9 @@ def copy_config(cfg: Any) -> Any:
     """
     # make unique yaml file using uuid
     os.makedirs("output", exist_ok=True)
-    tmp_file = os.path.join("output/", str(uuid.uuid4()) + ".p")
-    with open(tmp_file, "wb") as f:
-        dill.dump(cfg, f)
-    with open(tmp_file, "rb") as f:
-        cfg = dill.load(f)
+    tmp_file = os.path.join("output/", str(uuid.uuid4()) + ".yaml")
+    save_config_yaml(tmp_file, cfg)
+    cfg = load_config_yaml(tmp_file)
     os.remove(tmp_file)
     return cfg
 
