@@ -1032,9 +1032,7 @@ def get_ui_elements(
             elif q.client[f"{pre}/cfg_mode/from_cfg"]:
                 q.client[f"{pre}/cfg/{k}"] = v
         # Overwrite current default values with user_settings
-        if "api" in k and f"default_{k}" in q.client:
-            q.client[f"{pre}/cfg/{k}"] = q.client[f"default_{k}"]
-        elif q.client[f"{pre}/cfg_mode/from_default"] and f"default_{k}" in q.client:
+        if q.client[f"{pre}/cfg_mode/from_default"] and f"default_{k}" in q.client:
             q.client[f"{pre}/cfg/{k}"] = q.client[f"default_{k}"]
 
         if not (check_dependencies(cfg=cfg, pre=pre, k=k, q=q)):
@@ -1573,9 +1571,10 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
     process_queue = list(set(all_process_queue))
 
     secrets = {
-        "NEPTUNE_API_TOKEN": cfg.logging.neptune_api_token,
-        "OPENAI_API_KEY": cfg.environment.openai_api_token,
+        "NEPTUNE_API_TOKEN": q.client["default_neptune_api_token"],
+        "OPENAI_API_KEY": q.client["default_openai_api_token"]
     }
+    print(secrets)
     cfg = copy_config(cfg)
     cfg.output_directory = f"{get_output_dir(q)}/{cfg.experiment_name}/"
     os.makedirs(cfg.output_directory)
