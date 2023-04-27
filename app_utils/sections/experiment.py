@@ -1649,8 +1649,6 @@ def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda"):
     cfg.tokenizer.padding_quantile = 0
 
     cfg.prediction.num_history = 2
-    cfg.prediction.max_length_prompt = 256
-    cfg.prediction.max_length_inference = 256
 
     tokenizer = get_tokenizer(cfg)
 
