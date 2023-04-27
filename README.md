@@ -132,6 +132,35 @@ During the experiment, you can monitor the training progress and model performan
 ### Push to Hugging Face 🤗
 If you want to publish your model, you can export it with a single click to the [Hugging Face Hub](https://huggingface.co/)
 and share it with the community. To be able to push your model to the Hub, you need to have an API token with write access.
+You can also click the _Download model_ button to the model locally in Hugging Face format and use it in your own application.
+To use a converted model, you can use the following code snippet:
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "path_to_downloaded_model"  # either local folder or huggingface model name
+
+# Important: The prompt needs to be in the same format the model was trained with.
+# You can find an example prompt in the experiment logs.
+prompt = "<|prompt|>How are you?<|endoftext|><|answer|>"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+model.cuda().eval()
+
+inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
+# generate configuration can be modified to your needs
+tokens = model.generate(
+    **inputs,
+    max_new_tokens=256,
+    temperature=0.3,
+    repetition_penalty=1.2,
+    num_beams=2
+)[0]
+tokens = tokens[inputs["input_ids"].shape[1]:]
+answer = tokenizer.decode(tokens, skip_special_tokens=True)
+print(answer)
+```
 
 ### Compare experiments
 In the **View Experiments** view, you can compare your experiments and see how different model parameters affect the model performance.
