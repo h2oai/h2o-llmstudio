@@ -1672,6 +1672,8 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         }
         if cfg.dataset.add_eos_token_to_prompt:
             data.update({"end_of_sentence": cfg._tokenizer_eos_token})
+        else:
+            data.update({"end_of_sentence": ""})
 
         custom_pipeline = pipeline_template.render(data)
 
