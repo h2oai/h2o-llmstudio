@@ -32,9 +32,9 @@ class H2OTextGenerationPipeline(TextGenerationPipeline):
         for rec in records:
             rec["generated_text"] = (
                 rec["generated_text"]
-                .split({{text_answer_separator}})[1]
+                .split("{{text_answer_separator}}")[1]
                 .strip()
-                .split({{text_prompt_start}})[0]
+                .split("{{text_prompt_start}}")[0]
                 .strip()
             )
         return records
