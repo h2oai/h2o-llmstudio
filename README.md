@@ -166,5 +166,15 @@ python prompt.py -e examples/output_oasst1
 
 All open-source datasets and models are posted on [H2O.ai's Hugging Face page](https://huggingface.co/h2oai/).
 
+
+## Changelog
+The field is rapidly evolving, and we are constantly adding new features and fixing bugs.
+While we are striving to converge to a stable framework, at this early point of development certain changes may break your existing experiments. 
+We thus recommend to pin the version of the framework to the one you used for your experiments. 
+Below, we list a summary of the changes that may affect older experiments:
+- [PR 12](https://github.com/h2oai/h2o-llmstudio/pull/12). Experiment configurations are now stored in yaml format,
+allowing for more flexibility in the configuration while making it much easier to be backward compatible. Old experiment configurations that are stored in pickle format will be converted to yaml format automatically.
+- [PR 40](https://github.com/h2oai/h2o-llmstudio/pull/40). Datasets can now use past chat history as input. This feature can be enabled by setting `Parent Id Column` in the dataset configuration.
+
 ## License
 H2O LLM Studio is licensed under the Apache 2.0 license. Please see the [LICENSE](LICENSE) file for more information.

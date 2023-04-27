@@ -45,8 +45,8 @@ def unwrap_model(model: torch.nn.Module):
 
 
 # TODO: currently not saving optimizer
-def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> Dict:
-    """Saves a model checkpoint if the path is provided and returns it back.
+def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
+    """Saves a model checkpoint if the path is provided.
 
     Args:
         model: model to save
@@ -65,8 +65,6 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> Dict:
 
     if path is not None:
         torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
-
-    return checkpoint
 
 
 def load_model_weights(

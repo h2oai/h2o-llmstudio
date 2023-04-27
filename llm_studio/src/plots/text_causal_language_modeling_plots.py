@@ -62,8 +62,8 @@ class Plots:
                 """
             <div padding: 10px;">
             <p style="font-size: 20px;">
-            <b>Note:</b> <br> Model is jointly trained on prompt + answer text. 
-            If you only want to use the answer text as a target, 
+            <b>Note:</b> <br> Model is jointly trained on prompt + answer text.
+            If you only want to use the answer text as a target,
             restart the experiment and enable <i> Mask Prompt Labels </i>
             </p>
             </div>
