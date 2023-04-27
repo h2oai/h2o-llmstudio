@@ -132,7 +132,7 @@ During the experiment, you can monitor the training progress and model performan
 ### Push to Hugging Face 🤗
 If you want to publish your model, you can export it with a single click to the [Hugging Face Hub](https://huggingface.co/)
 and share it with the community. To be able to push your model to the Hub, you need to have an API token with write access.
-You can also click the _Download model_ button to the model locally in Hugging Face format and use it in your own application.
+You can also click the **Download model** button to the model locally in Hugging Face format and use it in your own application.
 To use a converted model, you can use the following code snippet:
 
 ```python
