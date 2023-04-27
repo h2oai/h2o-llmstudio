@@ -45,8 +45,11 @@ def get_tokenizer(cfg: Any):
     if tokenizer.cls_token is None:
         tokenizer.cls_token = tokenizer.eos_token
         tokenizer.cls_token_id = tokenizer.eos_token_id
+    if tokenizer.sep_token is None:
+        tokenizer.sep_token = tokenizer.eos_token
+        tokenizer.sep_token_id = tokenizer.eos_token_id
 
-    cfg._tokenizer_sep_token = tokenizer.eos_token
+    cfg._tokenizer_sep_token = tokenizer.sep_token
 
     if tokenizer.unk_token_id is not None:
         cfg._tokenizer_mask_token_id = tokenizer.unk_token_id

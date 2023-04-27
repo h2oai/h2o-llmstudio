@@ -1522,12 +1522,9 @@ async def experiment_download_model(q: Q, error: str = ""):
     if not os.path.exists(zip_path):
         logger.info(f"Creating {zip_path} on demand")
 
-        cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path, device="cpu")
-        if hasattr(cfg.training, "lora") and cfg.training.lora:
-            # merges the LoRa layers into the base model.
-            # This is needed if someone wants to use the base model as a standalone
-            # model.
-            model.backbone = model.backbone.merge_and_unload()
+        cfg, model, tokenizer = load_cfg_model_tokenizer(
+            experiment_path, merge=True, device="cpu"
+        )
 
         model = unwrap_model(model)
         checkpoint_path = cfg.output_directory
