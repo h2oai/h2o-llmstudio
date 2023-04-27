@@ -1623,7 +1623,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         card_data = huggingface_hub.ModelCardData(
             language="en",
             library_name="transformers",
-            tags=["gpt", "llm", "large language model"],
+            tags=["gpt", "llm", "large language model", "h2o-llmstudio"],
         )
         card = huggingface_hub.ModelCard.from_template(
             card_data,
