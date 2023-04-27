@@ -4,6 +4,7 @@ import os
 import shutil
 import zipfile
 from typing import Callable, List, Optional
+from jinja2 import Environment, FileSystemLoader
 
 import huggingface_hub
 import numpy as np
@@ -1614,8 +1615,10 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         huggingface_hub.login(
             q.client["experiment/display/push_to_huggingface/api_key"]
         )
-        user_id = huggingface_hub.whoami()['name']
-        repo_id = f"{user_id}/{q.client['experiment/display/push_to_huggingface/model_name']}"
+        user_id = huggingface_hub.whoami()["name"]
+        repo_id = (
+            f"{user_id}/{q.client['experiment/display/push_to_huggingface/model_name']}"
+        )
 
         # push tokenizer to hub
         tokenizer.push_to_hub(
@@ -1625,13 +1628,13 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
 
         # push model card to hub
         card_data = huggingface_hub.ModelCardData(
-            language='en',
-            library_name='transformers',
-            tags=['gpt', 'llm', 'large language model'],
+            language="en",
+            library_name="transformers",
+            tags=["gpt", "llm", "large language model"],
         )
         card = huggingface_hub.ModelCard.from_template(
             card_data,
-            template_path='model_card_template.md',
+            template_path="model_card_template.md",
             base_model=cfg.llm_backbone,  # will be replaced in template if it exists
             repo_id=repo_id,
             model_architecture=model.backbone.__repr__(),
@@ -1654,10 +1657,39 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         )
 
         # push model to hub
+        model.backbone.config.custom_pipeline = {
+            "text-generation": {
+                "impl": "h2oai_pipeline.H2OTextGenerationPipeline",
+                "pt": "AutoModelForCausalLM",
+            }
+        }
         model.backbone.push_to_hub(
             repo_id=repo_id,
             private=True,
             commit_message="Upload model",
+        )
+
+        # push pipeline to hub
+        template_env = Environment(loader=FileSystemLoader(searchpath="llm_studio/src/"))
+        pipeline_template = template_env.get_template("h2oai_pipeline_template.py")
+
+        data = {
+            "text_prompt_start": cfg.dataset.text_prompt_start,
+            "text_answer_separator": cfg.dataset.text_answer_separator,
+        }
+
+        custom_pipeline = pipeline_template.render(data)
+
+        custom_pipeline_path = os.path.join(experiment_path, "h2oai_pipeline.py")
+        with open(custom_pipeline_path, "w") as f:
+            f.write(custom_pipeline)
+
+        api.upload_file(
+            path_or_fileobj=custom_pipeline_path,
+            path_in_repo="h2oai_pipeline.py",
+            repo_id=repo_id,
+            repo_type="model",
+            commit_message="Upload h2oai_pipeline.py",
         )
 
         dialog_items = [
