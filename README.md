@@ -74,7 +74,7 @@ make wave
 This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
 Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
 
-If you are running H2O LLM Studio outside of Pipenv, you can also start the server using the following command:
+If you are running H2O LLM Studio outside of Pipenv, you need to start wave as follows:
 ```bash
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 H2O_WAVE_NO_LOG=True \
