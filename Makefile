@@ -21,6 +21,10 @@ setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
 	$(PIPENV_PIP) install deps/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl --force-reinstall
 
+.PHONY: export-requirements
+export-requirements: pipenv
+	$(PIPENV) requirements > requirements.txt
+
 clean-env:
 	$(PIPENV) --rm
 
