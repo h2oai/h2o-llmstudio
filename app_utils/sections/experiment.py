@@ -1677,6 +1677,8 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             "text_prompt_start": cfg.dataset.text_prompt_start,
             "text_answer_separator": cfg.dataset.text_answer_separator,
         }
+        if cfg.dataset.add_eos_token_to_prompt:
+            data.update({"end_of_sentence": cfg._tokenizer_eos_token})
 
         custom_pipeline = pipeline_template.render(data)
 

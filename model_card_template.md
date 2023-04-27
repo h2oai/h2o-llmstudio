@@ -35,7 +35,7 @@ res = generate_text("Why is drinking water so healthy?", max_new_tokens=100)
 print(res[0]["generated_text"])
 ```
 
-Alternatively, if you prefer to not use `trust_remote_code=True` you can download [instruct_pipeline.py](https://huggingface.co/{{repo_id}}/blob/main/h2oai_pipeline.py), store it alongside your notebook, and construct the pipeline yourself from the loaded model and tokenizer:
+Alternatively, if you prefer to not use `trust_remote_code=True` you can download [h2oai_pipeline.py](https://huggingface.co/{{repo_id}}/blob/main/h2oai_pipeline.py), store it alongside your notebook, and construct the pipeline yourself from the loaded model and tokenizer:
 
 ```python
 import torch
