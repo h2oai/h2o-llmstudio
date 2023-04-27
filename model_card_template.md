@@ -58,7 +58,7 @@ print(res[0]["generated_text"])
 
 ## Model Configuration
 
-This model was trained using H2O LLM Studio and the configuration in [cfg.yaml](cfg.yaml). Visit [H2O LLM Studio](https://github.com/h2oai/h2o-llmstudio) to learn how to train your own large language models.
+This model was trained using H2O LLM Studio and with the configuration in [cfg.yaml](cfg.yaml). Visit [H2O LLM Studio](https://github.com/h2oai/h2o-llmstudio) to learn how to train your own large language models.
 
 
 ## Model Validation
