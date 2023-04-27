@@ -1,5 +1,7 @@
 import os
 
+from llm_studio.src.utils.config_utils import load_config_yaml
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -11,7 +13,6 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 import argparse
 
-import dill
 import numpy as np
 import torch
 
@@ -46,8 +47,7 @@ if __name__ == "__main__":
     args, unknown = parser.parse_known_args()
     DEVICE = args.device
 
-    with open(os.path.join(args.experiment, "cfg_last.p"), "rb") as pickle_file:
-        cfg = dill.load(pickle_file)
+    cfg = load_config_yaml(os.path.join(args.experiment, "cfg.yaml"))
 
     cfg.training.epochs = 0
 
@@ -92,7 +92,8 @@ if __name__ == "__main__":
     print()
     print("=============")
     print(
-        "You can change inference parameters on the fly by typing --param value, such as --num_beams 4. You can also chain them such as --num_beams 4 --top_k 30."
+        "You can change inference parameters on the fly by typing --param value, "
+        "such as --num_beams 4. You can also chain them such as --num_beams 4 --top_k 30."
     )
     print()
 

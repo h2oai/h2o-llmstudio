@@ -27,6 +27,9 @@ clean-env:
 clean-data:
 	rm -rf data
 
+clean-output:
+	rm -rf output
+
 reports:
 	mkdir -p reports
 
@@ -62,7 +65,7 @@ black: pipenv
 
 .PHONY: test
 test: reports
-	export PYTHONPATH=$(shell pwd) && $(PIPENV) run pytest -v -s -x \
+	export PYTHONPATH=$(PWD) && $(PIPENV) run pytest -v -s -x \
 		--junitxml=./reports/junit.xml \
 		tests/* | tee reports/pytest.log
 

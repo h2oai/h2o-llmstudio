@@ -75,6 +75,9 @@ def get_tokenizer(cfg: Any):
             tokenizer.add_tokens([stop_word])
         cfg.tokenizer._stop_words.append(stop_word)
 
+    cfg.tokenizer._stop_words = [
+        stop_word for stop_word in cfg.tokenizer._stop_words if stop_word != ""
+    ]
     cfg.tokenizer._vocab_length = len(tokenizer.vocab)
 
     cfg.tokenizer._stop_words_ids = []

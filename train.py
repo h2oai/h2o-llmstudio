@@ -25,7 +25,11 @@ from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from tqdm import tqdm
 
 from llm_studio.src.loggers import MainLogger
-from llm_studio.src.utils.config_utils import load_config
+from llm_studio.src.utils.config_utils import (
+    load_config_py,
+    load_config_yaml,
+    save_config_yaml,
+)
 from llm_studio.src.utils.data_utils import (
     get_data,
     get_inference_batch_size,
@@ -54,12 +58,7 @@ from llm_studio.src.utils.modeling_utils import (
     save_predictions,
     wrap_model_distributed,
 )
-from llm_studio.src.utils.utils import (
-    kill_ddp_processes,
-    save_config,
-    set_environment,
-    set_seed,
-)
+from llm_studio.src.utils.utils import kill_ddp_processes, set_environment, set_seed
 
 logger = logging.getLogger(__name__)
 
@@ -393,9 +392,7 @@ def run_train(
                                 f"{val_metric:.5} to {checkpoint_path}"
                             )
 
-                            _ = save_checkpoint(
-                                model=model, path=checkpoint_path, cfg=cfg
-                            )
+                            save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
                         best_val_metric = val_metric
 
                 model.train()
@@ -562,7 +559,7 @@ def run(cfg: Any) -> None:
     global_start_time = time.time()
     if cfg.environment._local_rank == 0:
         # re-save cfg
-        save_config(f"{cfg.output_directory}/cfg.p", cfg)
+        save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
         cfg.logging._logger = MainLogger(cfg)
 
@@ -580,6 +577,8 @@ def run(cfg: Any) -> None:
             global_start_time,
             step=cfg.environment._curr_step,
         )
+        # re-save config
+        save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
     val_data, val_loss, val_metric, last_batch = run_train(
         cfg=cfg,
@@ -606,9 +605,9 @@ def run(cfg: Any) -> None:
                 f"{val_metric:.5} to {checkpoint_path}"
             )
 
-            _ = save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
+            save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
-        save_config(f"{cfg.output_directory}/cfg_last.p", cfg)
+        save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
     if cfg.environment._local_rank == 0:
         save_prediction_outputs(cfg.experiment_name, experiment_path)
@@ -634,16 +633,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "-C", "--config", help="config filename", default=argparse.SUPPRESS
     )
-    parser.add_argument(
-        "-P", "--pickle", help="pickle filename", default=argparse.SUPPRESS
-    )
+    parser.add_argument("-Y", "--yaml", help="yaml filename", default=argparse.SUPPRESS)
     parser_args, unknown = parser.parse_known_args(sys.argv)
 
     if "config" in parser_args:
-        cfg = load_config(parser_args.config)
-    elif "pickle" in parser_args:
-        with open(parser_args.pickle, "rb") as pickle_file:
-            cfg = dill.load(pickle_file)
+        cfg = load_config_py(parser_args.config)
+    elif "yaml" in parser_args:
+        cfg = load_config_yaml(parser_args.yaml)
     else:
         raise ValueError("Please, provide a configuration file")
 
