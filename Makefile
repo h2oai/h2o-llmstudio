@@ -13,7 +13,7 @@ pipenv:
 
 .PHONY: setup
 setup: pipenv
-	$(PIPENV) install --python $(PYTHON_VERSION)
+	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
 	$(PIPENV_PIP) install deps/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl --force-reinstall
 
 .PHONY: setup-dev
