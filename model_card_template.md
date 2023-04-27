@@ -26,40 +26,7 @@ pip install transformers==4.28.1
 pip install accelerate==0.18.0
 ```
 
-```python
-import torch
-from transformers import pipeline
-
-generate_text = pipeline(
-    model="{{repo_id}}",
-    torch_dtype=torch.bfloat16,
-    trust_remote_code=True,
-    device_map="auto",
-)
-
-res = generate_text(
-    "Why is drinking water so healthy?",
-    min_new_tokens={{min_new_tokens}},
-    max_new_tokens={{max_new_tokens}},
-    do_sample={{do_sample}},
-    num_beams={{num_beams}},
-    temperature=float({{temperature}}),
-    repetition_penalty=float({{repetition_penalty}}),
-)
-print(res[0]["generated_text"])
-```
-
-You can print a sample prompt after the preprocessing step to see how it is feed to the tokenizer:
-
-```python
-print(generate_text.preprocess("Why is drinking water so healthy?")["prompt_text"])
-```
-
-```bash
-{{text_prompt_start}}Why is drinking water so healthy?{{end_of_sentence}}{{text_answer_separator}}
-```
-
-Alternatively, if you prefer to not use `trust_remote_code=True` you can download [h2oai_pipeline.py](https://huggingface.co/{{repo_id}}/blob/main/h2oai_pipeline.py), store it alongside your notebook, and construct the pipeline yourself from the loaded model and tokenizer:
+Download [h2oai_pipeline.py](h2oai_pipeline.py), store it alongside your notebook, and construct the pipeline from the loaded model and tokenizer:
 
 ```python
 import torch
@@ -87,6 +54,16 @@ res = generate_text(
     repetition_penalty=float({{repetition_penalty}}),
 )
 print(res[0]["generated_text"])
+```
+
+You can print a sample prompt after the preprocessing step to see how it is feed to the tokenizer:
+
+```python
+print(generate_text.preprocess("Why is drinking water so healthy?")["prompt_text"])
+```
+
+```bash
+{{text_prompt_start}}Why is drinking water so healthy?{{end_of_sentence}}{{text_answer_separator}}
 ```
 
 ## Model Architecture
