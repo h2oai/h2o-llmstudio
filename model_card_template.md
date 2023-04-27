@@ -19,11 +19,11 @@ This model was trained using [H2O LLM Studio](https://github.com/h2oai/h2o-llmst
 
 ## Usage
 
-To use the model with the `transformers` library on a machine with GPUs, first make sure you have the `transformers` and `accelerate` libraries installed.
+To use the model with the `transformers` library on a machine with GPUs, first make sure you have the `transformers` and `torch` libraries installed.
 
 ```bash
 pip install transformers==4.28.1
-pip install accelerate==0.18.0
+pip install torch==2.0.0
 ```
 
 Download [h2oai_pipeline.py](h2oai_pipeline.py), store it alongside your notebook, and construct the pipeline from the loaded model and tokenizer:
