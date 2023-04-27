@@ -66,6 +66,37 @@ print(generate_text.preprocess("Why is drinking water so healthy?")["prompt_text
 {{text_prompt_start}}Why is drinking water so healthy?{{end_of_sentence}}{{text_answer_separator}}
 ```
 
+You may also construct the pipeline from the loaded model and tokenizer yourself and consider the preprocessing steps:
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+
+model_name = "{{repo_id}}"  # either local folder or huggingface model name
+# Important: The prompt needs to be in the same format the model was trained with.
+# You can find an example prompt in the experiment logs.
+prompt = "{{text_prompt_start}}How are you?{{end_of_sentence}}{{text_answer_separator}}"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+model.cuda().eval()
+inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
+
+# generate configuration can be modified to your needs
+tokens = model.generate(
+    **inputs,
+    min_new_tokens={{min_new_tokens}},
+    max_new_tokens={{max_new_tokens}},
+    temperature=float({{temperature}}),
+    repetition_penalty=float({{repetition_penalty}}),
+    num_beams={{num_beams}},
+)[0]
+
+tokens = tokens[inputs["input_ids"].shape[1]:]
+answer = tokenizer.decode(tokens, skip_special_tokens=True)
+print(answer)
+```
+
 ## Model Architecture
 
 ```
