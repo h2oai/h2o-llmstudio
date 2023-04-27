@@ -5,12 +5,12 @@ from transformers.pipelines.text_generation import ReturnType
 class H2OTextGenerationPipeline(TextGenerationPipeline):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        prompt = "{{text_prompt_start}}{instruction}{{end_of_sentence}}{{text_answer_separator}}"
+        self.prompt = "{{text_prompt_start}}{instruction}{{end_of_sentence}}{{text_answer_separator}}"
 
     def preprocess(
         self, prompt_text, prefix="", handle_long_generation=None, **generate_kwargs
     ):
-        prompt_text = prompt.format(instruction=prompt_text)
+        prompt_text = self.prompt.format(instruction=prompt_text)
         return super().preprocess(
             prompt_text,
             prefix=prefix,
@@ -31,6 +31,10 @@ class H2OTextGenerationPipeline(TextGenerationPipeline):
         )
         for rec in records:
             rec["generated_text"] = (
-                rec["generated_text"].split(bot)[1].strip().split(human)[0].strip()
+                rec["generated_text"]
+                .split({{text_answer_separator}})[1]
+                .strip()
+                .split({{text_prompt_start}})[0]
+                .strip()
             )
         return records

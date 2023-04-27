@@ -4,7 +4,6 @@ import os
 import shutil
 import zipfile
 from typing import Callable, List, Optional
-from jinja2 import Environment, FileSystemLoader
 
 import huggingface_hub
 import numpy as np
@@ -12,6 +11,7 @@ import pandas as pd
 import torch
 import yaml
 from h2o_wave import Q, data, ui
+from jinja2 import Environment, FileSystemLoader
 from sqlitedict import SqliteDict
 
 from app_utils.config import default_cfg
@@ -1663,7 +1663,9 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         )
 
         # push pipeline to hub
-        template_env = Environment(loader=FileSystemLoader(searchpath="llm_studio/src/"))
+        template_env = Environment(
+            loader=FileSystemLoader(searchpath="llm_studio/src/")
+        )
         pipeline_template = template_env.get_template("h2oai_pipeline_template.py")
 
         data = {
