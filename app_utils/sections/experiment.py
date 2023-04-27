@@ -1632,6 +1632,15 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             repo_id=repo_id,
             model_architecture=model.backbone.__repr__(),
             config=cfg.__repr__(),
+            min_new_tokens=cfg.prediction.min_length_inference,
+            max_new_tokens=cfg.prediction.max_length_inference,
+            do_sample=cfg.prediction.do_sample,
+            num_beams=cfg.prediction.num_beams,
+            temperature=cfg.prediction.temperature,
+            repetition_penalty=cfg.prediction.repetition_penalty,
+            text_prompt_start=cfg.dataset.text_prompt_start,
+            text_answer_separator=cfg.dataset.text_answer_separator,
+            end_of_sentence=cfg._tokenizer_eos_token if cfg.dataset.add_eos_token_to_prompt else "",
         )
         card.push_to_hub(
             repo_id=repo_id,
