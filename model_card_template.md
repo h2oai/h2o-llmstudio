@@ -87,9 +87,10 @@ tokens = model.generate(
     **inputs,
     min_new_tokens={{min_new_tokens}},
     max_new_tokens={{max_new_tokens}},
+    do_sample={{do_sample}},
+    num_beams={{num_beams}},
     temperature=float({{temperature}}),
     repetition_penalty=float({{repetition_penalty}}),
-    num_beams={{num_beams}},
 )[0]
 
 tokens = tokens[inputs["input_ids"].shape[1]:]
