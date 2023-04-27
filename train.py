@@ -467,6 +467,7 @@ def run(cfg: Any) -> None:
         )
     else:
         cfg.environment._local_rank = 0
+        cfg.environment._device = "cuda:0"
 
     set_seed(cfg.environment._seed)
     if cfg.environment._local_rank == 0:
