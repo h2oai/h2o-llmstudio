@@ -106,7 +106,7 @@ def convert_cfg_to_nested_dictionary(cfg: ConfigProblemBase) -> dict:
 
     for k, v in cfg_dict.items():
 
-        if k.startswith("_") or cfg._get_visibility(k) < 0:
+        if k.startswith("_"):
             continue
 
         if any([x in k for x in ["api"]]):
@@ -158,7 +158,7 @@ def parse_cfg_dataclass(cfg: ConfigProblemBase) -> List[Dict]:
 
     for k, v in cfg_dict.items():
 
-        if k.startswith("_") or cfg._get_visibility(k) < 0:
+        if k.startswith("_"):
             continue
 
         if any([x in k for x in ["api"]]):
@@ -174,7 +174,7 @@ def parse_cfg_dataclass(cfg: ConfigProblemBase) -> List[Dict]:
             elements_group = parse_cfg_dataclass(cfg=v)
             t = elements_group
         else:
-            raise _get_type_annotation_error(v, type_annotations[k])
+            continue
 
         items += t
 

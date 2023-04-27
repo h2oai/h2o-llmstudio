@@ -1032,7 +1032,9 @@ def get_ui_elements(
             elif q.client[f"{pre}/cfg_mode/from_cfg"]:
                 q.client[f"{pre}/cfg/{k}"] = v
         # Overwrite current default values with user_settings
-        if q.client[f"{pre}/cfg_mode/from_default"] and f"default_{k}" in q.client:
+        if "api" in k and f"default_{k}" in q.client:
+            q.client[f"{pre}/cfg/{k}"] = q.client[f"default_{k}"]
+        elif q.client[f"{pre}/cfg_mode/from_default"] and f"default_{k}" in q.client:
             q.client[f"{pre}/cfg/{k}"] = q.client[f"default_{k}"]
 
         if not (check_dependencies(cfg=cfg, pre=pre, k=k, q=q)):
