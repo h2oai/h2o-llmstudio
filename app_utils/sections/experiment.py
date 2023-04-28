@@ -931,151 +931,15 @@ async def experiment_display(q: Q) -> None:
         "experiment/display/train_data_insights",
         "experiment/display/validation_prediction_insights",
     ]:
-        if (
-            q.client["experiment/display/tab"]
-            == "experiment/display/train_data_insights"
-        ):
-            key = "train_data"
-        elif (
-            q.client["experiment/display/tab"]
-            == "experiment/display/validation_prediction_insights"
-        ):
-            key = "validation_predictions"
-
-        for k1 in ["image", "html"]:
-            if k1 not in charts:
-                continue
-            for k2, v2 in charts[k1].items():
-                if k2 != key:
-                    continue
-                if k1 == "html":
-                    q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.markup_card(
-                        box=box[cnt], title="", content=v2
-                    )
-                    q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
-
-                    continue
-
-                if k1 == "image":
-                    q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.image_card(
-                        box=box[cnt], title="", type="png", image=v2
-                    )
-                    q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
-                    continue
+        await insights_tab(charts, q)
     elif q.client["experiment/display/tab"] in ["experiment/display/summary"]:
-
-        experiment_df = get_experiments(q)
-        experiment_df = experiment_df[experiment_df.id == experiment_id]
-
-        items = []
-
-        cfg = load_config_yaml(
-            os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
-        )
-
-        parent_element = get_parent_element(cfg)
-        if parent_element:
-            items.append(parent_element)
-
-        for col in experiment_df.columns:
-            if col in [
-                "id",
-                "path",
-                "process_id",
-                "status",
-                "eta",
-                "info",
-                "mode",
-                "progress",
-            ]:
-                continue
-            v = experiment_df[col].values[0]
-            if col == "config_file":
-                col = "problem type"
-            t = ui.stat_list_item(label=make_label(col), value=str(v))
-
-            items.append(t)
-
-        q.page["experiment/display/summary"] = ui.stat_list_card(
-            box=box[cnt], items=items, title=""
-        )
-
-        q.client.delete_cards.add("experiment/display/summary")
-
+        await summary_tab(experiment_id, q)
     elif q.client["experiment/display/tab"] in ["experiment/display/config"]:
-        experiment_cfg = load_config_yaml(
-            os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
-        )
-        items = get_cfg_list_items(experiment_cfg)
-
-        q.page["experiment/display/config"] = ui.stat_list_card(
-            box=box[cnt], items=items, title=""
-        )
-
-        q.client.delete_cards.add("experiment/display/config")
+        await configs_tab(q)
     elif q.client["experiment/display/tab"] in ["experiment/display/logs"]:
-        logs_path = f"{q.client['experiment/display/experiment_path']}/logs.log"
-        text = ""
-        in_pre = 0
-        # Read log file only if it already exists
-        if os.path.exists(logs_path):
-            with open(logs_path, "r") as f:
-                for line in f.readlines():
-                    if in_pre == 0:
-                        text += "<div>"
-                    if "INFO: Lock" in line:
-                        continue
-                    # maximum line length
-                    n = 250
-                    chunks = [line[i : i + n] for i in range(0, len(line), n)]
-                    text += "</div><div>".join(chunks)
-
-                    # Check for formatted HTML text
-                    if "<pre>" in line:
-                        in_pre += 1
-                    if "</pre>" in line:
-                        in_pre -= 1
-                    if in_pre == 0:
-                        text += "</div>"
-        items = [ui.text(text)]
-
-        q.page["experiment/display/logs"] = ui.form_card(
-            box=box[cnt], items=items, title=""
-        )
-
-        q.client.delete_cards.add("experiment/display/logs")
-
+        await logs_tab(q)
     elif q.client["experiment/display/tab"] in ["experiment/display/chat"]:
-        cyclic_buffer = data(fields="msg fromUser", size=-500)
-        q.page["experiment/display/chat"] = ui.chatbot_card(
-            box=box[cnt], data=cyclic_buffer, name="experiment/display/chat/chatbot"
-        )
-
-        q.client["experiment/display/chat/box"] = box[cnt]
-        q.client["experiment/display/chat/messages"] = []
-
-        q.client.delete_cards.add("experiment/display/chat")
-
-        message = ["Loading the model...", False]
-        q.page["experiment/display/chat"].data[-1] = message
-
-        await q.page.save()
-
-        logger.info(torch.cuda.memory_allocated())
-
-        cfg, model, tokenizer = load_cfg_model_tokenizer(
-            q.client["experiment/display/experiment_path"]
-        )
-        logger.info(torch.cuda.memory_allocated())
-
-        q.page["experiment/display/chat"].data[-1] = [
-            "Model successfully loaded, how can I help you?",
-            False,
-        ]
-
-        q.client["experiment/display/chat/cfg"] = cfg
-        q.client["experiment/display/chat/model"] = model
-        q.client["experiment/display/chat/tokenizer"] = tokenizer
+        await chat_tab(q)
 
     await q.page.save()
 
@@ -1127,6 +991,140 @@ async def experiment_display(q: Q) -> None:
     q.client.delete_cards.add("experiment/display/footer")
 
 
+async def insights_tab(charts, q):
+    if (
+            q.client["experiment/display/tab"]
+            == "experiment/display/train_data_insights"
+    ):
+        key = "train_data"
+    elif (
+            q.client["experiment/display/tab"]
+            == "experiment/display/validation_prediction_insights"
+    ):
+        key = "validation_predictions"
+    for k1 in ["image", "html"]:
+        if k1 not in charts:
+            continue
+        for k2, v2 in charts[k1].items():
+            if k2 != key:
+                continue
+            if k1 == "html":
+                q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.markup_card(
+                    box="first", title="", content=v2
+                )
+                q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
+
+                continue
+
+            if k1 == "image":
+                q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.image_card(
+                    box="first", title="", type="png", image=v2
+                )
+                q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
+                continue
+
+
+async def summary_tab(experiment_id, q):
+    experiment_df = get_experiments(q)
+    experiment_df = experiment_df[experiment_df.id == experiment_id]
+    items = []
+    cfg = load_config_yaml(
+        os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
+    )
+    parent_element = get_parent_element(cfg)
+    if parent_element:
+        items.append(parent_element)
+    for col in experiment_df.columns:
+        if col in [
+            "id",
+            "path",
+            "process_id",
+            "status",
+            "eta",
+            "info",
+            "mode",
+            "progress",
+        ]:
+            continue
+        v = experiment_df[col].values[0]
+        if col == "config_file":
+            col = "problem type"
+        t = ui.stat_list_item(label=make_label(col), value=str(v))
+
+        items.append(t)
+    q.page["experiment/display/summary"] = ui.stat_list_card(
+        box="first", items=items, title=""
+    )
+    q.client.delete_cards.add("experiment/display/summary")
+
+
+async def configs_tab(q):
+    experiment_cfg = load_config_yaml(
+        os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
+    )
+    items = get_cfg_list_items(experiment_cfg)
+    q.page["experiment/display/config"] = ui.stat_list_card(
+        box="first", items=items, title=""
+    )
+    q.client.delete_cards.add("experiment/display/config")
+
+
+async def logs_tab(q):
+    logs_path = f"{q.client['experiment/display/experiment_path']}/logs.log"
+    text = ""
+    in_pre = 0
+    # Read log file only if it already exists
+    if os.path.exists(logs_path):
+        with open(logs_path, "r") as f:
+            for line in f.readlines():
+                if in_pre == 0:
+                    text += "<div>"
+                if "INFO: Lock" in line:
+                    continue
+                # maximum line length
+                n = 250
+                chunks = [line[i: i + n] for i in range(0, len(line), n)]
+                text += "</div><div>".join(chunks)
+
+                # Check for formatted HTML text
+                if "<pre>" in line:
+                    in_pre += 1
+                if "</pre>" in line:
+                    in_pre -= 1
+                if in_pre == 0:
+                    text += "</div>"
+    items = [ui.text(text)]
+    q.page["experiment/display/logs"] = ui.form_card(
+        box="first", items=items, title=""
+    )
+    q.client.delete_cards.add("experiment/display/logs")
+
+
+async def chat_tab(q):
+    cyclic_buffer = data(fields="msg fromUser", size=-500)
+    q.page["experiment/display/chat"] = ui.chatbot_card(
+        box="first", data=cyclic_buffer, name="experiment/display/chat/chatbot"
+    )
+    q.client["experiment/display/chat/box"] = "first"
+    q.client["experiment/display/chat/messages"] = []
+    q.client.delete_cards.add("experiment/display/chat")
+    message = ["Loading the model...", False]
+    q.page["experiment/display/chat"].data[-1] = message
+    await q.page.save()
+    logger.info(torch.cuda.memory_allocated())
+    cfg, model, tokenizer = load_cfg_model_tokenizer(
+        q.client["experiment/display/experiment_path"]
+    )
+    logger.info(torch.cuda.memory_allocated())
+    q.page["experiment/display/chat"].data[-1] = [
+        "Model successfully loaded, how can I help you?",
+        False,
+    ]
+    q.client["experiment/display/chat/cfg"] = cfg
+    q.client["experiment/display/chat/model"] = model
+    q.client["experiment/display/chat/tokenizer"] = tokenizer
+
+
 async def parse_param(q: Q, cfg, prompt):
     prompt = prompt.replace("--", "")
     parts = prompt.split(" ")
@@ -1141,7 +1139,10 @@ async def parse_param(q: Q, cfg, prompt):
     return cfg
 
 
-async def experiment_chat(q: Q) -> None:
+async def experiment_chat_update(q: Q) -> None:
+    """
+    Update the chatbot with the new message.
+    """
 
     prompt = q.client["experiment/display/chat/chatbot"]
 
