@@ -615,6 +615,9 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
     logger.info("dtype: {dtype}".format(dtype=kwargs["torch_dtype"]))
 
+    if cfg.architecture.gradient_checkpointing:
+        config.use_cache = False
+
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
@@ -645,6 +648,5 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
 
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
-        backbone.use_cache = False
 
     return backbone

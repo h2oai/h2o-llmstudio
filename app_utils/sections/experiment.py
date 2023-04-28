@@ -1643,7 +1643,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
 def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
     cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
     cfg.architecture.pretrained = False
-    cfg.tokenizer.padding_quantile = 0
+    cfg.architecture.gradient_checkpointing = False
     cfg.environment._device = device
     cfg.environment._local_rank = 0
 
