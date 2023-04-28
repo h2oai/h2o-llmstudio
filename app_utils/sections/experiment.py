@@ -11,6 +11,7 @@ import pandas as pd
 import torch
 import yaml
 from h2o_wave import Q, data, ui
+from jinja2 import Environment, FileSystemLoader
 from sqlitedict import SqliteDict
 
 from app_utils.config import default_cfg
@@ -1607,17 +1608,96 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         huggingface_hub.login(
             q.client["experiment/display/push_to_huggingface/api_key"]
         )
+        user_id = huggingface_hub.whoami()["name"]
+        repo_id = (
+            f"{user_id}/{q.client['experiment/display/push_to_huggingface/model_name']}"
+        )
 
+        # push tokenizer to hub
         tokenizer.push_to_hub(
-            repo_id=q.client["experiment/display/push_to_huggingface/model_name"],
-            token=q.client["experiment/display/push_to_huggingface/api_key"],
+            repo_id=repo_id,
             private=True,
         )
 
+        # push model card to hub
+        card_data = huggingface_hub.ModelCardData(
+            language="en",
+            library_name="transformers",
+            tags=["gpt", "llm", "large language model", "h2o-llmstudio"],
+        )
+        card = huggingface_hub.ModelCard.from_template(
+            card_data,
+            template_path="model_card_template.md",
+            base_model=cfg.llm_backbone,  # will be replaced in template if it exists
+            repo_id=repo_id,
+            model_architecture=model.backbone.__repr__(),
+            config=cfg.__repr__(),
+            min_new_tokens=cfg.prediction.min_length_inference,
+            max_new_tokens=cfg.prediction.max_length_inference,
+            do_sample=cfg.prediction.do_sample,
+            num_beams=cfg.prediction.num_beams,
+            temperature=cfg.prediction.temperature,
+            repetition_penalty=cfg.prediction.repetition_penalty,
+            text_prompt_start=cfg.dataset.text_prompt_start,
+            text_answer_separator=cfg.dataset.text_answer_separator,
+            end_of_sentence=cfg._tokenizer_eos_token if cfg.dataset.add_eos_token_to_prompt else "",
+        )
+        card.push_to_hub(
+            repo_id=repo_id,
+            repo_type="model",
+            commit_message="Upload model card",
+        )
+
+        # push config to hub
+        api = huggingface_hub.HfApi()
+        api.upload_file(
+            path_or_fileobj=f"{experiment_path}/cfg.yaml",
+            path_in_repo="cfg.yaml",
+            repo_id=repo_id,
+            repo_type="model",
+            commit_message="Upload cfg.yaml",
+        )
+
+        # push model to hub
+        model.backbone.config.custom_pipelines = {
+            "text-generation": {
+                "impl": "h2oai_pipeline.H2OTextGenerationPipeline",
+                "pt": "AutoModelForCausalLM",
+            }
+        }
         model.backbone.push_to_hub(
-            repo_id=q.client["experiment/display/push_to_huggingface/model_name"],
-            token=q.client["experiment/display/push_to_huggingface/api_key"],
+            repo_id=repo_id,
             private=True,
+            commit_message="Upload model",
+        )
+
+        # push pipeline to hub
+        template_env = Environment(
+            loader=FileSystemLoader(searchpath="llm_studio/src/")
+        )
+        pipeline_template = template_env.get_template("h2oai_pipeline_template.py")
+
+        data = {
+            "text_prompt_start": cfg.dataset.text_prompt_start,
+            "text_answer_separator": cfg.dataset.text_answer_separator,
+        }
+        if cfg.dataset.add_eos_token_to_prompt:
+            data.update({"end_of_sentence": cfg._tokenizer_eos_token})
+        else:
+            data.update({"end_of_sentence": ""})
+
+        custom_pipeline = pipeline_template.render(data)
+
+        custom_pipeline_path = os.path.join(experiment_path, "h2oai_pipeline.py")
+        with open(custom_pipeline_path, "w") as f:
+            f.write(custom_pipeline)
+
+        api.upload_file(
+            path_or_fileobj=custom_pipeline_path,
+            path_in_repo="h2oai_pipeline.py",
+            repo_id=repo_id,
+            repo_type="model",
+            commit_message="Upload h2oai_pipeline.py",
         )
 
         dialog_items = [
