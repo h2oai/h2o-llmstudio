@@ -524,7 +524,9 @@ def get_experiment_table(
     for col in col_remove:
         if col in df_viz:
             del df_viz[col]
-    # df_viz = df_viz.rename(columns={"process_id": "pid", "config_file": "problem type"})
+    # df_viz = df_viz.rename(
+    #     columns={"process_id": "pid", "config_file": "problem type"},
+    # )
     # df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
 
     if actions == "experiment" and q.client["experiment/list/mode"] == "train":
@@ -1587,7 +1589,6 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             ),
         ]
     elif q.args["experiment/display/push_to_huggingface_submit"]:
-
         await busy_dialog(
             q=q,
             title="Exporting to HuggingFace ",

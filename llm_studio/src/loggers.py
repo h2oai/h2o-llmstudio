@@ -51,7 +51,6 @@ def get_cfg(cfg: Any) -> Dict:
 
 class NeptuneLogger:
     def __init__(self, cfg: Any):
-
         import neptune as neptune
         from neptune.utils import stringify_unsupported
 

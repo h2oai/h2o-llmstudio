@@ -581,9 +581,8 @@ async def dataset_import(
                 # change the default validation strategy if validation df set
                 if cfg.dataset.validation_dataframe != "None":
                     cfg.dataset.validation_strategy = "custom"
-                save_config_yaml(
-                    f"{new_path}/{q.client['dataset/import/cfg_file']}.yaml", cfg
-                )
+                cfg_path = f"{new_path}/{q.client['dataset/import/cfg_file']}.yaml"
+                save_config_yaml(cfg_path, cfg)
 
                 train_rows = None
                 if os.path.exists(cfg.dataset.train_dataframe):
@@ -600,7 +599,7 @@ async def dataset_import(
                     id=q.client["dataset/import/id"],
                     name=q.client["dataset/import/name"],
                     path=new_path,
-                    config_file=f"{new_path}/{q.client['dataset/import/cfg_file']}.yaml",
+                    config_file=cfg_path,
                     train_rows=train_rows,
                     validation_rows=validation_rows,
                 )

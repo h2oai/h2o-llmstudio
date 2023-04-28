@@ -180,7 +180,7 @@ class CustomDataset(Dataset):
     @staticmethod
     def clean_output(
         output: Dict,
-        prompts: List[str,],
+        prompts: List[str],
         cfg: Any,
     ):
         output["predicted_text"] = output["predicted_text"].tolist()
