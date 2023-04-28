@@ -33,9 +33,13 @@ Using CLI for fine-tuning LLMs:
 
 ## What's New
 
-- April 25, 2023 Added functionality for supporting nested conversations in data. A new `parent_id_column` can be selected for datasets to support tree-like structures in your conversational data. Additional `augmentation` settings have been added for this feature.
+- [PR 12](https://github.com/h2oai/h2o-llmstudio/pull/12). Experiment configurations are now stored in yaml format,
+allowing for more flexibility in the configuration while making it much easier to be backward compatible. Old experiment configurations that are stored in pickle format will be converted to yaml format automatically.
+- [PR 40](https://github.com/h2oai/h2o-llmstudio/pull/40) Added functionality for supporting nested conversations in data. A new `parent_id_column` can be selected for datasets to support tree-like structures in your conversational data. Additional `augmentation` settings have been added for this feature.
 
-Please note that due to current rapid development we cannot guarantee full backwards compatibility of new functionality. Please either reset your `data` and `output` folders when upgrading and running into compatibility issues.
+Please note that due to current rapid development we cannot guarantee full backwards compatibility of new functionality. 
+We thus recommend to pin the version of the framework to the one you used for your experiments. 
+For resetting, please delete/backup your `data` and `output` folders.
 
 ## Setup
 H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
@@ -132,6 +136,35 @@ During the experiment, you can monitor the training progress and model performan
 ### Push to Hugging Face 🤗
 If you want to publish your model, you can export it with a single click to the [Hugging Face Hub](https://huggingface.co/)
 and share it with the community. To be able to push your model to the Hub, you need to have an API token with write access.
+You can also click the **Download model** button to download the model locally.
+To use a converted model, you can use the following code snippet:
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "path_to_downloaded_model"  # either local folder or huggingface model name
+
+# Important: The prompt needs to be in the same format the model was trained with.
+# You can find an example prompt in the experiment logs.
+prompt = "<|prompt|>How are you?<|endoftext|><|answer|>"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+model.cuda().eval()
+
+inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
+# generate configuration can be modified to your needs
+tokens = model.generate(
+    **inputs,
+    max_new_tokens=256,
+    temperature=0.3,
+    repetition_penalty=1.2,
+    num_beams=2
+)[0]
+tokens = tokens[inputs["input_ids"].shape[1]:]
+answer = tokenizer.decode(tokens, skip_special_tokens=True)
+print(answer)
+```
 
 ### Compare experiments
 In the **View Experiments** view, you can compare your experiments and see how different model parameters affect the model performance.
@@ -167,15 +200,10 @@ python prompt.py -e examples/output_oasst1
 
 All open-source datasets and models are posted on [H2O.ai's Hugging Face page](https://huggingface.co/h2oai/).
 
+## Model checkpoints
 
-## Changelog
-The field is rapidly evolving, and we are constantly adding new features and fixing bugs.
-While we are striving to converge to a stable framework, at this early point of development certain changes may break your existing experiments. 
-We thus recommend to pin the version of the framework to the one you used for your experiments. 
-Below, we list a summary of the changes that may affect older experiments:
-- [PR 12](https://github.com/h2oai/h2o-llmstudio/pull/12). Experiment configurations are now stored in yaml format,
-allowing for more flexibility in the configuration while making it much easier to be backward compatible. Old experiment configurations that are stored in pickle format will be converted to yaml format automatically.
-- [PR 40](https://github.com/h2oai/h2o-llmstudio/pull/40). Datasets can now use past chat history as input. This feature can be enabled by setting `Parent Id Column` in the dataset configuration.
+All open-source datasets and models are posted on [H2O.ai's Hugging Face page](https://huggingface.co/h2oai/) and our [H2OGPT](https://github.com/h2oai/h2ogpt) repository.
+
 
 ## License
 H2O LLM Studio is licensed under the Apache 2.0 license. Please see the [LICENSE](LICENSE) file for more information.
