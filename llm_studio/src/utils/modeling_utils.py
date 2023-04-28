@@ -5,7 +5,6 @@ from collections import OrderedDict
 from typing import Any, Callable, Dict, Tuple
 
 import coolname
-import pandas as pd
 import torch
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
@@ -17,18 +16,12 @@ from transformers import AutoConfig, AutoModel, BitsAndBytesConfig
 
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
-from llm_studio.src.utils.data_utils import (
-    cat_batches,
-    get_inference_batch_size,
-    get_train_dataloader,
-    get_train_dataset,
-)
+from llm_studio.src.utils.data_utils import cat_batches, get_inference_batch_size
 from llm_studio.src.utils.exceptions import (
     LLMDataException,
     LLMMetricException,
     LLMModelException,
 )
-from llm_studio.src.utils.gpu_utils import is_oom_error
 from llm_studio.src.utils.logging_utils import TqdmToLogger
 from llm_studio.src.utils.utils import save_pickle
 

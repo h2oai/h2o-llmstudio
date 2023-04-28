@@ -13,7 +13,6 @@ import yaml
 from h2o_wave import Q, data, ui
 from jinja2 import Environment, FileSystemLoader
 from sqlitedict import SqliteDict
-from llm_studio.src.tooltips import tooltips
 
 from app_utils.config import default_cfg
 from app_utils.sections.common import clean_dashboard
@@ -37,6 +36,7 @@ from app_utils.utils import (
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
 from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
     convert_cfg_to_nested_dictionary,
     get_parent_element,
