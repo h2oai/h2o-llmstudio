@@ -43,6 +43,7 @@ from llm_studio.src.utils.config_utils import (
 from llm_studio.src.utils.data_utils import is_valid_data_frame, read_dataframe
 from llm_studio.src.utils.export_utils import get_size_str
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
+
 from .config import default_cfg
 
 logger = logging.getLogger(__name__)
@@ -1572,7 +1573,7 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
 
     secrets = {
         "NEPTUNE_API_TOKEN": q.client["default_neptune_api_token"],
-        "OPENAI_API_KEY": q.client["default_openai_api_token"]
+        "OPENAI_API_KEY": q.client["default_openai_api_token"],
     }
     cfg = copy_config(cfg)
     cfg.output_directory = f"{get_output_dir(q)}/{cfg.experiment_name}/"

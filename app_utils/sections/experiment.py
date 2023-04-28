@@ -989,14 +989,11 @@ async def experiment_display(q: Q) -> None:
 
 
 async def insights_tab(charts, q):
-    if (
-            q.client["experiment/display/tab"]
-            == "experiment/display/train_data_insights"
-    ):
+    if q.client["experiment/display/tab"] == "experiment/display/train_data_insights":
         key = "train_data"
     elif (
-            q.client["experiment/display/tab"]
-            == "experiment/display/validation_prediction_insights"
+        q.client["experiment/display/tab"]
+        == "experiment/display/validation_prediction_insights"
     ):
         key = "validation_predictions"
     for k1 in ["image", "html"]:
@@ -1080,7 +1077,7 @@ async def logs_tab(q):
                     continue
                 # maximum line length
                 n = 250
-                chunks = [line[i: i + n] for i in range(0, len(line), n)]
+                chunks = [line[i : i + n] for i in range(0, len(line), n)]
                 text += "</div><div>".join(chunks)
 
                 # Check for formatted HTML text
@@ -1091,13 +1088,37 @@ async def logs_tab(q):
                 if in_pre == 0:
                     text += "</div>"
     items = [ui.text(text)]
-    q.page["experiment/display/logs"] = ui.form_card(
-        box="first", items=items, title=""
-    )
+    q.page["experiment/display/logs"] = ui.form_card(box="first", items=items, title="")
     q.client.delete_cards.add("experiment/display/logs")
 
 
 async def chat_tab(q: Q):
+    running_experiments = get_experiments(q=q)
+    running_experiments = running_experiments[
+        running_experiments.status.isin(["running"])
+    ]
+
+    gpu_blocked = any(
+        [
+            "0" in gpu_list
+            for gpu_list in running_experiments["gpu_list"]
+            .apply(lambda x: x.split(","))
+            .to_list()
+        ]
+    )
+    if gpu_blocked:
+        q.page["experiment/display/chat"] = ui.form_card(
+            box="first",
+            items=[
+                ui.text(
+                    "Chatbot is not available when GPU is blocked by another experiment."
+                )
+            ],
+            title="",
+        )
+        q.client.delete_cards.add("experiment/display/chat")
+        return
+
     cyclic_buffer = data(fields="msg fromUser", size=-500)
     q.page["experiment/display/chat"] = ui.chatbot_card(
         box="first", data=cyclic_buffer, name="experiment/display/chat/chatbot"
