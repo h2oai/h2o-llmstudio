@@ -111,7 +111,7 @@ The default settings are chosen with care and should give a good baseline. The m
 - **LLM Backbone**: This parameter determines the LLM architecture to use.
 - **Mask Prompt Labels**: This option controls whether to mask the prompt labels during training and only train on the loss of the answer.
 - **Hyperparameters** such as learning rate, batch size, and number of epochs determine the training process.
-Please consult the tooltips of each hyperparameter to learn more about them.
+Please consult the tooltips of each hyperparameter to learn more about them. The tooltips are shown next to each hyperparameter in the GUI and can be found as plain text `.mdx` files in the [tooltips/](tooltips/) folder.
 - **Evaluate Before Training** This option lets you evaluate the model before training, which can help you judge the quality of the LLM backbone before fine-tuning.
 
 We provide several metric options for evaluating the performance of your model.
