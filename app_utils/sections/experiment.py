@@ -670,7 +670,7 @@ async def experiment_compare(q: Q, selected_rows: list):
             current_name = f" {experiment.name}"
             experiment_names.append(current_name)
 
-        await plot_experiment_charts(q, charts, experiment_names)
+        await charts_tab(q, charts, experiment_names)
 
     elif q.client["experiment/compare/tab"] == "experiment/compare/config":
         if q.client["experiment/compare/diff_toggle"] is None:
@@ -922,11 +922,8 @@ async def experiment_display(q: Q) -> None:
     )
     q.client.delete_cards.add("experiment/display/tab")
 
-    box = ["first", "first", "second", "second"]
-    cnt = 0
-
     if q.client["experiment/display/tab"] == "experiment/display/charts":
-        await plot_experiment_charts(q, [charts], [""])
+        await charts_tab(q, [charts], [""])
     elif q.client["experiment/display/tab"] in [
         "experiment/display/train_data_insights",
         "experiment/display/validation_prediction_insights",
@@ -1100,12 +1097,11 @@ async def logs_tab(q):
     q.client.delete_cards.add("experiment/display/logs")
 
 
-async def chat_tab(q):
+async def chat_tab(q: Q):
     cyclic_buffer = data(fields="msg fromUser", size=-500)
     q.page["experiment/display/chat"] = ui.chatbot_card(
         box="first", data=cyclic_buffer, name="experiment/display/chat/chatbot"
     )
-    q.client["experiment/display/chat/box"] = "first"
     q.client["experiment/display/chat/messages"] = []
     q.client.delete_cards.add("experiment/display/chat")
     message = ["Loading the model...", False]
@@ -1245,7 +1241,7 @@ def unite_validation_metric_charts(charts_list):
     return charts_list
 
 
-async def plot_experiment_charts(q, charts_list, legend_labels):
+async def charts_tab(q, charts_list, legend_labels):
     charts_list = unite_validation_metric_charts(charts_list)
 
     box = ["first", "first", "second", "second"]
