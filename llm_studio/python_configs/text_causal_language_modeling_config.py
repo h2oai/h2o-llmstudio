@@ -295,7 +295,6 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     use_fsdp: bool = False
 
     find_unused_parameters: bool = False
-    sync_batch_normalization: bool = False
     trust_remote_code: bool = False
     number_of_workers: int = 4
     seed: int = -1
@@ -322,9 +321,6 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
         self._possible_values["number_of_workers"] = (1, multiprocessing.cpu_count(), 1)
         self._possible_values["seed"] = possible_values.Number(step=1, min=-1)
-
-        if torch.cuda.device_count() <= 1:
-            self._visibility["sync_batch_normalization"] = -1
 
 
 @dataclass

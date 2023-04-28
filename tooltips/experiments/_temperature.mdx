@@ -1,0 +1,4 @@
+Defines the temperature to use for sampling from the next token distribution during validation and inference. In other words, the defined temperature controls the randomness of predictions by scaling the logits before applying <a href="https://www.researchgate.net/figure/The-Gumbel-Softmax-distribution-interpolates-between-discrete-one-hot-encoded-categorical_fig4_309663606" target="_blank" >softmax</a>. A higher temperature makes the distribution more random.
+
+- Modify the temperature value if you have the **Do Sample** setting enabled (**On**).
+- To learn more about this setting, refer to the following article: <a href="https://huggingface.co/blog/how-to-generate" target="_blank" >How to generate text: using different decoding methods for language generation with Transformers</a>.
