@@ -165,7 +165,7 @@ python prompt.py -e examples/output_oasst1
 
 ## Model checkpoints
 
-All open-source datasets and models are posted on [H2O.ai's Hugging Face page](https://huggingface.co/h2oai/).
+All open-source datasets and models are posted on [H2O.ai's Hugging Face page](https://huggingface.co/h2oai/). Make sure to check out the [h2oGPT repository](https://github.com/h2oai/h2ogpt), too. It includes a CLI interface for training and evaluating large language models and also provides code for preparing large open-source datasets as instruction datasets for fine-tuning LLMs.
 
 
 ## Changelog
