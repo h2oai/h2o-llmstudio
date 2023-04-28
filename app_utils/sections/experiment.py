@@ -1659,7 +1659,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         )
 
         # push model to hub
-        model.backbone.config.custom_pipeline = {
+        model.backbone.config.custom_pipelines = {
             "text-generation": {
                 "impl": "h2oai_pipeline.H2OTextGenerationPipeline",
                 "pt": "AutoModelForCausalLM",
