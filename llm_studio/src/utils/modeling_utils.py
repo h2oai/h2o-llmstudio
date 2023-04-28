@@ -161,8 +161,6 @@ def wrap_model_distributed(model: torch.nn.Module, cfg: Any, fsdp: bool):
             limit_all_gathers=True,
         )
     else:
-        if cfg.environment.sync_batch_normalization:
-            model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
         find_unused_parameters = cfg.environment.find_unused_parameters
         if getattr(cfg.architecture, "gradient_checkpointing", None):
             find_unused_parameters = False
