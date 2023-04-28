@@ -1,5 +1,4 @@
 import os
-from copy import copy
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -16,7 +15,6 @@ import time
 from distutils import util
 from typing import Any, Callable, Dict, Tuple
 
-import dill
 import numpy as np
 import pandas as pd
 import torch
@@ -469,6 +467,7 @@ def run(cfg: Any) -> None:
         )
     else:
         cfg.environment._local_rank = 0
+        cfg.environment._device = "cuda:0"
 
     set_seed(cfg.environment._seed)
     if cfg.environment._local_rank == 0:

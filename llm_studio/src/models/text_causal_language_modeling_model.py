@@ -68,6 +68,10 @@ class TokenStoppingCriteria(StoppingCriteria):
         generated_ids = input_ids[:, self.prompt_input_ids_len :]
         for stop_word_id in self.stop_word_ids:
             if self.should_stop(generated_ids, stop_word_id.to(generated_ids.device)):
+                if generated_ids.shape[1] == 1:
+                    logger.warning(
+                        f"Stopping criteria triggered for {stop_word_id} at first generated token."
+                    )
                 return True
         return False
 

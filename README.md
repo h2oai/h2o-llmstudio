@@ -97,7 +97,7 @@ During an experiment you can adapt the data representation with the following se
 
 ### Example data:
 We provide an example dataset (converted dataset from [OpenAssistant/oasst1](https://huggingface.co/datasets/OpenAssistant/oasst1))
-that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=127047926). It is recommended to use `train_full.csv` for training. This dataset is also downloaded and prepared by default when first starting the GUI.
+that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=127047926). It is recommended to use `train_full.csv` for training. This dataset is also downloaded and prepared by default when first starting the GUI. Multiple dataframes can be uploaded into a single dataset by uploading a `.zip` archive.
 
 ## Training your model
 
@@ -141,17 +141,18 @@ In addition, you can track your experiments with [Neptune](https://neptune.ai/) 
 
 As an example, you can run an experiment on the OASST data via CLI.
 
-First, get the data [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=126228752) and place it into the `examples/data_oasst1` folder; or download it directly via API command:
+First, get the training dataset (`train_full.csv`) [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=126228752) and place it into the `examples/data_oasst1` folder; or download it directly via [Kaggle API](https://www.kaggle.com/docs/api) command:
 ```bash
 kaggle kernels output philippsinger/openassistant-conversations-dataset-oasst1 -p examples/data_oasst1/
 ```
 
-First, go into the interactive shell:
+Then, go into the interactive shell. If not already done earlier, install the dependencies first:
 ```bash
+make setup  # installs all dependencies
 make shell
 ```
 
-Then, you can run the experiment via:
+You can now run the experiment via:
 ```bash
 python train.py -C examples/cfg_example_oasst1.py
 ```

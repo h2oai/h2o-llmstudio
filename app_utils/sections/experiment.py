@@ -15,6 +15,7 @@ from sqlitedict import SqliteDict
 from llm_studio.src.tooltips import tooltips
 
 from app_utils.config import default_cfg
+from app_utils.sections.common import clean_dashboard
 from app_utils.utils import (
     add_model_type,
     flatten_dict,
@@ -33,7 +34,7 @@ from app_utils.utils import (
     remove_model_type,
     start_experiment,
 )
-from app_utils.wave_utils import ui_table_from_df, wave_theme
+from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.utils.config_utils import (
     convert_cfg_to_nested_dictionary,
@@ -56,8 +57,6 @@ from llm_studio.src.utils.export_utils import (
 from llm_studio.src.utils.logging_utils import write_flag
 from llm_studio.src.utils.modeling_utils import load_checkpoint, unwrap_model
 from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
-
-from .common import clean_dashboard
 
 logger = logging.getLogger(__name__)
 
@@ -1527,12 +1526,9 @@ async def experiment_download_model(q: Q, error: str = ""):
     if not os.path.exists(zip_path):
         logger.info(f"Creating {zip_path} on demand")
 
-        cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path, device="cpu")
-        if hasattr(cfg.training, "lora") and cfg.training.lora:
-            # merges the LoRa layers into the base model.
-            # This is needed if someone wants to use the base model as a standalone
-            # model.
-            model.backbone = model.backbone.merge_and_unload()
+        cfg, model, tokenizer = load_cfg_model_tokenizer(
+            experiment_path, merge=True, device="cpu"
+        )
 
         model = unwrap_model(model)
         checkpoint_path = cfg.output_directory
@@ -1600,13 +1596,17 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             ),
         ]
     elif q.args["experiment/display/push_to_huggingface_submit"]:
+
+        await busy_dialog(
+            q=q,
+            title="Exporting to HuggingFace ",
+            text="Model size can affect the export time significantly.",
+        )
+
         experiment_path = q.client["experiment/display/experiment_path"]
-        cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path, device="cpu")
-        if hasattr(cfg.training, "lora") and cfg.training.lora:
-            # merges the LoRa layers into the base model.
-            # This is needed if someone wants to use the base model as a standalone
-            # model.
-            model.backbone = model.backbone.merge_and_unload()
+        cfg, model, tokenizer = load_cfg_model_tokenizer(
+            experiment_path, merge=True, device="cpu"
+        )
 
         huggingface_hub.login(
             q.client["experiment/display/push_to_huggingface/api_key"]
@@ -1644,22 +1644,24 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
     q.client["keep_meta"] = True
 
 
-def load_cfg_model_tokenizer(experiment_path, device="cuda"):
+def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
     cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
     cfg.architecture.pretrained = False
     cfg.tokenizer.padding_quantile = 0
+    cfg.environment._device = device
+    cfg.environment._local_rank = 0
 
     cfg.prediction.num_history = 2
-    cfg.prediction.max_length_prompt = 256
-    cfg.prediction.max_length_inference = 256
-
-    if cfg.dataset.text_prompt_start == "":
-        cfg.dataset.text_prompt_start = "\n"
 
     tokenizer = get_tokenizer(cfg)
 
     gc.collect()
     torch.cuda.empty_cache()
+
+    if merge and cfg.training.lora and cfg.architecture.backbone_dtype == "int8":
+        logger.info("Loading backbone in float16 for merging LORA weights.")
+        cfg.architecture.backbone_dtype = "float16"
+        cfg.architecture.pretrained = True
 
     with torch.device(device):
         model = cfg.architecture.model_class(cfg)
@@ -1667,6 +1669,11 @@ def load_cfg_model_tokenizer(experiment_path, device="cuda"):
             experiment_path, "checkpoint.pth"
         )
         load_checkpoint(cfg, model, strict=False)
+
+        if merge and cfg.training.lora:
+            # merges the LoRa layers into the base model.
+            # This is needed if one wants to use the base model as a standalone model.
+            model.backbone = model.backbone.merge_and_unload()
 
     model = model.to(device).eval()
     model.backbone.use_cache = True
