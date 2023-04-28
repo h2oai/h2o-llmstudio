@@ -1574,7 +1574,6 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
         "NEPTUNE_API_TOKEN": q.client["default_neptune_api_token"],
         "OPENAI_API_KEY": q.client["default_openai_api_token"]
     }
-    print(secrets)
     cfg = copy_config(cfg)
     cfg.output_directory = f"{get_output_dir(q)}/{cfg.experiment_name}/"
     os.makedirs(cfg.output_directory)
