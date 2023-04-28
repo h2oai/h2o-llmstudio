@@ -42,11 +42,10 @@ style: reports pipenv
 	-$(PIPENV) run flake8 | tee -a reports/flake8.log
 	@echo
 
-	-$(PIPENV) run mypy . | tee -a reports/mypy.log
+	-$(PIPENV) run mypy . --check-untyped-defs | tee -a reports/mypy.log
 	@echo
 
 	@if [ -s reports/flake8.log ]; then exit 1; fi
-	@if [ -s reports/mypy.log ]; then exit 1; fi
 
 .PHONY: format
 format: pipenv

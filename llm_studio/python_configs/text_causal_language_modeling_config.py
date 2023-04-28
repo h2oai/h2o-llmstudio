@@ -152,10 +152,10 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["batch_size"] = (1, 256, 1)
         self._possible_values["epochs"] = (0, 50, 1)
         self._possible_values["schedule"] = Schedulers.names()
-        self._possible_values["warmup_epochs"] = (0, 5, 0.05)
+        self._possible_values["warmup_epochs"] = (0.0, 5, 0.05)
 
         self._possible_values["weight_decay"] = possible_values.Number(step=1e-5, min=0)
-        self._possible_values["gradient_clip"] = (0, 10, 0.1)
+        self._possible_values["gradient_clip"] = (0.0, 10.0, 0.1)
         self._possible_values["grad_accumulation"] = (1, 8, 1)
 
         self._possible_values["lora_r"] = (1, 256, 1)
@@ -249,9 +249,9 @@ class ConfigNLPAugmentation(DefaultConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self._possible_values["token_mask_probability"] = (0, 0.9, 0.05)
-        self._possible_values["skip_parent_probability"] = (0, 1.0, 0.05)
-        self._possible_values["random_parent_probability"] = (0, 1.0, 0.05)
+        self._possible_values["token_mask_probability"] = (0.0, 0.9, 0.05)
+        self._possible_values["skip_parent_probability"] = (0.0, 1.0, 0.05)
+        self._possible_values["random_parent_probability"] = (0.0, 1.0, 0.05)
         self._visibility["nlp_augmentations_class"] = -1
 
 
