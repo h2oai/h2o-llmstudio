@@ -24,6 +24,7 @@ setup-dev: pipenv
 .PHONY: export-requirements
 export-requirements: pipenv
 	$(PIPENV) requirements > requirements.txt
+	 echo "deps/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl" >> requirements.txt
 
 clean-env:
 	$(PIPENV) --rm
