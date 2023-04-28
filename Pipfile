@@ -45,6 +45,7 @@ openai = "==0.27.4"
 einops = "==0.6.1"
 datasets = "==2.11.0"
 neptune = "==1.1.1"
+Jinja2 = "==3.1.2"
 
 [dev-packages]
 pytest = "==7.1.3"
