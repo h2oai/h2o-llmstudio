@@ -31,16 +31,11 @@ def set_seed(seed: int = 1234) -> None:
 
 def set_environment(cfg):
     """Sets and checks environment settings"""
-    if not cfg.environment.openai_api_token:
-        cfg.environment.openai_api_token = os.getenv("OPENAI_API_KEY", "")
-    if not cfg.logging.neptune_api_token:
-        cfg.logging.neptune_api_token = os.getenv("NEPTUNE_API_TOKEN", "")
-    os.environ["OPENAI_API_KEY"] = cfg.environment.openai_api_token
-    openai.api_key = cfg.environment.openai_api_token
-
-    if "GPT" in cfg.prediction.metric and cfg.environment.openai_api_token == "":
+    if "GPT" in cfg.prediction.metric and os.getenv("OPENAI_API_KEY", "") == "":
         logger.warning("No OpenAI API Key set. Setting metric to BLEU. ")
         cfg.prediction.metric = "BLEU"
+    else:
+        openai.api_key = os.getenv("OPENAI_API_KEY", "")
 
     return cfg
 

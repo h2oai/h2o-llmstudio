@@ -1,5 +1,6 @@
 import dataclasses
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import numpy as np
@@ -62,7 +63,7 @@ class NeptuneLogger:
 
         self.logger = neptune.init_run(
             project=cfg.logging.neptune_project,
-            api_token=cfg.logging.neptune_api_token,
+            api_token=os.getenv("NEPTUNE_API_TOKEN", ""),
             name=cfg.experiment_name,
             mode=mode,
             capture_stdout=False,
