@@ -45,8 +45,8 @@ def unwrap_model(model: torch.nn.Module):
 
 
 # TODO: currently not saving optimizer
-def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> Dict:
-    """Saves a model checkpoint if the path is provided and returns it back.
+def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
+    """Saves a model checkpoint if the path is provided.
 
     Args:
         model: model to save
@@ -66,15 +66,20 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> Dict:
     if path is not None:
         torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
 
-    return checkpoint
-
 
 def load_model_weights(
     model: torch.nn.Module, model_weights: Dict, strict: bool, cfg: Any
 ):
     orig_num_items = len(model_weights)
+    model_state_dict = model.state_dict()
+
+    # needed to load models trained in int8 with other dtypes
     model_weights = {
-        k: v for k, v in model_weights.items() if v.dtype is not torch.int8
+        k: v
+        if not (v.dtype is torch.int8 and cfg.architecture.backbone_dtype != "int8")
+        else model_state_dict[k]
+        for k, v in model_weights.items()
+        if not ("SCB" in k and cfg.architecture.backbone_dtype != "int8")
     }
 
     # Need to ignore int8 weights so undo strict loading requirement
@@ -596,6 +601,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     if cfg.architecture.backbone_dtype == "int8":
         kwargs["device_map"] = {"": cfg.environment._device}
         kwargs["torch_dtype"] = torch.float16
+        kwargs["load_in_8bit"] = True
         quantization_config = BitsAndBytesConfig(
             load_in_8bit=True,
             llm_int8_threshold=0.0,
@@ -605,6 +611,9 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
     logger.info("dtype: {dtype}".format(dtype=kwargs["torch_dtype"]))
+
+    if cfg.architecture.gradient_checkpointing:
+        config.use_cache = False
 
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
@@ -636,6 +645,5 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
 
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
-        backbone.use_cache = False
 
     return backbone

@@ -39,7 +39,11 @@ class Config(ConfigProblemBase):
         mask_prompt_labels=True,
     )
     tokenizer: ConfigNLPCausalLMTokenizer = ConfigNLPCausalLMTokenizer(
-        max_length_prompt=64, max_length_answer=64, max_length=128, padding_quantile=1.0
+        max_length_prompt=64,
+        max_length_answer=64,
+        max_length=128,
+        padding_quantile=1.0,
+        add_prompt_answer_tokens=False,
     )
     augmentation: ConfigNLPAugmentation = ConfigNLPAugmentation(
         token_mask_probability=0.0
@@ -68,7 +72,7 @@ class Config(ConfigProblemBase):
         num_beams=2,
         temperature=0.3,
         repetition_penalty=1.2,
-        stop_tokens=(),
+        stop_tokens="",
     )
     environment: ConfigNLPCausalLMEnvironment = ConfigNLPCausalLMEnvironment(
         mixed_precision=True, number_of_workers=8, seed=1

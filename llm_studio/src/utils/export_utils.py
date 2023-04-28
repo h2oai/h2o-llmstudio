@@ -39,6 +39,12 @@ def get_logs_path(experiment_name: str, experiment_path: str):
     return get_artifact_path_path(experiment_name, experiment_path, "logs")
 
 
+def get_model_path(experiment_name: str, experiment_path: str):
+    """Get path to experiment model"""
+
+    return get_artifact_path_path(experiment_name, experiment_path, "model")
+
+
 def check_available_space(output_folder: str, min_disk_space: Optional[float]):
     if not min_disk_space:
         return True

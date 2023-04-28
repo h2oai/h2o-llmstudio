@@ -47,6 +47,13 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq")
 
     def __post_init__(self):
+        self.prompt_column = (
+            tuple(
+                self.prompt_column,
+            )
+            if isinstance(self.prompt_column, str)
+            else tuple(self.prompt_column)
+        )
         super().__post_init__()
 
         self._possible_values["train_dataframe"] = possible_values.Files(
@@ -190,8 +197,8 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
     max_length_prompt: int = 256
     max_length_answer: int = 256
     max_length: int = 512
-    padding_quantile: float = 1.0
     add_prompt_answer_tokens: bool = False
+    padding_quantile: float = 1.0
     add_prefix_space: bool = False
 
     def __post_init__(self):
@@ -292,7 +299,6 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     trust_remote_code: bool = False
     number_of_workers: int = 4
     seed: int = -1
-    openai_api_token: str = ""
 
     _seed: int = 0  # internal seed set in train.py (equals seed if seed is not -1)
     _distributed: bool = False
@@ -324,7 +330,6 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 @dataclass
 class ConfigNLPCausalLMLogging(DefaultConfig):
     logger: str = "None"
-    neptune_api_token: str = ""
     neptune_project: str = ""
     _neptune_debug: bool = False
 
@@ -340,7 +345,7 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
         self._possible_values["number_of_texts"] = (0, 20, 2)
 
         self._nesting.add(
-            ["neptune_api_token", "neptune_project"],
+            ["neptune_project"],
             [Dependency(key="logger", value="Neptune", is_set=True)],
         )
 

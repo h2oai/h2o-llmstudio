@@ -1,5 +1,6 @@
 import codecs
 import collections.abc
+import html
 import logging
 from typing import Any, Dict, List, Tuple, Union
 
@@ -79,7 +80,7 @@ class CustomDataset(Dataset):
         self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.prompts]
 
         if self.cfg.environment._local_rank == 0:
-            logger.info(f"Sample prompt: {self.prompts[0]}")
+            logger.info(f"Sample prompt: {html.escape(self.prompts[0])}")
 
     @staticmethod
     def parse_prompt(cfg: Any, prompt: str):
@@ -183,16 +184,11 @@ class CustomDataset(Dataset):
         cfg: Any,
     ):
         output["predicted_text"] = output["predicted_text"].tolist()
-        # output["predicted_text"] = [
-        #     predicted_text[len(prompt) :].strip()
-        #     for predicted_text, prompt in zip(output["predicted_text"], prompts)
-        # ]
-
         for j in range(len(output["predicted_text"])):
             curr_text = output["predicted_text"][j].strip()
             for stop_token in cfg.tokenizer._stop_words:
-                if curr_text.endswith(stop_token):
-                    curr_text = curr_text[: -len(stop_token)]
+                if curr_text.find(stop_token) != -1:
+                    curr_text = curr_text[: curr_text.find(stop_token)]
             output["predicted_text"][j] = curr_text.strip()
 
         return output
