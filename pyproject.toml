@@ -1,7 +1,7 @@
 [tool.black]
 line-length = 88
 target_version = ["py38"]
-exclude = "(.eggs|.git|.hg|.mypy_cache|.nox|.tox|.venv|.svn|_build|buck-out|build|dist)"
+exclude = "(.eggs|.git|.hg|.mypy_cache|.nox|.tox|.venv|.svn|_build|buck-out|build|dist|output|data)"
 
 [tool.isort]
 multi_line_output = 3
@@ -15,5 +15,5 @@ line_length = 88
 ignore_missing_imports = true
 allow_redefinition = true
 strict_optional = false
-exclude = "build"
+exclude = "(build|output|data)"
 

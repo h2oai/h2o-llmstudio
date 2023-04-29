@@ -5,7 +5,6 @@ from collections import OrderedDict
 from typing import Any, Callable, Dict, Tuple
 
 import coolname
-import pandas as pd
 import torch
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
@@ -17,18 +16,12 @@ from transformers import AutoConfig, AutoModel, BitsAndBytesConfig
 
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
-from llm_studio.src.utils.data_utils import (
-    cat_batches,
-    get_inference_batch_size,
-    get_train_dataloader,
-    get_train_dataset,
-)
+from llm_studio.src.utils.data_utils import cat_batches, get_inference_batch_size
 from llm_studio.src.utils.exceptions import (
     LLMDataException,
     LLMMetricException,
     LLMModelException,
 )
-from llm_studio.src.utils.gpu_utils import is_oom_error
 from llm_studio.src.utils.logging_utils import TqdmToLogger
 from llm_studio.src.utils.utils import save_pickle
 
@@ -137,9 +130,7 @@ def load_checkpoint(
 
 
 def wrap_model_distributed(model: torch.nn.Module, cfg: Any, fsdp: bool):
-
     if fsdp:
-
         auto_wrap_policy = None
 
         mixed_precision_policy = None
@@ -454,7 +445,6 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
 def prepare_model_for_lora_training(
     model, output_embedding_layer_name="lm_head", layer_norm_names=["layer_norm"]
 ):
-
     loaded_in_8bit = getattr(model, "is_loaded_in_8bit", False)
 
     for name, param in model.named_parameters():
