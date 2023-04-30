@@ -68,10 +68,15 @@ test: reports
 
 .PHONY: wave
 wave:
-	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
-	H2O_WAVE_NO_LOG=True \
-	H2O_WAVE_PRIVATE_DIR="/download/@$(PWD)/output/download" \
-	$(PIPENV) run wave run app
+	(export H2O_WAVE_MAX_REQUEST_SIZE=25MB && \
+	 export H2O_WAVE_NO_LOG=True && \
+	 export H2O_WAVE_PRIVATE_DIR="/download/@$(PWD)/output/download" && \
+	 echo ----- ENVIRONMENT ----- && \
+	 env && \
+	 echo ----- PWD ----- && \
+	 pwd && \
+	 echo ---------- && \
+	 $(PIPENV) run wave run app)
 
 .PHONY: wave-no-reload
 wave-no-reload:
