@@ -1,5 +1,6 @@
 import dataclasses
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import numpy as np
@@ -28,7 +29,6 @@ def get_cfg(cfg: Any) -> Dict:
     cfg_dict = {key: cfg_dict[key] for key in cfg._get_order(warn_if_unset=False)}
 
     for k, v in cfg_dict.items():
-
         if k.startswith("_") or cfg._get_visibility(k) < 0:
             continue
 
@@ -51,17 +51,17 @@ def get_cfg(cfg: Any) -> Dict:
 
 class NeptuneLogger:
     def __init__(self, cfg: Any):
-
-        import neptune.new as neptune
+        import neptune as neptune
+        from neptune.utils import stringify_unsupported
 
         if cfg.logging._neptune_debug:
             mode = "debug"
         else:
             mode = "async"
 
-        self.logger = neptune.init(
+        self.logger = neptune.init_run(
             project=cfg.logging.neptune_project,
-            api_token=cfg.logging.neptune_api_token,
+            api_token=os.getenv("NEPTUNE_API_TOKEN", ""),
             name=cfg.experiment_name,
             mode=mode,
             capture_stdout=False,
@@ -69,36 +69,15 @@ class NeptuneLogger:
             source_files=[],
         )
 
-        self.logger["cfg"] = get_cfg(cfg)
+        self.logger["cfg"] = stringify_unsupported(get_cfg(cfg))
 
     def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
         name = f"{subset}/{name}"
-        self.logger[name].log(value, step=step)
-
-
-class AimLogger:
-    def __init__(self, cfg: Any):
-
-        import aim
-
-        self.logger = aim.Session()
-
-        params = get_cfg(cfg)
-
-        self.logger.set_params(params, name="cfg")
-
-    def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
-
-        if np.isnan(value):
-            value = None
-        else:
-            value = float(value)
-        self.logger.track(value, name=name, subset=subset, step=step)
+        self.logger[name].append(value, step=step)
 
 
 class LocalLogger:
     def __init__(self, cfg: Any):
-
         logging.getLogger("sqlitedict").setLevel(logging.ERROR)
 
         self.logs = f"{cfg.output_directory}/charts.db"
@@ -110,7 +89,6 @@ class LocalLogger:
             logs.commit()
 
     def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
-
         if subset in ("image", "html"):
             with SqliteDict(self.logs) as logs:
                 if subset not in logs:
@@ -161,12 +139,12 @@ class MainLogger:
 
         try:
             self.loggers["external"] = self.loggers["external"](cfg)
-        except Exception:
+        except Exception as e:
             logger.warning(
-                "Error when initializing logger. "
-                "Disabling custom logging functionality. "
-                "Please ensure logger configuration is correct and "
-                "you have a stable Internet connection."
+                f"Error when initializing logger. "
+                f"Disabling custom logging functionality. "
+                f"Please ensure logger configuration is correct and "
+                f"you have a stable Internet connection: {e}"
             )
             self.loggers["external"] = DummyLogger(cfg)
 
@@ -174,7 +152,6 @@ class MainLogger:
         self.loggers["external"] = DummyLogger()
 
     def log(self, subset: str, name: str, value: str, step: float = None):
-
         for k, logger in self.loggers.items():
             if "validation_predictions" in name and k == "external":
                 continue

@@ -359,3 +359,22 @@ async def report_error(q: Q):
     q.page[card_name].items[13].text_xs.visible = True
 
     await q.page.save()
+
+
+async def busy_dialog(
+    q: Q, title: str = "", text: str = "", force_wait: bool = False
+) -> None:
+    """Creates busy dialog"""
+
+    q.page["meta"].dialog = ui.dialog(
+        title=title,
+        primary=True,
+        items=[
+            ui.progress(label=text),
+        ],
+        blocking=True,
+    )
+    await q.page.save()
+    if force_wait:
+        await q.sleep(1)
+    q.page["meta"].dialog = None

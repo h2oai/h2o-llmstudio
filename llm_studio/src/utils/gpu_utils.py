@@ -1,4 +1,3 @@
-import gc
 from typing import Any, Union
 
 import numpy as np
@@ -76,15 +75,3 @@ def is_oom_error(exception: BaseException) -> bool:
         or is_cudnn_snafu(exception)
         or is_out_of_cpu_memory(exception)
     )
-
-
-def garbage_collection_cuda() -> None:
-    """Garbage collection Torch (CUDA) memory."""
-    gc.collect()
-    try:
-        # This is the last thing that should cause an OOM error, but seemingly it can.
-        torch.cuda.empty_cache()
-    except RuntimeError as exception:
-        if not is_oom_error(exception):
-            # Only handle OOM errors
-            raise

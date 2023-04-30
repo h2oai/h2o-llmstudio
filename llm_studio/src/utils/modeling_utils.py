@@ -5,7 +5,6 @@ from collections import OrderedDict
 from typing import Any, Callable, Dict, Tuple
 
 import coolname
-import pandas as pd
 import torch
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
@@ -17,18 +16,12 @@ from transformers import AutoConfig, AutoModel, BitsAndBytesConfig
 
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
-from llm_studio.src.utils.data_utils import (
-    cat_batches,
-    get_inference_batch_size,
-    get_train_dataloader,
-    get_train_dataset,
-)
+from llm_studio.src.utils.data_utils import cat_batches, get_inference_batch_size
 from llm_studio.src.utils.exceptions import (
     LLMDataException,
     LLMMetricException,
     LLMModelException,
 )
-from llm_studio.src.utils.gpu_utils import garbage_collection_cuda, is_oom_error
 from llm_studio.src.utils.logging_utils import TqdmToLogger
 from llm_studio.src.utils.utils import save_pickle
 
@@ -45,8 +38,8 @@ def unwrap_model(model: torch.nn.Module):
 
 
 # TODO: currently not saving optimizer
-def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> Dict:
-    """Saves a model checkpoint if the path is provided and returns it back.
+def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
+    """Saves a model checkpoint if the path is provided.
 
     Args:
         model: model to save
@@ -66,15 +59,20 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> Dict:
     if path is not None:
         torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
 
-    return checkpoint
-
 
 def load_model_weights(
     model: torch.nn.Module, model_weights: Dict, strict: bool, cfg: Any
 ):
     orig_num_items = len(model_weights)
+    model_state_dict = model.state_dict()
+
+    # needed to load models trained in int8 with other dtypes
     model_weights = {
-        k: v for k, v in model_weights.items() if v.dtype is not torch.int8
+        k: v
+        if not (v.dtype is torch.int8 and cfg.architecture.backbone_dtype != "int8")
+        else model_state_dict[k]
+        for k, v in model_weights.items()
+        if not ("SCB" in k and cfg.architecture.backbone_dtype != "int8")
     }
 
     # Need to ignore int8 weights so undo strict loading requirement
@@ -132,9 +130,7 @@ def load_checkpoint(
 
 
 def wrap_model_distributed(model: torch.nn.Module, cfg: Any, fsdp: bool):
-
     if fsdp:
-
         auto_wrap_policy = None
 
         mixed_precision_policy = None
@@ -156,8 +152,6 @@ def wrap_model_distributed(model: torch.nn.Module, cfg: Any, fsdp: bool):
             limit_all_gathers=True,
         )
     else:
-        if cfg.environment.sync_batch_normalization:
-            model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
         find_unused_parameters = cfg.environment.find_unused_parameters
         if getattr(cfg.architecture, "gradient_checkpointing", None):
             find_unused_parameters = False
@@ -308,101 +302,6 @@ def compute_metric(
     return val_metric, full_val_metric
 
 
-def adjust_batch_size(cfg: Any, train_df: pd.DataFrame) -> int:
-    """Decreases the batch size if OOM is met.
-
-    Args:
-        cfg: input config
-        train_df: train DataFrame
-
-    Returns:
-        New batch size
-    """
-
-    model = cfg.architecture.model_class(cfg)
-    model.to(cfg.environment._device)
-
-    change_distributed = False
-    if cfg.environment._distributed:
-        cfg.environment._distributed = False
-        change_distributed = True
-
-    while cfg.training.batch_size >= 2:
-        logger.info(f"Adjusting batch size... Trying {cfg.training.batch_size}")
-
-        train_dataset = get_train_dataset(train_df=train_df, cfg=cfg, verbose=False)
-        train_dataloader = get_train_dataloader(
-            train_ds=train_dataset, cfg=cfg, verbose=False
-        )
-
-        optimizer = get_optimizer(model=model, cfg=cfg)
-        if cfg.environment.mixed_precision:
-            scaler = torch.cuda.amp.GradScaler()
-        else:
-            scaler = None
-        optimizer.zero_grad(set_to_none=True)
-        tr_it = iter(train_dataloader)
-
-        model.train()
-        num_updates = 0
-        epoch_steps = min(10, len(train_dataloader))
-        try:
-            for data in range(epoch_steps):
-                num_updates += 1
-
-                try:
-                    data = next(tr_it)
-                except Exception:
-                    logger.warning("Data reading error.")
-                    if num_updates == 1:
-                        raise LLMDataException(
-                            "Dataset contains broken records, "
-                            "cannot determine batch size. Please, check the dataset."
-                        )
-
-                # Batch to device
-                batch = cfg.dataset.dataset_class.batch_to_device(
-                    data, cfg.environment._device
-                )
-
-                # Forward pass
-                if cfg.environment.mixed_precision:
-                    with torch.cuda.amp.autocast():
-                        output_dict = model.forward(batch)
-                else:
-                    output_dict = model.forward(batch)
-
-                loss = output_dict["loss"]
-
-                # Backward pass
-                if cfg.environment.mixed_precision:
-                    scaler.scale(loss).backward()
-                    scaler.step(optimizer)
-                    scaler.update()
-                    optimizer.zero_grad(set_to_none=True)
-                else:
-                    loss.backward()
-                    optimizer.step()
-                    optimizer.zero_grad(set_to_none=True)
-
-            break
-        except RuntimeError as exception:
-            if is_oom_error(exception):
-                logger.info("OOM error is caught, decreasing the batch size.")
-                garbage_collection_cuda()
-                cfg.training.batch_size = cfg.training.batch_size // 2
-                continue
-            else:
-                raise  # some other error not memory related
-
-    if change_distributed:
-        cfg.environment._distributed = True
-    garbage_collection_cuda()
-    logger.info(f"Batch size is adjusted. Will use {cfg.training.batch_size}")
-
-    return cfg.training.batch_size
-
-
 def get_number_of_validation_epochs(training_epochs: int, evaluation_epochs: float):
     """
     Given the number of training epochs and the number of epochs between model
@@ -546,7 +445,6 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
 def prepare_model_for_lora_training(
     model, output_embedding_layer_name="lm_head", layer_norm_names=["layer_norm"]
 ):
-
     loaded_in_8bit = getattr(model, "is_loaded_in_8bit", False)
 
     for name, param in model.named_parameters():
@@ -599,6 +497,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     if cfg.architecture.backbone_dtype == "int8":
         kwargs["device_map"] = {"": cfg.environment._device}
         kwargs["torch_dtype"] = torch.float16
+        kwargs["load_in_8bit"] = True
         quantization_config = BitsAndBytesConfig(
             load_in_8bit=True,
             llm_int8_threshold=0.0,
@@ -608,6 +507,9 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
     logger.info("dtype: {dtype}".format(dtype=kwargs["torch_dtype"]))
+
+    if cfg.architecture.gradient_checkpointing:
+        config.use_cache = False
 
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
@@ -639,6 +541,5 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
 
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
-        backbone.use_cache = False
 
     return backbone

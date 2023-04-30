@@ -5,6 +5,7 @@ from typing import Any, List, Optional, Sequence, Set, Tuple
 from llm_studio.src import possible_values
 from llm_studio.src.nesting import Dependency, Nesting
 from llm_studio.src.order import Order
+from llm_studio.src.tooltips import tooltips
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +100,7 @@ class DefaultConfig:
         """
         Returns a tooltip for the field provided
         """
-        return None
+        return tooltips.get(f"experiments_{field}", None)
 
     def _get_visibility(self, field: str) -> Optional[int]:
         """Returns a visibility level for the field provided.
@@ -165,3 +166,13 @@ class DefaultConfig:
                 # object, at least, has no __annotations__ attribute.
                 pass
         return d
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        """Creates a config object from a dictionary"""
+        d_filtered = {k: v for k, v in d.items() if k in cls.get_annotations()}
+        if len(d) != len(d_filtered):
+            logger.warning(
+                f"Keys {set(d.keys()) - set(d_filtered.keys())} are not in the config."
+            )
+        return cls(**d_filtered)  # mypy: ignore

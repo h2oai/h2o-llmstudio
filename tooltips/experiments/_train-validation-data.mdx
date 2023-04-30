@@ -1,0 +1,8 @@
+Defines whether the model should use the entire train and validation dataset during model training. When turned **On**, H2O LLM Studio uses the whole train dataset and validation data to train the model.
+
+- H2O LLM Studio also evaluates the model on the provided validation fold. Validation is always only on the provided validation fold.
+- H2O LLM Studio uses both datasets for model training if you provide a train and validation dataset.
+    - To define a training dataset, use the **Train dataframe** setting.
+    - To define a validation dataset, use the **Validation dataframe** setting.
+- The **Train validation data** setting is only available if you turned the **Save best checkpoint** setting **Off**.
+- Turning **On** the **Train validation data** setting should produce a model that you can expect to perform better because H2O LLM Studio trained the model on more data. Though, also note that using the entire train dataset and validation dataset generally causes the model's accuracy to be *overstated* as information from the validation data is incorporated into the model during the training process.

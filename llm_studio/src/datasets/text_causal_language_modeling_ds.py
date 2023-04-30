@@ -1,5 +1,6 @@
 import codecs
 import collections.abc
+import html
 import logging
 from typing import Any, Dict, List, Tuple, Union
 
@@ -79,7 +80,7 @@ class CustomDataset(Dataset):
         self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.prompts]
 
         if self.cfg.environment._local_rank == 0:
-            logger.info(f"Sample prompt: {self.prompts[0]}")
+            logger.info(f"Sample prompt: {html.escape(self.prompts[0])}")
 
     @staticmethod
     def parse_prompt(cfg: Any, prompt: str):
@@ -179,9 +180,7 @@ class CustomDataset(Dataset):
     @staticmethod
     def clean_output(
         output: Dict,
-        prompts: List[
-            str,
-        ],
+        prompts: List[str],
         cfg: Any,
     ):
         output["predicted_text"] = output["predicted_text"].tolist()
@@ -195,7 +194,6 @@ class CustomDataset(Dataset):
         return output
 
     def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
-
         output = self.clean_output(output, self.prompts, cfg)
 
         output["target_text"] = self.answers

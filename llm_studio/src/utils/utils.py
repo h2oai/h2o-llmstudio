@@ -3,16 +3,12 @@ import os
 import pickle
 import random
 import zipfile
-from typing import Any, Tuple
+from typing import Any
 
-import dill
 import numpy as np
 import openai
 import psutil
 import torch
-
-# types which can be shown directly in the UI without any extra nesting
-KNOWN_TYPE_ANNOTATIONS = [int, float, bool, str, Tuple[str, ...]]
 
 logger = logging.getLogger(__name__)
 
@@ -35,13 +31,11 @@ def set_seed(seed: int = 1234) -> None:
 
 def set_environment(cfg):
     """Sets and checks environment settings"""
-
-    os.environ["OPENAI_API_KEY"] = cfg.environment.openai_api_token
-    openai.api_key = cfg.environment.openai_api_token
-
-    if "GPT" in cfg.prediction.metric and cfg.environment.openai_api_token == "":
+    if "GPT" in cfg.prediction.metric and os.getenv("OPENAI_API_KEY", "") == "":
         logger.warning("No OpenAI API Key set. Setting metric to BLEU. ")
         cfg.prediction.metric = "BLEU"
+    else:
+        openai.api_key = os.getenv("OPENAI_API_KEY", "")
 
     return cfg
 
@@ -112,21 +106,6 @@ def add_file_to_zip(zf: zipfile.ZipFile, path: str) -> None:
         pass
 
 
-def load_dill(path: str) -> Any:
-    """Loads a dill file
-
-    Args:
-        path: path of file to load
-
-    Returns:
-        Loaded object
-    """
-
-    with open(path, "rb") as binary_file:
-        f = dill.load(binary_file)
-        return f
-
-
 def save_pickle(path: str, obj: Any, protocol: int = 4) -> None:
     """Saves object as pickle file
 
@@ -138,55 +117,6 @@ def save_pickle(path: str, obj: Any, protocol: int = 4) -> None:
 
     with open(path, "wb") as pickle_file:
         pickle.dump(obj, pickle_file, protocol=protocol)
-
-
-def save_dill(path: str, obj: Any) -> None:
-    """Saves object as dill file
-
-    Args:
-        path: path of file to save
-        obj: object to save
-    """
-
-    with open(path, "wb") as pickle_file:
-        dill.dump(obj, pickle_file)
-
-
-def copy_config(cfg: Any) -> Any:
-    """Makes a copy of the config
-
-    Args:
-        cfg: config object
-    Returns:
-        copy of the config
-    """
-
-    # cfg.environment._cpu_comm can't be copied
-    cpu_comm = None
-    if cfg.environment._cpu_comm is not None:
-        cpu_comm = cfg.environment._cpu_comm
-        cfg.environment._cpu_comm = None
-    cfg = dill.copy(cfg)
-    cfg.environment._cpu_comm = cpu_comm
-
-    return cfg
-
-
-def save_config(path: str, cfg: Any) -> None:
-    """Saves config as dill file
-
-    Args:
-        path: path of file to save to
-        cfg: config to save
-    """
-
-    # cfg.environment._cpu_comm can't be saved
-    cpu_comm = None
-    if cfg.environment._cpu_comm is not None:
-        cpu_comm = cfg.environment._cpu_comm
-        cfg.environment._cpu_comm = None
-    save_dill(path, cfg)
-    cfg.environment._cpu_comm = cpu_comm
 
 
 class DisableLogger:

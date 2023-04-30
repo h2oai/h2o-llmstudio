@@ -120,7 +120,7 @@ def read_dataframe(
 
 def get_fill_columns(cfg: Any) -> List[str]:
     if hasattr(cfg.dataset, "prompt_column"):
-        if isinstance(cfg.dataset.prompt_column, tuple):
+        if isinstance(cfg.dataset.prompt_column, (list, tuple)):
             return list(cfg.dataset.prompt_column)
         return [cfg.dataset.prompt_column]
 
