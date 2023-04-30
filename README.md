@@ -64,15 +64,34 @@ make wave
 This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
 Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
 
-## Run H2O LLM Studio GUI using Docker
+## Run H2O LLM Studio GUI using Docker from a nightly build
 
 Install Docker first by following instructions from [NVIDIA Containers](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker).
+H2O LLM Studio images are stored in the h2oai GCR vorvan container repository.
 
-This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
+```
+mkdir -p `pwd`/data
+mkdir -p `pwd`/output
+docker run \
+    --runtime=nvidia \
+    --shm-size=64g \
+    --init \
+    --rm \
+    -p 10101:10101 \
+    -v `pwd`/data:/workspace/data \
+    -v `pwd`/output:/workspace/output \
+    gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+```
+
 Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
+
+(Note Other helpful docker commands are `docker ps` and `docker kill`.)
+
+## Run H2O LLM Studio GUI by building your own Docker image
+
 ```bash
 docker build -t h2o-llmstudio .
-docker run --runtime=nvidia --shm-size=64g -p 10101:10101 --rm h2o-llmstudio
+docker run --runtime=nvidia --shm-size=64g -p 10101:10101 --init --rm h2o-llmstudio
 ```
 
 ## Run H2O LLM Studio with command line interface (CLI)
