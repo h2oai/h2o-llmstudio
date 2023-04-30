@@ -85,7 +85,7 @@ docker run \
 
 Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
 
-(Note Other helpful docker commands are `docker ps` and `docker kill`.)
+(Note other helpful docker commands are `docker ps` and `docker kill`.)
 
 ## Run H2O LLM Studio GUI by building your own Docker image
 
