@@ -14,5 +14,8 @@ WORKDIR /workspace
 RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 COPY . .
 RUN make setup
+ENV H2O_WAVE_MAX_REQUEST_SIZE=25MB
+ENV H2O_WAVE_NO_LOG=True
+ENV H2O_WAVE_PRIVATE_DIR="/download/@/workspace/output/download"
 EXPOSE 10101
-ENTRYPOINT [ "make", "wave" ]
+ENTRYPOINT [ "python3.10", "-m", "pipenv", "run", "wave", "run", "app" ]
