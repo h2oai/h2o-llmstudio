@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.0-devel-ubuntu22.04
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -15,4 +15,4 @@ RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 COPY . .
 RUN make setup
 EXPOSE 10101
-ENTRYPOINT [ "python3.10", "-m", "pipenv", "run", "wave", "run", "app" ]
+ENTRYPOINT [ "make", "wave" ]
