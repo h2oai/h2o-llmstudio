@@ -1864,7 +1864,11 @@ def get_download_link(q, artifact_path):
         os.makedirs(os.path.dirname(new_path), exist_ok=True)
         os.symlink(os.path.abspath(artifact_path), os.path.abspath(new_path))
 
-    return url + url_path
+    # return a relative path so that downloads work when the instance is
+    # behind a reverse proxy or being accessed by a public IP in a public
+    # cloud.
+
+    return url_path
 
 
 def check_valid_upload_content(upload_path: str) -> Tuple[bool, str]:
