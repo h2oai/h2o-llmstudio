@@ -95,7 +95,15 @@ Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LL
 
 ```bash
 docker build -t h2o-llmstudio .
-docker run --runtime=nvidia --shm-size=64g -p 10101:10101 --init --rm h2o-llmstudio
+docker run \
+    --runtime=nvidia \
+    --shm-size=64g \
+    --init \
+    --rm \
+    -p 10101:10101 \
+    -v `pwd`/data:/workspace/data \
+    -v `pwd`/output:/workspace/output \
+    h2o-llmstudio
 ```
 
 ## Run H2O LLM Studio with command line interface (CLI)
