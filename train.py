@@ -480,7 +480,7 @@ def run(cfg: Any) -> None:
     train_df, val_df = get_data(cfg)
 
     if (
-        len(val_df) >= int(os.getenv("GPT_EVAL_MAX", 100))
+        len(val_df) > int(os.getenv("GPT_EVAL_MAX", 100))
         and "GPT" in cfg.prediction.metric
     ):
         logger.warning(
