@@ -8,6 +8,11 @@ import pandas as pd
 from joblib import Parallel, delayed
 from sacrebleu import BLEU
 from sacrebleu.metrics.base import Metric
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_random_exponential,
+) 
 
 from llm_studio.src.datasets.text_utils import get_texts
 
@@ -24,6 +29,30 @@ def sacrebleu_score(
         scores.append(metric.sentence_score(predicted_text, [target_text]).score)
     return np.mean(scores)
 
+@retry(wait=wait_random_exponential(multiplier=1, max=60), stop=stop_after_attempt(3))
+def call_openai_api(template, model):
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a helpful and precise assistant "
+                "for checking the quality of the answer.",
+            },
+            {
+                "role": "user",
+                "content": template,
+            },
+        ],
+        temperature=0.1,
+        max_tokens=1024,
+    )
+    ret = response["choices"][0]["message"]["content"]
+    ret = ret.split("\n")
+    score = ret[0]
+    score = score.lower().replace("score:", "").strip()
+    score = float(score)
+    return score, " ".join(ret[1:]).strip()
 
 def rate_reply(question, reference_answer, assistant_answer, model):
     # motivated by https://github.com/lm-sys/FastChat/tree/main/fastchat/eval
@@ -35,35 +64,11 @@ def rate_reply(question, reference_answer, assistant_answer, model):
         assistant_answer=assistant_answer,
     )
 
-    for _ in range(3):
-        try:
-            response = openai.ChatCompletion.create(
-                model=model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a helpful and precise assistant "
-                        "for checking the quality of the answer.",
-                    },
-                    {
-                        "role": "user",
-                        "content": template,
-                    },
-                ],
-                temperature=0.1,
-                max_tokens=1024,
-            )
-            ret = response["choices"][0]["message"]["content"]
-            ret = ret.split("\n")
-            score = ret[0]
-            score = score.lower().replace("score:", "").strip()
-            score = float(score)
-            return score, " ".join(ret[1:]).strip()
-        except Exception:
-            pass
-
-    logger.warning("error in api call")
-    return 0.0, ""
+    try:
+        return call_openai_api(template, model)
+    except Exception:
+        logger.warning("error in api call")
+        return 0.0, ""
 
 
 def gpt_score(
@@ -77,7 +82,7 @@ def gpt_score(
         return np.mean(results["metrics"].detach().cpu().numpy())
     prompts = get_texts(val_df, cfg, separator="")
 
-    ret = Parallel(n_jobs=len(prompts), backend="multiprocessing")(
+    ret = Parallel(n_jobs=8, backend="multiprocessing")(
         delayed(rate_reply)(prompt, target_text, predicted_text, model)
         for prompt, predicted_text, target_text in zip(
             prompts, results["predicted_text"], results["target_text"]

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2a8ac9b9b84a348d8ea645f4274d3028f31d7ad2df2f6092a3c60151848d4b94"
+            "sha256": "700b88ebcacb8c12c6e1bf025ea9bb141b4690f435baed62afd059765a5b4969"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -304,7 +304,7 @@
                 "sha256:f8303414c7b03f794347ad062c0516cee0e15f7a612abd0ce1e25caf6ceb47df",
                 "sha256:fca62a8301b605b954ad2e9c3666f9d97f63872aa4efcae5492baca2056b74ab"
             ],
-            "markers": "python_full_version >= '3.7.0'",
+            "markers": "python_version >= '3.7'",
             "version": "==3.1.0"
         },
         "click": {
@@ -342,7 +342,7 @@
                 "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44",
                 "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.6' and python_full_version != '3.5.0'",
             "version": "==0.4.6"
         },
         "coolname": {
@@ -1104,7 +1104,7 @@
         },
         "peft": {
             "git": "https://github.com/huggingface/peft",
-            "ref": "e8f66b8a425eced6c592089d40b8d33d82c2b2f0"
+            "ref": "632997d1fb776c3cf05d8c2537ac9a98a7ce9435"
         },
         "pillow": {
             "hashes": [
@@ -1819,6 +1819,14 @@
             "markers": "python_version >= '3.7'",
             "version": "==0.9.0"
         },
+        "tenacity": {
+            "hashes": [
+                "sha256:2f277afb21b851637e8f52e6a613ff08734c347dc19ade928e519d7d2d8569b0",
+                "sha256:43af037822bd0029025877f3b2d97cc4d7bb0c2991000a3d59d71517c5c969e0"
+            ],
+            "index": "pypi",
+            "version": "==8.2.2"
+        },
         "text-unidecode": {
             "hashes": [
                 "sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8",
@@ -2006,7 +2014,7 @@
                 "sha256:8a388717b9476f934a21484e8c8e61875ab60644d29b9b39e11e4b9dc1c6b305",
                 "sha256:aa751d169e23c7479ce47a0cb0da579e3ede798f994f5816a74e4f4500dcea42"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'",
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_full_version != '3.5.0'",
             "version": "==1.26.15"
         },
         "webcolors": {
@@ -2570,11 +2578,11 @@
         },
         "platformdirs": {
             "hashes": [
-                "sha256:01437886022decaf285d8972f9526397bfae2ac55480ed372ed6d9eca048870a",
-                "sha256:a5e1536e5ea4b1c238a1364da17ff2993d5bd28e15600c2c8224008aff6bbcad"
+                "sha256:47692bc24c1958e8b0f13dd727307cff1db103fca36399f457da8e05f222fdc4",
+                "sha256:7954a68d0ba23558d753f73437c55f89027cf8f5108c19844d4b82e5af396335"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==3.4.0"
+            "version": "==3.5.0"
         },
         "pluggy": {
             "hashes": [
@@ -2823,11 +2831,11 @@
         },
         "virtualenv": {
             "hashes": [
-                "sha256:278753c47aaef1a0f14e6db8a4c5e1e040e90aea654d0fc1dc7e0d8a42616cc3",
-                "sha256:48fd3b907b5149c5aab7c23d9790bea4cac6bc6b150af8635febc4cfeab1275a"
+                "sha256:6abec7670e5802a528357fdc75b26b9f57d5d92f29c5462ba0fbe45feacc685e",
+                "sha256:a85caa554ced0c0afbd0d638e7e2d7b5f92d23478d05d17a76daeac8f279f924"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==20.22.0"
+            "version": "==20.23.0"
         },
         "virtualenv-clone": {
             "hashes": [
