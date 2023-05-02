@@ -97,11 +97,11 @@ default_cfg = {
         "default_logger": "None",
         "default_neptune_project": os.getenv("NEPTUNE_PROJECT", ""),
         "default_neptune_api_token": os.getenv("NEPTUNE_API_TOKEN", ""),
-        "default_openai_api_token": os.getenv("OPENAI_API_KEY", ""),
         "default_huggingface_api_token": os.getenv("HUGGINGFACE_TOKEN", ""),
+        "default_openai_api_token": os.getenv("OPENAI_API_KEY", ""),
+        "default_gpt_eval_max": os.getenv("GPT_EVAL_MAX", 100),
         "delete_dialogs": True,
         "chart_plot_max_points": 1000,
-        "default_gpt_eval_max": os.getenv("GPT_EVAL_MAX", 100),
     },
 }
 
