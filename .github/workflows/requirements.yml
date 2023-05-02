@@ -1,0 +1,26 @@
+name: Generate_Requirements
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+
+jobs:
+  style:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Requirements
+        run: make setup
+
+      - name: Generate requirements.txt
+        run: make requirements > requirements.txt
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Update requirements.txt"
+          commit_options: "--author 'GitHub Action <action@github.com>'"
