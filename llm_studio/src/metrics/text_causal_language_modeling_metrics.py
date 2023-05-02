@@ -8,11 +8,7 @@ import pandas as pd
 from joblib import Parallel, delayed
 from sacrebleu import BLEU
 from sacrebleu.metrics.base import Metric
-from tenacity import (
-    retry,
-    stop_after_attempt,
-    wait_random_exponential,
-) 
+from tenacity import retry, stop_after_attempt, wait_random_exponential
 
 from llm_studio.src.datasets.text_utils import get_texts
 
@@ -28,6 +24,7 @@ def sacrebleu_score(
     ):
         scores.append(metric.sentence_score(predicted_text, [target_text]).score)
     return np.mean(scores)
+
 
 @retry(wait=wait_random_exponential(multiplier=1, max=60), stop=stop_after_attempt(3))
 def call_openai_api(template, model):
@@ -53,6 +50,7 @@ def call_openai_api(template, model):
     score = score.lower().replace("score:", "").strip()
     score = float(score)
     return score, " ".join(ret[1:]).strip()
+
 
 def rate_reply(question, reference_answer, assistant_answer, model):
     # motivated by https://github.com/lm-sys/FastChat/tree/main/fastchat/eval

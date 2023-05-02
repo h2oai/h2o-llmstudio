@@ -1640,7 +1640,9 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             repetition_penalty=cfg.prediction.repetition_penalty,
             text_prompt_start=cfg.dataset.text_prompt_start,
             text_answer_separator=cfg.dataset.text_answer_separator,
-            end_of_sentence=cfg._tokenizer_eos_token if cfg.dataset.add_eos_token_to_prompt else "",
+            end_of_sentence=cfg._tokenizer_eos_token
+            if cfg.dataset.add_eos_token_to_prompt
+            else "",
         )
         card.push_to_hub(
             repo_id=repo_id,
