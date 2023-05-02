@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  requirements:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -22,5 +22,7 @@ jobs:
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
+          commit_author_name: Gh Actions Bot
           commit_message: "Update requirements.txt"
-          commit_options: "--author 'GitHub Action <action@github.com>'"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
