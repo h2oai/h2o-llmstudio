@@ -78,6 +78,15 @@ make wave
 This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
 Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
 
+If you are running H2O LLM Studio with a custom environment other than Pipenv, you need to start the app as follows:
+```bash
+H2O_WAVE_MAX_REQUEST_SIZE=25MB \
+H2O_WAVE_NO_LOG=True \
+H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
+wave run app
+```
+
+
 ## Run H2O LLM Studio GUI using Docker from a nightly build
 
 Install Docker first by following instructions from [NVIDIA Containers](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker).
