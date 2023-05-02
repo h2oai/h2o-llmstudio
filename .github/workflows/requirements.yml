@@ -1,8 +1,6 @@
 name: Requirements
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
 
 jobs:
