@@ -40,7 +40,6 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
     """
 
     if mode == "full":
-
         zones = [
             header_zone(),
             ui.zone(
@@ -67,7 +66,6 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
         ]
 
     if mode == "experiment_start":
-
         zones = [
             header_zone(),
             ui.zone(
@@ -94,7 +92,6 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
         ]
 
     elif mode == "error":
-
         zones = [
             header_zone(),
             ui.zone(
@@ -120,7 +117,6 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
         ]
 
     elif mode == "home":
-
         zones = [
             header_zone(),
             ui.zone(

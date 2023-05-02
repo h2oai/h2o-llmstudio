@@ -45,7 +45,6 @@ async def experiment_rename_action_workflow(q: Q):
 
 
 async def list_current_experiments(q, allowed_statuses=None, actions=True, reset=True):
-
     await experiment_list(
         q,
         allowed_statuses=allowed_statuses,

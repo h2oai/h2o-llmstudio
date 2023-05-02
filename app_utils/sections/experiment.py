@@ -36,6 +36,7 @@ from app_utils.utils import (
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
 from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
     convert_cfg_to_nested_dictionary,
     get_parent_element,
@@ -111,6 +112,7 @@ async def experiment_start(q: Q) -> None:
                 for _, row in df_datasets.iterrows()
             ],
             trigger=True,
+            tooltip=tooltips["experiments_dataset"],
         ),
     ]
 
@@ -177,7 +179,6 @@ async def experiment_start(q: Q) -> None:
     )
 
     if len(df_experiments["id"]) > 0:
-
         if q.client["experiment/start/cfg_experiment"] is None:
             q.client["experiment/start/cfg_experiment"] = str(
                 df_experiments["id"].iloc[0]
@@ -198,6 +199,7 @@ async def experiment_start(q: Q) -> None:
                 choices=choices_problem_types,
                 value=q.client["experiment/start/cfg_file"],
                 trigger=True,
+                tooltip=tooltips["experiments_problem_type"],
             )
         ]
 
@@ -286,6 +288,7 @@ async def experiment_start(q: Q) -> None:
                 label="Import config from YAML",
                 value=False,
                 trigger=True,
+                tooltip=tooltips["experiments_import_config_from_yaml"],
             )
         ]
 
@@ -526,7 +529,9 @@ def get_experiment_table(
     for col in col_remove:
         if col in df_viz:
             del df_viz[col]
-    # df_viz = df_viz.rename(columns={"process_id": "pid", "config_file": "problem type"})
+    # df_viz = df_viz.rename(
+    #     columns={"process_id": "pid", "config_file": "problem type"},
+    # )
     # df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
 
     if actions == "experiment" and q.client["experiment/list/mode"] == "train":
@@ -819,7 +824,6 @@ async def experiment_stop(q: Q, experiment_ids: List[int]) -> None:
     """
 
     for experiment_id in experiment_ids:
-
         experiment = q.client.app_db.get_experiment(experiment_id)
 
         try:
@@ -964,7 +968,6 @@ async def experiment_display(q: Q) -> None:
                     q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
                     continue
     elif q.client["experiment/display/tab"] in ["experiment/display/summary"]:
-
         experiment_df = get_experiments(q)
         experiment_df = experiment_df[experiment_df.id == experiment_id]
 
@@ -1143,7 +1146,6 @@ async def parse_param(q: Q, cfg, prompt):
 
 
 async def experiment_chat(q: Q) -> None:
-
     prompt = q.client["experiment/display/chat/chatbot"]
 
     if prompt.lower().startswith("--"):
@@ -1562,7 +1564,6 @@ async def experiment_download_model(q: Q, error: str = ""):
 
 
 async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
-
     if q.args["experiment/display/push_to_huggingface"] or error:
         dialog_items = [
             ui.message_bar("error", error, visible=True if error else False),
@@ -1593,7 +1594,6 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             ),
         ]
     elif q.args["experiment/display/push_to_huggingface_submit"]:
-
         await busy_dialog(
             q=q,
             title="Exporting to HuggingFace ",

@@ -381,7 +381,6 @@ def run_train(
                         objective_op(val_metric, best_val_metric)
                         and cfg.training.save_best_checkpoint
                     ):
-
                         if cfg.environment._local_rank == 0:
                             checkpoint_path = cfg.output_directory
                             logger.info(
@@ -594,7 +593,6 @@ def run(cfg: Any) -> None:
     experiment_path = f"{cfg.output_directory}"
 
     if cfg.environment._local_rank == 0:
-
         if not cfg.training.save_best_checkpoint:
             checkpoint_path = cfg.output_directory
 
@@ -612,7 +610,6 @@ def run(cfg: Any) -> None:
         save_prediction_outputs(cfg.experiment_name, experiment_path)
 
     if cfg.environment._local_rank == 0:
-
         flag_path = os.path.join(cfg.output_directory, "flags.json")
         write_flag(flag_path, "status", "finished")
         time_took = time.time() - global_start_time
