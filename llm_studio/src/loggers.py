@@ -1,5 +1,6 @@
 import dataclasses
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import numpy as np
@@ -28,7 +29,6 @@ def get_cfg(cfg: Any) -> Dict:
     cfg_dict = {key: cfg_dict[key] for key in cfg._get_order(warn_if_unset=False)}
 
     for k, v in cfg_dict.items():
-
         if k.startswith("_") or cfg._get_visibility(k) < 0:
             continue
 
@@ -51,7 +51,6 @@ def get_cfg(cfg: Any) -> Dict:
 
 class NeptuneLogger:
     def __init__(self, cfg: Any):
-
         import neptune as neptune
         from neptune.utils import stringify_unsupported
 
@@ -62,7 +61,7 @@ class NeptuneLogger:
 
         self.logger = neptune.init_run(
             project=cfg.logging.neptune_project,
-            api_token=cfg.logging.neptune_api_token,
+            api_token=os.getenv("NEPTUNE_API_TOKEN", ""),
             name=cfg.experiment_name,
             mode=mode,
             capture_stdout=False,
@@ -79,7 +78,6 @@ class NeptuneLogger:
 
 class LocalLogger:
     def __init__(self, cfg: Any):
-
         logging.getLogger("sqlitedict").setLevel(logging.ERROR)
 
         self.logs = f"{cfg.output_directory}/charts.db"
@@ -91,7 +89,6 @@ class LocalLogger:
             logs.commit()
 
     def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
-
         if subset in ("image", "html"):
             with SqliteDict(self.logs) as logs:
                 if subset not in logs:
@@ -155,7 +152,6 @@ class MainLogger:
         self.loggers["external"] = DummyLogger()
 
     def log(self, subset: str, name: str, value: str, step: float = None):
-
         for k, logger in self.loggers.items():
             if "validation_predictions" in name and k == "external":
                 continue

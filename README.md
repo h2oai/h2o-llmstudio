@@ -21,8 +21,9 @@
 - chat with your model and get instant feedback on your model performance.
 - easily export your model to the [Hugging Face Hub](https://huggingface.co/) and share it with the community.
 
-
 ## Quickstart
+
+For questions, discussing, or just hanging out, come and join our <a href="https://discord.gg/WKhYMWcVbq"><b>Discord</b></a>!
 
 We offer several ways of getting started quickly.
 
@@ -30,30 +31,43 @@ Using CLI for fine-tuning LLMs:
 
 [![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/philippsinger/h2o-llm-studio-cli/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1-OYccyTvmfa3r7cAquw8sioFFPJcn4R9?usp=sharing)
 
-
 ## What's New
 
-- April 25, 2023 Added functionality for supporting nested conversations in data. A new `parent_id_column` can be selected for datasets to support tree-like structures in your conversational data. Additional `augmentation` settings have been added for this feature.
+- [PR 12](https://github.com/h2oai/h2o-llmstudio/pull/12). Experiment configurations are now stored in yaml format,
+allowing for more flexibility in the configuration while making it much easier to be backward compatible. Old experiment configurations that are stored in pickle format will be converted to yaml format automatically.
+- [PR 40](https://github.com/h2oai/h2o-llmstudio/pull/40) Added functionality for supporting nested conversations in data. A new `parent_id_column` can be selected for datasets to support tree-like structures in your conversational data. Additional `augmentation` settings have been added for this feature.
 
-Please note that due to current rapid development we cannot guarantee full backwards compatibility of new functionality. Please either reset your `data` and `output` folders when upgrading and running into compatibility issues.
+Please note that due to current rapid development we cannot guarantee full backwards compatibility of new functionality. 
+We thus recommend to pin the version of the framework to the one you used for your experiments. 
+For resetting, please delete/backup your `data` and `output` folders.
 
 ## Setup
 H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
 
 
-To get started with H2O LLM Studio, you'll need to install Python 3.10 if you don't have it on your machine already.
-### System installs (Python 3.10)
+### Recommended Install
+The recommended way to install H2O LLM Studio is using pipenv with Python 3.10.
+To install Python 3.10 on Ubuntu 16.04+, execute the following commands:
+
+#### System installs (Python 3.10)
 ```bash
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt install python3.10
 sudo apt-get install python3.10-distutils
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 ```
-### Create virtual environment (pipenv)
+#### Create virtual environment (pipenv)
 The following command will create a virtual environment using pipenv and will install the dependencies using pipenv:
 ```bash
 make setup
 ```
+
+### Using requirements.txt
+If you wish to use conda or another virtual environment, you can also install the dependencies using the requirements.txt file:
+```bash
+pip install -r requirements.txt
+```
+
 
 ## Run H2O LLM Studio GUI
 
@@ -63,6 +77,53 @@ make wave
 ```
 This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
 Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
+
+If you are running H2O LLM Studio with a custom environment other than Pipenv, you need to start the app as follows:
+```bash
+H2O_WAVE_MAX_REQUEST_SIZE=25MB \
+H2O_WAVE_NO_LOG=True \
+H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
+wave run app
+```
+
+
+## Run H2O LLM Studio GUI using Docker from a nightly build
+
+Install Docker first by following instructions from [NVIDIA Containers](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker).
+H2O LLM Studio images are stored in the h2oai GCR vorvan container repository.
+
+```
+mkdir -p `pwd`/data
+mkdir -p `pwd`/output
+docker run \
+    --runtime=nvidia \
+    --shm-size=64g \
+    --init \
+    --rm \
+    -p 10101:10101 \
+    -v `pwd`/data:/workspace/data \
+    -v `pwd`/output:/workspace/output \
+    gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+```
+
+Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
+
+(Note other helpful docker commands are `docker ps` and `docker kill`.)
+
+## Run H2O LLM Studio GUI by building your own Docker image
+
+```bash
+docker build -t h2o-llmstudio .
+docker run \
+    --runtime=nvidia \
+    --shm-size=64g \
+    --init \
+    --rm \
+    -p 10101:10101 \
+    -v `pwd`/data:/workspace/data \
+    -v `pwd`/output:/workspace/output \
+    h2o-llmstudio
+```
 
 ## Run H2O LLM Studio with command line interface (CLI)
 You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration file that contains all the experiment parameters. 
@@ -89,7 +150,6 @@ The interactive chat will also work with model that were finetuned using the UI.
 H2O LLM studio expects a csv file with at least two columns, one being the instruct column, the other 
 being the answer that the model should generate. You can also provide an extra validation dataframe using the same format or use an automatic train/validation split to evaluate the model performance. 
 
-
 During an experiment you can adapt the data representation with the following settings 
 
 - **Prompt Column:** The column in the dataset containing the user prompt.
@@ -98,7 +158,7 @@ During an experiment you can adapt the data representation with the following se
 
 ### Example data:
 We provide an example dataset (converted dataset from [OpenAssistant/oasst1](https://huggingface.co/datasets/OpenAssistant/oasst1))
-that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=127047926). It is recommended to use `train_full.csv` for training. This dataset is also downloaded and prepared by default when first starting the GUI.
+that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=127047926). It is recommended to use `train_full.csv` for training. This dataset is also downloaded and prepared by default when first starting the GUI. Multiple dataframes can be uploaded into a single dataset by uploading a `.zip` archive.
 
 ## Training your model
 
@@ -106,12 +166,13 @@ With H2O LLM Studio, training your large language model is easy and intuitive.
 First, upload your dataset and then start training your model.
 
 ### Starting an experiment
-H2O LLM Studio provides various parameters to set for a given experiment, with some of the most important being:
+H2O LLM Studio allows to tune a variety of parameters and enables fast iterations to be able to explore different hyperparameters easily.
+The default settings are chosen with care and should give a good baseline. The most important parameters are:
 
 - **LLM Backbone**: This parameter determines the LLM architecture to use.
 - **Mask Prompt Labels**: This option controls whether to mask the prompt labels during training and only train on the loss of the answer.
 - **Hyperparameters** such as learning rate, batch size, and number of epochs determine the training process.
-An overview of all parameters is given in the [parameter description](docs/parameters.md).
+Please consult the tooltips of each hyperparameter to learn more about them. The tooltips are shown next to each hyperparameter in the GUI and can be found as plain text `.mdx` files in the [tooltips/](tooltips/) folder.
 - **Evaluate Before Training** This option lets you evaluate the model before training, which can help you judge the quality of the LLM backbone before fine-tuning.
 
 We provide several metric options for evaluating the performance of your model.
@@ -132,6 +193,35 @@ During the experiment, you can monitor the training progress and model performan
 ### Push to Hugging Face 🤗
 If you want to publish your model, you can export it with a single click to the [Hugging Face Hub](https://huggingface.co/)
 and share it with the community. To be able to push your model to the Hub, you need to have an API token with write access.
+You can also click the **Download model** button to download the model locally.
+To use a converted model, you can use the following code snippet:
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "path_to_downloaded_model"  # either local folder or huggingface model name
+
+# Important: The prompt needs to be in the same format the model was trained with.
+# You can find an example prompt in the experiment logs.
+prompt = "<|prompt|>How are you?<|endoftext|><|answer|>"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+model.cuda().eval()
+
+inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
+# generate configuration can be modified to your needs
+tokens = model.generate(
+    **inputs,
+    max_new_tokens=256,
+    temperature=0.3,
+    repetition_penalty=1.2,
+    num_beams=2
+)[0]
+tokens = tokens[inputs["input_ids"].shape[1]:]
+answer = tokenizer.decode(tokens, skip_special_tokens=True)
+print(answer)
+```
 
 ### Compare experiments
 In the **View Experiments** view, you can compare your experiments and see how different model parameters affect the model performance.
@@ -141,17 +231,18 @@ In addition, you can track your experiments with [Neptune](https://neptune.ai/) 
 
 As an example, you can run an experiment on the OASST data via CLI.
 
-First, get the data [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=126228752) and place it into the `examples/data_oasst1` folder; or download it directly via API command:
+First, get the training dataset (`train_full.csv`) [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=126228752) and place it into the `examples/data_oasst1` folder; or download it directly via [Kaggle API](https://www.kaggle.com/docs/api) command:
 ```bash
 kaggle kernels output philippsinger/openassistant-conversations-dataset-oasst1 -p examples/data_oasst1/
 ```
 
-First, go into the interactive shell:
+Then, go into the interactive shell. If not already done earlier, install the dependencies first:
 ```bash
+make setup  # installs all dependencies
 make shell
 ```
 
-Then, you can run the experiment via:
+You can now run the experiment via:
 ```bash
 python train.py -C examples/cfg_example_oasst1.py
 ```
@@ -164,17 +255,8 @@ python prompt.py -e examples/output_oasst1
 
 ## Model checkpoints
 
-All open-source datasets and models are posted on [H2O.ai's Hugging Face page](https://huggingface.co/h2oai/).
+All open-source datasets and models are posted on [H2O.ai's Hugging Face page](https://huggingface.co/h2oai/) and our [H2OGPT](https://github.com/h2oai/h2ogpt) repository.
 
-
-## Changelog
-The field is rapidly evolving, and we are constantly adding new features and fixing bugs.
-While we are striving to converge to a stable framework, at this early point of development certain changes may break your existing experiments. 
-We thus recommend to pin the version of the framework to the one you used for your experiments. 
-Below, we list a summary of the changes that may affect older experiments:
-- [PR 12](https://github.com/h2oai/h2o-llmstudio/pull/12). Experiment configurations are now stored in yaml format,
-allowing for more flexibility in the configuration while making it much easier to be backward compatible. Old experiment configurations that are stored in pickle format will be converted to yaml format automatically.
-- [PR 40](https://github.com/h2oai/h2o-llmstudio/pull/40). Datasets can now use past chat history as input. This feature can be enabled by setting `Parent Id Column` in the dataset configuration.
 
 ## License
 H2O LLM Studio is licensed under the Apache 2.0 license. Please see the [LICENSE](LICENSE) file for more information.

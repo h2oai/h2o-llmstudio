@@ -7,7 +7,6 @@ from llm_studio.src.loggers import Loggers
 
 
 async def settings(q: Q) -> None:
-
     await clean_dashboard(q, mode="full")
     q.client["nav/active"] = "settings"
 

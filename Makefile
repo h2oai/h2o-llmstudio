@@ -13,13 +13,18 @@ pipenv:
 
 .PHONY: setup
 setup: pipenv
-	$(PIPENV) install --python $(PYTHON_VERSION)
+	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
 	$(PIPENV_PIP) install deps/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl --force-reinstall
 
 .PHONY: setup-dev
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
 	$(PIPENV_PIP) install deps/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl --force-reinstall
+
+.PHONY: export-requirements
+export-requirements: pipenv
+	$(PIPENV) requirements > requirements.txt
+	 echo "deps/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl" >> requirements.txt
 
 clean-env:
 	$(PIPENV) --rm
@@ -35,20 +40,17 @@ reports:
 
 .PHONY: style
 style: reports pipenv
-	@echo -n > reports/style.log
-	@echo -n > reports/style_errors.log
+	@echo -n > reports/flake8.log
+	@echo -n > reports/mypy.log
 	@echo
 
-	@echo "# flake8" >> reports/style.log
-	-$(PIPENV) run flake8 | tee -a reports/style.log || echo "flake8 failed" >> reports/style_errors.log
+	-$(PIPENV) run flake8 | tee -a reports/flake8.log
 	@echo
 
-	@echo "" >> reports/style.log
-	@echo "# mypy" >> reports/style.log
-	-$(PIPENV) run mypy . | tee -a reports/style.log || echo "mypy failed" >> reports/style_errors.log
+	-$(PIPENV) run mypy . --check-untyped-defs | tee -a reports/mypy.log
 	@echo
 
-	@if [ -s reports/style_errors.log ]; then exit 1; fi
+	@if [ -s reports/flake8.log ]; then exit 1; fi
 
 .PHONY: format
 format: pipenv

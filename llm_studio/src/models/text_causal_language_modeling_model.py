@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 class TokenStoppingCriteria(StoppingCriteria):
     """
     Stopping criteria based on tokens.
-    Will stop generation when each generated sample contains at least one of the stop_word_ids.
+    Will stop generation when each generated sample contains at least one of the
+    stop_word_ids.
     """
 
     def __init__(self, stop_word_ids, prompt_input_ids_len):
@@ -68,6 +69,11 @@ class TokenStoppingCriteria(StoppingCriteria):
         generated_ids = input_ids[:, self.prompt_input_ids_len :]
         for stop_word_id in self.stop_word_ids:
             if self.should_stop(generated_ids, stop_word_id.to(generated_ids.device)):
+                if generated_ids.shape[1] == 1:
+                    logger.warning(
+                        f"Stopping criteria triggered for {stop_word_id} at first "
+                        "generated token."
+                    )
                 return True
         return False
 
@@ -171,7 +177,6 @@ class Model(nn.Module):
 
         # model's forward only works with labels
         if "labels" in batch:
-
             batch = batch_padding(
                 self.cfg,
                 batch,

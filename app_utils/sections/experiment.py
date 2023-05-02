@@ -11,9 +11,11 @@ import pandas as pd
 import torch
 import yaml
 from h2o_wave import Q, data, ui
+from jinja2 import Environment, FileSystemLoader
 from sqlitedict import SqliteDict
 
 from app_utils.config import default_cfg
+from app_utils.sections.common import clean_dashboard
 from app_utils.utils import (
     add_model_type,
     flatten_dict,
@@ -34,6 +36,7 @@ from app_utils.utils import (
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
 from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
     convert_cfg_to_nested_dictionary,
     get_parent_element,
@@ -55,8 +58,6 @@ from llm_studio.src.utils.export_utils import (
 from llm_studio.src.utils.logging_utils import write_flag
 from llm_studio.src.utils.modeling_utils import load_checkpoint, unwrap_model
 from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
-
-from .common import clean_dashboard
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +112,7 @@ async def experiment_start(q: Q) -> None:
                 for _, row in df_datasets.iterrows()
             ],
             trigger=True,
+            tooltip=tooltips["experiments_dataset"],
         ),
     ]
 
@@ -177,7 +179,6 @@ async def experiment_start(q: Q) -> None:
     )
 
     if len(df_experiments["id"]) > 0:
-
         if q.client["experiment/start/cfg_experiment"] is None:
             q.client["experiment/start/cfg_experiment"] = str(
                 df_experiments["id"].iloc[0]
@@ -198,6 +199,7 @@ async def experiment_start(q: Q) -> None:
                 choices=choices_problem_types,
                 value=q.client["experiment/start/cfg_file"],
                 trigger=True,
+                tooltip=tooltips["experiments_problem_type"],
             )
         ]
 
@@ -286,6 +288,7 @@ async def experiment_start(q: Q) -> None:
                 label="Import config from YAML",
                 value=False,
                 trigger=True,
+                tooltip=tooltips["experiments_import_config_from_yaml"],
             )
         ]
 
@@ -526,7 +529,9 @@ def get_experiment_table(
     for col in col_remove:
         if col in df_viz:
             del df_viz[col]
-    # df_viz = df_viz.rename(columns={"process_id": "pid", "config_file": "problem type"})
+    # df_viz = df_viz.rename(
+    #     columns={"process_id": "pid", "config_file": "problem type"},
+    # )
     # df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
 
     if actions == "experiment" and q.client["experiment/list/mode"] == "train":
@@ -819,7 +824,6 @@ async def experiment_stop(q: Q, experiment_ids: List[int]) -> None:
     """
 
     for experiment_id in experiment_ids:
-
         experiment = q.client.app_db.get_experiment(experiment_id)
 
         try:
@@ -964,7 +968,6 @@ async def experiment_display(q: Q) -> None:
                     q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
                     continue
     elif q.client["experiment/display/tab"] in ["experiment/display/summary"]:
-
         experiment_df = get_experiments(q)
         experiment_df = experiment_df[experiment_df.id == experiment_id]
 
@@ -1143,7 +1146,6 @@ async def parse_param(q: Q, cfg, prompt):
 
 
 async def experiment_chat(q: Q) -> None:
-
     prompt = q.client["experiment/display/chat/chatbot"]
 
     if prompt.lower().startswith("--"):
@@ -1523,12 +1525,9 @@ async def experiment_download_model(q: Q, error: str = ""):
     if not os.path.exists(zip_path):
         logger.info(f"Creating {zip_path} on demand")
 
-        cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path, device="cpu")
-        if hasattr(cfg.training, "lora") and cfg.training.lora:
-            # merges the LoRa layers into the base model.
-            # This is needed if someone wants to use the base model as a standalone
-            # model.
-            model.backbone = model.backbone.merge_and_unload()
+        cfg, model, tokenizer = load_cfg_model_tokenizer(
+            experiment_path, merge=True, device="cpu"
+        )
 
         model = unwrap_model(model)
         checkpoint_path = cfg.output_directory
@@ -1565,7 +1564,6 @@ async def experiment_download_model(q: Q, error: str = ""):
 
 
 async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
-
     if q.args["experiment/display/push_to_huggingface"] or error:
         dialog_items = [
             ui.message_bar("error", error, visible=True if error else False),
@@ -1596,7 +1594,6 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             ),
         ]
     elif q.args["experiment/display/push_to_huggingface_submit"]:
-
         await busy_dialog(
             q=q,
             title="Exporting to HuggingFace ",
@@ -1604,27 +1601,105 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         )
 
         experiment_path = q.client["experiment/display/experiment_path"]
-        cfg, model, tokenizer = load_cfg_model_tokenizer(experiment_path, device="cpu")
-        if hasattr(cfg.training, "lora") and cfg.training.lora:
-            # merges the LoRa layers into the base model.
-            # This is needed if someone wants to use the base model as a standalone
-            # model.
-            model.backbone = model.backbone.merge_and_unload()
+        cfg, model, tokenizer = load_cfg_model_tokenizer(
+            experiment_path, merge=True, device="cpu"
+        )
 
         huggingface_hub.login(
             q.client["experiment/display/push_to_huggingface/api_key"]
         )
+        user_id = huggingface_hub.whoami()["name"]
+        repo_id = (
+            f"{user_id}/{q.client['experiment/display/push_to_huggingface/model_name']}"
+        )
 
+        # push tokenizer to hub
         tokenizer.push_to_hub(
-            repo_id=q.client["experiment/display/push_to_huggingface/model_name"],
-            token=q.client["experiment/display/push_to_huggingface/api_key"],
+            repo_id=repo_id,
             private=True,
         )
 
+        # push model card to hub
+        card_data = huggingface_hub.ModelCardData(
+            language="en",
+            library_name="transformers",
+            tags=["gpt", "llm", "large language model", "h2o-llmstudio"],
+        )
+        card = huggingface_hub.ModelCard.from_template(
+            card_data,
+            template_path="model_card_template.md",
+            base_model=cfg.llm_backbone,  # will be replaced in template if it exists
+            repo_id=repo_id,
+            model_architecture=model.backbone.__repr__(),
+            config=cfg.__repr__(),
+            min_new_tokens=cfg.prediction.min_length_inference,
+            max_new_tokens=cfg.prediction.max_length_inference,
+            do_sample=cfg.prediction.do_sample,
+            num_beams=cfg.prediction.num_beams,
+            temperature=cfg.prediction.temperature,
+            repetition_penalty=cfg.prediction.repetition_penalty,
+            text_prompt_start=cfg.dataset.text_prompt_start,
+            text_answer_separator=cfg.dataset.text_answer_separator,
+            end_of_sentence=cfg._tokenizer_eos_token
+            if cfg.dataset.add_eos_token_to_prompt
+            else "",
+        )
+        card.push_to_hub(
+            repo_id=repo_id,
+            repo_type="model",
+            commit_message="Upload model card",
+        )
+
+        # push config to hub
+        api = huggingface_hub.HfApi()
+        api.upload_file(
+            path_or_fileobj=f"{experiment_path}/cfg.yaml",
+            path_in_repo="cfg.yaml",
+            repo_id=repo_id,
+            repo_type="model",
+            commit_message="Upload cfg.yaml",
+        )
+
+        # push model to hub
+        model.backbone.config.custom_pipelines = {
+            "text-generation": {
+                "impl": "h2oai_pipeline.H2OTextGenerationPipeline",
+                "pt": "AutoModelForCausalLM",
+            }
+        }
         model.backbone.push_to_hub(
-            repo_id=q.client["experiment/display/push_to_huggingface/model_name"],
-            token=q.client["experiment/display/push_to_huggingface/api_key"],
+            repo_id=repo_id,
             private=True,
+            commit_message="Upload model",
+        )
+
+        # push pipeline to hub
+        template_env = Environment(
+            loader=FileSystemLoader(searchpath="llm_studio/src/")
+        )
+        pipeline_template = template_env.get_template("h2oai_pipeline_template.py")
+
+        data = {
+            "text_prompt_start": cfg.dataset.text_prompt_start,
+            "text_answer_separator": cfg.dataset.text_answer_separator,
+        }
+        if cfg.dataset.add_eos_token_to_prompt:
+            data.update({"end_of_sentence": cfg._tokenizer_eos_token})
+        else:
+            data.update({"end_of_sentence": ""})
+
+        custom_pipeline = pipeline_template.render(data)
+
+        custom_pipeline_path = os.path.join(experiment_path, "h2oai_pipeline.py")
+        with open(custom_pipeline_path, "w") as f:
+            f.write(custom_pipeline)
+
+        api.upload_file(
+            path_or_fileobj=custom_pipeline_path,
+            path_in_repo="h2oai_pipeline.py",
+            repo_id=repo_id,
+            repo_type="model",
+            commit_message="Upload h2oai_pipeline.py",
         )
 
         dialog_items = [
@@ -1647,22 +1722,24 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
     q.client["keep_meta"] = True
 
 
-def load_cfg_model_tokenizer(experiment_path, device="cuda"):
+def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
     cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
     cfg.architecture.pretrained = False
-    cfg.tokenizer.padding_quantile = 0
+    cfg.architecture.gradient_checkpointing = False
+    cfg.environment._device = device
+    cfg.environment._local_rank = 0
 
     cfg.prediction.num_history = 2
-    cfg.prediction.max_length_prompt = 256
-    cfg.prediction.max_length_inference = 256
-
-    if cfg.dataset.text_prompt_start == "":
-        cfg.dataset.text_prompt_start = "\n"
 
     tokenizer = get_tokenizer(cfg)
 
     gc.collect()
     torch.cuda.empty_cache()
+
+    if merge and cfg.training.lora and cfg.architecture.backbone_dtype == "int8":
+        logger.info("Loading backbone in float16 for merging LORA weights.")
+        cfg.architecture.backbone_dtype = "float16"
+        cfg.architecture.pretrained = True
 
     with torch.device(device):
         model = cfg.architecture.model_class(cfg)
@@ -1670,6 +1747,11 @@ def load_cfg_model_tokenizer(experiment_path, device="cuda"):
             experiment_path, "checkpoint.pth"
         )
         load_checkpoint(cfg, model, strict=False)
+
+        if merge and cfg.training.lora:
+            # merges the LoRa layers into the base model.
+            # This is needed if one wants to use the base model as a standalone model.
+            model.backbone = model.backbone.merge_and_unload()
 
     model = model.to(device).eval()
     model.backbone.use_cache = True

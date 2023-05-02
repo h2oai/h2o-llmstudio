@@ -1,5 +1,4 @@
 import os
-from copy import copy
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -16,7 +15,6 @@ import time
 from distutils import util
 from typing import Any, Callable, Dict, Tuple
 
-import dill
 import numpy as np
 import pandas as pd
 import torch
@@ -383,7 +381,6 @@ def run_train(
                         objective_op(val_metric, best_val_metric)
                         and cfg.training.save_best_checkpoint
                     ):
-
                         if cfg.environment._local_rank == 0:
                             checkpoint_path = cfg.output_directory
                             logger.info(
@@ -469,6 +466,7 @@ def run(cfg: Any) -> None:
         )
     else:
         cfg.environment._local_rank = 0
+        cfg.environment._device = "cuda:0"
 
     set_seed(cfg.environment._seed)
     if cfg.environment._local_rank == 0:
@@ -595,7 +593,6 @@ def run(cfg: Any) -> None:
     experiment_path = f"{cfg.output_directory}"
 
     if cfg.environment._local_rank == 0:
-
         if not cfg.training.save_best_checkpoint:
             checkpoint_path = cfg.output_directory
 
@@ -613,7 +610,6 @@ def run(cfg: Any) -> None:
         save_prediction_outputs(cfg.experiment_name, experiment_path)
 
     if cfg.environment._local_rank == 0:
-
         flag_path = os.path.join(cfg.output_directory, "flags.json")
         write_flag(flag_path, "status", "finished")
         time_took = time.time() - global_start_time
