@@ -22,7 +22,6 @@ jobs:
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_author_name: Gh Actions Bot
           commit_message: "Update requirements.txt"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
