@@ -68,6 +68,44 @@ make wave
 This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
 Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
 
+## Run H2O LLM Studio GUI using Docker from a nightly build
+
+Install Docker first by following instructions from [NVIDIA Containers](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker).
+H2O LLM Studio images are stored in the h2oai GCR vorvan container repository.
+
+```
+mkdir -p `pwd`/data
+mkdir -p `pwd`/output
+docker run \
+    --runtime=nvidia \
+    --shm-size=64g \
+    --init \
+    --rm \
+    -p 10101:10101 \
+    -v `pwd`/data:/workspace/data \
+    -v `pwd`/output:/workspace/output \
+    gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+```
+
+Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
+
+(Note other helpful docker commands are `docker ps` and `docker kill`.)
+
+## Run H2O LLM Studio GUI by building your own Docker image
+
+```bash
+docker build -t h2o-llmstudio .
+docker run \
+    --runtime=nvidia \
+    --shm-size=64g \
+    --init \
+    --rm \
+    -p 10101:10101 \
+    -v `pwd`/data:/workspace/data \
+    -v `pwd`/output:/workspace/output \
+    h2o-llmstudio
+```
+
 ## Run H2O LLM Studio with command line interface (CLI)
 You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration file that contains all the experiment parameters. 
 To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`, and then use the following command:
@@ -93,7 +131,6 @@ The interactive chat will also work with model that were finetuned using the UI.
 H2O LLM studio expects a csv file with at least two columns, one being the instruct column, the other 
 being the answer that the model should generate. You can also provide an extra validation dataframe using the same format or use an automatic train/validation split to evaluate the model performance. 
 
-
 During an experiment you can adapt the data representation with the following settings 
 
 - **Prompt Column:** The column in the dataset containing the user prompt.
@@ -110,12 +147,13 @@ With H2O LLM Studio, training your large language model is easy and intuitive.
 First, upload your dataset and then start training your model.
 
 ### Starting an experiment
-H2O LLM Studio provides various parameters to set for a given experiment, with some of the most important being:
+H2O LLM Studio allows to tune a variety of parameters and enables fast iterations to be able to explore different hyperparameters easily.
+The default settings are chosen with care and should give a good baseline. The most important parameters are:
 
 - **LLM Backbone**: This parameter determines the LLM architecture to use.
 - **Mask Prompt Labels**: This option controls whether to mask the prompt labels during training and only train on the loss of the answer.
 - **Hyperparameters** such as learning rate, batch size, and number of epochs determine the training process.
-An overview of all parameters is given in the [parameter description](docs/parameters.md).
+Please consult the tooltips of each hyperparameter to learn more about them. The tooltips are shown next to each hyperparameter in the GUI and can be found as plain text `.mdx` files in the [tooltips/](tooltips/) folder.
 - **Evaluate Before Training** This option lets you evaluate the model before training, which can help you judge the quality of the LLM backbone before fine-tuning.
 
 We provide several metric options for evaluating the performance of your model.
@@ -195,10 +233,6 @@ You can then use the `prompt.py` script to chat with your model:
 ```bash
 python prompt.py -e examples/output_oasst1
 ```
-
-## Model checkpoints
-
-All open-source datasets and models are posted on [H2O.ai's Hugging Face page](https://huggingface.co/h2oai/).
 
 ## Model checkpoints
 

@@ -36,6 +36,7 @@ from app_utils.utils import (
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
 from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
     convert_cfg_to_nested_dictionary,
     get_parent_element,
@@ -111,6 +112,7 @@ async def experiment_start(q: Q) -> None:
                 for _, row in df_datasets.iterrows()
             ],
             trigger=True,
+            tooltip=tooltips["experiments_dataset"],
         ),
     ]
 
@@ -177,7 +179,6 @@ async def experiment_start(q: Q) -> None:
     )
 
     if len(df_experiments["id"]) > 0:
-
         if q.client["experiment/start/cfg_experiment"] is None:
             q.client["experiment/start/cfg_experiment"] = str(
                 df_experiments["id"].iloc[0]
@@ -198,6 +199,7 @@ async def experiment_start(q: Q) -> None:
                 choices=choices_problem_types,
                 value=q.client["experiment/start/cfg_file"],
                 trigger=True,
+                tooltip=tooltips["experiments_problem_type"],
             )
         ]
 
@@ -286,6 +288,7 @@ async def experiment_start(q: Q) -> None:
                 label="Import config from YAML",
                 value=False,
                 trigger=True,
+                tooltip=tooltips["experiments_import_config_from_yaml"],
             )
         ]
 
@@ -526,7 +529,9 @@ def get_experiment_table(
     for col in col_remove:
         if col in df_viz:
             del df_viz[col]
-    # df_viz = df_viz.rename(columns={"process_id": "pid", "config_file": "problem type"})
+    # df_viz = df_viz.rename(
+    #     columns={"process_id": "pid", "config_file": "problem type"},
+    # )
     # df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
 
     if actions == "experiment" and q.client["experiment/list/mode"] == "train":
@@ -819,7 +824,6 @@ async def experiment_stop(q: Q, experiment_ids: List[int]) -> None:
     """
 
     for experiment_id in experiment_ids:
-
         experiment = q.client.app_db.get_experiment(experiment_id)
 
         try:
@@ -1580,7 +1584,6 @@ async def experiment_download_model(q: Q, error: str = ""):
 
 
 async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
-
     if q.args["experiment/display/push_to_huggingface"] or error:
         dialog_items = [
             ui.message_bar("error", error, visible=True if error else False),
@@ -1611,7 +1614,6 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             ),
         ]
     elif q.args["experiment/display/push_to_huggingface_submit"]:
-
         await busy_dialog(
             q=q,
             title="Exporting to HuggingFace ",
@@ -1658,7 +1660,9 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             repetition_penalty=cfg.prediction.repetition_penalty,
             text_prompt_start=cfg.dataset.text_prompt_start,
             text_answer_separator=cfg.dataset.text_answer_separator,
-            end_of_sentence=cfg._tokenizer_eos_token if cfg.dataset.add_eos_token_to_prompt else "",
+            end_of_sentence=cfg._tokenizer_eos_token
+            if cfg.dataset.add_eos_token_to_prompt
+            else "",
         )
         card.push_to_hub(
             repo_id=repo_id,

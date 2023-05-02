@@ -1,11 +1,13 @@
 from transformers import TextGenerationPipeline
 from transformers.pipelines.text_generation import ReturnType
 
+STYLE = "{{text_prompt_start}}{instruction}{{end_of_sentence}}{{text_answer_separator}}"
+
 
 class H2OTextGenerationPipeline(TextGenerationPipeline):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.prompt = "{{text_prompt_start}}{instruction}{{end_of_sentence}}{{text_answer_separator}}"
+        self.prompt = STYLE
 
     def preprocess(
         self, prompt_text, prefix="", handle_long_generation=None, **generate_kwargs

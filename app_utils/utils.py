@@ -462,7 +462,6 @@ async def kaggle_download(
     clean_macos_artifacts(kaggle_path)
 
     for f in glob.glob(kaggle_path + "/*"):
-
         if ".zip" in f and zip_file not in f:
             with zipfile.ZipFile(f, "r") as zip_ref:
                 zip_ref.extractall(kaggle_path)
@@ -739,7 +738,6 @@ def get_ui_element(
             )
         ]
     elif type_annotation in (str, Tuple[str, ...]):
-
         if poss_values is None:
             val = q.client[pre + k] if q.client[pre + k] is not None else v
 
@@ -1008,7 +1006,6 @@ def get_ui_elements(
             password = False
 
         if k.startswith("_") or cfg._get_visibility(k) < 0:
-
             if q.client[f"{pre}/cfg_mode/from_cfg"]:
                 q.client[f"{pre}/cfg/{k}"] = v
             continue
@@ -1071,7 +1068,6 @@ def get_ui_elements(
                 pre=f"{pre}/cfg/",
             )
         elif dataclasses.is_dataclass(v):
-
             if limit is not None and k in limit:
                 elements_group = get_ui_elements(cfg=v, q=q, limit=None, pre=pre)
             else:
@@ -1139,7 +1135,6 @@ def parse_ui_elements(
     cfg_dict = cfg.__dict__
     type_annotations = cfg.get_annotations()
     for k, v in cfg_dict.items():
-
         if k.startswith("_") or cfg._get_visibility(k) == -1:
             continue
 
@@ -1292,7 +1287,6 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
 
     info = defaultdict(list)
     for _, row in df.iterrows():
-
         try:
             cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
         except Exception:
@@ -1432,7 +1426,6 @@ def get_datasets_info(df: DataFrame, q: Q) -> DefaultDict:
 
     info = defaultdict(list)
     for idx, row in df.iterrows():
-
         config_file = q.client.app_db.get_dataset(row.id).config_file
         path = row.path + "/"
 
@@ -1671,7 +1664,11 @@ def get_download_link(q, artifact_path):
         os.makedirs(os.path.dirname(new_path), exist_ok=True)
         os.symlink(os.path.abspath(artifact_path), os.path.abspath(new_path))
 
-    return url + url_path
+    # return a relative path so that downloads work when the instance is
+    # behind a reverse proxy or being accessed by a public IP in a public
+    # cloud.
+
+    return url_path
 
 
 def check_valid_upload_content(upload_path: str) -> Tuple[bool, str]:

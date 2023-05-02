@@ -14,7 +14,6 @@ from llm_studio.src.utils.export_utils import get_size_str
 
 
 async def home(q: Q) -> None:
-
     await clean_dashboard(q, mode="home")
     q.client["nav/active"] = "home"
 

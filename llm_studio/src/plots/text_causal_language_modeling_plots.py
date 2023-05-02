@@ -85,7 +85,6 @@ class Plots:
 
     @classmethod
     def plot_data(cls, cfg) -> PlotData:
-
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
         df = df.iloc[sample_indices(len(df), Plots.NUM_TEXTS)]
 
