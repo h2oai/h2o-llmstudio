@@ -110,5 +110,4 @@ webcolors==1.13
 websocket-client==1.5.1 ; python_version >= '3.7'
 xxhash==3.2.0 ; python_version >= '3.6'
 yarl==1.9.2 ; python_version >= '3.7'
-echo "deps/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl" >> requirements.txt
 deps/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl
