@@ -5,6 +5,7 @@ from typing import Any, List, Optional, Sequence, Set, Tuple
 from llm_studio.src import possible_values
 from llm_studio.src.nesting import Dependency, Nesting
 from llm_studio.src.order import Order
+from llm_studio.src.tooltips import tooltips
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +100,7 @@ class DefaultConfig:
         """
         Returns a tooltip for the field provided
         """
-        return None
+        return tooltips.get(f"experiments_{field}", None)
 
     def _get_visibility(self, field: str) -> Optional[int]:
         """Returns a visibility level for the field provided.

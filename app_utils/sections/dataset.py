@@ -88,7 +88,6 @@ async def dataset_import(
     await clean_dashboard(q, mode="full")
     q.client["nav/active"] = "dataset/import"
     if step == 1:  # select import data source
-
         q.page["dataset/import"] = ui.form_card(box="content", items=[])
         q.client.delete_cards.add("dataset/import")
 
@@ -202,7 +201,6 @@ async def dataset_import(
             ]
 
         elif q.client["dataset/import/source"] == "Local":
-
             current_path = (
                 q.client["dataset/import/local_path_current"]
                 if q.client["dataset/import/local_path_current"] is not None
@@ -242,7 +240,6 @@ async def dataset_import(
             ]
 
         elif q.client["dataset/import/source"] == "Kaggle":
-
             if q.client["dataset/import/kaggle_access_key"] is None:
                 q.client["dataset/import/kaggle_access_key"] = q.client[
                     "default_kaggle_username"
@@ -556,20 +553,17 @@ async def dataset_import(
         q.client.delete_cards.add("dataset/import/footer")
 
     elif step == 6:  # create dataset
-
         if q.client["dataset/import/name"] == "":
             await clean_dashboard(q, mode="full")
             await dataset_import(q, step=2, error="Please enter all required fields!")
 
         else:
-
             folder_name = q.client["dataset/import/path"].split("/")[-1]
             new_folder = q.client["dataset/import/name"]
             act_path = q.client["dataset/import/path"]
             new_path = new_folder.join(act_path.rsplit(folder_name, 1))
 
             try:
-
                 shutil.move(q.client["dataset/import/path"], new_path)
 
                 cfg = q.client["dataset/import/cfg"]
@@ -587,9 +581,8 @@ async def dataset_import(
                 # change the default validation strategy if validation df set
                 if cfg.dataset.validation_dataframe != "None":
                     cfg.dataset.validation_strategy = "custom"
-                save_config_yaml(
-                    f"{new_path}/{q.client['dataset/import/cfg_file']}.yaml", cfg
-                )
+                cfg_path = f"{new_path}/{q.client['dataset/import/cfg_file']}.yaml"
+                save_config_yaml(cfg_path, cfg)
 
                 train_rows = None
                 if os.path.exists(cfg.dataset.train_dataframe):
@@ -606,7 +599,7 @@ async def dataset_import(
                     id=q.client["dataset/import/id"],
                     name=q.client["dataset/import/name"],
                     path=new_path,
-                    config_file=f"{new_path}/{q.client['dataset/import/cfg_file']}.yaml",
+                    config_file=cfg_path,
                     train_rows=train_rows,
                     validation_rows=validation_rows,
                 )
@@ -1034,7 +1027,6 @@ async def dataset_display(q: Q) -> None:
         q.client.delete_cards.add("dataset/display/data")
 
     elif q.client["dataset/display/tab"] == "dataset/display/visualization":
-
         try:
             plot = cfg.logging.plots_class.plot_data(cfg)
         except Exception as error:
@@ -1081,7 +1073,6 @@ async def dataset_display(q: Q) -> None:
         q.client.delete_cards.add("dataset/display/statistics")
 
     elif q.client["dataset/display/tab"] == "dataset/display/summary":
-
         dataset_df = get_datasets(q)
         dataset_df = dataset_df[dataset_df.id == dataset_id]
 
