@@ -268,18 +268,23 @@ class CustomDataset(Dataset):
 
         return sample
 
-    def _concat_samples(self, prompt, idx):
-        parent = self.prompts[idx] + self.answers[idx]
+    def _get_sample(self, idx):
+        prompt = self.prompts[idx]
+        answer = self.answers[idx]
         if self.cfg.dataset.add_eos_token_to_answer:
-            parent += self.cfg._tokenizer_eos_token
-        prompt = parent + prompt
-        return prompt
+            answer += self.cfg._tokenizer_eos_token
+        prompt_encodings = self.encode(
+            self.tokenizer, prompt, self.cfg.tokenizer.max_length_prompt, "left"
+        )["input_ids"]
+        answer_encodings = self.encode(
+            self.tokenizer, answer, self.cfg.tokenizer.max_length_answer, "right"
+        )["input_ids"]
+        return (prompt_encodings, answer_encodings)
 
     def _read_data(self, idx: int, sample: Dict) -> Dict:
         """Reads a single text observation."""
 
-        prompt = self.prompts[idx]
-        answer = self.answers[idx]
+        samples = [self._get_sample(idx)]
 
         if self.parent_ids is not None:
             parent_idx = idx
@@ -292,52 +297,34 @@ class CustomDataset(Dataset):
                     < self.cfg.augmentation.skip_parent_probability
                 ):
                     break
-                prompt = self._concat_samples(prompt, int(parent_idx))
+                samples.insert(0, self._get_sample(int(parent_idx)))
 
         if (
             self.mode == "train"
             and np.random.random() < self.cfg.augmentation.random_parent_probability
         ):
             rnd_idx = np.random.randint(len(self))
-            prompt = self._concat_samples(prompt, rnd_idx)
+            samples.insert(0, self._get_sample(int(rnd_idx)))
 
-        prompt_encodings = self.encode(
-            self.tokenizer, prompt, self.cfg.tokenizer.max_length_prompt, "left"
-        )
+        input_ids = torch.cat([torch.cat(sample) for sample in samples])
+        prompt_mask = torch.cat([torch.cat([torch.ones_like(sample[0]), torch.zeros_like(sample[1])])])
+        attention_mask = torch.ones_like(input_ids)
 
+        labels = input_ids.clone()
+
+        if self.cfg.dataset.mask_prompt_labels:
+            labels[prompt_mask] = -100
         if self.cfg.dataset.add_eos_token_to_answer:
-            answer_encodings = self.encode(
-                self.tokenizer,
-                answer,
-                self.cfg.tokenizer.max_length_answer - 1,
-                "right",
-            )
-            answer_encodings["input_ids"] = torch.cat(
-                [
-                    answer_encodings["input_ids"],
-                    torch.Tensor([self.tokenizer.eos_token_id]),
-                ],
-                dim=0,
-            )
-            answer_encodings["attention_mask"] = torch.cat(
-                [answer_encodings["attention_mask"], torch.Tensor([1])], dim=0
-            )
-        else:
-            answer_encodings = self.encode(
-                self.tokenizer, answer, self.cfg.tokenizer.max_length_answer, "right"
-            )
-
-        input_ids = torch.cat(
-            [prompt_encodings["input_ids"], answer_encodings["input_ids"]], dim=0
-        )
-        attention_mask = torch.cat(
-            [prompt_encodings["attention_mask"], answer_encodings["attention_mask"]],
-            dim=0,
-        )
+            # eos_token may be equal to pad_token. Add the label back manually.
+            labels[-1] = self.tokenizer.eos_token_id
 
         if self.cfg.tokenizer.max_length < len(input_ids):
             input_ids = input_ids[-self.cfg.tokenizer.max_length :]
             attention_mask = attention_mask[-self.cfg.tokenizer.max_length :]
+            labels = labels[-self.cfg.tokenizer.max_length :]
+
+        sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), self.tokenizer.pad_token_id)
+        sample["labels"][-len(labels) :] = labels
 
         sample.update(
             self.pad_tokens(
