@@ -1,0 +1,25 @@
+name: Requirements
+
+on:
+  pull_request:
+
+jobs:
+  requirements:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10.11
+      - run: make setup
+
+      - name: Generate requirements.txt
+        run: make export-requirements
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Update requirements.txt"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

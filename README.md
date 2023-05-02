@@ -45,19 +45,29 @@ For resetting, please delete/backup your `data` and `output` folders.
 H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
 
 
-To get started with H2O LLM Studio, you'll need to install Python 3.10 if you don't have it on your machine already.
-### System installs (Python 3.10)
+### Recommended Install
+The recommended way to install H2O LLM Studio is using pipenv with Python 3.10.
+To install Python 3.10 on Ubuntu 16.04+, execute the following commands:
+
+#### System installs (Python 3.10)
 ```bash
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt install python3.10
 sudo apt-get install python3.10-distutils
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 ```
-### Create virtual environment (pipenv)
+#### Create virtual environment (pipenv)
 The following command will create a virtual environment using pipenv and will install the dependencies using pipenv:
 ```bash
 make setup
 ```
+
+### Using requirements.txt
+If you wish to use conda or another virtual environment, you can also install the dependencies using the requirements.txt file:
+```bash
+pip install -r requirements.txt
+```
+
 
 ## Run H2O LLM Studio GUI
 
@@ -67,6 +77,15 @@ make wave
 ```
 This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
 Navigate to http://localhost:10101/ (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
+
+If you are running H2O LLM Studio with a custom environment other than Pipenv, you need to start the app as follows:
+```bash
+H2O_WAVE_MAX_REQUEST_SIZE=25MB \
+H2O_WAVE_NO_LOG=True \
+H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
+wave run app
+```
+
 
 ## Run H2O LLM Studio GUI using Docker from a nightly build
 
