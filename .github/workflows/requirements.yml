@@ -1,20 +1,20 @@
-name: Generate_Requirements
+name: Requirements
 
 on:
   push:
     branches: [ main ]
   pull_request:
 
-
 jobs:
-  style:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install Requirements
-        run: make setup
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10.11
+      - run: make setup
 
       - name: Generate requirements.txt
         run: make requirements > requirements.txt
