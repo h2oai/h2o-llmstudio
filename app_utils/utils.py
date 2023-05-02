@@ -1564,7 +1564,7 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
 
     process_queue = list(set(all_process_queue))
 
-    ENV_VARS = {
+    env_vars = {
         "NEPTUNE_API_TOKEN": q.client["default_neptune_api_token"],
         "OPENAI_API_KEY": q.client["default_openai_api_token"],
         "GPT_EVAL_MAX": str(q.client["default_gpt_eval_max"]),
@@ -1576,7 +1576,7 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
 
     # Start the training process
     p = start_process(
-        cfg=cfg, gpu_list=gpu_list, process_queue=process_queue, env_vars=ENV_VARS
+        cfg=cfg, gpu_list=gpu_list, process_queue=process_queue, env_vars=env_vars
     )
 
     logger.info(f"Process: {p.pid}, Queue: {process_queue}, GPUs: {gpu_list}")
