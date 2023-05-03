@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - id: GCP auth
+      - id: 'auth'
         uses: google-github-actions/auth@v1
         with:
           credentials_json: '${{ secrets.GCP_CRED_JSON }}'
