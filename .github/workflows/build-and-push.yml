@@ -3,7 +3,7 @@ name: Build and Push to Vorvan
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 4 * * *"
 
 jobs:
   build:
