@@ -19,3 +19,7 @@ jobs:
       - name: Configure Docker Client
         run: |-
           gcloud auth configure-docker --quiet #authenticate to gcr
+      - name: Build Image
+        run: |-
+          echo $GCLOUD_PROJECT
+          # docker build --build-arg NPM_TOKEN=${{ secrets.NPM_TOKEN }} -t gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA .
