@@ -271,14 +271,25 @@ class CustomDataset(Dataset):
     def _get_sample(self, idx):
         prompt = self.prompts[idx]
         answer = self.answers[idx]
-        if self.cfg.dataset.add_eos_token_to_answer:
-            answer += self.cfg._tokenizer_eos_token
+
         prompt_encodings = self.encode(
             self.tokenizer, prompt, self.cfg.tokenizer.max_length_prompt, "left"
         )["input_ids"]
+        if self.cfg.dataset.add_eos_token_to_answer:
+            max_length_answer = self.cfg.tokenizer.max_length_answer - 1
+        else:
+            max_length_answer = self.cfg.tokenizer.max_length_answer
         answer_encodings = self.encode(
-            self.tokenizer, answer, self.cfg.tokenizer.max_length_answer, "right"
+            self.tokenizer, answer, max_length_answer, "right"
         )["input_ids"]
+        if self.cfg.dataset.add_eos_token_to_answer:
+            answer_encodings = torch.cat(
+                [
+                    answer_encodings,
+                    torch.Tensor([self.tokenizer.eos_token_id]),
+                ],
+                dim=0,
+            )
         return [prompt_encodings, answer_encodings]
 
     def _read_data(self, idx: int, sample: Dict) -> Dict:
