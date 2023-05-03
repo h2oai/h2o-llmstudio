@@ -388,18 +388,3 @@ class CustomDataset(Dataset):
             encodings["input_ids"] = encodings["input_ids"][-max_length:]
             encodings["attention_mask"] = encodings["attention_mask"][-max_length:]
         return encodings
-
-    def _read_label(self, idx, sample) -> Dict:
-        sample["labels"] = sample["input_ids"].clone()
-
-        eos_at_end = self.tokenizer.eos_token_id == sample["input_ids"][-1]
-        sample["labels"][sample["labels"] == self.tokenizer.pad_token_id] = -100
-        if self.cfg.dataset.mask_prompt_labels:
-            sample["labels"][
-                : int(-sample["answer_attention_mask"].sum().item())
-            ] = -100
-        if eos_at_end:
-            # eos_token may be equal to pad_token. Add the label back manually.
-            sample["labels"][-1] = self.tokenizer.eos_token_id
-
-        return sample

@@ -261,11 +261,7 @@ def run_train(
                 batch = nlp_augment(batch)
 
             # Plot first batch
-            if (
-                epoch == 0
-                and itr == 0
-                and cfg.environment._local_rank == 0
-            ):
+            if epoch == 0 and itr == 0 and cfg.environment._local_rank == 0:
                 plot = cfg.logging.plots_class.plot_batch(batch=batch, cfg=cfg)
                 log_plot(cfg, plot, "train_data")
 
