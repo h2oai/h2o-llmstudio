@@ -19,7 +19,7 @@ from app_utils.sections.dataset import (
     dataset_newexperiment,
 )
 from app_utils.sections.experiment import (
-    experiment_chat_update,
+    chat_update,
     experiment_delete,
     experiment_display,
     experiment_download_logs,
@@ -310,7 +310,7 @@ async def handle(q: Q) -> None:
             await experiment_display(q)
 
         elif q.args["experiment/display/chat/chatbot"]:
-            await experiment_chat_update(q)
+            await chat_update(q)
 
         elif q.args["dataset/import/local_upload"]:
             await dataset_import_uploaded_file(q)

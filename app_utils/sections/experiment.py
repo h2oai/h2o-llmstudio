@@ -1149,6 +1149,9 @@ async def chat_tab(q: Q):
 
     # Hide fields that are should not be visible in the UI
     cfg.prediction._visibility["metric"] = -1
+    cfg.prediction._visibility["batch_size_inference"] = -1
+    cfg.prediction._visibility["min_length_inference"] = -1
+    cfg.prediction._visibility["stop_tokens"] = -1
 
     logger.info(torch.cuda.memory_allocated())
     q.page["experiment/display/chat"].data[-1] = [
@@ -1157,11 +1160,13 @@ async def chat_tab(q: Q):
     ]
 
     option_items = get_ui_elements(
-        cfg=q.client["experiment/display/chat/cfg"].prediction, q=q
+        cfg=q.client["experiment/display/chat/cfg"].prediction,
+        q=q,
+        pre="chat/cfg_predictions",
     )
-    items = option_items
-
-    q.page["experiment/display/chat/settings"] = ui.form_card(box="second", items=items)
+    q.page["experiment/display/chat/settings"] = ui.form_card(
+        box="second", items=option_items
+    )
     q.client.delete_cards.add("experiment/display/chat/settings")
 
 
@@ -1179,10 +1184,16 @@ async def parse_param(q: Q, cfg, prompt):
     return cfg
 
 
-async def experiment_chat_update(q: Q) -> None:
+async def chat_update(q: Q) -> None:
     """
     Update the chatbot with the new message.
     """
+    cfg_prediction = parse_ui_elements(
+        cfg=q.client["experiment/display/chat/cfg"].prediction,
+        q=q,
+        pre="chat/cfg_predictions/cfg/",
+    )
+    q.client["experiment/display/chat/cfg"].prediction = cfg_prediction
 
     prompt = q.client["experiment/display/chat/chatbot"]
 
