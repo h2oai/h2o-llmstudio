@@ -1,10 +1,7 @@
 name: Build and Push to Vorvan
 
 on:
-  push:
   workflow_dispatch:
-  schedule:
-    - cron: "0 0 * * *"
 
 jobs:
   build:
@@ -20,5 +17,5 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1
       - name: Configure Docker Client
         run: |-
-          gcloud info
           gcloud auth configure-docker --quiet #authenticate to gcr
+      -name:
