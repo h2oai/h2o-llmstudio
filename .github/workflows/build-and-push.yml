@@ -18,6 +18,6 @@ jobs:
       - name: Configure Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
       - name: Configure Docker Client
-          run: |-
-            gcloud info
-            gcloud auth configure-docker --quiet #authenticate to gcr
+        run: |-
+          gcloud info
+          gcloud auth configure-docker --quiet #authenticate to gcr
