@@ -1,4 +1,4 @@
-name: Build and Push to Voran
+name: Build and Push to Vorvan
 
 on:
   workflow_dispatch:
