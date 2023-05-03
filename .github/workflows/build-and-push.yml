@@ -19,7 +19,9 @@ jobs:
       - name: Configure Docker Client
         run: |-
           gcloud auth configure-docker --quiet #authenticate to gcr
-      - name: Build Image
+      - name: Docker Build Image
         run: |-
-          echo $GCLOUD_PROJECT
-          # docker build --build-arg NPM_TOKEN=${{ secrets.NPM_TOKEN }} -t gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA .
+          docker build -t gcr.io/$GCLOUD_PROJECT/llmstudio:latest .
+      - name: Push to Vorvan
+        run: |-
+          docker push gcr.io/$GCLOUD_PROJECT/llmstudio:latest
