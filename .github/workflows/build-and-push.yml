@@ -22,7 +22,7 @@ jobs:
           gcloud auth configure-docker --quiet #authenticate to gcr
       - name: Docker Build Image
         run: |-
-          docker build -t gcr.io/$GCLOUD_PROJECT/llmstudio:latest .
+          docker build -t gcr.io/$GCLOUD_PROJECT/h2oai/h2o-llmstudio:nightly .
       - name: Push to Vorvan
         run: |-
-          docker push gcr.io/$GCLOUD_PROJECT/llmstudio:latest
+          docker push gcr.io/$GCLOUD_PROJECT/h2oai/h2o-llmstudio:nightly
