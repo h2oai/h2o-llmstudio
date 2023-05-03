@@ -39,7 +39,10 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
 
     """
 
-    if mode == "full":
+    if mode in [
+        "full",
+        "experiment_start"
+    ]:
         zones = [
             header_zone(),
             ui.zone(
@@ -64,33 +67,6 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                 ],
             ),
         ]
-
-    if mode == "experiment_start":
-        zones = [
-            header_zone(),
-            ui.zone(
-                "body",
-                size="1",
-                direction=ui.ZoneDirection.ROW,
-                zones=[
-                    navigation_zone(),
-                    ui.zone(
-                        "content_all",
-                        direction=ui.ZoneDirection.COLUMN,
-                        size="87.5%",
-                        zones=[
-                            ui.zone(
-                                "content",
-                                size="calc(100vh - 160px)",
-                                direction=ui.ZoneDirection.ROW,
-                            ),
-                            ui.zone("footer", size="80px"),
-                        ],
-                    ),
-                ],
-            ),
-        ]
-
     elif mode == "error":
         zones = [
             header_zone(),
@@ -155,7 +131,11 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
             ),
         ]
 
-    elif mode in ["experiment/display/charts", "experiment/compare/charts"]:
+    elif mode in [
+        "experiment/display/charts",
+        "experiment/compare/charts",
+        "experiment/display/chat",
+    ]:
         zones = [
             header_zone(),
             ui.zone(
@@ -194,7 +174,6 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
         "experiment/display/validation_prediction_insights",
         "experiment/display/config",
         "experiment/display/logs",
-        "experiment/display/chat",
         "dataset/display/data",
         "dataset/display/visualization",
         "dataset/display/statistics",
@@ -225,7 +204,8 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                 ],
             ),
         ]
-
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
     return zones
 
 

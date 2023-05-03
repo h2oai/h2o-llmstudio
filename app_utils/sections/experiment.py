@@ -35,6 +35,7 @@ from app_utils.utils import (
     start_experiment,
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
+from llm_studio.python_configs.text_causal_language_modeling_config import ConfigProblemBase
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
@@ -1130,21 +1131,36 @@ async def chat_tab(q: Q):
     )
     q.client["experiment/display/chat/messages"] = []
     q.client.delete_cards.add("experiment/display/chat")
+
     message = ["Loading the model...", False]
     q.page["experiment/display/chat"].data[-1] = message
     await q.page.save()
     logger.info(torch.cuda.memory_allocated())
+
     cfg, model, tokenizer = load_cfg_model_tokenizer(
         q.client["experiment/display/experiment_path"]
     )
+
+    q.client["experiment/display/chat/cfg"]: ConfigProblemBase = cfg
+    q.client["experiment/display/chat/model"] = model
+    q.client["experiment/display/chat/tokenizer"] = tokenizer
+
+    # Hide fields that are should not be visible in the UI
+    cfg.prediction._visibility["metric"] = -1
+
     logger.info(torch.cuda.memory_allocated())
     q.page["experiment/display/chat"].data[-1] = [
         "Model successfully loaded, how can I help you?",
         False,
     ]
-    q.client["experiment/display/chat/cfg"] = cfg
-    q.client["experiment/display/chat/model"] = model
-    q.client["experiment/display/chat/tokenizer"] = tokenizer
+
+    option_items = get_ui_elements(cfg=q.client["experiment/display/chat/cfg"].prediction,
+                                   q=q)
+    items = option_items
+
+    q.page["experiment/display/chat/settings"] = ui.form_card(box="second", items=items)
+    q.client.delete_cards.add("experiment/display/chat/settings")
+
 
 
 async def parse_param(q: Q, cfg, prompt):
@@ -1192,7 +1208,7 @@ async def experiment_chat_update(q: Q) -> None:
     full_prompt = ""
     if len(q.client["experiment/display/chat/messages"]):
         for prev_message in q.client["experiment/display/chat/messages"][
-            -(cfg.prediction.num_history + 1) :
+            -(cfg.prediction._num_history + 1) :
         ]:
             if prev_message[1] is True:
                 prev_message = cfg.dataset.dataset_class.parse_prompt(
@@ -1748,8 +1764,7 @@ def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
     cfg.architecture.gradient_checkpointing = False
     cfg.environment._device = device
     cfg.environment._local_rank = 0
-
-    cfg.prediction.num_history = 2
+    cfg.prediction._num_history = 2
 
     tokenizer = get_tokenizer(cfg)
 
