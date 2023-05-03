@@ -1155,7 +1155,7 @@ async def chat_tab(q: Q):
         q.client["experiment/display/experiment_path"]
     )
 
-    q.client["experiment/display/chat/cfg"]: ConfigProblemBase = cfg
+    q.client["experiment/display/chat/cfg"] = cfg
     q.client["experiment/display/chat/model"] = model
     q.client["experiment/display/chat/tokenizer"] = tokenizer
 
