@@ -34,6 +34,7 @@ generate_text = pipeline(
     model="{{repo_id}}",
     torch_dtype=torch.float16,
     trust_remote_code=True,
+    use_fast={{use_fast}},
     device_map={"": "cuda:0"},
 )
 
@@ -69,6 +70,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 tokenizer = AutoTokenizer.from_pretrained(
     "{{repo_id}}",
+    use_fast={{use_fast}},
     padding_side="left"
 )
 model = AutoModelForCausalLM.from_pretrained(
@@ -96,13 +98,12 @@ You may also construct the pipeline from the loaded model and tokenizer yourself
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-
 model_name = "{{repo_id}}"  # either local folder or huggingface model name
 # Important: The prompt needs to be in the same format the model was trained with.
 # You can find an example prompt in the experiment logs.
 prompt = "{{text_prompt_start}}How are you?{{end_of_sentence}}{{text_answer_separator}}"
 
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast={{use_fast}})
 model = AutoModelForCausalLM.from_pretrained(model_name)
 model.cuda().eval()
 inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
