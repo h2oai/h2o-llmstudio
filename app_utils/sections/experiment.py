@@ -35,9 +35,6 @@ from app_utils.utils import (
     start_experiment,
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
-from llm_studio.python_configs.text_causal_language_modeling_config import (
-    ConfigProblemBase,
-)
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
@@ -1119,7 +1116,8 @@ async def chat_tab(q: Q):
             box="first",
             items=[
                 ui.text(
-                    "Chatbot is not available when GPU is blocked by another experiment."
+                    "Chatbot is not available when GPU "
+                    "is blocked by another experiment."
                 )
             ],
             title="",
@@ -1467,7 +1465,7 @@ async def experiment_download_artifact(
     get_artifact_path_fn: Callable[[str, str, str], str],
     save_artifact_fn: Callable[[str, str, str, str], str],
     additional_log: Optional[str] = "",
-    min_disk_space: Optional[float] = 0.,
+    min_disk_space: Optional[float] = 0.0,
 ):
     """Download specific artifact, if it does not exist, create it on demand
 
