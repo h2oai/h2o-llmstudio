@@ -1138,7 +1138,14 @@ async def chat_tab(q: Q):
     q.page["experiment/display/chat"].data[-1] = message
 
     q.page["experiment/display/chat/settings"] = ui.form_card(
-        box="second", items=[ui.progress(label="Loading the model...")]
+        box="second",
+        items=[
+            ui.expander(
+                name="chat_settings",
+                label="Chat Settings",
+                items=[ui.progress(label="Loading the model...")],
+            )
+        ],
     )
 
     await q.page.save()
@@ -1170,7 +1177,10 @@ async def chat_tab(q: Q):
         pre="chat/cfg_predictions",
     )
     q.page["experiment/display/chat/settings"] = ui.form_card(
-        box="second", items=option_items
+        box="second",
+        items=[
+            ui.expander(name="chat_settings", label="Chat Settings", items=option_items)
+        ],
     )
     q.client.delete_cards.add("experiment/display/chat/settings")
 
@@ -1198,6 +1208,7 @@ async def chat_update(q: Q) -> None:
         q=q,
         pre="chat/cfg_predictions/cfg/",
     )
+    logger.info(f"Updated chatbot config: {cfg_prediction}")
     q.client["experiment/display/chat/cfg"].prediction = cfg_prediction
 
     prompt = q.client["experiment/display/chat/chatbot"]

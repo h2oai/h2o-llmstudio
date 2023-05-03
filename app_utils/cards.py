@@ -182,12 +182,12 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                             ui.zone("nav2", size="60px"),
                             ui.zone(
                                 "first",
-                                size="calc((100vh - 220px)*0.7)",
+                                size="calc((100vh - 220px)*0.65)",
                                 direction=ui.ZoneDirection.ROW,
                             ),
                             ui.zone(
                                 "second",
-                                size="calc((100vh - 220px)*0.3)",
+                                size="calc((100vh - 220px)*0.35)",
                                 direction=ui.ZoneDirection.ROW,
                             ),
                             ui.zone("footer", size="80px"),
