@@ -241,7 +241,6 @@ def run_train(
         model.train()
 
         log_update_steps = max(epoch_steps // 20, 1)
-        failed_batches = 0
         evaluation_step = int(epoch_steps * cfg.training.evaluation_epochs)
         for itr in range(epoch_steps):
             num_updates += 1
@@ -249,17 +248,8 @@ def run_train(
                 cfg.training.batch_size * cfg.environment._world_size
             )
 
-            try:
-                data = next(tr_it)
-            except Exception:
-                failed_batches += 1
-                logger.warning("Data reading error. Skipping batch for training.")
-                if failed_batches >= epoch_steps * 0.05:
-                    raise LLMDataException(
-                        "Multiple observations in the dataset are broken, "
-                        "aborting training. Please, check the dataset."
-                    )
-                continue
+            # Get batch
+            data = next(tr_it)
 
             # Batch to device
             batch = cfg.dataset.dataset_class.batch_to_device(
@@ -273,7 +263,7 @@ def run_train(
             # Plot first batch
             if (
                 epoch == 0
-                and (itr - failed_batches) == 0
+                and itr == 0
                 and cfg.environment._local_rank == 0
             ):
                 plot = cfg.logging.plots_class.plot_batch(batch=batch, cfg=cfg)

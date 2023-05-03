@@ -279,7 +279,7 @@ class CustomDataset(Dataset):
         answer_encodings = self.encode(
             self.tokenizer, answer, self.cfg.tokenizer.max_length_answer, "right"
         )["input_ids"]
-        return (prompt_encodings, answer_encodings)
+        return [prompt_encodings, answer_encodings]
 
     def _read_data(self, idx: int, sample: Dict) -> Dict:
         """Reads a single text observation."""
@@ -307,20 +307,18 @@ class CustomDataset(Dataset):
             samples.insert(0, self._get_sample(int(rnd_idx)))
 
         input_ids = torch.cat([torch.cat(sample) for sample in samples])
-        prompt_mask = torch.cat([torch.cat([torch.ones_like(sample[0]), torch.zeros_like(sample[1])]) for sample in samples])
+        prompt_mask = torch.cat([torch.cat([torch.ones_like(sample[0]), torch.zeros_like(sample[1])]) for sample in samples]).to(torch.bool)
         attention_mask = torch.ones_like(input_ids)
 
         labels = input_ids.clone()
 
         if self.cfg.dataset.mask_prompt_labels:
-            labels[prompt_mask] = -100
+            labels.masked_fill_(prompt_mask, -100)
         if self.cfg.dataset.add_eos_token_to_answer:
             # eos_token may be equal to pad_token. Add the label back manually.
             labels[-1] = self.tokenizer.eos_token_id
 
         if self.cfg.tokenizer.max_length < len(input_ids):
-            input_ids = input_ids[-self.cfg.tokenizer.max_length :]
-            attention_mask = attention_mask[-self.cfg.tokenizer.max_length :]
             labels = labels[-self.cfg.tokenizer.max_length :]
 
         sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), self.tokenizer.pad_token_id)
@@ -337,7 +335,7 @@ class CustomDataset(Dataset):
 
         samples[-1][1] = torch.empty(0)
         prompt_input_ids = torch.cat([torch.cat(sample) for sample in samples])
-        prompt_attention_mask = torch.ones_like(input_ids)
+        prompt_attention_mask = torch.ones_like(prompt_input_ids)
 
         sample.update(
             self.pad_tokens(
@@ -356,6 +354,11 @@ class CustomDataset(Dataset):
         self, input_ids, attention_mask, max_length, pad_token_id, prefix=""
     ):
         sample = {}
+
+        if max_length < len(input_ids):
+            input_ids = input_ids[-max_length :]
+            attention_mask = attention_mask[-max_length :]
+
         sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
         sample[f"{prefix}input_ids"][-len(input_ids) :] = input_ids
         sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
