@@ -35,7 +35,9 @@ from app_utils.utils import (
     start_experiment,
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
-from llm_studio.python_configs.text_causal_language_modeling_config import ConfigProblemBase
+from llm_studio.python_configs.text_causal_language_modeling_config import (
+    ConfigProblemBase,
+)
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
@@ -1154,13 +1156,13 @@ async def chat_tab(q: Q):
         False,
     ]
 
-    option_items = get_ui_elements(cfg=q.client["experiment/display/chat/cfg"].prediction,
-                                   q=q)
+    option_items = get_ui_elements(
+        cfg=q.client["experiment/display/chat/cfg"].prediction, q=q
+    )
     items = option_items
 
     q.page["experiment/display/chat/settings"] = ui.form_card(box="second", items=items)
     q.client.delete_cards.add("experiment/display/chat/settings")
-
 
 
 async def parse_param(q: Q, cfg, prompt):

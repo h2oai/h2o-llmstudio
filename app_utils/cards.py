@@ -39,10 +39,7 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
 
     """
 
-    if mode in [
-        "full",
-        "experiment_start"
-    ]:
+    if mode in ["full", "experiment_start"]:
         zones = [
             header_zone(),
             ui.zone(
