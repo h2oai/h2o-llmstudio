@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "87f2f257c1cf8ab2890f8a7329374e4e213258255f449dfedb84b7e6e1502758"
+            "sha256": "10b2f8755ab94c7ce547df22fedd5c440ec3e508208e78248a68e32279716772"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1104,7 +1104,7 @@
         },
         "peft": {
             "git": "https://github.com/huggingface/peft",
-            "ref": "632997d1fb776c3cf05d8c2537ac9a98a7ce9435"
+            "ref": "a37156c2c7966ff7d1487d33734738414aa0bafc"
         },
         "pillow": {
             "hashes": [
@@ -1819,6 +1819,14 @@
             "markers": "python_version >= '3.7'",
             "version": "==0.9.0"
         },
+        "tenacity": {
+            "hashes": [
+                "sha256:2f277afb21b851637e8f52e6a613ff08734c347dc19ade928e519d7d2d8569b0",
+                "sha256:43af037822bd0029025877f3b2d97cc4d7bb0c2991000a3d59d71517c5c969e0"
+            ],
+            "index": "pypi",
+            "version": "==8.2.2"
+        },
         "text-unidecode": {
             "hashes": [
                 "sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8",
@@ -2515,10 +2523,10 @@
         },
         "types-urllib3": {
             "hashes": [
-                "sha256:04235e792139cf3624b25d38faab593456738fbdb7439634046172e3b1339400",
-                "sha256:697102ddf4f781eed6f692353f40cee1098643526f5a8b99f49d2ede90fd3754"
+                "sha256:3ba3d3a8ee46e0d5512c6bd0594da4f10b2584b47a470f8422044a2ab462f1df",
+                "sha256:a1557355ce8d350a555d142589f3001903757d2d36c18a66f588d9659bbc917d"
             ],
-            "version": "==1.26.25.11"
+            "version": "==1.26.25.12"
         },
         "typing-extensions": {
             "hashes": [

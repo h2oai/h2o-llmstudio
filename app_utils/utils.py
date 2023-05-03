@@ -93,7 +93,7 @@ def find_free_port():
 
 
 def start_process(
-    cfg: ConfigProblemBase, gpu_list: List, process_queue: List, secrets: Dict
+    cfg: ConfigProblemBase, gpu_list: List, process_queue: List, env_vars: Dict
 ) -> subprocess.Popen:
     """Starts train.py for a given configuration setting
 
@@ -101,7 +101,7 @@ def start_process(
         cfg: config
         gpu_list: list of GPUs to use for the training
         process_queue: list of processes to wait for before starting the training
-        secrets: dictionary of secrets to pass to the training process
+        env_vars: dictionary of ENV variables to pass to the training process
     Returns:
         Process
 
@@ -109,7 +109,7 @@ def start_process(
 
     num_gpus = len(gpu_list)
     config_name = os.path.join(cfg.output_directory, "cfg.yaml")
-    env = {**os.environ, **secrets}
+    env = {**os.environ, **env_vars}
 
     if num_gpus == 0:
         p = subprocess.Popen(
@@ -1564,9 +1564,10 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
 
     process_queue = list(set(all_process_queue))
 
-    secrets = {
+    env_vars = {
         "NEPTUNE_API_TOKEN": q.client["default_neptune_api_token"],
         "OPENAI_API_KEY": q.client["default_openai_api_token"],
+        "GPT_EVAL_MAX": str(q.client["default_gpt_eval_max"]),
     }
     cfg = copy_config(cfg)
     cfg.output_directory = f"{get_output_dir(q)}/{cfg.experiment_name}/"
@@ -1575,7 +1576,7 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
 
     # Start the training process
     p = start_process(
-        cfg=cfg, gpu_list=gpu_list, process_queue=process_queue, secrets=secrets
+        cfg=cfg, gpu_list=gpu_list, process_queue=process_queue, env_vars=env_vars
     )
 
     logger.info(f"Process: {p.pid}, Queue: {process_queue}, GPUs: {gpu_list}")

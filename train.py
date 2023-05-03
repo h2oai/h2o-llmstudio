@@ -479,7 +479,10 @@ def run(cfg: Any) -> None:
         logger.info("Preparing the data...")
     train_df, val_df = get_data(cfg)
 
-    if len(val_df) >= os.getenv("GPT_EVAL_MAX", 100) and "GPT" in cfg.prediction.metric:
+    if (
+        len(val_df) > int(os.getenv("GPT_EVAL_MAX", 100))
+        and "GPT" in cfg.prediction.metric
+    ):
         logger.warning(
             f"More than {os.getenv('GPT_EVAL_MAX', 100)} validation records. "
             "Safeguarding against OpenAI API costs. Setting metric to BLEU. "
