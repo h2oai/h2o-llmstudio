@@ -1136,6 +1136,11 @@ async def chat_tab(q: Q):
 
     message = ["Loading the model...", False]
     q.page["experiment/display/chat"].data[-1] = message
+
+    q.page["experiment/display/chat/settings"] = ui.form_card(
+        box="second", items=[ui.progress(label="Loading the model...")]
+    )
+
     await q.page.save()
     logger.info(torch.cuda.memory_allocated())
 

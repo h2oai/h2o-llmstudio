@@ -131,7 +131,6 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
     elif mode in [
         "experiment/display/charts",
         "experiment/compare/charts",
-        "experiment/display/chat",
     ]:
         zones = [
             header_zone(),
@@ -155,6 +154,40 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                             ui.zone(
                                 "second",
                                 size="calc((100vh - 220px)*0.5)",
+                                direction=ui.ZoneDirection.ROW,
+                            ),
+                            ui.zone("footer", size="80px"),
+                        ],
+                    ),
+                ],
+            ),
+        ]
+
+    elif mode in [
+        "experiment/display/chat",
+    ]:
+        zones = [
+            header_zone(),
+            ui.zone(
+                "body",
+                size="1",
+                direction=ui.ZoneDirection.ROW,
+                zones=[
+                    navigation_zone(),
+                    ui.zone(
+                        "content_all",
+                        direction=ui.ZoneDirection.COLUMN,
+                        size="87.5%",
+                        zones=[
+                            ui.zone("nav2", size="60px"),
+                            ui.zone(
+                                "first",
+                                size="calc((100vh - 220px)*0.7)",
+                                direction=ui.ZoneDirection.ROW,
+                            ),
+                            ui.zone(
+                                "second",
+                                size="calc((100vh - 220px)*0.3)",
                                 direction=ui.ZoneDirection.ROW,
                             ),
                             ui.zone("footer", size="80px"),
