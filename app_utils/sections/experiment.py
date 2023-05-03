@@ -1466,8 +1466,8 @@ async def experiment_download_artifact(
     q: Q,
     get_artifact_path_fn: Callable[[str, str, str], str],
     save_artifact_fn: Callable[[str, str, str, str], str],
-    additional_log: Optional[str],
-    min_disk_space: Optional[float],
+    additional_log: Optional[str] = "",
+    min_disk_space: Optional[float] = 0.,
 ):
     """Download specific artifact, if it does not exist, create it on demand
 
