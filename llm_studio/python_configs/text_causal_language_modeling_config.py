@@ -352,7 +352,7 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
 class ConfigProblemBase(DefaultConfig):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
-    llm_backbone: str = "EleutherAI/pythia-12b-deduped"
+    llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
 
     dataset: ConfigNLPCausalLMDataset = field(default_factory=ConfigNLPCausalLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
@@ -380,14 +380,18 @@ class ConfigProblemBase(DefaultConfig):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
+                "h2oai/h2ogpt-oig-oasst1-512-6.9b",
                 "h2oai/h2ogpt-oasst1-512-20b",
+                "h2oai/h2ogpt-gm-oasst1-en-1024-12b",
                 "EleutherAI/gpt-neo-1.3B",
                 "EleutherAI/gpt-j-6B",
+                "EleutherAI/gpt-neox-20b",
                 "facebook/opt-125m",
                 "facebook/opt-2.7b",
                 "facebook/opt-6.7b",
                 "facebook/opt-13b",
-                "EleutherAI/pythia-1b",
+                "EleutherAI/pythia-1b-deduped",
+                "EleutherAI/pythia-2.8b-deduped",
                 "EleutherAI/pythia-6.9b-deduped",
                 "EleutherAI/pythia-12b-deduped",
                 "cerebras/Cerebras-GPT-13B",
