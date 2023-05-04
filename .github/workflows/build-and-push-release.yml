@@ -1,0 +1,29 @@
+name: Build and Push to Vorvan - Release
+
+on:
+  push:
+    tags:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - id: 'auth'
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_CRED_JSON }}'
+      - name: Configure Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+      - name: Configure Docker Client
+        run: |-
+          gcloud auth configure-docker --quiet #authenticate to gcr
+      - name: Docker Build Image
+        run: |-
+          docker build -t gcr.io/$GCLOUD_PROJECT/h2oai/h2o-llmstudio:${{ github.ref_name }} .
+      - name: Push to Vorvan
+        run: |-
+          docker push gcr.io/$GCLOUD_PROJECT/h2oai/h2o-llmstudio:${{ github.ref_name }}
