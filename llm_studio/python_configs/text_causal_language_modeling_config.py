@@ -352,7 +352,7 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
 class ConfigProblemBase(DefaultConfig):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
-    llm_backbone: str = "h2oai/h2ogpt-oig-oasst1-512-6.9b"
+    llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
 
     dataset: ConfigNLPCausalLMDataset = field(default_factory=ConfigNLPCausalLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
@@ -391,6 +391,7 @@ class ConfigProblemBase(DefaultConfig):
                 "facebook/opt-6.7b",
                 "facebook/opt-13b",
                 "EleutherAI/pythia-1b-deduped",
+                "EleutherAI/pythia-2.8b-deduped",
                 "EleutherAI/pythia-6.9b-deduped",
                 "EleutherAI/pythia-12b-deduped",
                 "cerebras/Cerebras-GPT-13B",
