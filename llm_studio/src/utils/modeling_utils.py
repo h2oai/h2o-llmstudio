@@ -442,7 +442,7 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
     val_df.to_csv(csv_preds_name, index=False)
 
 
-def prepare_model_for_lora_training(model, layer_norm_names=["layer_norm"]):
+def prepare_model_for_lora_training(model, layer_norm_names=("layer_norm",)):
     loaded_in_8bit = getattr(model, "is_loaded_in_8bit", False)
 
     for name, param in model.named_parameters():

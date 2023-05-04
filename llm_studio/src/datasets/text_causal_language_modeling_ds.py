@@ -263,9 +263,6 @@ class CustomDataset(Dataset):
         # Read data
         sample = self._read_data(idx=idx, sample=sample)
 
-        # Read labels
-        #sample = self._read_label(idx=idx, sample=sample)
-
         return sample
 
     def _get_sample(self, idx):
