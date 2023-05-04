@@ -1,4 +1,4 @@
-name: Build and Push to Vorvan
+name: Build and Push to Vorvan - Nightly
 
 on:
   schedule:
