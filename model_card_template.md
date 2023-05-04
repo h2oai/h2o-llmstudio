@@ -46,6 +46,7 @@ res = generate_text(
     num_beams={{num_beams}},
     temperature=float({{temperature}}),
     repetition_penalty=float({{repetition_penalty}}),
+    renormalize_logits=True
 )
 print(res[0]["generated_text"])
 ```
@@ -88,6 +89,7 @@ res = generate_text(
     num_beams={{num_beams}},
     temperature=float({{temperature}}),
     repetition_penalty=float({{repetition_penalty}}),
+    renormalize_logits=True
 )
 print(res[0]["generated_text"])
 ```
@@ -117,6 +119,7 @@ tokens = model.generate(
     num_beams={{num_beams}},
     temperature=float({{temperature}}),
     repetition_penalty=float({{repetition_penalty}}),
+    renormalize_logits=True
 )[0]
 
 tokens = tokens[inputs["input_ids"].shape[1]:]
