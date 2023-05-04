@@ -1125,15 +1125,15 @@ async def chat_tab(q: Q):
         q.client.delete_cards.add("experiment/display/chat")
         return
 
-    cyclic_buffer = data(fields="msg fromUser", size=-500)
+    q.client.chat_msg_num = 1
+    cyclic_buffer = data(
+        fields="msg fromUser", size=-500, rows={"1": ["Loading the model...", False]}
+    )
     q.page["experiment/display/chat"] = ui.chatbot_card(
         box="first", data=cyclic_buffer, name="experiment/display/chat/chatbot"
     )
     q.client["experiment/display/chat/messages"] = []
     q.client.delete_cards.add("experiment/display/chat")
-
-    message = ["Loading the model...", False]
-    q.page["experiment/display/chat"].data[-1] = message
 
     q.page["experiment/display/chat/settings"] = ui.form_card(
         box="second",
@@ -1164,7 +1164,7 @@ async def chat_tab(q: Q):
     cfg.prediction._visibility["stop_tokens"] = -1
 
     logger.info(torch.cuda.memory_allocated())
-    q.page["experiment/display/chat"].data[-1] = [
+    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = [
         "Model successfully loaded, how can I help you?",
         False,
     ]
@@ -1226,7 +1226,11 @@ async def chat_update(q: Q) -> None:
 
     message = [prompt, True]
     q.client["experiment/display/chat/messages"].append(message)
-    q.page["experiment/display/chat"].data[-1] = message
+    q.client.chat_msg_num += 1
+    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = message
+    q.client.chat_msg_num += 1
+    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = ["...", False]
+    await q.page.save()
 
     cfg = q.client["experiment/display/chat/cfg"]
     model = q.client["experiment/display/chat/model"]
@@ -1271,7 +1275,7 @@ async def chat_update(q: Q) -> None:
 
     message = [output["predicted_text"][0], False]
     q.client["experiment/display/chat/messages"].append(message)
-    q.page["experiment/display/chat"].data[-1] = message
+    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = message
 
     del output
     del inputs
