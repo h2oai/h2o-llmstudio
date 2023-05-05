@@ -202,9 +202,27 @@ def run_train(
 
     batch = None
     if cfg.training.evaluate_before_training:
-        val_data, val_loss, val_metric = run_eval(
-            cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
-        )
+        if hasattr(cfg.training, "lora") and cfg.training.lora:
+            if cfg.environment._distributed:
+                with model.module.backbone.disable_adapter():
+                    val_data, val_loss, val_metric = run_eval(
+                        cfg=cfg,
+                        model=model,
+                        val_dataloader=val_dataloader,
+                        val_df=val_df,
+                    )
+            else:
+                with model.backbone.disable_adapter():
+                    val_data, val_loss, val_metric = run_eval(
+                        cfg=cfg,
+                        model=model,
+                        val_dataloader=val_dataloader,
+                        val_df=val_df,
+                    )
+        else:
+            val_data, val_loss, val_metric = run_eval(
+                cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
+            )
 
     for epoch in range(start_epoch, cfg.training.epochs):
         set_seed(
