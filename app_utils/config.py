@@ -20,7 +20,7 @@ def get_size(x):
         return 2**31
 
 
-version = "0.0.1"
+version = "0.0.2-dev"
 
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -42,7 +42,6 @@ default_cfg = {
     "min_experiment_disk_space": get_size(
         os.getenv("MIN_DISK_SPACE_FOR_EXPERIMENTS", "2GB")
     ),
-    "separate_user_space": False,
     "allowed_file_extensions": os.getenv(
         "ALLOWED_FILE_EXTENSIONS", ".zip,.csv,.pq"
     ).split(","),
@@ -97,8 +96,9 @@ default_cfg = {
         "default_logger": "None",
         "default_neptune_project": os.getenv("NEPTUNE_PROJECT", ""),
         "default_neptune_api_token": os.getenv("NEPTUNE_API_TOKEN", ""),
-        "default_openai_api_token": os.getenv("OPENAI_API_KEY", ""),
         "default_huggingface_api_token": os.getenv("HUGGINGFACE_TOKEN", ""),
+        "default_openai_api_token": os.getenv("OPENAI_API_KEY", ""),
+        "default_gpt_eval_max": os.getenv("GPT_EVAL_MAX", 100),
         "delete_dialogs": True,
         "chart_plot_max_points": 1000,
     },
