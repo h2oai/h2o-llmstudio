@@ -58,26 +58,18 @@ def get_user_name(q):
 
 
 def get_data_dir(q):
-    if default_cfg.separate_user_space:
-        return f"data/{get_user_id(q)}"
     return "data/user"
 
 
 def get_output_dir(q):
-    if default_cfg.separate_user_space:
-        return f"output/{get_user_id(q)}"
     return "output/user"
 
 
 def get_download_dir(q):
-    if default_cfg.separate_user_space:
-        return f"output/download/{get_user_id(q)}"
     return "output/download"
 
 
 def get_db_path(q):
-    if default_cfg.separate_user_space:
-        return f"{default_cfg.dbs_path}/{get_user_id(q)}.db"
     return f"{default_cfg.dbs_path}/user.db"
 
 

@@ -1699,6 +1699,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             repo_id=repo_id,
             model_architecture=model.backbone.__repr__(),
             config=cfg.__repr__(),
+            use_fast=cfg.tokenizer.use_fast,
             min_new_tokens=cfg.prediction.min_length_inference,
             max_new_tokens=cfg.prediction.max_length_inference,
             do_sample=cfg.prediction.do_sample,
