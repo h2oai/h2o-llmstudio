@@ -329,7 +329,7 @@ class CustomDataset(Dataset):
         if self.cfg.tokenizer.max_length < len(input_ids):
             labels = labels[-self.cfg.tokenizer.max_length :]
 
-        sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), self.tokenizer.pad_token_id)
+        sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), -100)
         sample["labels"][-len(labels) :] = labels
 
         sample.update(
