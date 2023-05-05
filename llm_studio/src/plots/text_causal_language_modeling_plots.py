@@ -26,7 +26,7 @@ class Plots:
         tokenizer = get_tokenizer(cfg)
 
         texts = [
-            tokenizer.decode(input_ids, skip_special_tokens=True)
+            tokenizer.decode(input_ids, skip_special_tokens=False)
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
 
@@ -44,7 +44,7 @@ class Plots:
         ]
 
         target_texts = [
-            tokenizer.decode(input_ids, skip_special_tokens=True)
+            tokenizer.decode(input_ids, skip_special_tokens=False)
             for input_ids in input_ids_labels
         ]
 

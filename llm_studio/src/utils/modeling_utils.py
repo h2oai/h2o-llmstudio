@@ -442,9 +442,7 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
     val_df.to_csv(csv_preds_name, index=False)
 
 
-def prepare_model_for_lora_training(
-    model, output_embedding_layer_name="lm_head", layer_norm_names=["layer_norm"]
-):
+def prepare_model_for_lora_training(model, layer_norm_names=("layer_norm",)):
     loaded_in_8bit = getattr(model, "is_loaded_in_8bit", False)
 
     for name, param in model.named_parameters():
@@ -457,27 +455,6 @@ def prepare_model_for_lora_training(
                 layer_norm_name in name for layer_norm_name in layer_norm_names
             ):
                 param.data = param.data.to(torch.float32)
-
-    if hasattr(model, output_embedding_layer_name):
-        output_embedding_layer = getattr(model, output_embedding_layer_name)
-        input_dtype = output_embedding_layer.weight.dtype
-
-        class CastOutputToFloat(torch.nn.Sequential):
-            r"""
-            Manually cast to the expected dtype of the lm_head
-            as sometimes there is a final layer norm that is casted
-            in fp32
-
-            """
-
-            def forward(self, x):
-                return super().forward(x.to(input_dtype)).to(torch.float32)
-
-        setattr(
-            model,
-            output_embedding_layer_name,
-            CastOutputToFloat(output_embedding_layer),
-        )
 
     return model
 
