@@ -36,7 +36,7 @@ from llm_studio.src.utils.data_utils import (
     get_val_dataloader,
     get_val_dataset,
 )
-from llm_studio.src.utils.exceptions import LLMDataException, LLMTrainingException
+from llm_studio.src.utils.exceptions import LLMTrainingException
 from llm_studio.src.utils.export_utils import save_prediction_outputs
 from llm_studio.src.utils.gpu_utils import sync_across_processes
 from llm_studio.src.utils.logging_utils import (

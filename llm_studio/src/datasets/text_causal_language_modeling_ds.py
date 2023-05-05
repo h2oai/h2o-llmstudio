@@ -1,6 +1,5 @@
 import codecs
 import collections.abc
-import html
 import logging
 from typing import Any, Dict, List, Tuple, Union
 
@@ -315,7 +314,12 @@ class CustomDataset(Dataset):
             samples.insert(0, self._get_sample(int(rnd_idx)))
 
         input_ids = torch.cat([torch.cat(sample) for sample in samples])
-        prompt_mask = torch.cat([torch.cat([torch.ones_like(sample[0]), torch.zeros_like(sample[1])]) for sample in samples]).to(torch.bool)
+        prompt_mask = torch.cat(
+            [
+                torch.cat([torch.ones_like(sample[0]), torch.zeros_like(sample[1])])
+                for sample in samples
+            ]
+        ).to(torch.bool)
         attention_mask = torch.ones_like(input_ids)
 
         labels = input_ids.clone()
@@ -355,7 +359,6 @@ class CustomDataset(Dataset):
             )
         )
 
-
         return sample
 
     def pad_tokens(
@@ -364,8 +367,8 @@ class CustomDataset(Dataset):
         sample = {}
 
         if max_length < len(input_ids):
-            input_ids = input_ids[-max_length :]
-            attention_mask = attention_mask[-max_length :]
+            input_ids = input_ids[-max_length:]
+            attention_mask = attention_mask[-max_length:]
 
         sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
         sample[f"{prefix}input_ids"][-len(input_ids) :] = input_ids
