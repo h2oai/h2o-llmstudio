@@ -30,15 +30,28 @@ def get_texts(df, cfg, separator=None):
 
 
 def get_tokenizer(cfg: Any):
+    if "llama" in cfg.llm_backbone:
+        logger.info("Llama backbone detected, forcing slow tokenizer.")
+        cfg.tokenizer.use_fast = False
     tokenizer = AutoTokenizer.from_pretrained(
         cfg.llm_backbone,
         add_prefix_space=cfg.tokenizer.add_prefix_space,
-        use_fast=True,
+        use_fast=cfg.tokenizer.use_fast,
         trust_remote_code=cfg.environment.trust_remote_code,
     )
     tokenizer.padding_side = getattr(
         cfg.tokenizer, "_padding_side", tokenizer.padding_side
     )
+
+    # if the eos token is an empty string, we assign it to a token
+    if tokenizer.eos_token == "":
+        tokenizer.add_special_tokens({"eos_token": "</s>"})
+        tokenizer.eos_token = "</s>"
+    # if the bos token is an empty string, we assign it to a token
+    if tokenizer.bos_token == "":
+        tokenizer.add_special_tokens({"bos_token": "<s>"})
+        tokenizer.bos_token = "<s>"
+
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -81,7 +94,7 @@ def get_tokenizer(cfg: Any):
     cfg.tokenizer._stop_words = [
         stop_word for stop_word in cfg.tokenizer._stop_words if stop_word != ""
     ]
-    cfg.tokenizer._vocab_length = len(tokenizer.vocab)
+    cfg.tokenizer._vocab_length = tokenizer.vocab_size
 
     cfg.tokenizer._stop_words_ids = []
     for stop_word in set(cfg.tokenizer._stop_words):
