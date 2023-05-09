@@ -1212,8 +1212,7 @@ async def chat_update(q: Q) -> None:
         q=q,
         pre="chat/cfg_predictions/cfg/",
     )
-    logger.info(f"Updated chatbot config: {cfg_prediction}")
-    logger.info(f"Number of messages: {q.client.chat_msg_num}")
+    logger.info(f"Using chatbot config: {cfg_prediction}")
     q.client["experiment/display/chat/cfg"].prediction = cfg_prediction
 
     prompt = q.client["experiment/display/chat/chatbot"]
@@ -1245,7 +1244,7 @@ async def chat_update(q: Q) -> None:
                     prev_message += cfg._tokenizer_eos_token
 
             full_prompt += prev_message
-
+    logger.info(f"Full prompt: {full_prompt}")
     inputs = cfg.dataset.dataset_class.encode(
         tokenizer, full_prompt, cfg.tokenizer.max_length_prompt, "left"
     )
