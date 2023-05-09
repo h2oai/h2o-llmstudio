@@ -1097,7 +1097,7 @@ async def logs_tab(q):
     q.client.delete_cards.add("experiment/display/logs")
 
 
-async def chat_tab(q: Q):
+async def chat_tab(q: Q, load_model=True):
     running_experiments = get_experiments(q=q)
     running_experiments = running_experiments[
         running_experiments.status.isin(["running"])
@@ -1125,9 +1125,14 @@ async def chat_tab(q: Q):
         q.client.delete_cards.add("experiment/display/chat")
         return
 
+    if load_model:
+        loading_message = "Loading the model..."
+    else:
+        loading_message = "Chat History cleaned. How can I help you?"
+
     q.client.chat_msg_num = 1
     cyclic_buffer = data(
-        fields="msg fromUser", size=-500, rows={"1": ["Loading the model...", False]}
+        fields="msg fromUser", size=-500, rows={"1": [loading_message, False]}
     )
     q.page["experiment/display/chat"] = ui.chatbot_card(
         box="first", data=cyclic_buffer, name="experiment/display/chat/chatbot"
@@ -1149,13 +1154,21 @@ async def chat_tab(q: Q):
     await q.page.save()
     logger.info(torch.cuda.memory_allocated())
 
-    cfg, model, tokenizer = load_cfg_model_tokenizer(
-        q.client["experiment/display/experiment_path"]
-    )
+    if load_model:
+        cfg, model, tokenizer = load_cfg_model_tokenizer(
+            q.client["experiment/display/experiment_path"]
+        )
+        q.client["experiment/display/chat/cfg"] = cfg
+        q.client["experiment/display/chat/model"] = model
+        q.client["experiment/display/chat/tokenizer"] = tokenizer
+        initial_message = "Model successfully loaded, how can I help you?"
 
-    q.client["experiment/display/chat/cfg"] = cfg
-    q.client["experiment/display/chat/model"] = model
-    q.client["experiment/display/chat/tokenizer"] = tokenizer
+    else:
+        cfg = q.client["experiment/display/chat/cfg"]
+        assert q.client["experiment/display/chat/model"] is not None
+        assert q.client["experiment/display/chat/tokenizer"] is not None
+        # Message will be replaced, not noticeable in the UI.
+        initial_message = loading_message
 
     # Hide fields that are should not be visible in the UI
     cfg.prediction._visibility["metric"] = -1
@@ -1165,7 +1178,7 @@ async def chat_tab(q: Q):
 
     logger.info(torch.cuda.memory_allocated())
     q.page["experiment/display/chat"].data[q.client.chat_msg_num] = [
-        "Model successfully loaded, how can I help you?",
+        initial_message,
         False,
     ]
 
@@ -1177,24 +1190,17 @@ async def chat_tab(q: Q):
     q.page["experiment/display/chat/settings"] = ui.form_card(
         box="second",
         items=[
-            ui.expander(name="chat_settings", label="Chat Settings", items=option_items)
+            ui.button(
+                name="experiment/display/chat/clear_history",
+                label="Clear History",
+                primary=True,
+            ),
+            ui.expander(
+                name="chat_settings", label="Chat Settings", items=option_items
+            ),
         ],
     )
     q.client.delete_cards.add("experiment/display/chat/settings")
-
-
-async def parse_param(q: Q, cfg, prompt):
-    prompt = prompt.replace("--", "")
-    parts = prompt.split(" ")
-    args = [" ".join(parts[i : i + 2]) for i in range(0, len(parts), 2)]
-    for arg in args:
-        arg = arg.split(" ")
-        setattr(cfg.prediction, arg[0], type(getattr(cfg.prediction, arg[0]))(arg[1]))
-        q.page["experiment/display/chat"].data[-1] = [
-            f"Permanently changed {arg[0]} to {getattr(cfg.prediction, arg[0])}",
-            False,
-        ]
-    return cfg
 
 
 async def chat_update(q: Q) -> None:
@@ -1210,19 +1216,6 @@ async def chat_update(q: Q) -> None:
     q.client["experiment/display/chat/cfg"].prediction = cfg_prediction
 
     prompt = q.client["experiment/display/chat/chatbot"]
-
-    if prompt.lower().startswith("--"):
-        if prompt.lower() in ["--clean", "--clear"]:
-            q.page["experiment/display/chat"].data[-1] = ["History cleaned", False]
-            q.client["experiment/display/chat/messages"] = []
-            return
-        q.client["experiment/display/chat/cfg"] = await parse_param(
-            q, q.client["experiment/display/chat/cfg"], prompt
-        )
-        q.client["experiment/display/chat/model"].cfg = q.client[
-            "experiment/display/chat/cfg"
-        ]
-        return
 
     message = [prompt, True]
     q.client["experiment/display/chat/messages"].append(message)
