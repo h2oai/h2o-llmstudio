@@ -1130,7 +1130,7 @@ async def chat_tab(q: Q, load_model=True):
     else:
         loading_message = "Chat History cleaned. How can I help you?"
 
-    q.client.chat_msg_num = 1
+    q.client.chat_msg_num = "1"
     cyclic_buffer = data(
         fields="msg fromUser", size=-500, rows={"1": [loading_message, False]}
     )
@@ -1213,15 +1213,16 @@ async def chat_update(q: Q) -> None:
         pre="chat/cfg_predictions/cfg/",
     )
     logger.info(f"Updated chatbot config: {cfg_prediction}")
+    logger.info(f"Number of messages: {q.client.chat_msg_num}")
     q.client["experiment/display/chat/cfg"].prediction = cfg_prediction
 
     prompt = q.client["experiment/display/chat/chatbot"]
 
     message = [prompt, True]
     q.client["experiment/display/chat/messages"].append(message)
-    q.client.chat_msg_num += 1
+    q.client.chat_msg_num = q.client.chat_msg_num + "1"
     q.page["experiment/display/chat"].data[q.client.chat_msg_num] = message
-    q.client.chat_msg_num += 1
+    q.client.chat_msg_num = q.client.chat_msg_num + "1"
     q.page["experiment/display/chat"].data[q.client.chat_msg_num] = ["...", False]
     await q.page.save()
 

@@ -271,7 +271,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     repetition_penalty: float = 1.2
     stop_tokens: str = ""
     top_k: int = 0
-    top_p: float = 1.
+    top_p: float = 1.0
 
     num_history: int = 2
 
