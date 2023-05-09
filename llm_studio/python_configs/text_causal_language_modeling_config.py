@@ -270,6 +270,8 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     temperature: float = 0.3
     repetition_penalty: float = 1.2
     stop_tokens: str = ""
+    top_k: int = 0
+    top_p: float = 1
 
     def __post_init__(self):
         super().__post_init__()
@@ -282,6 +284,8 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._possible_values["num_beams"] = (1, 10, 1)
         self._possible_values["temperature"] = (0, 10, 0.05)
         self._possible_values["repetition_penalty"] = (1, 10, 0.05)
+        self._possible_values["top_k"] = (0, 100, 1)
+        self._possible_values["top_p"] = (0, 0.5, 0.05)
 
         self._visibility["metric_class"] = -1
 
