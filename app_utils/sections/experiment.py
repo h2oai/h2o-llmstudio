@@ -1232,7 +1232,7 @@ async def chat_update(q: Q) -> None:
     full_prompt = ""
     if len(q.client["experiment/display/chat/messages"]):
         for prev_message in q.client["experiment/display/chat/messages"][
-            -(cfg.prediction._num_history + 1) :
+            -(cfg.prediction.num_history + 1) :
         ]:
             if prev_message[1] is True:
                 prev_message = cfg.dataset.dataset_class.parse_prompt(
@@ -1789,7 +1789,7 @@ def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
     cfg.architecture.gradient_checkpointing = False
     cfg.environment._device = device
     cfg.environment._local_rank = 0
-    cfg.prediction._num_history = 2
+    cfg.prediction._visibility["num_history"] = 1
 
     tokenizer = get_tokenizer(cfg)
 
