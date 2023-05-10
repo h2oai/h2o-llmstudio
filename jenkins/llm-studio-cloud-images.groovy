@@ -16,6 +16,7 @@ node('mr-0x16') {
     stage('Init') {
         cleanWs()
         currentBuild.displayName = "#${BUILD_NUMBER} - Rel:${LLM_STUDIO_VERSION}"
+        checkout scm
         sh('ls -al')
     }
 
