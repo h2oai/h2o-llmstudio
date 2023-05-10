@@ -34,7 +34,7 @@ make setup
 
 # -----
 cd /etc/systemd/system
-sudo chmod -R ubuntu:ubuntu .
+sudo chown -R ubuntu:ubuntu .
 
 cd /etc/systemd/system
 printf """
