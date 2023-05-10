@@ -25,6 +25,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt -y install \
   python3-pip \
   python3-dev \
   python3-virtualenv \
+  python3-distutils \
   libopenblas-dev
 
 # Clone h2o-llmstudio
