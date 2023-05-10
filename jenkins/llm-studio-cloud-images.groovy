@@ -4,7 +4,7 @@ properties(
     [
         parameters(
             [
-                gitParameter(name: 'BRANCH_TAG',type: 'PT_BRANCH_TAG', defaultValue: 'main'),
+                gitParameter(name: 'BRANCH_TAG',type: 'PT_BRANCH_TAG', defaultValue: 'devops/llm-studio-cloud-images'),
                 booleanParam(name: 'AWS', defaultValue: true, description: 'Make Amazon Machine Image/Not?'),
                 string(name: 'LLM_STUDIO_VERSION')
             ]
