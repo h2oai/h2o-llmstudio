@@ -1,27 +1,15 @@
 #!/bin/bash
 
 # Install core packages
-sudo apt update && sudo apt upgrade -y
+sudo apt update
 sudo DEBIAN_FRONTEND=noninteractive apt -y --no-install-recommends install \
   curl \
-  apt-utils \
-  apache2-utils \
-  wget \
-  libblas-dev \
-  default-jre \
-  clinfo \
-  vim \
-  software-properties-common \
-  gnupg2 \
-  ca-certificates \
+  build-essential
 
-# System installs (Python 3.10)
-
-printf "Installing make ..."
-
-sudo apt -y install make
+# Verify make installation
 ls /usr/bin/make
 
+# System installs (Python 3.10)
 sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo DEBIAN_FRONTEND=noninteractive apt -y install python3.10
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install python3.10-distutils
