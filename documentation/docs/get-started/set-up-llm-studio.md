@@ -7,8 +7,8 @@ import TabItem from '@theme/TabItem';
 
 H2O LLM Studio requires the following minimum requirements:
 
-- A machine with Ubuntu 16.04+ 
-- At least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02
+- A machine with Ubuntu 16.04+ with atleast one recent Nvidia GPU 
+- Nvidia drivers v470.57.02 or a later version
 
 :::info
 Atleast 24GB of GPU memory is recommended for larger models.
@@ -16,6 +16,7 @@ Atleast 24GB of GPU memory is recommended for larger models.
 
 ## Installation
 
+:::note Installation methods
 <Tabs className="unique-tabs">
   <TabItem value="recommended-install" label="Recommended installation" default>
   <p>The recommended way to install H2O LLM Studio is using pipenv with Python 3.10. To install Python 3.10 on Ubuntu 16.04+, execute the following commands.</p>
@@ -36,6 +37,7 @@ Atleast 24GB of GPU memory is recommended for larger models.
   <pre><code>pip install -r requirements.txt</code></pre>
   </TabItem>
 </Tabs>
+:::
 
 <!-- 
 ## Recommended installation
@@ -86,6 +88,8 @@ make wave
 ```
 
 This will start the H2O Wave server and the H2O LLM Studio app. Navigate to [http://localhost:10101/](http://localhost:10101/) (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models. 
+
+![home-screen](llm-studio-home-screen.png)
 
 If you are running H2O LLM Studio with a custom environment other than Pipenv, start the app as follows: 
 

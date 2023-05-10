@@ -19,7 +19,6 @@ module.exports = {
           type: "category",
           label: "Datasets",
           items: [
-            "tutorials/datasets/tutorial-1a",
             "tutorials/datasets/tutorial-2a",
             "tutorials/datasets/tutorial-3a",
           ],
@@ -46,7 +45,10 @@ module.exports = {
     },
     "concepts",
     {
-      "User guide": ["user-guide/page-1"],
+      "User guide": [
+      "user-guide/data-connectors-format",
+      "user-guide/import-dataset",
+      ],
     },
     "key-terms",
     "release-notes",
