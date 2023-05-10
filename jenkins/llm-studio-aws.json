@@ -7,17 +7,17 @@
         "aws_owners": "<AWS OWNERS ID>",
         "aws_subnet_id": "<SUBNET ID>",
         "aws_security_group_id": "<SECURITY GROUP ID>",
-        "llm-studio-version": "<LLM STUDIO VERSION>"
+        "llm_studio_version": "<LLM STUDIO VERSION>"
     },
     "builders": [
       {
         "type": "amazon-ebs",
-        "ami_name": "h2oai-llm-studio-{{user `llm-studio-version`}}",
+        "ami_name": "h2oai-llm-studio-{{user `llm_studio_version`}}",
         "instance_type": "g4dn.xlarge",
         "ssh_username": "ubuntu",
         "tags": 
           {
-            "name": "h2oai-llm-studio-{{user `llm-studio-version`}}"
+            "name": "h2oai-llm-studio-{{user `llm_studio_version`}}"
           },
         "access_key": "{{user `aws_access_key`}}",
         "secret_key": "{{user `aws_secret_key`}}",
@@ -51,7 +51,7 @@
         "strip_path": true,
         "custom_data": {
           "base_image": "AWS Ubuntu 20.04",
-          "llm-studio-version": "{{user `llm-studio-version`}}"
+          "llm_studio_version": "{{user `llm_studio_version`}}"
         }
       }
     ],
