@@ -30,4 +30,23 @@ cd h2o-llmstudio
 # Create virtual environment (pipenv)
 
 make setup
-make wave
+
+# -----
+cd /etc/systemd/system
+printf """
+[Unit]
+Description=LLM Studio Service
+After=network.target
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/h2o-llmstudio
+ExecStart=/usr/bin/make wave
+Restart=always
+[Install]
+WantedBy=multi-user.target
+""" >> llm_studio.service
+
+sudo systemctl daemon-reload
+sudo systemctl enable llm_studio.service
+sudo systemctl start llm_studio.service
