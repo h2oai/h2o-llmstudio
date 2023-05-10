@@ -13,11 +13,12 @@ sudo DEBIAN_FRONTEND=noninteractive apt -y --no-install-recommends install \
   vim \
   software-properties-common \
   gnupg2 \
-  ca-certificates
+  ca-certificates \
+  make
 
 # System installs (Python 3.10)
 
-sudo add-apt-repository ppa:deadsnakes/ppa
+sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo DEBIAN_FRONTEND=noninteractive apt -y install python3.10
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install python3.10-distutils
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
@@ -33,6 +34,9 @@ make setup
 
 # -----
 cd /etc/systemd/system
+sudo chmod -R ubuntu:ubuntu .
+
+cd /etc/systemd/system
 printf """
 [Unit]
 Description=LLM Studio Service
@@ -46,6 +50,7 @@ Restart=always
 [Install]
 WantedBy=multi-user.target
 """ >> llm_studio.service
+
 
 sudo systemctl daemon-reload
 sudo systemctl enable llm_studio.service
