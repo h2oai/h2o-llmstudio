@@ -59,7 +59,7 @@
        { 
          "type": "shell",
          "environment_vars": [],
-         "script": "./install_dai_aws_ubuntu2004.sh"
+         "script": "./install_llm_studio_ubuntu2004.sh"
        }
     ]
   }
