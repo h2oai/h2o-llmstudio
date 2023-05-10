@@ -4,7 +4,7 @@ properties(
     [
         parameters(
             [
-                gitParameter(name: 'BRANCH_TAG',type: 'PT_BRANCH_TAG', defaultValue: 'devops/llm-studio-cloud-images'),
+                string(name: 'BRANCH_TAG', defaultValue: 'origin/main'),
                 booleanParam(name: 'AWS', defaultValue: true, description: 'Make Amazon Machine Image/Not?'),
                 string(name: 'LLM_STUDIO_VERSION')
             ]
@@ -16,14 +16,7 @@ node('mr-0x16') {
     stage('Init') {
         cleanWs()
         currentBuild.displayName = "#${BUILD_NUMBER} - Rel:${LLM_STUDIO_VERSION}"
-        checkout([$class: 'GitSCM',
-                  branches: [[name: "${params.BRANCH_TAG}"]],
-                  doGenerateSubmoduleConfigurations: false,
-                  extensions: [],
-                  gitTool: 'Default',
-                  submoduleCfg: [],
-                  userRemoteConfigs: [[url: 'https://github.com/h2oai/h2o-llmstudio.git']]
-                ])
+        checkout scm
         sh('ls -al')
     }
 
