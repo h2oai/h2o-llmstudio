@@ -17,7 +17,7 @@ node('mr-0x16') {
         cleanWs()
         currentBuild.displayName = "#${BUILD_NUMBER} - Rel:${LLM_STUDIO_VERSION}"
         checkout([$class: 'GitSCM',
-                  branches: [[name: "${params.TAG}"]],
+                  branches: [[name: "${params.BRANCH_TAG}"]],
                   doGenerateSubmoduleConfigurations: false,
                   extensions: [],
                   gitTool: 'Default',
