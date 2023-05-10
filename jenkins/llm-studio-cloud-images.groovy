@@ -30,7 +30,7 @@ node('mr-0x16') {
                                              string(credentialsId: "AWS_MARKETPLACE_SUBNET", variable: "aws_subnet_id"),
                                              string(credentialsId: "AWS_MARKETPLACE_SG", variable: "aws_security_group_id")]) {
                                 dir('jenkins') {
-                                    if (params.aws.toBoolean()) {
+                                    if (params.AWS) {
                                         sh("packer build \
                                         -var 'aws_access_key=$AWS_ACCESS_KEY_ID' \
                                         -var 'aws_secret_key=$AWS_SECRET_ACCESS_KEY' \
@@ -55,10 +55,4 @@ node('mr-0x16') {
             cleanWs()
         }
     }
-}
-
-
-withCredentials(){
-   dir('jenkins'){
-   } 
 }
