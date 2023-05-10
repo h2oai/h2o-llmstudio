@@ -17,16 +17,10 @@ sudo DEBIAN_FRONTEND=noninteractive apt -y --no-install-recommends install \
 
 # System installs (Python 3.10)
 
-sudo add-apt-repository -y  ppa:deadsnakes/ppa
-sudo apt-get -y update
-sudo DEBIAN_FRONTEND=noninteractive apt -y install \
-  python3.10 \
-  python3.10-dev \
-  python3-pip \
-  python3-dev \
-  python3-virtualenv \
-  python3-distutils \
-  libopenblas-dev
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo -y apt install python3.10
+sudo -y apt-get install python3.10-distutils
+curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 
 # Clone h2o-llmstudio
 
