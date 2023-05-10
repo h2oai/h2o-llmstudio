@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Install core packages
-sudo apt update
-sudo DEBIAN_FRONTEND=noninteractive apt -y --no-install-recommends install \
+sudo apt-get update
+sudo apt-get -y --no-install-recommends install \
   curl \
   build-essential
 
@@ -11,8 +11,8 @@ ls /usr/bin/make
 
 # System installs (Python 3.10)
 sudo add-apt-repository ppa:deadsnakes/ppa -y
-sudo DEBIAN_FRONTEND=noninteractive apt -y install python3.10
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install python3.10-distutils
+sudo apt -y install python3.10
+sudo apt-get -y install python3.10-distutils
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 
 # Clone h2o-llmstudio
