@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install core packages
-sudo apt -y update && \
+sudo apt update && sudo apt upgrade -y
 sudo DEBIAN_FRONTEND=noninteractive apt -y --no-install-recommends install \
   curl \
   apt-utils \
@@ -14,9 +14,13 @@ sudo DEBIAN_FRONTEND=noninteractive apt -y --no-install-recommends install \
   software-properties-common \
   gnupg2 \
   ca-certificates \
-  make
 
 # System installs (Python 3.10)
+
+printf "Installing make ..."
+
+sudo apt -y install make
+ls /usr/bin/make
 
 sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo DEBIAN_FRONTEND=noninteractive apt -y install python3.10
