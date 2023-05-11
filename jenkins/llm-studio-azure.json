@@ -28,7 +28,8 @@
                 "task": "Image deployment"
             },
             "location": "East US",
-            "vm_size": "Standard_DS2_v2"
+            "vm_size": "Standard_DS2_v2",
+            "ssh_username": "ubuntu"
         }
     ],
     "post-processors": [
