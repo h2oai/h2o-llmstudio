@@ -21,7 +21,7 @@
             "os_type": "Linux",
             "image_publisher": "Canonical",
             "image_offer": "UbuntuServer",
-            "image_sku": "20.04-LTS",
+            "image_sku": "20_04-LTS",
             "os_disk_size_gb": 512,
             "azure_tags": {
                 "dept": "Engineering",
