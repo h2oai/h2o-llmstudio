@@ -32,7 +32,7 @@ node('mr-0x16') {
                                              string(credentialsId: "AWS_MARKETPLACE_OWNERS", variable: "aws_owners"),
                                              string(credentialsId: "AWS_MARKETPLACE_SUBNET", variable: "aws_subnet_id"),
                                              string(credentialsId: "AWS_MARKETPLACE_SG", variable: "aws_security_group_id")]) {
-                                dir('jenkins') {
+                                dir('jenkins/packer') {
                                     if (params.AWS) {
                                         sh("packer build \
                                         -var 'aws_access_key=$AWS_ACCESS_KEY_ID' \
@@ -55,7 +55,7 @@ node('mr-0x16') {
 
                         "GCP Ubuntu 20.04": {
                             withCredentials([file(credentialsId: 'GCP_MARKETPLACE_SERVICE_ACCOUNT', variable: 'GCP_ACCOUNT_FILE')]) {
-                                dir('jenkins') {
+                                dir('jenkins/packer') {
                                     if (params.GCP) {
                                         sh("packer build \
                                             -var 'project_id=h2o-gce' \
@@ -76,7 +76,7 @@ node('mr-0x16') {
                                              string(credentialsId: "AZURE_MARKETPLACE_CLIENT_SECRET", variable: "AZURE_CLIENT_SECRET"),
                                              string(credentialsId: "AZURE_MARKETPLACE_SUBSCRIPTION_ID", variable: "AZURE_SUBSCRIPTION_ID"),
                                              string(credentialsId: "AZURE_MARKETPLACE_TENANT_ID", variable: "AZURE_TENANT_ID")]) {
-                                dir('jenkins') {
+                                dir('jenkins/packer') {
                                     if (params.AZURE) {
                                         sh("packer build \
                                             -var 'client_id=$AZURE_CLIENT_ID' \
