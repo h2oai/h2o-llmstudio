@@ -6,6 +6,7 @@ properties(
             [
                 string(name: 'BRANCH_TAG', defaultValue: 'origin/main'),
                 booleanParam(name: 'AWS', defaultValue: true, description: 'Make Amazon Machine Image/Not?'),
+                booleanParam(name: 'GCP', defaultValue: true, description: 'Make GCP Image/Not?'),
                 string(name: 'LLM_STUDIO_VERSION')
             ]
         )
@@ -46,6 +47,24 @@ node('mr-0x16') {
                                         archiveArtifacts artifacts: '*-image-info.json'
                                     }else {
                                         Utils.markStageSkippedForConditional('AWS Ubuntu 20.04')
+                                    }
+                                }
+                            }
+                        },
+
+                        "GCP Ubuntu 20.04": {
+                            withCredentials([file(credentialsId: 'GCP_MARKETPLACE_SERVICE_ACCOUNT', variable: 'GCP_ACCOUNT_FILE')]) {
+                                dir('jenkins') {
+                                    if (params.GCP) {
+                                        sh("packer build \
+                                            -var 'project_id=h2o-gce' \
+                                            -var 'account_file=$GCP_ACCOUNT_FILE' \
+                                            -var 'llm_studio_version=${LLM_STUDIO_VERSION}' \
+                                            llm-studio-gcp.json"
+                                        )
+                                        archiveArtifacts artifacts: '*-image-info.json'
+                                    }else {
+                                        Utils.markStageSkippedForConditional('GCP Ubuntu 20.04')
                                     }
                                 }
                             }
