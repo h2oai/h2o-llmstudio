@@ -14,7 +14,7 @@ properties(
     ]
 )
 
-node('mr-0x16') {
+node('docker') {
     stage('Init') {
         cleanWs()
         currentBuild.displayName = "#${BUILD_NUMBER} - Rel:${LLM_STUDIO_VERSION}"
