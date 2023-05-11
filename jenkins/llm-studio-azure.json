@@ -15,7 +15,7 @@
             "subscription_id": "{{user `subscription_id`}}",
             "tenant_id": "{{user `tenant_id`}}",
             "capture_container_name": "h2ovhdimages",
-            "capture_name_prefix": "{{user `llm_studio_version`}}",
+            "capture_name_prefix": "h2oai-llm-studio-{{user `llm_studio_version`}}",
             "resource_group_name": "{{user `managed_image_resource_group_name`}}",
             "storage_account": "h2ovhdimages",
             "os_type": "Linux",
