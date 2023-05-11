@@ -1,0 +1,51 @@
+{
+    "variables": {
+        "client_id": "<AZURE CLIENT ID>",
+        "client_secret": "<AZURE CLIENT SECRET>",
+        "subscription_id": "92429150-401a-431f-8955-e69c0c119e68",
+        "tenant_id": "840229f2-c911-49e6-a73d-5b3a4311835a",
+        "managed_image_resource_group_name": "H2OIMAGES",
+        "llm_studio_version": "<LLM STUDIO VERSION>"
+    },
+    "builders": [
+        {
+            "type": "azure-arm",
+            "client_id": "{{user `client_id`}}",
+            "client_secret": "{{user `client_secret`}}",
+            "subscription_id": "{{user `subscription_id`}}",
+            "tenant_id": "{{user `tenant_id`}}",
+            "capture_container_name": "h2ovhdimages",
+            "capture_name_prefix": "{{user `llm_studio_version`}}",
+            "resource_group_name": "{{user `managed_image_resource_group_name`}}",
+            "storage_account": "h2ovhdimages",
+            "os_type": "Linux",
+            "image_publisher": "Canonical",
+            "image_offer": "UbuntuServer",
+            "image_sku": "20.04-LTS",
+            "os_disk_size_gb": 512,
+            "azure_tags": {
+                "dept": "Engineering",
+                "task": "Image deployment"
+            },
+            "location": "East US",
+            "vm_size": "Standard_DS2_v2"
+        }
+    ],
+    "post-processors": [
+        {
+            "type": "manifest",
+            "output": "azure-ubuntu-image-info.json",
+            "strip_path": true,
+            "custom_data": {
+                "base_image": "AZURE Ubuntu 20.04",
+                "llm_studio_version": "{{user `llm_studio_version`}}"
+            }
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "script": "./install_llm_studio_ubuntu2004.sh"
+        }
+    ]
+}
