@@ -2,9 +2,9 @@
 
 # Install core packages
 sudo apt update
-sudo apt install -y software-properties-common
-sudo add-apt-repository universe -y
-sudo apt update
+# sudo apt install -y software-properties-common
+# sudo add-apt-repository universe -y
+# sudo apt update
 sudo apt -y install curl
 sudo apt -y install make
 
