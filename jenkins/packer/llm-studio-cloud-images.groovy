@@ -8,7 +8,7 @@ properties(
                 booleanParam(name: 'AWS', defaultValue: true, description: 'Make Amazon Machine Image/Not?'),
                 booleanParam(name: 'GCP', defaultValue: true, description: 'Make GCP Image/Not?'),
                 booleanParam(name: 'AZURE', defaultValue: true, description: 'Make AZURE Image/Not?'),
-                string(name: 'LLM_STUDIO_VERSION')
+                string(name: 'LLM_STUDIO_VERSION', description: 'Example: for release 1.10.5 use 1105 likewise')
             ]
         )
     ]
