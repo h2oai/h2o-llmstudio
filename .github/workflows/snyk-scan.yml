@@ -44,11 +44,10 @@ jobs:
           SNYK_TOKEN: '${{ secrets.SNYK_TOKEN }}'
         run: |
           make setup
-          make export-requirements
           snyk test \
             -d \
-            --file=requirements.txt \
-            --package-manager=pip \
+            --file=Pipfile \
+            --package-manager=pipenv \
             --command=python3.10 \
             --skip-unresolved 
       
@@ -87,7 +86,6 @@ jobs:
           snyk container monitor \
             h2o-llm-studio \
             --file=Dockerfile \
-            --remote-repo-url=h2o-llm-studio/${{ github.ref_name }} \
             --org=h2o-llm-studio \
             --project=H2O-LLM-STUDIO/h2o-llm-studio/${{ github.ref_name }}/Dockerfile
         
@@ -97,11 +95,10 @@ jobs:
           SNYK_TOKEN: '${{ secrets.SNYK_TOKEN }}'
         run: |
           make setup
-          make export-requirements
           snyk monitor \
             -d \
-            --file=requirements.txt \
-            --package-manager=pip \
+            --file=Pipfile \
+            --package-manager=pipenv \
             --command=python3.10 \
             --skip-unresolved
             --remote-repo-url=h2o-llm-studio/${{ github.ref_name }} \
