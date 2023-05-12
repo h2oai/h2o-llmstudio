@@ -30,6 +30,8 @@ jobs:
       - name: Get storage usage (debugging)
         run: |
           df -H
+          pwd
+          sudo du -sh .
       
       - name: Scan the docker image
         continue-on-error: true
@@ -86,6 +88,8 @@ jobs:
       - name: Get storage usage (debugging)
         run: |
           df -H
+          pwd
+          sudo du -sh .
       
       - name: Monitor the docker image
         continue-on-error: true
