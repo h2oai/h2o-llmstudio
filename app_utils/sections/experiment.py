@@ -1603,7 +1603,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
                 required=False,
                 tooltip=(
                     "The account name on HF to push the model to. "
-                    "Leaving it empty will push it to the default user account.",
+                    "Leaving it empty will push it to the default user account."
                 ),
             ),
             ui.textbox(
@@ -1660,11 +1660,12 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             device=q.client["experiment/display/push_to_huggingface/device"],
         )
 
+        huggingface_hub.login(
+            q.client["experiment/display/push_to_huggingface/api_key"]
+        )
+
         user_id = q.client["experiment/display/push_to_huggingface/account_name"]
         if user_id == "":
-            huggingface_hub.login(
-                q.client["experiment/display/push_to_huggingface/api_key"]
-            )
             user_id = huggingface_hub.whoami()["name"]
         repo_id = (
             f"{user_id}/{q.client['experiment/display/push_to_huggingface/model_name']}"
