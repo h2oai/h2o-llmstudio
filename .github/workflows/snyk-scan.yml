@@ -27,6 +27,10 @@ jobs:
         run: |
           docker build -t h2o-llm-studio .
       
+      - name: Get storage usage (debugging)
+        run: |
+          df -H
+      
       - name: Scan the docker image
         continue-on-error: true
         env:
@@ -78,6 +82,10 @@ jobs:
       - name: Build the docker image
         run: |
           docker build -t h2o-llm-studio .
+      
+      - name: Get storage usage (debugging)
+        run: |
+          df -H
       
       - name: Monitor the docker image
         continue-on-error: true
