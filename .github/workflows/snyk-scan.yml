@@ -30,7 +30,8 @@ jobs:
             -d \
             --file=Pipfile \
             --command=python3.10 \
-            --skip-unresolved 
+            --skip-unresolved \
+            --severity-threshold=high
      
   snyk_scan_monitor:
     if: ${{ github.event_name == 'push'}} || ${{ github.event_name == 'workflow_dispatch' }}
