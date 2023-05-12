@@ -1,0 +1,59 @@
+name: Snyk Security Vulnerability Scan
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+    branches:
+      - main
+
+jobs:
+  snyk_scan_test:
+    if: ${{ github.event_name == 'pull_request' }} || ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: snyk/actions/setup@master
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+    
+      - name: Scan python dependencies
+        env:
+          SNYK_TOKEN: '${{ secrets.SNYK_TOKEN }}'
+        run: |
+          make setup
+          snyk test \
+            -d \
+            --file=Pipfile \
+            --command=python3.10 \
+            --skip-unresolved \
+            --severity-threshold=high
+     
+  snyk_scan_monitor:
+    if: ${{ github.event_name == 'push'}} || ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: snyk/actions/setup@master
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+        
+      - name: Monitor python dependencies
+        env:
+          SNYK_TOKEN: '${{ secrets.SNYK_TOKEN }}'
+        run: |
+          make setup
+          snyk monitor \
+            -d \
+            --file=Pipfile \
+            --command=python3.10 \
+            --skip-unresolved \
+            --remote-repo-url=h2o-llm-studio/${{ github.ref_name }} \
+            --org=h2o-llm-studio \
+            --project=H2O-LLM-STUDIO/h2o-llm-studio/${{ github.ref_name }}/Pipfile
