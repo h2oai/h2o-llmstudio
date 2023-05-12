@@ -29,7 +29,7 @@ jobs:
       
       - name: Get storage usage (debugging)
         run: |
-          df -H
+          df -H .
           pwd
           sudo du -sh .
       
@@ -87,7 +87,7 @@ jobs:
       
       - name: Get storage usage (debugging)
         run: |
-          df -H
+          df -H .
           pwd
           sudo du -sh .
       
