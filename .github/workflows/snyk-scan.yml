@@ -25,6 +25,7 @@ jobs:
       
       - name: Build the docker image
         run: |
+          docker rmi $(docker images -a -q) 
           docker build -t h2o-llm-studio .
       
       - name: Get storage usage (debugging)
@@ -84,6 +85,7 @@ jobs:
       
       - name: Build the docker image
         run: |
+          docker rmi $(docker images -a -q) 
           docker build -t h2o-llm-studio .
       
       - name: Get storage usage (debugging)
