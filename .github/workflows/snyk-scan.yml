@@ -22,30 +22,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      
-      # - name: Build the docker image
-      #   run: |
-      #     docker rmi $(docker images -a -q) 
-      #     docker build -t h2o-llm-studio .
-      
-      # - name: Get storage usage (debugging)
-      #   run: |
-      #     docker images
-      #     df -H .
-      #     pwd
-      #     sudo du -h .
-      
-      # - name: Scan the docker image
-      #   continue-on-error: true
-      #   env:
-      #     SNYK_TOKEN: '${{ secrets.SNYK_TOKEN }}'
-      #   id: docker
-      #   run: |
-      #     snyk container test \
-      #       h2o-llm-studio \
-      #       -d \
-      #       --file=Dockerfile
-        
+    
       - name: Scan python dependencies
         id: python
         continue-on-error: true
@@ -58,18 +35,7 @@ jobs:
             --file=Pipfile \
             --command=python3.10 \
             --skip-unresolved 
-      
-      # - name: Check Snyk scan results
-      #   if: steps.docker.outcome == 'failure' || steps.python.outcome == 'failure'
-      #   shell: bash
-      #   run: |
-      #     echo "[warning] Please solve the fixable security vulnerabilities found in failed steps!
-      #           Snyk scan for Docker image - ${{ steps.docker.outcome }}
-      #           Snyk scan for Python dependencies - ${{ steps.python.outcome }}
-      #           "
-      #     exit 1
-    
-        
+     
   snyk_scan_monitor:
     if: ${{ github.event_name == 'push'}} || ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
@@ -81,34 +47,6 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      
-      # - name: Get storage usage (debugging)
-      #   run: |
-      #     docker images
-      #     df -H .
-      #     cd ../../../
-      #     pwd
-      #     sudo du -h .
-      
-      # - name: Cleanup
-      #   run:
-      #     docker rmi $(docker images -a -q) 
-      
-      # - name: Build the docker image
-      #   run: |
-      #     docker build -t h2o-llm-studio .
-  
-      # - name: Monitor the docker image
-      #   continue-on-error: true
-      #   env:
-      #     SNYK_TOKEN: '${{ secrets.SNYK_TOKEN }}'
-      #   run: |
-      #     snyk container monitor \
-      #       h2o-llm-studio \
-      #       -d \
-      #       --file=Dockerfile \
-      #       --org=h2o-llm-studio \
-      #       --project=H2O-LLM-STUDIO/h2o-llm-studio/${{ github.ref_name }}/Dockerfile
         
       - name: Monitor python dependencies
         continue-on-error: true
