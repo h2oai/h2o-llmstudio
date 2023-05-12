@@ -25,7 +25,7 @@ jobs:
       
       - name: Build the docker image
         run: |
-          docker build -t h2o-llm-studio:${{ github.ref_name }} .
+          docker build -t h2o-llm-studio .
       
       - name: Scan the docker image
         continue-on-error: true
@@ -34,7 +34,7 @@ jobs:
         id: docker
         run: |
           snyk container test \
-            h2o-llm-studio:${{ github.ref_name }} \
+            h2o-llm-studio \
             --file=Dockerfile
         
       - name: Scan python dependencies
@@ -77,7 +77,7 @@ jobs:
       
       - name: Build the docker image
         run: |
-          docker build -t h2o-llm-studio:${{ github.ref_name }} .
+          docker build -t h2o-llm-studio .
       
       - name: Monitor the docker image
         continue-on-error: true
@@ -85,7 +85,7 @@ jobs:
           SNYK_TOKEN: '${{ secrets.SNYK_TOKEN }}'
         run: |
           snyk container monitor \
-            h2o-llm-studio:${{ github.ref_name }} \
+            h2o-llm-studio \
             --file=Dockerfile \
             --remote-repo-url=h2o-llm-studio/${{ github.ref_name }} \
             --org=h2o-llm-studio \
