@@ -1577,7 +1577,6 @@ async def experiment_download_model(q: Q, error: str = ""):
 
 async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
     if q.args["experiment/display/push_to_huggingface"] or error:
-
         devices = ["cpu"] + [f"cuda:{idx}" for idx in range(torch.cuda.device_count())]
         default_device = "cuda:0"
 
@@ -1591,7 +1590,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         try:
             huggingface_hub.login(q.client["default_huggingface_api_token"])
             user_id = huggingface_hub.whoami()["name"]
-        except:
+        except Exception:
             user_id = ""
 
         dialog_items = [
@@ -1648,7 +1647,6 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             ),
         ]
     elif q.args["experiment/display/push_to_huggingface_submit"]:
-
         await busy_dialog(
             q=q,
             title="Exporting to HuggingFace",
