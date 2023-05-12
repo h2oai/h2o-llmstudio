@@ -120,7 +120,7 @@ jobs:
             -d \
             --file=Pipfile \
             --command=python3.10 \
-            --skip-unresolved
+            --skip-unresolved \
             --remote-repo-url=h2o-llm-studio/${{ github.ref_name }} \
             --org=h2o-llm-studio \
             --project=H2O-LLM-STUDIO/h2o-llm-studio/${{ github.ref_name }}/Pipfile
