@@ -87,7 +87,8 @@ jobs:
         run: |
           docker images
           df -H .
-          cd ~ & pwd
+          cd ~
+          pwd
           sudo du -h .
       
       - name: Cleanup
