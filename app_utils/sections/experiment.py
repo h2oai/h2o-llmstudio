@@ -1095,6 +1095,25 @@ async def experiment_display(q: Q) -> None:
         )
     ]
 
+    if status != "finished":
+        buttons += [
+            ui.button(
+                name="experiment/display/download_model",
+                label="Donwload checkpoint",
+                primary=False,
+                disabled=False,
+                tooltip=None,
+            ),
+            ui.button(
+                name="experiment/display/push_to_huggingface",
+                label="Push checkpoint to huggingface",
+                primary=False,
+                disabled=False,
+                tooltip=None,
+            ),
+        ]
+
+
     if status == "finished":
         buttons += [
             ui.button(
