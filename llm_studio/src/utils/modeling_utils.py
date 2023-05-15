@@ -395,8 +395,8 @@ def run_inference(
         else:
             output = model.forward(batch, calculate_loss=calculate_loss)
 
-        output = dataloader.dataset.postprocess_batch_predictions(  # type: ignore
-            cfg=cfg, input_batch=batch, output=output
+        output = dataloader.dataset.postprocess_batch_predictions(
+            cfg=cfg, output=output
         )
 
         for key, val in output.items():

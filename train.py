@@ -146,6 +146,7 @@ def run_eval(
 def run_train(
     cfg: Any,
     model: torch.nn.Module,
+    reward_model: Any,
     train_dataloader: torch.utils.data.DataLoader,
     val_dataloader: torch.utils.data.DataLoader,
     val_df: pd.DataFrame,
@@ -271,6 +272,17 @@ def run_train(
                     output_dict = model.forward(batch)
             else:
                 output_dict = model.forward(batch)
+
+            if cfg.training.use_rlhf:
+                output_dict = train_dataloader.dataset.postprocess_batch_predictions(
+                    cfg=cfg, output=output_dict
+                )
+                # tokenize prompt & output
+                score = reward_model.get_score(
+                    batch["raw_prompt_text"], output_dict["predicted_text"]
+                )
+                print(score)
+                # score by reward model
 
             loss = output_dict["loss"]
             if ~np.isfinite(loss.item()) and (num_updates > 20):
@@ -509,6 +521,14 @@ def run(cfg: Any) -> None:
     with torch.device(cfg.environment._device):
         model = cfg.architecture.model_class(cfg)
 
+        if cfg.training.use_rlhf:
+            logger.info("Using RLHF - Loading reward model")
+            reward_model = cfg.architecture.reward_model_class(
+                cfg.training.reward_model
+            )
+        else:
+            reward_model = None
+
         # load model weights
         if cfg.architecture.pretrained_weights != "":
             # Do not load strictly if continue training from the previous experiment
@@ -570,6 +590,7 @@ def run(cfg: Any) -> None:
     val_data, val_loss, val_metric, last_batch = run_train(
         cfg=cfg,
         model=model,
+        reward_model=reward_model,
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
         val_df=val_df,

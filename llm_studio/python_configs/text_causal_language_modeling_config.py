@@ -10,7 +10,7 @@ from llm_studio.python_configs.base import DefaultConfig
 from llm_studio.src import possible_values
 from llm_studio.src.augmentations.nlp_aug import BaseNLPAug
 from llm_studio.src.loggers import Loggers
-from llm_studio.src.losses import classification_losses
+from llm_studio.src.losses import text_causal_language_modeling_losses
 from llm_studio.src.metrics import text_causal_language_modeling_metrics
 from llm_studio.src.models import text_causal_language_modeling_model
 from llm_studio.src.nesting import Dependency
@@ -101,7 +101,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
 
 @dataclass
 class ConfigNLPCausalLMTraining(DefaultConfig):
-    loss_class: Any = classification_losses.Losses
+    loss_class: Any = text_causal_language_modeling_losses.Losses
     loss_function: str = "CrossEntropy"
     optimizer: str = "AdamW"
 
@@ -129,6 +129,9 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     evaluation_epochs: float = 1.0
     evaluate_before_training: bool = True
     train_validation_data: bool = False
+
+    use_rlhf: bool = False
+    reward_model: str = "OpenAssistant/reward-model-deberta-v3-large-v2"
 
     def __post_init__(self):
         super().__post_init__()
@@ -190,6 +193,10 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
             ["train_validation_data"],
             [Dependency(key="save_best_checkpoint", value=False, is_set=True)],
         )
+        self._nesting.add(
+            ["reward_model"],
+            [Dependency(key="use_rlhf", value=False, is_set=False)],
+        )
 
 
 @dataclass
@@ -216,6 +223,7 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 @dataclass
 class ConfigNLPCausalLMArchitecture(DefaultConfig):
     model_class: Any = text_causal_language_modeling_model.Model
+    reward_model_class: Any = text_causal_language_modeling_model.RewardModel
     pretrained: bool = True
 
     backbone_dtype: str = "float16"
@@ -238,6 +246,7 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
         )
 
         self._visibility["model_class"] = -1
+        self._visibility["reward_model_class"] = -1
         self._visibility["pretrained"] = -1
 
 

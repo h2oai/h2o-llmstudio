@@ -1,12 +1,13 @@
 import logging
 from typing import Any, Dict
-
+import numpy as np
 import torch
 from peft import LoraConfig, get_peft_model
 from torch import nn
 from transformers import AutoModelForCausalLM, StoppingCriteria, StoppingCriteriaList
 from transformers.generation.utils import GenerationMixin
 from transformers.utils import logging as transformers_logging
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import create_nlp_backbone
@@ -197,7 +198,30 @@ class Model(nn.Module):
                 assert self.cfg.training.loss_function == "CrossEntropy"
                 outputs["loss"] = output.loss
 
-        if not self.training:
+        if not self.training or self.cfg.training.use_rlhf:
             outputs["predicted_answer_ids"] = self.generate(batch, self.cfg)
 
         return outputs
+
+
+class RewardModel(nn.Module):
+    def __init__(self, reward_model="OpenAssistant/reward-model-deberta-v3-large-v2"):
+        super(RewardModel, self).__init__()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            reward_model
+        ).to(self.device)
+        self.tokenizer = AutoTokenizer.from_pretrained(reward_model)
+
+    def get_score(
+        self,
+        questions=None,
+        answers=None,
+    ):
+        scores = []
+        for question, answer in zip(questions, answers):
+            inputs = self.tokenizer(question, answer, return_tensors="pt").to(
+                self.device
+            )
+            scores.append(self.model(**inputs).logits[0].cpu().detach().item())
+        return scores

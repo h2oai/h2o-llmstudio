@@ -60,7 +60,9 @@ class CustomDataset(Dataset):
 
         self.tokenizer = get_tokenizer(cfg)
 
-        self.prompts = get_texts(df, self.cfg, separator="")
+        self.raw_prompts = get_texts(df, self.cfg, separator="")
+        self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.raw_prompts]
+
         self.answers = (
             self.df[self.cfg.dataset.answer_column].astype(str).values.tolist()
         )
@@ -75,8 +77,6 @@ class CustomDataset(Dataset):
             else:
                 self.parent_ids = self.df[self.cfg.dataset.parent_id_column].values
                 self.df_id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
-
-        self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.prompts]
 
         if self.cfg.environment._local_rank == 0:
             logger.info(f"Sample prompt: {self.prompts[0]}")
@@ -123,6 +123,11 @@ class CustomDataset(Dataset):
         """
         if isinstance(batch, torch.Tensor):
             return batch.to(device)
+        elif isinstance(batch, (list, tuple)) and all(
+            isinstance(item, str) for item in batch
+        ):
+            # Do not move list of strings to device
+            return batch
         elif isinstance(batch, collections.abc.Mapping):
             return {
                 key: CustomDataset.batch_to_device(value, device)
@@ -164,9 +169,7 @@ class CustomDataset(Dataset):
 
         return None
 
-    def postprocess_batch_predictions(
-        self, cfg: Any, input_batch: Dict, output: Dict
-    ) -> Dict:
+    def postprocess_batch_predictions(self, cfg: Any, output: Dict) -> Dict:
         predicted_text = [
             self.tokenizer.decode(ids, skip_special_tokens=True).strip()
             for ids in output["predicted_answer_ids"]
@@ -358,6 +361,8 @@ class CustomDataset(Dataset):
                 prefix="prompt_",
             )
         )
+
+        sample["raw_prompt_text"] = self.raw_prompts[idx]
 
         return sample
 
