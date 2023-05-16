@@ -1151,6 +1151,7 @@ async def chat_tab(q: Q, load_model=True):
             )
         ],
     )
+    q.client.delete_cards.add("experiment/display/chat/settings")
 
     await q.page.save()
     logger.info(torch.cuda.memory_allocated())
@@ -1204,7 +1205,6 @@ async def chat_tab(q: Q, load_model=True):
             ),
         ],
     )
-    q.client.delete_cards.add("experiment/display/chat/settings")
 
 
 async def chat_update(q: Q) -> None:
