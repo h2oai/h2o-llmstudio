@@ -39,7 +39,7 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
 
     """
 
-    if mode == "full":
+    if mode in ["full", "experiment_start"]:
         zones = [
             header_zone(),
             ui.zone(
@@ -64,33 +64,6 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                 ],
             ),
         ]
-
-    if mode == "experiment_start":
-        zones = [
-            header_zone(),
-            ui.zone(
-                "body",
-                size="1",
-                direction=ui.ZoneDirection.ROW,
-                zones=[
-                    navigation_zone(),
-                    ui.zone(
-                        "content_all",
-                        direction=ui.ZoneDirection.COLUMN,
-                        size="87.5%",
-                        zones=[
-                            ui.zone(
-                                "content",
-                                size="calc(100vh - 160px)",
-                                direction=ui.ZoneDirection.ROW,
-                            ),
-                            ui.zone("footer", size="80px"),
-                        ],
-                    ),
-                ],
-            ),
-        ]
-
     elif mode == "error":
         zones = [
             header_zone(),
@@ -155,7 +128,10 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
             ),
         ]
 
-    elif mode in ["experiment/display/charts", "experiment/compare/charts"]:
+    elif mode in [
+        "experiment/display/charts",
+        "experiment/compare/charts",
+    ]:
         zones = [
             header_zone(),
             ui.zone(
@@ -188,13 +164,46 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
         ]
 
     elif mode in [
+        "experiment/display/chat",
+    ]:
+        zones = [
+            header_zone(),
+            ui.zone(
+                "body",
+                size="1",
+                direction=ui.ZoneDirection.ROW,
+                zones=[
+                    navigation_zone(),
+                    ui.zone(
+                        "content_all",
+                        direction=ui.ZoneDirection.COLUMN,
+                        size="87.5%",
+                        zones=[
+                            ui.zone("nav2", size="60px"),
+                            ui.zone(
+                                "first",
+                                size="calc((100vh - 220px)*0.65)",
+                                direction=ui.ZoneDirection.ROW,
+                            ),
+                            ui.zone(
+                                "second",
+                                size="calc((100vh - 220px)*0.35)",
+                                direction=ui.ZoneDirection.ROW,
+                            ),
+                            ui.zone("footer", size="80px"),
+                        ],
+                    ),
+                ],
+            ),
+        ]
+
+    elif mode in [
         "experiment/compare/config",
         "experiment/display/summary",
         "experiment/display/train_data_insights",
         "experiment/display/validation_prediction_insights",
         "experiment/display/config",
         "experiment/display/logs",
-        "experiment/display/chat",
         "dataset/display/data",
         "dataset/display/visualization",
         "dataset/display/statistics",
@@ -225,7 +234,8 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                 ],
             ),
         ]
-
+    else:
+        raise ValueError(f"Unknown mode: {mode}")
     return zones
 
 

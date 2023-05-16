@@ -19,7 +19,8 @@ from app_utils.sections.dataset import (
     dataset_newexperiment,
 )
 from app_utils.sections.experiment import (
-    experiment_chat,
+    chat_tab,
+    chat_update,
     experiment_delete,
     experiment_display,
     experiment_download_logs,
@@ -53,7 +54,10 @@ async def handle(q: Q) -> None:
 
     # logger.info(f"args: {q.args}")
 
-    if not q.args["experiment/display/chat/chatbot"]:
+    if not (
+        q.args["experiment/display/chat/chatbot"]
+        or q.args["experiment/display/chat/clear_history"]
+    ):
         if "experiment/display/chat/cfg" in q.client:
             del q.client["experiment/display/chat/cfg"]
         if "experiment/display/chat/model" in q.client:
@@ -310,7 +314,9 @@ async def handle(q: Q) -> None:
             await experiment_display(q)
 
         elif q.args["experiment/display/chat/chatbot"]:
-            await experiment_chat(q)
+            await chat_update(q)
+        elif q.args["experiment/display/chat/clear_history"]:
+            await chat_tab(q, load_model=False)
 
         elif q.args["dataset/import/local_upload"]:
             await dataset_import_uploaded_file(q)
