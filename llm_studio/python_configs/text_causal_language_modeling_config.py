@@ -279,6 +279,10 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     temperature: float = 0.3
     repetition_penalty: float = 1.2
     stop_tokens: str = ""
+    top_k: int = 0
+    top_p: float = 1.0
+
+    num_history: int = 2
 
     def __post_init__(self):
         super().__post_init__()
@@ -291,8 +295,13 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._possible_values["num_beams"] = (1, 10, 1)
         self._possible_values["temperature"] = (0, 10, 0.05)
         self._possible_values["repetition_penalty"] = (1, 10, 0.05)
+        self._possible_values["top_k"] = (0, 100, 1)
+        self._possible_values["top_p"] = (0.5, 1, 0.05)
+        self._possible_values["num_history"] = (1, 50, 1)
 
         self._visibility["metric_class"] = -1
+        # possible values for num_history are only used in chatbot tab
+        self._visibility["num_history"] = -1
 
 
 @dataclass

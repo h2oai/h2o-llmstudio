@@ -157,6 +157,8 @@ class Model(nn.Module):
             num_beams=cfg.prediction.num_beams,
             temperature=float(cfg.prediction.temperature),
             repetition_penalty=float(cfg.prediction.repetition_penalty),
+            top_k=cfg.prediction.top_k,
+            top_p=float(cfg.prediction.top_p),
             stopping_criteria=stopping_criteria,
             renormalize_logits=True,
             return_dict_in_generate=False,
