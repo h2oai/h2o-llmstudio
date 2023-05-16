@@ -1147,6 +1147,7 @@ async def chat_tab(q: Q, load_model=True):
                 name="chat_settings",
                 label="Chat Settings",
                 items=[ui.progress(label="Loading the model...")],
+                expanded=True,
             )
         ],
     )
@@ -1196,7 +1197,10 @@ async def chat_tab(q: Q, load_model=True):
                 primary=True,
             ),
             ui.expander(
-                name="chat_settings", label="Chat Settings", items=option_items
+                name="chat_settings",
+                label="Chat Settings",
+                items=option_items,
+                expanded=True,
             ),
         ],
     )
