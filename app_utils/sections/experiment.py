@@ -1589,8 +1589,20 @@ async def experiment_download_model(q: Q, error: str = ""):
     if not os.path.exists(zip_path):
         logger.info(f"Creating {zip_path} on demand")
 
+        device = "cuda"
+        experiments = get_experiments(q)
+        num_running_queued = len(
+            experiments[experiments["status"].isin(["queued", "running"])]
+        )
+        if num_running_queued > 0:
+            logger.info(
+                "Preparing model on CPU as there are experiments running. "
+                "This might slow down the progress."
+            )
+            device = "cpu"
+
         cfg, model, tokenizer = load_cfg_model_tokenizer(
-            experiment_path, merge=True, device="cpu"
+            experiment_path, merge=True, device=device
         )
 
         model = unwrap_model(model)
@@ -1629,14 +1641,54 @@ async def experiment_download_model(q: Q, error: str = ""):
 
 async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
     if q.args["experiment/display/push_to_huggingface"] or error:
+        devices = ["cpu"] + [f"cuda:{idx}" for idx in range(torch.cuda.device_count())]
+        default_device = "cuda:0"
+
+        experiments = get_experiments(q)
+        num_running_queued = len(
+            experiments[experiments["status"].isin(["queued", "running"])]
+        )
+        if num_running_queued > 0:
+            default_device = "cpu"
+
+        try:
+            huggingface_hub.login(q.client["default_huggingface_api_token"])
+            user_id = huggingface_hub.whoami()["name"]
+        except Exception:
+            user_id = ""
+
         dialog_items = [
             ui.message_bar("error", error, visible=True if error else False),
+            ui.textbox(
+                name="experiment/display/push_to_huggingface/account_name",
+                label="Account Name",
+                value=user_id,
+                width="500px",
+                required=False,
+                tooltip=(
+                    "The account name on HF to push the model to. "
+                    "Leaving it empty will push it to the default user account."
+                ),
+            ),
             ui.textbox(
                 name="experiment/display/push_to_huggingface/model_name",
                 label="Model Name",
                 value=q.client["experiment/display/experiment"].name,
                 width="500px",
                 required=True,
+                tooltip="The name of the model as shown on HF.",
+            ),
+            ui.dropdown(
+                name="experiment/display/push_to_huggingface/device",
+                label="Device for preparing the model",
+                required=True,
+                value=default_device,
+                width="500px",
+                choices=[ui.choice(str(d), str(d)) for d in devices],
+                tooltip=(
+                    "The local device to prepare the model before pushing it to HF. "
+                    "CPU can be significantly slower."
+                ),
             ),
             ui.textbox(
                 name="experiment/display/push_to_huggingface/api_key",
@@ -1645,6 +1697,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
                 width="500px",
                 password=True,
                 required=True,
+                tooltip="HF API key, needs write access.",
             ),
             ui.buttons(
                 [
@@ -1660,19 +1713,24 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
     elif q.args["experiment/display/push_to_huggingface_submit"]:
         await busy_dialog(
             q=q,
-            title="Exporting to HuggingFace ",
+            title="Exporting to HuggingFace",
             text="Model size can affect the export time significantly.",
         )
 
         experiment_path = q.client["experiment/display/experiment_path"]
         cfg, model, tokenizer = load_cfg_model_tokenizer(
-            experiment_path, merge=True, device="cpu"
+            experiment_path,
+            merge=True,
+            device=q.client["experiment/display/push_to_huggingface/device"],
         )
 
         huggingface_hub.login(
             q.client["experiment/display/push_to_huggingface/api_key"]
         )
-        user_id = huggingface_hub.whoami()["name"]
+
+        user_id = q.client["experiment/display/push_to_huggingface/account_name"]
+        if user_id == "":
+            user_id = huggingface_hub.whoami()["name"]
         repo_id = (
             f"{user_id}/{q.client['experiment/display/push_to_huggingface/model_name']}"
         )
