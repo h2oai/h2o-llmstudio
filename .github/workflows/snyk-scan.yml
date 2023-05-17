@@ -9,6 +9,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   snyk_scan_test:
     if: ${{ github.event_name == 'pull_request' }} || ${{ github.event_name == 'workflow_dispatch' }}
