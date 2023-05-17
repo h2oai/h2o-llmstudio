@@ -62,4 +62,4 @@ jobs:
             --skip-unresolved \
             --remote-repo-url=h2o-llm-studio/${{ steps.extract_ref.outputs.ref }} \
             --org=h2o-llm-studio \
-            --project=H2O-LLM-STUDIO/h2o-llm-studio/${{ steps.extract_ref.outputs.ref }}/Pipfile
+            --project-name=H2O-LLM-STUDIO/h2o-llm-studio/${{ steps.extract_ref.outputs.ref }}/Pipfile
