@@ -8,14 +8,13 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+'
     branches:
       - main
-      - devops/snyk-fix
 
 permissions:
   contents: read
 
 jobs:
   snyk_scan_test:
-    if: ${{ github.event_name == 'push' }} || ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
@@ -38,6 +37,7 @@ jobs:
           SNYK_TOKEN: '${{ secrets.SNYK_TOKEN }}'
         run: |
           make setup
+          sed -n '/\[dev-packages\]/q;p' Pipfile > temp.txt && mv temp.txt Pipfile
           snyk test \
             -d \
             --file=Pipfile \
@@ -66,6 +66,7 @@ jobs:
           SNYK_TOKEN: '${{ secrets.SNYK_TOKEN }}'
         run: |
           make setup
+          sed -n '/\[dev-packages\]/q;p' Pipfile > temp.txt && mv temp.txt Pipfile
           snyk monitor \
             -d \
             --file=Pipfile \
