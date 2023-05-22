@@ -1244,7 +1244,7 @@ async def chat_update(q: Q) -> None:
         for prev_message in q.client["experiment/display/chat/messages"][
             -(cfg.prediction.num_history + 1) :
         ]:
-            if prev_message[1] is True:
+            if prev_message[1] is USER:
                 prev_message = cfg.dataset.dataset_class.parse_prompt(
                     cfg, prev_message[0]
                 )
