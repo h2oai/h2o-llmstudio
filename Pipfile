@@ -47,7 +47,7 @@ datasets = "==2.11.0"
 neptune = "==1.1.1"
 Jinja2 = "==3.1.2"
 tenacity = ">=8.2.2"
-h2o-wave = "==0.25.3"
+h2o-wave = {file = "https://github.com/h2oai/wave/releases/download/nightly/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl"}
 
 [dev-packages]
 pytest = "==7.1.3"

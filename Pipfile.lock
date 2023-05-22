@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3c3fe1e7ee24e0b39aa51834185c0bc05090d4d68eae237b2d29b53599d170c8"
+            "sha256": "7b770ad9a4bd264e0fb650a3dde65ed394194dfeba60d16f745bb8c55dda72fd"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -699,16 +699,12 @@
             "version": "==0.14.0"
         },
         "h2o-wave": {
+            "file": "https://github.com/h2oai/wave/releases/download/nightly/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl",
             "hashes": [
-                "sha256:3e33860a7b33fa97e9ae78930e51284d1466261fc72f3ce7d685a6093cf69dd6",
-                "sha256:47f35520fa78e8b7cff590dcdd878d7906c77b6c7cf74481dfa5e86a22e50a94",
-                "sha256:b36ffd6971cc1830b791bc62230aadc2baebc78fc068e5c3a6d1fa7c7e266986",
-                "sha256:c08b958b317a27d31441844d807936ff06c6a8feecdbb60d90bd3c5919d5549a",
-                "sha256:d664605c4e64b2479b8bf7715390495d3f0d679a3c597657f58c4151032bc5fe",
-                "sha256:dbae94d7b4983f67aa84b286a352cd1b990388a257db48e17c4d0d10a31e284a"
+                "sha256:89c21d425104a58322e5b6e04035acbfd9f0d7fa78b9c4bfec4b900d1db90407"
             ],
             "index": "pypi",
-            "version": "==0.25.3"
+            "version": "==nightly"
         },
         "httpcore": {
             "hashes": [
