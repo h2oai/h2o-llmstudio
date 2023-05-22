@@ -9,9 +9,12 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   snyk_scan_test:
-    if: ${{ github.event_name == 'pull_request' }} || ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
@@ -20,12 +23,21 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+      
+      - name: Check changed Deps files
+        uses: tj-actions/changed-files@v35
+        id: changed-files
+        with:
+          files: | # This will match all the files with below patterns
+            Pipfile
     
       - name: Scan python dependencies
+        if: contains(steps.changed-files.outputs.all_changed_and_modified_files, 'Pipfile')
         env:
           SNYK_TOKEN: '${{ secrets.SNYK_TOKEN }}'
         run: |
           make setup
+          sed -n '/\[dev-packages\]/q;p' Pipfile > temp.txt && mv temp.txt Pipfile
           snyk test \
             -d \
             --file=Pipfile \
@@ -43,17 +55,23 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+      
+      - name: Extract github branch/tag name
+        shell: bash
+        run: echo "ref=$(echo ${GITHUB_REF##*/})" >> $GITHUB_OUTPUT
+        id: extract_ref
         
       - name: Monitor python dependencies
         env:
           SNYK_TOKEN: '${{ secrets.SNYK_TOKEN }}'
         run: |
           make setup
+          sed -n '/\[dev-packages\]/q;p' Pipfile > temp.txt && mv temp.txt Pipfile
           snyk monitor \
             -d \
             --file=Pipfile \
             --command=python3.10 \
             --skip-unresolved \
-            --remote-repo-url=h2o-llm-studio/${{ github.ref_name }} \
+            --remote-repo-url=h2o-llm-studio/${{ steps.extract_ref.outputs.ref }} \
             --org=h2o-llm-studio \
-            --project=H2O-LLM-STUDIO/h2o-llm-studio/${{ github.ref_name }}/Pipfile
+            --project-name=H2O-LLM-STUDIO/h2o-llm-studio/${{ steps.extract_ref.outputs.ref }}/Pipfile
