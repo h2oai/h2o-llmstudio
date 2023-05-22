@@ -9,6 +9,29 @@
 
 <a href="https://user-images.githubusercontent.com/1069138/233859311-32aa1f8c-4d68-47ac-8cd9-9313171ff9f9.png"><img width="50%" alt="home" src="https://user-images.githubusercontent.com/1069138/233859311-32aa1f8c-4d68-47ac-8cd9-9313171ff9f9.png"></a><a href="https://user-images.githubusercontent.com/1069138/233859315-e6928aa7-28d2-420b-8366-bc7323c368ca.png"><img width="50%" alt="logs" src="https://user-images.githubusercontent.com/1069138/233859315-e6928aa7-28d2-420b-8366-bc7323c368ca.png"></a>
 
+## Jump to
+
+- [With H2O LLM Studio, you can](#with-h2o-llm-studio-you-can)
+- [Quickstart](#quickstart)
+- [What's New](#whats-new)
+- [Setup](#setup)
+  - [Recommended Install](#recommended-install)
+  - [Using requirements.txt](#using-requirementstxt)
+- [Run H2O LLM Studio GUI](#run-h2o-llm-studio-gui)
+- [Run H2O LLM Studio GUI using Docker from a nightly build](#run-h2o-llm-studio-gui-using-docker-from-a-nightly-build)
+- [Run H2O LLM Studio GUI by building your own Docker image](#run-h2o-llm-studio-gui-by-building-your-own-docker-image)
+- [Run H2O LLM Studio with command line interface (CLI)](#run-h2o-llm-studio-with-command-line-interface-cli)
+- [Data Format](#data-format)
+- [Training your model](#training-your-model)
+  - [Starting an experiment](#starting-an-experiment)
+  - [Monitoring the experiment](#monitoring-the-experiment)
+  - [Push to Hugging Face 🤗](#push-to-hugging-face-🤗)
+  - [Compare experiments](#compare-experiments)
+- [Example: Run on OASST data via CLI](#example-run-on-oasst-data-via-cli)
+- [Model checkpoints](#model-checkpoints)
+- [FAQ](#faq)
+- [License](#license)
+
 ## With H2O LLM Studio, you can
 
 - easily and effectively fine-tune LLMs **without the need for any coding experience**.
@@ -178,7 +201,7 @@ During an experiment you can adapt the data representation with the following se
 - **Answer Column:** The column in the dataset containing the expected output.
 - **Parent Id Column:** An optional column specifying the parent id to be used for chained conversations. The value of this column needs to match an additional column with the name `id`. If provided, the prompt will be concatenated after preceeding parent rows.
 
-### Example data:
+### Example data
 
 We provide an example dataset (converted dataset from [OpenAssistant/oasst1](https://huggingface.co/datasets/OpenAssistant/oasst1))
 that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=127047926). It is recommended to use `train_full.csv` for training. This dataset is also downloaded and prepared by default when first starting the GUI. Multiple dataframes can be uploaded into a single dataset by uploading a `.zip` archive.
@@ -282,6 +305,20 @@ python prompt.py -e examples/output_oasst1
 ## Model checkpoints
 
 All open-source datasets and models are posted on [H2O.ai's Hugging Face page](https://huggingface.co/h2oai/) and our [H2OGPT](https://github.com/h2oai/h2ogpt) repository.
+
+## FAQ
+
+> ❓ How much data is generally required to fine-tune a model?
+
+There is no clear answer. As a rule of thumb, 1000 to 50000 samples of conversational data should be enough. Quality and diversity is very important. Make sure to try training on a subsample of data using the "sample" parameter to see how big the impact of the dataset size is. Recent [studies](https://arxiv.org/abs/2305.11206) suggest that less data is needed for larger foundation models.
+
+> ❓ Is there any recommendations for which backbone to use? For example, are some better for certain types of tasks?
+
+The majority of the LLM backbones are trained on a very similar corpus of data. The main difference is the size of the model and the number of parameters. Usually, the larger the model, the better they are. The larger models also take longer to train. We recommend starting with the smallest model and then increasing the size if the performance is not satisfactory. If you are looking to train for tasks that are not directly english question answering, it is also a good idea to look for specialized LLM backbones.
+
+> ❓ What if my data is not in question and answer form, I just have documents? How can I fine-tune the LLM model?
+
+To train a chatbot style model, you need to convert your data into a question and answer format.
 
 ## License
 
