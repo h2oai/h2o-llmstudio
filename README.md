@@ -56,6 +56,22 @@ sudo apt install python3.10
 sudo apt-get install python3.10-distutils
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 ```
+
+#### Installing NVIDIA Drivers (if required)
+If deploying on a 'bare metal' machine running Ubuntu, one may need to install the required Nvidia drivers and CUDA. 
+The following commands show how to retrieve the latest drivers for a machine runnung Ubuntu 20.04 as an example.
+One can update the following based on their OS. 
+
+```bash
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://developer.download.nvidia.com/compute/cuda/11.4.3/local_installers/cuda-repo-ubuntu2004-11-4-local_11.4.3-470.82.01-1_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu2004-11-4-local_11.4.3-470.82.01-1_amd64.deb
+sudo apt-key add /var/cuda-repo-ubuntu2004-11-4-local/7fa2af80.pub
+sudo apt-get -y update
+sudo apt-get -y install cuda
+```
+
 #### Create virtual environment (pipenv)
 The following command will create a virtual environment using pipenv and will install the dependencies using pipenv:
 ```bash
