@@ -61,6 +61,10 @@ from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
 
 logger = logging.getLogger(__name__)
 
+USER_ON_LEFT = False
+USER = USER_ON_LEFT
+BOT = not USER_ON_LEFT
+
 
 async def experiment_start(q: Q) -> None:
     """Display experiment start cards."""
@@ -1130,9 +1134,11 @@ async def chat_tab(q: Q, load_model=True):
     else:
         loading_message = "Chat History cleaned. How can I help you?"
 
-    q.client.chat_msg_num = "1"
+    q.client.chat_msg_num = "0"
     cyclic_buffer = data(
-        fields="msg fromUser", size=-500, rows={"1": [loading_message, False]}
+        fields="msg fromUser",
+        size=-500,
+        rows={q.client.chat_msg_num: [loading_message, BOT]},
     )
     q.page["experiment/display/chat"] = ui.chatbot_card(
         box="first", data=cyclic_buffer, name="experiment/display/chat/chatbot"
@@ -1181,7 +1187,7 @@ async def chat_tab(q: Q, load_model=True):
     logger.info(torch.cuda.memory_allocated())
     q.page["experiment/display/chat"].data[q.client.chat_msg_num] = [
         initial_message,
-        False,
+        BOT,
     ]
 
     option_items = get_ui_elements(
@@ -1221,12 +1227,12 @@ async def chat_update(q: Q) -> None:
 
     prompt = q.client["experiment/display/chat/chatbot"]
 
-    message = [prompt, True]
+    message = [prompt, USER]
     q.client["experiment/display/chat/messages"].append(message)
     q.client.chat_msg_num = q.client.chat_msg_num + "1"
     q.page["experiment/display/chat"].data[q.client.chat_msg_num] = message
     q.client.chat_msg_num = q.client.chat_msg_num + "1"
-    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = ["...", False]
+    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = ["...", BOT]
     await q.page.save()
 
     cfg = q.client["experiment/display/chat/cfg"]
@@ -1238,7 +1244,7 @@ async def chat_update(q: Q) -> None:
         for prev_message in q.client["experiment/display/chat/messages"][
             -(cfg.prediction.num_history + 1) :
         ]:
-            if prev_message[1] is True:
+            if prev_message[1] is USER:
                 prev_message = cfg.dataset.dataset_class.parse_prompt(
                     cfg, prev_message[0]
                 )
@@ -1270,7 +1276,7 @@ async def chat_update(q: Q) -> None:
 
     output = cfg.dataset.dataset_class.clean_output(output, [full_prompt], cfg)
 
-    message = [output["predicted_text"][0], False]
+    message = [output["predicted_text"][0], BOT]
     q.client["experiment/display/chat/messages"].append(message)
     q.page["experiment/display/chat"].data[q.client.chat_msg_num] = message
 
