@@ -526,6 +526,7 @@ def run(cfg: Any) -> None:
             reward_model = cfg.architecture.reward_model_class(
                 cfg.training.reward_model
             )
+            reward_model.eval()
         else:
             reward_model = None
 

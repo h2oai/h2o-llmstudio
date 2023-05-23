@@ -115,6 +115,14 @@ class Model(nn.Module):
             self.backbone = get_peft_model(self.backbone, lora_config)
             self.backbone.print_trainable_parameters()
 
+        if self.cfg.training.use_rlhf:
+            logger.info("Loading reference model for RLHF")
+            self.ref_model = create_nlp_backbone(
+                cfg, model_class=AutoModelForCausalLM, kwargs=kwargs
+            )
+            self.ref_model.eval()
+            self.ref_model.requires_grad_(False)
+
         self.loss_fn = self.cfg.training.loss_class.get(self.cfg.training.loss_function)
 
     def generate(self, batch: Dict, cfg: Any):
@@ -135,6 +143,8 @@ class Model(nn.Module):
 
         # Adding GenerationMixin type annotation for faster lookup
         generation_function: GenerationMixin.generate = self.backbone.generate
+        if self.cfg.training.use_rlhf:
+            ref_generation_function: GenerationMixin.generate = self.ref_model.generate
 
         verbosity = transformers_logging.get_verbosity()
         stopping_criteria = StoppingCriteriaList(
@@ -164,12 +174,34 @@ class Model(nn.Module):
             return_dict_in_generate=False,
             use_cache=True,
         )
+        if self.cfg.training.use_rlhf:
+            ref_output = ref_generation_function(
+                inputs=batch["prompt_input_ids"],
+                attention_mask=batch["prompt_attention_mask"],
+                pad_token_id=pad_token_id,
+                min_new_tokens=cfg.prediction.min_length_inference,
+                max_new_tokens=cfg.prediction.max_length_inference,
+                do_sample=cfg.prediction.do_sample,
+                num_beams=cfg.prediction.num_beams,
+                temperature=float(cfg.prediction.temperature),
+                repetition_penalty=float(cfg.prediction.repetition_penalty),
+                top_k=cfg.prediction.top_k,
+                top_p=float(cfg.prediction.top_p),
+                stopping_criteria=stopping_criteria,
+                renormalize_logits=True,
+                return_dict_in_generate=False,
+                use_cache=True,
+            )
         transformers_logging.set_verbosity(verbosity)
 
         # Mask the prompt tokens
         output[:, : batch["prompt_input_ids"].shape[1]] = pad_token_id
+        if self.cfg.training.use_rlhf:
+            ref_output[:, : batch["prompt_input_ids"].shape[1]] = pad_token_id
+        else:
+            ref_output = None
 
-        return output
+        return output, ref_output
 
     def forward(
         self,
@@ -201,7 +233,11 @@ class Model(nn.Module):
                 outputs["loss"] = output.loss
 
         if not self.training or self.cfg.training.use_rlhf:
-            outputs["predicted_answer_ids"] = self.generate(batch, self.cfg)
+            with torch.no_grad():
+                (
+                    outputs["predicted_answer_ids"],
+                    outputs["ref_predicted_answer_ids"],
+                ) = self.generate(batch, self.cfg)
 
         return outputs
 
