@@ -175,18 +175,7 @@ class CustomDataset(Dataset):
             for ids in output["predicted_answer_ids"]
         ]
         output["predicted_text"] = np.array(predicted_text)
-
-        if cfg.training.use_rlhf:
-            predicted_text = [
-                self.tokenizer.decode(ids, skip_special_tokens=True).strip()
-                for ids in output["ref_predicted_answer_ids"]
-            ]
-            output["ref_predicted_text"] = np.array(predicted_text)
-
-        print(output["predicted_text"])
-        print(output["ref_predicted_text"])
-
-        # del output["predicted_answer_ids"]
+        del output["predicted_answer_ids"]
 
         return output
 
