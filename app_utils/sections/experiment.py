@@ -1679,7 +1679,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             ui.textbox(
                 name="experiment/display/push_to_huggingface/model_name",
                 label="Model Name",
-                value=q.client["experiment/display/experiment"].name,
+                value=q.client["experiment/display/experiment"].name.replace(".", "-"),
                 width="500px",
                 required=True,
                 tooltip="The name of the model as shown on HF.",
@@ -1737,9 +1737,10 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         user_id = q.client["experiment/display/push_to_huggingface/account_name"]
         if user_id == "":
             user_id = huggingface_hub.whoami()["name"]
-        repo_id = (
-            f"{user_id}/{q.client['experiment/display/push_to_huggingface/model_name']}"
-        )
+        exp_name = q.client[
+            "experiment/display/push_to_huggingface/model_name"
+        ].replace(".", "-")
+        repo_id = f"{user_id}/{exp_name}"
 
         # push tokenizer to hub
         tokenizer.push_to_hub(
