@@ -261,9 +261,6 @@ class Model(nn.Module):
             last_hidden_state = output.hidden_states[-1]
             lm_logits = output.logits
 
-            # if last_hidden_state.device != self.v_head.summary.weight.device:
-            #     last_hidden_state = last_hidden_state.to(self.v_head.summary.weight.device)
-
             value = self.v_head(last_hidden_state).squeeze(-1)
 
             # force upcast in fp32 if logits are in half-precision
