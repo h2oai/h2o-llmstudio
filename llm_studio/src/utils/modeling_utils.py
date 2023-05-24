@@ -519,4 +519,4 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
 
-    return backbone
+    return backbone, config

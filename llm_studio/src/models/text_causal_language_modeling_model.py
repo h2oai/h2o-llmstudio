@@ -1,6 +1,6 @@
 import logging
 from typing import Any, Dict
-import numpy as np
+
 import torch
 from peft import LoraConfig, get_peft_model
 from torch import nn
@@ -13,6 +13,44 @@ from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import create_nlp_backbone
 
 logger = logging.getLogger(__name__)
+
+
+class ValueHead(nn.Module):
+    """
+    The ValueHead class implements a head for GPT2 that returns a scalar for each
+    output token.
+    """
+
+    def __init__(self, config):
+        super().__init__()
+        if not hasattr(config, "summary_dropout_prob"):
+            summary_dropout_prob = 0.1
+        else:
+            summary_dropout_prob = config.summary_dropout_prob
+
+        self.dropout = (
+            nn.Dropout(summary_dropout_prob) if summary_dropout_prob else nn.Identity()
+        )
+
+        # some models such as OPT have a projection layer before the word embeddings
+        # e.g. OPT-350m
+        if hasattr(config, "word_embed_proj_dim"):
+            hidden_size = config.word_embed_proj_dim
+        else:
+            hidden_size = config.hidden_size
+
+        self.summary = nn.Linear(hidden_size, 1)
+
+    def forward(self, hidden_states):
+        output = self.dropout(hidden_states)
+
+        # For now force upcast in fp32 if needed. Let's keep the
+        # output in fp32 for numerical stability.
+        if output.dtype != self.summary.weight.dtype:
+            output = output.to(self.summary.weight.dtype)
+
+        output = self.summary(output)
+        return output
 
 
 class TokenStoppingCriteria(StoppingCriteria):
@@ -95,7 +133,7 @@ class Model(nn.Module):
         self.cfg = cfg
         kwargs = {}
 
-        self.backbone = create_nlp_backbone(
+        self.backbone, self.backbone_config = create_nlp_backbone(
             cfg, model_class=AutoModelForCausalLM, kwargs=kwargs
         )
 
@@ -117,11 +155,16 @@ class Model(nn.Module):
 
         if self.cfg.training.use_rlhf:
             logger.info("Loading reference model for RLHF")
-            self.ref_model = create_nlp_backbone(
+            self.ref_model, self.ref_model_config = create_nlp_backbone(
                 cfg, model_class=AutoModelForCausalLM, kwargs=kwargs
             )
             self.ref_model.eval()
             self.ref_model.requires_grad_(False)
+
+            self.v_head = ValueHead(self.backbone_config)
+            # random init by default
+            self.v_head.summary.weight.data.normal_(mean=0.0, std=0.2)
+            self.v_head.summary.bias.data.zero_()
 
         self.loss_fn = self.cfg.training.loss_class.get(self.cfg.training.loss_function)
 
@@ -186,6 +229,11 @@ class Model(nn.Module):
     ) -> Dict:
         outputs: Dict = {}
 
+        kwargs = {}
+
+        if self.cfg.training.use_rlhf:
+            kwargs["output_hidden_states"] = True
+
         # model's forward only works with labels
         if "labels" in batch:
             batch = batch_padding(
@@ -203,10 +251,27 @@ class Model(nn.Module):
                 input_ids=batch["input_ids"],
                 attention_mask=batch["attention_mask"],
                 labels=batch["labels"],
+                **kwargs,
             )
             if calculate_loss:
                 assert self.cfg.training.loss_function == "CrossEntropy"
                 outputs["loss"] = output.loss
+
+        if self.cfg.training.use_rlhf:
+            last_hidden_state = output.hidden_states[-1]
+            lm_logits = output.logits
+
+            # if last_hidden_state.device != self.v_head.summary.weight.device:
+            #     last_hidden_state = last_hidden_state.to(self.v_head.summary.weight.device)
+
+            value = self.v_head(last_hidden_state).squeeze(-1)
+
+            # force upcast in fp32 if logits are in half-precision
+            if lm_logits.dtype != torch.float32:
+                lm_logits = lm_logits.float()
+
+            outputs["value"] = value
+            outputs["logits"] = lm_logits
 
         if not self.training or self.cfg.training.use_rlhf:
             outputs["predicted_answer_ids"] = self.generate(batch, self.cfg)

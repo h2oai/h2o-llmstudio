@@ -289,7 +289,11 @@ class CustomDataset(Dataset):
                 ],
                 dim=0,
             )
-        return [prompt_encodings, answer_encodings]
+
+        if self.cfg.training.use_rlhf and self.mode == "train":
+            return [prompt_encodings]
+        else:
+            return [prompt_encodings, answer_encodings]
 
     def _read_data(self, idx: int, sample: Dict) -> Dict:
         """Reads a single text observation."""
@@ -317,12 +321,18 @@ class CustomDataset(Dataset):
             samples.insert(0, self._get_sample(int(rnd_idx)))
 
         input_ids = torch.cat([torch.cat(sample) for sample in samples])
-        prompt_mask = torch.cat(
-            [
-                torch.cat([torch.ones_like(sample[0]), torch.zeros_like(sample[1])])
-                for sample in samples
-            ]
-        ).to(torch.bool)
+
+        if self.cfg.training.use_rlhf and self.mode == "train":
+            prompt_mask = torch.cat(
+                [torch.ones_like(sample[0]) for sample in samples]
+            ).to(torch.bool)
+        else:
+            prompt_mask = torch.cat(
+                [
+                    torch.cat([torch.ones_like(sample[0]), torch.zeros_like(sample[1])])
+                    for sample in samples
+                ]
+            ).to(torch.bool)
         attention_mask = torch.ones_like(input_ids)
 
         labels = input_ids.clone()
@@ -348,7 +358,8 @@ class CustomDataset(Dataset):
             )
         )
 
-        samples[-1][1] = torch.empty(0)
+        if not self.cfg.training.use_rlhf:
+            samples[-1][1] = torch.empty(0)
         prompt_input_ids = torch.cat([torch.cat(sample) for sample in samples])
         prompt_attention_mask = torch.ones_like(prompt_input_ids)
 
