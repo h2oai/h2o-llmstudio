@@ -1,4 +1,5 @@
 import gc
+import glob
 import logging
 import os
 import shutil
@@ -1617,11 +1618,15 @@ async def experiment_download_model(q: Q, error: str = ""):
         model.backbone.save_pretrained(checkpoint_path)
         tokenizer.save_pretrained(checkpoint_path)
 
+        card = get_model_card(cfg, model, repo_id="<path_to_local_folder>")
+        card.save(os.path.join(experiment_path, "model_card.md"))
+
         zf = zipfile.ZipFile(zip_path, "w")
 
         FILES_TO_PUSH = [
-            "pytorch_model.bin",
             "vocab.json",
+            "sentencepiece.bpe.model",
+            "bpe_encoder.bin",
             "tokenizer_config.json",
             "tokenizer.json",
             "special_tokens_map.json",
@@ -1629,10 +1634,18 @@ async def experiment_download_model(q: Q, error: str = ""):
             "generation_config.json",
             "config.json",
             "added_tokens.json",
+            "model_card.md",
         ]
 
         for file in FILES_TO_PUSH:
-            add_file_to_zip(zf=zf, path=f"{experiment_path}/{file}")
+            path = os.path.join(experiment_path, file)
+            if os.path.isfile(path):
+                add_file_to_zip(zf=zf, path=path)
+
+        # Add model weight files
+        weight_files = glob.glob(os.path.join(checkpoint_path, "pytorch_model*.bin"))
+        for file in weight_files:
+            add_file_to_zip(zf=zf, path=file)
 
         zf.close()
 
@@ -1749,31 +1762,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         )
 
         # push model card to hub
-        card_data = huggingface_hub.ModelCardData(
-            language="en",
-            library_name="transformers",
-            tags=["gpt", "llm", "large language model", "h2o-llmstudio"],
-        )
-        card = huggingface_hub.ModelCard.from_template(
-            card_data,
-            template_path="model_card_template.md",
-            base_model=cfg.llm_backbone,  # will be replaced in template if it exists
-            repo_id=repo_id,
-            model_architecture=model.backbone.__repr__(),
-            config=cfg.__repr__(),
-            use_fast=cfg.tokenizer.use_fast,
-            min_new_tokens=cfg.prediction.min_length_inference,
-            max_new_tokens=cfg.prediction.max_length_inference,
-            do_sample=cfg.prediction.do_sample,
-            num_beams=cfg.prediction.num_beams,
-            temperature=cfg.prediction.temperature,
-            repetition_penalty=cfg.prediction.repetition_penalty,
-            text_prompt_start=cfg.dataset.text_prompt_start,
-            text_answer_separator=cfg.dataset.text_answer_separator,
-            end_of_sentence=cfg._tokenizer_eos_token
-            if cfg.dataset.add_eos_token_to_prompt
-            else "",
-        )
+        card = get_model_card(cfg, model, repo_id)
         card.push_to_hub(
             repo_id=repo_id,
             repo_type="model",
@@ -1850,6 +1839,35 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
 
     q.page["meta"].dialog = dialog
     q.client["keep_meta"] = True
+
+
+def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
+    card_data = huggingface_hub.ModelCardData(
+        language="en",
+        library_name="transformers",
+        tags=["gpt", "llm", "large language model", "h2o-llmstudio"],
+    )
+    card = huggingface_hub.ModelCard.from_template(
+        card_data,
+        template_path="model_card_template.md",
+        base_model=cfg.llm_backbone,  # will be replaced in template if it exists
+        repo_id=repo_id,
+        model_architecture=model.backbone.__repr__(),
+        config=cfg.__repr__(),
+        use_fast=cfg.tokenizer.use_fast,
+        min_new_tokens=cfg.prediction.min_length_inference,
+        max_new_tokens=cfg.prediction.max_length_inference,
+        do_sample=cfg.prediction.do_sample,
+        num_beams=cfg.prediction.num_beams,
+        temperature=cfg.prediction.temperature,
+        repetition_penalty=cfg.prediction.repetition_penalty,
+        text_prompt_start=cfg.dataset.text_prompt_start,
+        text_answer_separator=cfg.dataset.text_answer_separator,
+        end_of_sentence=cfg._tokenizer_eos_token
+        if cfg.dataset.add_eos_token_to_prompt
+        else "",
+    )
+    return card
 
 
 def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
