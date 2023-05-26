@@ -501,9 +501,9 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         backbone.resize_token_embeddings(cfg.tokenizer._vocab_length)
 
     if cfg.training.lora:
-        backbone = prepare_model_for_kbit_training(backbone,
-                                                   use_gradient_checkpointing=cfg.architecture.gradient_checkpointing
-                                                   )
+        backbone = prepare_model_for_kbit_training(
+            backbone, use_gradient_checkpointing=cfg.architecture.gradient_checkpointing
+        )
     else:
         if cfg.architecture.backbone_dtype != "float32":
             if cfg.environment.mixed_precision:

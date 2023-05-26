@@ -15,11 +15,13 @@ pipenv:
 setup: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
 	$(PIPENV_PIP) install https://github.com/h2oai/wave/releases/download/nightly/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl --force-reinstall
+	$(PIPENV_PIP) install git+https://github.com/huggingface/transformers.git@9d73b922692776d1cf268b8c95fd90c68e561add --force-reinstall
 
 .PHONY: setup-dev
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
 	$(PIPENV_PIP) install https://github.com/h2oai/wave/releases/download/nightly/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl --force-reinstall
+	$(PIPENV_PIP) install git+https://github.com/huggingface/transformers.git@9d73b922692776d1cf268b8c95fd90c68e561add --force-reinstall
 
 .PHONY: export-requirements
 export-requirements: pipenv
