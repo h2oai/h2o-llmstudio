@@ -24,7 +24,7 @@ def get_artifact_path_path(
         Path to the zip file with experiment artifact
     """
 
-    return f"{experiment_path}/{artifact_type}_{experiment_name}.zip"
+    return os.path.join(experiment_path, f"{artifact_type}_{experiment_name}.zip")
 
 
 def get_predictions_path(experiment_name: str, experiment_path: str):

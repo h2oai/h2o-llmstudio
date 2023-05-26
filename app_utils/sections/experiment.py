@@ -1,4 +1,5 @@
 import gc
+import glob
 import logging
 import os
 import shutil
@@ -60,6 +61,10 @@ from llm_studio.src.utils.modeling_utils import load_checkpoint, unwrap_model
 from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
 
 logger = logging.getLogger(__name__)
+
+USER_ON_LEFT = False
+USER = USER_ON_LEFT
+BOT = not USER_ON_LEFT
 
 
 async def experiment_start(q: Q) -> None:
@@ -1130,9 +1135,11 @@ async def chat_tab(q: Q, load_model=True):
     else:
         loading_message = "Chat History cleaned. How can I help you?"
 
-    q.client.chat_msg_num = "1"
+    q.client.chat_msg_num = "0"
     cyclic_buffer = data(
-        fields="msg fromUser", size=-500, rows={"1": [loading_message, False]}
+        fields="msg fromUser",
+        size=-500,
+        rows={q.client.chat_msg_num: [loading_message, BOT]},
     )
     q.page["experiment/display/chat"] = ui.chatbot_card(
         box="first", data=cyclic_buffer, name="experiment/display/chat/chatbot"
@@ -1181,7 +1188,7 @@ async def chat_tab(q: Q, load_model=True):
     logger.info(torch.cuda.memory_allocated())
     q.page["experiment/display/chat"].data[q.client.chat_msg_num] = [
         initial_message,
-        False,
+        BOT,
     ]
 
     option_items = get_ui_elements(
@@ -1221,12 +1228,12 @@ async def chat_update(q: Q) -> None:
 
     prompt = q.client["experiment/display/chat/chatbot"]
 
-    message = [prompt, True]
+    message = [prompt, USER]
     q.client["experiment/display/chat/messages"].append(message)
     q.client.chat_msg_num = q.client.chat_msg_num + "1"
     q.page["experiment/display/chat"].data[q.client.chat_msg_num] = message
     q.client.chat_msg_num = q.client.chat_msg_num + "1"
-    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = ["...", False]
+    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = ["...", BOT]
     await q.page.save()
 
     cfg = q.client["experiment/display/chat/cfg"]
@@ -1238,7 +1245,7 @@ async def chat_update(q: Q) -> None:
         for prev_message in q.client["experiment/display/chat/messages"][
             -(cfg.prediction.num_history + 1) :
         ]:
-            if prev_message[1] is True:
+            if prev_message[1] is USER:
                 prev_message = cfg.dataset.dataset_class.parse_prompt(
                     cfg, prev_message[0]
                 )
@@ -1270,7 +1277,7 @@ async def chat_update(q: Q) -> None:
 
     output = cfg.dataset.dataset_class.clean_output(output, [full_prompt], cfg)
 
-    message = [output["predicted_text"][0], False]
+    message = [output["predicted_text"][0], BOT]
     q.client["experiment/display/chat/messages"].append(message)
     q.page["experiment/display/chat"].data[q.client.chat_msg_num] = message
 
@@ -1611,11 +1618,15 @@ async def experiment_download_model(q: Q, error: str = ""):
         model.backbone.save_pretrained(checkpoint_path)
         tokenizer.save_pretrained(checkpoint_path)
 
+        card = get_model_card(cfg, model, repo_id="<path_to_local_folder>")
+        card.save(os.path.join(experiment_path, "model_card.md"))
+
         zf = zipfile.ZipFile(zip_path, "w")
 
         FILES_TO_PUSH = [
-            "pytorch_model.bin",
             "vocab.json",
+            "sentencepiece.bpe.model",
+            "bpe_encoder.bin",
             "tokenizer_config.json",
             "tokenizer.json",
             "special_tokens_map.json",
@@ -1623,10 +1634,18 @@ async def experiment_download_model(q: Q, error: str = ""):
             "generation_config.json",
             "config.json",
             "added_tokens.json",
+            "model_card.md",
         ]
 
         for file in FILES_TO_PUSH:
-            add_file_to_zip(zf=zf, path=f"{experiment_path}/{file}")
+            path = os.path.join(experiment_path, file)
+            if os.path.isfile(path):
+                add_file_to_zip(zf=zf, path=path)
+
+        # Add model weight files
+        weight_files = glob.glob(os.path.join(checkpoint_path, "pytorch_model*.*"))
+        for file in weight_files:
+            add_file_to_zip(zf=zf, path=file)
 
         zf.close()
 
@@ -1673,7 +1692,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             ui.textbox(
                 name="experiment/display/push_to_huggingface/model_name",
                 label="Model Name",
-                value=q.client["experiment/display/experiment"].name,
+                value=q.client["experiment/display/experiment"].name.replace(".", "-"),
                 width="500px",
                 required=True,
                 tooltip="The name of the model as shown on HF.",
@@ -1731,9 +1750,10 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         user_id = q.client["experiment/display/push_to_huggingface/account_name"]
         if user_id == "":
             user_id = huggingface_hub.whoami()["name"]
-        repo_id = (
-            f"{user_id}/{q.client['experiment/display/push_to_huggingface/model_name']}"
-        )
+        exp_name = q.client[
+            "experiment/display/push_to_huggingface/model_name"
+        ].replace(".", "-")
+        repo_id = f"{user_id}/{exp_name}"
 
         # push tokenizer to hub
         tokenizer.push_to_hub(
@@ -1742,31 +1762,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         )
 
         # push model card to hub
-        card_data = huggingface_hub.ModelCardData(
-            language="en",
-            library_name="transformers",
-            tags=["gpt", "llm", "large language model", "h2o-llmstudio"],
-        )
-        card = huggingface_hub.ModelCard.from_template(
-            card_data,
-            template_path="model_card_template.md",
-            base_model=cfg.llm_backbone,  # will be replaced in template if it exists
-            repo_id=repo_id,
-            model_architecture=model.backbone.__repr__(),
-            config=cfg.__repr__(),
-            use_fast=cfg.tokenizer.use_fast,
-            min_new_tokens=cfg.prediction.min_length_inference,
-            max_new_tokens=cfg.prediction.max_length_inference,
-            do_sample=cfg.prediction.do_sample,
-            num_beams=cfg.prediction.num_beams,
-            temperature=cfg.prediction.temperature,
-            repetition_penalty=cfg.prediction.repetition_penalty,
-            text_prompt_start=cfg.dataset.text_prompt_start,
-            text_answer_separator=cfg.dataset.text_answer_separator,
-            end_of_sentence=cfg._tokenizer_eos_token
-            if cfg.dataset.add_eos_token_to_prompt
-            else "",
-        )
+        card = get_model_card(cfg, model, repo_id)
         card.push_to_hub(
             repo_id=repo_id,
             repo_type="model",
@@ -1843,6 +1839,35 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
 
     q.page["meta"].dialog = dialog
     q.client["keep_meta"] = True
+
+
+def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
+    card_data = huggingface_hub.ModelCardData(
+        language="en",
+        library_name="transformers",
+        tags=["gpt", "llm", "large language model", "h2o-llmstudio"],
+    )
+    card = huggingface_hub.ModelCard.from_template(
+        card_data,
+        template_path="model_card_template.md",
+        base_model=cfg.llm_backbone,  # will be replaced in template if it exists
+        repo_id=repo_id,
+        model_architecture=model.backbone.__repr__(),
+        config=cfg.__repr__(),
+        use_fast=cfg.tokenizer.use_fast,
+        min_new_tokens=cfg.prediction.min_length_inference,
+        max_new_tokens=cfg.prediction.max_length_inference,
+        do_sample=cfg.prediction.do_sample,
+        num_beams=cfg.prediction.num_beams,
+        temperature=cfg.prediction.temperature,
+        repetition_penalty=cfg.prediction.repetition_penalty,
+        text_prompt_start=cfg.dataset.text_prompt_start,
+        text_answer_separator=cfg.dataset.text_answer_separator,
+        end_of_sentence=cfg._tokenizer_eos_token
+        if cfg.dataset.add_eos_token_to_prompt
+        else "",
+    )
+    return card
 
 
 def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
