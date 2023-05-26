@@ -1643,7 +1643,7 @@ async def experiment_download_model(q: Q, error: str = ""):
                 add_file_to_zip(zf=zf, path=path)
 
         # Add model weight files
-        weight_files = glob.glob(os.path.join(checkpoint_path, "pytorch_model*.bin"))
+        weight_files = glob.glob(os.path.join(checkpoint_path, "pytorch_model*.*"))
         for file in weight_files:
             add_file_to_zip(zf=zf, path=file)
 
