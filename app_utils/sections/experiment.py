@@ -1470,8 +1470,8 @@ async def experiment_artifact_build_error_dialog(q: Q, error: str):
 
 async def experiment_download_artifact(
     q: Q,
-    get_artifact_path_fn: Callable[[str, str, str], str],
-    save_artifact_fn: Callable[[str, str, str, str], str],
+    get_artifact_path_fn: Callable[[str, str], str],
+    save_artifact_fn: Callable[[str, str, str], str],
     additional_log: Optional[str] = "",
     min_disk_space: Optional[float] = 0.0,
 ):
@@ -1883,7 +1883,11 @@ def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
     gc.collect()
     torch.cuda.empty_cache()
 
-    if merge and cfg.training.lora and cfg.architecture.backbone_dtype == "int8":
+    if (
+        merge
+        and cfg.training.lora
+        and cfg.architecture.backbone_dtype in ("int4", "int8")
+    ):
         logger.info("Loading backbone in float16 for merging LORA weights.")
         cfg.architecture.backbone_dtype = "float16"
         cfg.architecture.pretrained = True

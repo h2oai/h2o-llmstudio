@@ -66,16 +66,19 @@ def load_model_weights(
     orig_num_items = len(model_weights)
     model_state_dict = model.state_dict()
 
-    # needed to load models trained in int8 with other dtypes
+    # needed to load models trained in int4/int8 with other dtypes
     model_weights = {
         k: v
-        if not (v.dtype is torch.int8 and cfg.architecture.backbone_dtype != "int8")
+        if not (
+            (v.dtype is torch.int8 or v.dtype is torch.int4)
+            and cfg.architecture.backbone_dtype not in ("int4", "int8")
+        )
         else model_state_dict[k]
         for k, v in model_weights.items()
-        if not ("SCB" in k and cfg.architecture.backbone_dtype != "int8")
+        if not ("SCB" in k and cfg.architecture.backbone_dtype not in ("int4", "int8"))
     }
 
-    # Need to ignore int8 weights so undo strict loading requirement
+    # Need to ignore int4/int8 weights so undo strict loading requirement
     if len(model_weights) != orig_num_items:
         strict = False
 
@@ -483,12 +486,11 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         cfg.architecture.pretrained = True
     elif cfg.architecture.backbone_dtype == "int4":
         kwargs["device_map"] = {"": cfg.environment._device}
-        kwargs["torch_dtype"] = torch.float16
+        kwargs["torch_dtype"] = torch.bfloat16
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
             bnb_4bit_quant_type="nf4",
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_compute_dtype=torch.bfloat16
         )
         # need to force pretrained
         cfg.architecture.pretrained = True
