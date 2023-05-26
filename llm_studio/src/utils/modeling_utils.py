@@ -71,7 +71,7 @@ def load_model_weights(
     model_weights = {
         k: v
         if not (
-            (v.dtype is torch.int8 or v.dtype is torch.int4)
+            v.dtype is torch.int8
             and cfg.architecture.backbone_dtype not in ("int4", "int8")
         )
         else model_state_dict[k]
@@ -460,8 +460,6 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     quantization_config = None
     if cfg.architecture.backbone_dtype == "int8":
         kwargs["device_map"] = {"": cfg.environment._device}
-        kwargs["torch_dtype"] = torch.float16
-        kwargs["load_in_8bit"] = True
         quantization_config = BitsAndBytesConfig(
             load_in_8bit=True,
             llm_int8_threshold=0.0,
@@ -470,7 +468,6 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         cfg.architecture.pretrained = True
     elif cfg.architecture.backbone_dtype == "int4":
         kwargs["device_map"] = {"": cfg.environment._device}
-        kwargs["torch_dtype"] = torch.bfloat16
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.bfloat16,
@@ -480,7 +477,8 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         cfg.architecture.pretrained = True
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
-    logger.info("dtype: {dtype}".format(dtype=kwargs["torch_dtype"]))
+
+    logger.info(f"Using {cfg.architecture.backbone_dtype} for backbone")
 
     if cfg.architecture.gradient_checkpointing:
         config.use_cache = False
