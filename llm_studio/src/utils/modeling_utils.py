@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, Tuple
 
 import coolname
 import torch
+from peft import prepare_model_for_kbit_training
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
     MixedPrecision,
@@ -445,23 +446,6 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
     val_df.to_csv(csv_preds_name, index=False)
 
 
-def prepare_model_for_lora_training(model, layer_norm_names=("layer_norm",)):
-    loaded_in_8bit = getattr(model, "is_loaded_in_8bit", False)
-
-    for name, param in model.named_parameters():
-        # freeze base model's layers
-        param.requires_grad = False
-
-        if loaded_in_8bit:
-            # cast layer norm in fp32 for stability for 8bit models
-            if param.ndim == 1 and any(
-                layer_norm_name in name for layer_norm_name in layer_norm_names
-            ):
-                param.data = param.data.to(torch.float32)
-
-    return model
-
-
 def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     """
     Creates a backbone model for NLP tasks.
@@ -517,7 +501,9 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         backbone.resize_token_embeddings(cfg.tokenizer._vocab_length)
 
     if cfg.training.lora:
-        backbone = prepare_model_for_lora_training(backbone, layer_norm_names=[])
+        backbone = prepare_model_for_kbit_training(backbone,
+                                                   use_gradient_checkpointing=cfg.architecture.gradient_checkpointing
+                                                   )
     else:
         if cfg.architecture.backbone_dtype != "float32":
             if cfg.environment.mixed_precision:
