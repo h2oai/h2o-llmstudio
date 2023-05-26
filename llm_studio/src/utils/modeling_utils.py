@@ -481,6 +481,17 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         )
         # need to force pretrained
         cfg.architecture.pretrained = True
+    elif cfg.architecture.backbone_dtype == "int4":
+        kwargs["device_map"] = {"": cfg.environment._device}
+        kwargs["torch_dtype"] = torch.float16
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_compute_dtype=torch.bfloat16
+        )
+        # need to force pretrained
+        cfg.architecture.pretrained = True
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
     logger.info("dtype: {dtype}".format(dtype=kwargs["torch_dtype"]))
