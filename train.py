@@ -553,6 +553,7 @@ def run(cfg: Any) -> None:
             model_ref = cfg.architecture.ref_model_class(cfg)
         else:
             reward_model = None
+            model_ref = None
 
         # load model weights
         if cfg.architecture.pretrained_weights != "":
