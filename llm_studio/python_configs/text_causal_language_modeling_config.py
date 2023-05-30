@@ -223,6 +223,7 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 @dataclass
 class ConfigNLPCausalLMArchitecture(DefaultConfig):
     model_class: Any = text_causal_language_modeling_model.Model
+    ref_model_class: Any = text_causal_language_modeling_model.Model
     reward_model_class: Any = text_causal_language_modeling_model.RewardModel
     pretrained: bool = True
 
@@ -246,6 +247,7 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
         )
 
         self._visibility["model_class"] = -1
+        self._visibility["ref_model_class"] = -1
         self._visibility["reward_model_class"] = -1
         self._visibility["pretrained"] = -1
 

@@ -70,14 +70,8 @@ class PPOConfig(object):
         default=1, metadata={"help": "Number of samples optimized inside PPO together"}
     )
     ppo_epochs: Optional[int] = field(
-        default=4,
-        metadata={"help": "Number of optimisation epochs per batch of samples"},
-    )
-    compare_steps: Optional[int] = field(
         default=1,
-        metadata={
-            "help": "Number of steps between comparison of the current reward with the best seen so far"
-        },
+        metadata={"help": "Number of optimisation epochs per batch of samples"},
     )
 
     def to_dict(self):

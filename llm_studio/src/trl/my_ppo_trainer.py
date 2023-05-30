@@ -467,7 +467,7 @@ class PPOTrainer(PyTorchModelHubMixin):
             ref_logprobs, _, _, _ = self.batched_forward_pass(
                 self.ref_model, queries, responses, model_inputs
             )
-
+        print(all_logprobs, ref_logprobs)
         timing["time/ppo/forward_pass"] = time.time() - t
 
         t = time.time()
@@ -614,50 +614,43 @@ class PPOTrainer(PyTorchModelHubMixin):
                     shape (`batch_size`, `response_length`)
                 - all_values (`torch.FloatTensor`): Values of the responses, shape (`batch_size`, `response_length`)
         """
-        bs = len(queries)
-        fbs = self.config.mini_batch_size
         all_logprobs = []
         all_logits = []
         all_masks = []
         all_values = []
 
-        for i in range(int(bs / fbs)):
-            input_kwargs = {
-                key: value[i * fbs : (i + 1) * fbs]
-                for key, value in model_inputs.items()
-            }
-            query_batch = queries[i * fbs : (i + 1) * fbs]
-            response_batch = responses[i * fbs : (i + 1) * fbs]
-            logits, _, values = model(**input_kwargs)
+        outputs = model(model_inputs)
+        logits = outputs["logits"]
+        values = outputs["value"]
 
-            input_ids = input_kwargs["input_ids"]
-            attention_mask = input_kwargs["attention_mask"]
+        input_ids = model_inputs["input_ids"]
+        attention_mask = model_inputs["attention_mask"]
 
-            logprobs = logprobs_from_logits(logits[:, :-1, :], input_ids[:, 1:])
-            masks = torch.zeros_like(attention_mask)
-            masks[:, :-1] = attention_mask[:, 1:]
+        logprobs = logprobs_from_logits(logits[:, :-1, :], input_ids[:, 1:])
+        masks = torch.zeros_like(attention_mask)
+        masks[:, :-1] = attention_mask[:, 1:]
 
-            for j in range(fbs):
-                start = len(query_batch[j]) - 1
-                if attention_mask[j, 0] == 0:  # offset left padding
-                    start += attention_mask[j, :].nonzero()[0]
-                end = start + len(response_batch[j])
+        for j in range(len(queries)):
+            start = len(queries[j]) - 1
+            if attention_mask[j, 0] == 0:  # offset left padding
+                start += attention_mask[j, :].nonzero()[0]
+            end = start + len(responses[j])
 
-                if len(logprobs[j, start:end]) < 2:
-                    raise ValueError(
-                        "Responses are too short. Make sure they are at least 4 tokens long."
-                    )
+            if len(logprobs[j, start:end]) < 2:
+                raise ValueError(
+                    "Responses are too short. Make sure they are at least 4 tokens long."
+                )
 
-                masks[j, :start] = 0
-                masks[j, end:] = 0
+            masks[j, :start] = 0
+            masks[j, end:] = 0
 
-            if return_logits:
-                all_logits.append(logits)
-            else:
-                del logits
-            all_values.append(values)
-            all_logprobs.append(logprobs)
-            all_masks.append(masks)
+        if return_logits:
+            all_logits.append(logits)
+        else:
+            del logits
+        all_values.append(values)
+        all_logprobs.append(logprobs)
+        all_masks.append(masks)
 
         return (
             torch.cat(all_logprobs),

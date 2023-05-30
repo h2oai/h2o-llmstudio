@@ -175,7 +175,9 @@ class CustomDataset(Dataset):
             for ids in output["predicted_answer_ids"]
         ]
         output["predicted_text"] = np.array(predicted_text)
-        del output["predicted_answer_ids"]
+
+        if not cfg.training.use_rlhf:
+            del output["predicted_answer_ids"]
 
         return output
 

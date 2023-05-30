@@ -154,12 +154,12 @@ class Model(nn.Module):
             self.backbone.print_trainable_parameters()
 
         if self.cfg.training.use_rlhf:
-            logger.info("Loading reference model for RLHF")
-            self.ref_model, self.ref_model_config = create_nlp_backbone(
-                cfg, model_class=AutoModelForCausalLM, kwargs=kwargs
-            )
-            self.ref_model.eval()
-            self.ref_model.requires_grad_(False)
+            # logger.info("Loading reference model for RLHF")
+            # self.ref_model, self.ref_model_config = create_nlp_backbone(
+            #     cfg, model_class=AutoModelForCausalLM, kwargs=kwargs
+            # )
+            # self.ref_model.eval()
+            # self.ref_model.requires_grad_(False)
 
             self.v_head = ValueHead(self.backbone_config)
             # random init by default
@@ -173,15 +173,29 @@ class Model(nn.Module):
             self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
         )
 
+        if "prompt_attention_mask" in batch:
+            input_ids = batch["prompt_input_ids"]
+            attention_mask = batch["prompt_attention_mask"]
+            mask_key = "prompt_attention_mask"
+            pad_keys = [
+                "prompt_input_ids",
+                "prompt_attention_mask",
+            ]
+        else:
+            input_ids = batch["input_ids"]
+            attention_mask = batch["attention_mask"]
+            mask_key = "attention_mask"
+            pad_keys = [
+                "input_ids",
+                "attention_mask",
+            ]
+
         batch = batch_padding(
             self.cfg,
             batch,
             self.training,
-            mask_key="prompt_attention_mask",
-            pad_keys=[
-                "prompt_input_ids",
-                "prompt_attention_mask",
-            ],
+            mask_key=mask_key,
+            pad_keys=pad_keys,
         )
 
         # Adding GenerationMixin type annotation for faster lookup
@@ -192,15 +206,15 @@ class Model(nn.Module):
             [
                 TokenStoppingCriteria(
                     stop_word_ids=self.cfg.tokenizer._stop_words_ids,
-                    prompt_input_ids_len=batch["prompt_input_ids"].shape[1],
+                    prompt_input_ids_len=input_ids.shape[1],
                 )
             ]
         )
 
         transformers_logging.set_verbosity_error()
         output = generation_function(
-            inputs=batch["prompt_input_ids"],
-            attention_mask=batch["prompt_attention_mask"],
+            inputs=input_ids,
+            attention_mask=attention_mask,
             pad_token_id=pad_token_id,
             min_new_tokens=cfg.prediction.min_length_inference,
             max_new_tokens=cfg.prediction.max_length_inference,
@@ -218,7 +232,7 @@ class Model(nn.Module):
         transformers_logging.set_verbosity(verbosity)
 
         # Mask the prompt tokens
-        output[:, : batch["prompt_input_ids"].shape[1]] = pad_token_id
+        output[:, : input_ids.shape[1]] = pad_token_id
 
         return output
 
@@ -226,6 +240,7 @@ class Model(nn.Module):
         self,
         batch: Dict,
         calculate_loss: bool = True,
+        generate: bool = False,
     ) -> Dict:
         outputs: Dict = {}
 
@@ -256,6 +271,12 @@ class Model(nn.Module):
             if calculate_loss:
                 assert self.cfg.training.loss_function == "CrossEntropy"
                 outputs["loss"] = output.loss
+        else:
+            output = self.backbone(
+                input_ids=batch["input_ids"],
+                attention_mask=batch["attention_mask"],
+                **kwargs,
+            )
 
         if self.cfg.training.use_rlhf:
             last_hidden_state = output.hidden_states[-1]
@@ -270,8 +291,77 @@ class Model(nn.Module):
             outputs["value"] = value
             outputs["logits"] = lm_logits
 
-        if not self.training or self.cfg.training.use_rlhf:
+        if not self.training or generate:
             outputs["predicted_answer_ids"] = self.generate(batch, self.cfg)
+
+        return outputs
+
+
+class RefModel(nn.Module):
+    """
+    Model for causal language modeling problem type.
+    """
+
+    def __init__(self, cfg: Any):
+        """
+        Args:
+            cfg: config with all the hyperparameters
+        """
+
+        super(Model, self).__init__()
+
+        self.cfg = cfg
+
+        logger.info("Loading reference model for RLHF")
+        self.backbone, self.backbone_config = create_nlp_backbone(
+            cfg, model_class=AutoModelForCausalLM
+        )
+        self.backbone.eval()
+        self.backbone.requires_grad_(False)
+
+        self.v_head = ValueHead(self.backbone_config)
+        # random init by default
+        self.v_head.summary.weight.data.normal_(mean=0.0, std=0.2)
+        self.v_head.summary.bias.data.zero_()
+
+    def forward(
+        self,
+        batch: Dict,
+        calculate_loss: bool = False,
+    ) -> Dict:
+        outputs: Dict = {}
+
+        kwargs = {}
+        kwargs["output_hidden_states"] = True
+
+        batch = batch_padding(
+            self.cfg,
+            batch,
+            self.training,
+            pad_keys=[
+                "input_ids",
+                "attention_mask",
+                "special_tokens_mask",
+                "labels",
+            ],
+        )
+        output = self.backbone(
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+            **kwargs,
+        )
+
+        last_hidden_state = output.hidden_states[-1]
+        lm_logits = output.logits
+
+        value = self.v_head(last_hidden_state).squeeze(-1)
+
+        # force upcast in fp32 if logits are in half-precision
+        if lm_logits.dtype != torch.float32:
+            lm_logits = lm_logits.float()
+
+        outputs["value"] = value
+        outputs["logits"] = lm_logits
 
         return outputs
 
