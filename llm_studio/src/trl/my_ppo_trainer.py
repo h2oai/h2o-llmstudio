@@ -381,7 +381,7 @@ class PPOTrainer(PyTorchModelHubMixin):
             ref_logprobs, _, _, _ = self.batched_forward_pass(
                 self.ref_model, queries, responses, model_inputs, return_values=False
             )
-        print(all_logprobs, ref_logprobs)
+
         timing["time/ppo/forward_pass"] = time.time() - t
 
         t = time.time()
@@ -721,7 +721,6 @@ class PPOTrainer(PyTorchModelHubMixin):
         pg_loss = masked_mean(torch.max(pg_losses, pg_losses2), mask)
         pg_clipfrac = masked_mean(torch.gt(pg_losses2, pg_losses).double(), mask)
 
-        print(pg_loss, vf_loss)
         loss = pg_loss + self.config.vf_coef * vf_loss
 
         entropy = masked_mean(entropy_from_logits(logits), mask)

@@ -294,7 +294,7 @@ class Model(nn.Module):
             outputs["logits"] = lm_logits
 
         if not self.training or generate:
-            outputs["predicted_answer_ids"] = self.generate(batch, self.cfg)
+            outputs["predicted_answer_ids"] = self.generate(batch, self.cfg).detach()
         return outputs
 
 

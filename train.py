@@ -357,16 +357,15 @@ def run_train(
             if cfg.environment._local_rank == 0:
                 if cfg.training.use_rlhf:
                     for key in output_dict.keys():
-                        if isinstance(output_dict[key], (float, int)):
+                        if isinstance(output_dict[key], (float, int)) or (
+                            isinstance(output_dict[key], np.ndarray)
+                            and output_dict[key].size == 1
+                        ):
                             cfg.logging._logger.log(
                                 "train",
                                 key,
                                 output_dict[key],
                                 step=cfg.environment._curr_step,
-                            )
-                        else:
-                            logger.info(
-                                f"Not logging {key} of type {type(output_dict[key])}"
                             )
                 cfg.logging._logger.log(
                     "train", "loss", losses[-1], step=cfg.environment._curr_step
@@ -403,6 +402,8 @@ def run_train(
                         progress_bar.update(log_update_steps)
                     else:
                         progress_bar.update(epoch_steps % log_update_steps)
+
+                del output_dict
 
             # Validation loop
             if (itr + 1) % evaluation_step == 0:
