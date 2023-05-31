@@ -178,6 +178,8 @@ class CustomDataset(Dataset):
 
         if not cfg.training.use_rlhf:
             del output["predicted_answer_ids"]
+        else:
+            output["predicted_answer_ids"].detach()
 
         return output
 

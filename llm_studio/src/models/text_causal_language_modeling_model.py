@@ -212,7 +212,6 @@ class Model(nn.Module):
         )
 
         transformers_logging.set_verbosity_error()
-        print("Generating inner loop")
         output = generation_function(
             inputs=input_ids,
             attention_mask=attention_mask,
@@ -230,7 +229,6 @@ class Model(nn.Module):
             return_dict_in_generate=False,
             use_cache=True,
         )
-        print("Generated inner loop")
         transformers_logging.set_verbosity(verbosity)
 
         # Mask the prompt tokens
@@ -282,16 +280,13 @@ class Model(nn.Module):
 
         if self.cfg.training.use_rlhf:
             last_hidden_state = output.hidden_states[-1]
-            lm_logits = output.logits
-
-            value = self.v_head(last_hidden_state).squeeze(-1)
 
             # force upcast in fp32 if logits are in half-precision
-            if lm_logits.dtype != torch.float32:
-                lm_logits = lm_logits.float()
+            if output.logits.dtype != torch.float32:
+                output.logits = output.logits.float()
 
-            outputs["value"] = value
-            outputs["logits"] = lm_logits
+            outputs["logits"] = output.logits
+            outputs["value"] = self.v_head(last_hidden_state).squeeze(-1)
 
         if not self.training or generate:
             outputs["predicted_answer_ids"] = self.generate(batch, self.cfg).detach()
@@ -343,14 +338,12 @@ class RefModel(nn.Module):
             attention_mask=batch["attention_mask"],
         )
 
-        lm_logits = output.logits
-
         # force upcast in fp32 if logits are in half-precision
-        if lm_logits.dtype != torch.float32:
-            lm_logits = lm_logits.float()
+        if output.logits.dtype != torch.float32:
+            output.logits = output.logits.float()
 
+        outputs["logits"] = output.logits
         outputs["value"] = None
-        outputs["logits"] = lm_logits
 
         return outputs
 
@@ -375,4 +368,5 @@ class RewardModel(nn.Module):
                 self.device
             )
             scores.append(self.model(**inputs).logits[0].cpu().detach().item())
+            del inputs
         return scores

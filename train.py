@@ -297,6 +297,7 @@ def run_train(
                     predicted_answer_ids
                     for predicted_answer_ids in output_dict["predicted_answer_ids"]
                 ]
+                del output_dict
                 output_dict = ppo_trainer.step(query_tensor, response_tensor, reward)
 
                 loss = output_dict["ppo/loss/total"]
@@ -361,12 +362,13 @@ def run_train(
                             isinstance(output_dict[key], np.ndarray)
                             and output_dict[key].size == 1
                         ):
-                            cfg.logging._logger.log(
-                                "train",
-                                key,
-                                output_dict[key],
-                                step=cfg.environment._curr_step,
-                            )
+                            if np.isfinite(output_dict[key]):
+                                cfg.logging._logger.log(
+                                    "train",
+                                    key,
+                                    output_dict[key],
+                                    step=cfg.environment._curr_step,
+                                )
                 cfg.logging._logger.log(
                     "train", "loss", losses[-1], step=cfg.environment._curr_step
                 )
