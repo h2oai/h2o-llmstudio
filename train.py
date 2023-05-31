@@ -298,7 +298,9 @@ def run_train(
                     for predicted_answer_ids in output_dict["predicted_answer_ids"]
                 ]
                 output_dict = ppo_trainer.step(query_tensor, response_tensor, reward)
-                losses.append(np.mean(scores))  # reward is the reported "loss" in RLHF
+
+                loss = output_dict["ppo/loss/total"]
+                losses.append(loss)
             else:
                 # Forward pass
                 if cfg.environment.mixed_precision:
@@ -353,6 +355,15 @@ def run_train(
                     scheduler.step()
 
             if cfg.environment._local_rank == 0:
+                if cfg.training.use_rlhf:
+                    for key in output_dict.keys():
+                        if isinstance(output_dict[key], (float, int)):
+                            cfg.logging._logger.log(
+                                "train",
+                                key,
+                                output_dict[key],
+                                step=cfg.environment._curr_step,
+                            )
                 cfg.logging._logger.log(
                     "train", "loss", losses[-1], step=cfg.environment._curr_step
                 )
