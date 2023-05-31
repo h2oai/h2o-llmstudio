@@ -70,7 +70,7 @@ class PPOConfig(object):
         default=1, metadata={"help": "Number of samples optimized inside PPO together"}
     )
     ppo_epochs: Optional[int] = field(
-        default=1,
+        default=4,
         metadata={"help": "Number of optimisation epochs per batch of samples"},
     )
 
