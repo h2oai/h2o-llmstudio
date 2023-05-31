@@ -223,7 +223,7 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 @dataclass
 class ConfigNLPCausalLMArchitecture(DefaultConfig):
     model_class: Any = text_causal_language_modeling_model.Model
-    ref_model_class: Any = text_causal_language_modeling_model.Model
+    ref_model_class: Any = text_causal_language_modeling_model.RefModel
     reward_model_class: Any = text_causal_language_modeling_model.RewardModel
     pretrained: bool = True
 

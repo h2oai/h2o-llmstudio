@@ -212,6 +212,7 @@ class Model(nn.Module):
         )
 
         transformers_logging.set_verbosity_error()
+        print("Generating inner loop")
         output = generation_function(
             inputs=input_ids,
             attention_mask=attention_mask,
@@ -229,6 +230,7 @@ class Model(nn.Module):
             return_dict_in_generate=False,
             use_cache=True,
         )
+        print("Generated inner loop")
         transformers_logging.set_verbosity(verbosity)
 
         # Mask the prompt tokens
@@ -293,7 +295,6 @@ class Model(nn.Module):
 
         if not self.training or generate:
             outputs["predicted_answer_ids"] = self.generate(batch, self.cfg)
-
         return outputs
 
 
@@ -308,7 +309,7 @@ class RefModel(nn.Module):
             cfg: config with all the hyperparameters
         """
 
-        super(Model, self).__init__()
+        super(RefModel, self).__init__()
 
         self.cfg = cfg
 
@@ -319,20 +320,12 @@ class RefModel(nn.Module):
         self.backbone.eval()
         self.backbone.requires_grad_(False)
 
-        self.v_head = ValueHead(self.backbone_config)
-        # random init by default
-        self.v_head.summary.weight.data.normal_(mean=0.0, std=0.2)
-        self.v_head.summary.bias.data.zero_()
-
     def forward(
         self,
         batch: Dict,
         calculate_loss: bool = False,
     ) -> Dict:
         outputs: Dict = {}
-
-        kwargs = {}
-        kwargs["output_hidden_states"] = True
 
         batch = batch_padding(
             self.cfg,
@@ -348,19 +341,16 @@ class RefModel(nn.Module):
         output = self.backbone(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
-            **kwargs,
+            # **kwargs,
         )
 
-        last_hidden_state = output.hidden_states[-1]
         lm_logits = output.logits
-
-        value = self.v_head(last_hidden_state).squeeze(-1)
 
         # force upcast in fp32 if logits are in half-precision
         if lm_logits.dtype != torch.float32:
             lm_logits = lm_logits.float()
 
-        outputs["value"] = value
+        outputs["value"] = None
         outputs["logits"] = lm_logits
 
         return outputs
