@@ -364,6 +364,10 @@ def run_train(
                                 output_dict[key],
                                 step=cfg.environment._curr_step,
                             )
+                        else:
+                            logger.info(
+                                f"Not logging {key} of type {type(output_dict[key])}"
+                            )
                 cfg.logging._logger.log(
                     "train", "loss", losses[-1], step=cfg.environment._curr_step
                 )

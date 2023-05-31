@@ -341,7 +341,6 @@ class RefModel(nn.Module):
         output = self.backbone(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
-            # **kwargs,
         )
 
         lm_logits = output.logits
