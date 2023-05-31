@@ -551,6 +551,7 @@ def run(cfg: Any) -> None:
             )
             reward_model.eval()
             model_ref = cfg.architecture.ref_model_class(cfg)
+            model_ref.eval()
         else:
             reward_model = None
             model_ref = None

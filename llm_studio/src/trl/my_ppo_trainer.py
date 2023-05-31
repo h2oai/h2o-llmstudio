@@ -281,95 +281,9 @@ class PPOTrainer(PyTorchModelHubMixin):
         self.current_device = (
             torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
         )
-        self.model.to(self.current_device)
-        self.ref_model.to(self.current_device)
 
         # init the current step
         self.current_step = 0
-
-    def generate(
-        self,
-        query_tensor: Union[torch.Tensor, List[torch.Tensor]],
-        batch_size: int = 4,
-        return_prompt: bool = True,
-        **generation_kwargs,
-    ):
-        """
-        Generate response with the model given the query tensor.
-        call the `generate` method of the model.
-
-        Args:
-            query_tensor (`torch.LongTensor`):
-                A tensor of shape (`batch_size`, `seq_len`) containing query tokens.
-            generation_kwargs (dict[str, Any]):
-                Keyword arguments for generation.
-            batch_size (`int`, *optional):
-                Batch size used for generation, defaults to `4`.
-            return_prompt (`bool`, *optional*):
-                If set to `False` the prompt is not returned but only the newly generated tokens, defaults to `True`.
-
-        Returns:
-            `torch.LongTensor`: A tensor of shape (`batch_size`, `gen_len`) containing response tokens.
-        """
-
-        if isinstance(query_tensor, List):
-            return self._generate_batched(
-                query_tensor,
-                batch_size=batch_size,
-                return_prompt=return_prompt,
-                **generation_kwargs,
-            )
-
-        else:
-            response = self.model.generate(input_ids=query_tensor, **generation_kwargs)
-
-            if not return_prompt:
-                return response[:, query_tensor.shape[0] :]
-            return response
-
-    def _generate_batched(
-        self,
-        query_tensors: List[torch.Tensor],
-        batch_size: int = 4,
-        return_prompt: bool = True,
-        pad_to_multiple_of: int = None,
-        **generation_kwargs,
-    ):
-        outputs = []
-
-        padding_side_default = self.tokenizer.padding_side
-        self.tokenizer.padding_side = "left"
-
-        # in case we have fewer examples than bs
-        batch_size = min(len(query_tensors), batch_size)
-
-        for i in range(0, len(query_tensors), batch_size):
-            # prevent overflow if query tensors are not even multiple of bs
-            end_index = min(len(query_tensors), i + batch_size)
-
-            batch = query_tensors[i:end_index]
-            batch_mask = [torch.ones_like(element) for element in batch]
-            inputs = {"input_ids": batch, "attention_mask": batch_mask}
-
-            padded_inputs = self.tokenizer.pad(
-                inputs,
-                padding=True,
-                max_length=None,
-                pad_to_multiple_of=pad_to_multiple_of,
-                return_tensors="pt",
-            ).to(self.current_device)
-
-            generations = self.model.generate(**padded_inputs, **generation_kwargs)
-
-            for generation, mask in zip(generations, padded_inputs["attention_mask"]):
-                output = generation[(1 - mask).sum() :]  # remove padding
-
-                if not return_prompt:
-                    output = output[(mask).sum() :]  # remove prompt
-                outputs.append(output)
-
-        self.tokenizer.padding_side = padding_side_default
-        return outputs
 
     def _step_safety_checker(
         self,
@@ -465,7 +379,7 @@ class PPOTrainer(PyTorchModelHubMixin):
                 self.model, queries, responses, model_inputs
             )
             ref_logprobs, _, _, _ = self.batched_forward_pass(
-                self.ref_model, queries, responses, model_inputs
+                self.ref_model, queries, responses, model_inputs, return_values=False
             )
         print(all_logprobs, ref_logprobs)
         timing["time/ppo/forward_pass"] = time.time() - t
@@ -595,6 +509,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         responses: torch.Tensor,
         model_inputs: dict,
         return_logits: bool = False,
+        return_values: bool = True,
     ):
         """
         Calculate model outputs in multiple batches.
@@ -648,14 +563,17 @@ class PPOTrainer(PyTorchModelHubMixin):
             all_logits.append(logits)
         else:
             del logits
-        all_values.append(values)
+        if return_values:
+            all_values.append(values)
+        else:
+            del values
         all_logprobs.append(logprobs)
         all_masks.append(masks)
 
         return (
             torch.cat(all_logprobs),
             torch.cat(all_logits)[:, :-1] if return_logits else None,
-            torch.cat(all_values)[:, :-1],
+            torch.cat(all_values)[:, :-1] if return_values else None,
             torch.cat(all_masks)[:, :-1],
         )
 
@@ -803,6 +721,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         pg_loss = masked_mean(torch.max(pg_losses, pg_losses2), mask)
         pg_clipfrac = masked_mean(torch.gt(pg_losses2, pg_losses).double(), mask)
 
+        print(pg_loss, vf_loss)
         loss = pg_loss + self.config.vf_coef * vf_loss
 
         entropy = masked_mean(entropy_from_logits(logits), mask)
