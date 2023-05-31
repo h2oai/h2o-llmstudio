@@ -168,22 +168,18 @@ class Model(nn.Module):
 
         self.loss_fn = self.cfg.training.loss_class.get(self.cfg.training.loss_function)
 
-    def generate(self, batch: Dict, cfg: Any):
+    def generate(self, batch: Dict, cfg: Any, remove_prompt=False):
         pad_token_id = (
             self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
         )
 
         if "prompt_attention_mask" in batch:
-            input_ids = batch["prompt_input_ids"]
-            attention_mask = batch["prompt_attention_mask"]
             mask_key = "prompt_attention_mask"
             pad_keys = [
                 "prompt_input_ids",
                 "prompt_attention_mask",
             ]
         else:
-            input_ids = batch["input_ids"]
-            attention_mask = batch["attention_mask"]
             mask_key = "attention_mask"
             pad_keys = [
                 "input_ids",
@@ -197,6 +193,13 @@ class Model(nn.Module):
             mask_key=mask_key,
             pad_keys=pad_keys,
         )
+
+        if "prompt_attention_mask" in batch:
+            input_ids = batch["prompt_input_ids"]
+            attention_mask = batch["prompt_attention_mask"]
+        else:
+            input_ids = batch["input_ids"]
+            attention_mask = batch["attention_mask"]
 
         # Adding GenerationMixin type annotation for faster lookup
         generation_function: GenerationMixin.generate = self.backbone.generate
@@ -231,9 +234,14 @@ class Model(nn.Module):
         )
         transformers_logging.set_verbosity(verbosity)
 
-        # Mask the prompt tokens
-        output[:, : input_ids.shape[1]] = pad_token_id
+        if remove_prompt:
+            # remove the prompt tokens
+            output = output[:, input_ids.shape[1] :]
+        else:
+            # Mask the prompt tokens
+            output[:, : input_ids.shape[1]] = pad_token_id
 
+        logger.info(f"SHAPE: input {input_ids.shape}, output {output.shape}")
         return output
 
     def forward(
@@ -251,16 +259,29 @@ class Model(nn.Module):
 
         # model's forward only works with labels
         if "labels" in batch:
-            batch = batch_padding(
-                self.cfg,
-                batch,
-                self.training,
-                pad_keys=[
+            if "prompt_attention_mask" in batch:
+                mask_key = "prompt_attention_mask"
+                pad_keys = [
+                    "prompt_input_ids",
+                    "prompt_attention_mask",
+                    "special_tokens_mask",
+                    "labels",
+                ]
+            else:
+                mask_key = "attention_mask"
+                pad_keys = [
                     "input_ids",
                     "attention_mask",
                     "special_tokens_mask",
                     "labels",
-                ],
+                ]
+
+            batch = batch_padding(
+                self.cfg,
+                batch,
+                self.training,
+                mask_key=mask_key,
+                pad_keys=pad_keys,
             )
             output = self.backbone(
                 input_ids=batch["input_ids"],
@@ -272,6 +293,29 @@ class Model(nn.Module):
                 assert self.cfg.training.loss_function == "CrossEntropy"
                 outputs["loss"] = output.loss
         else:
+            if "prompt_attention_mask" in batch:
+                mask_key = "prompt_attention_mask"
+                pad_keys = [
+                    "prompt_input_ids",
+                    "prompt_attention_mask",
+                    "special_tokens_mask",
+                ]
+            else:
+                mask_key = "attention_mask"
+                pad_keys = [
+                    "input_ids",
+                    "attention_mask",
+                    "special_tokens_mask",
+                ]
+
+            batch = batch_padding(
+                self.cfg,
+                batch,
+                self.training,
+                mask_key=mask_key,
+                pad_keys=pad_keys,
+            )
+
             output = self.backbone(
                 input_ids=batch["input_ids"],
                 attention_mask=batch["attention_mask"],
@@ -287,7 +331,8 @@ class Model(nn.Module):
 
             outputs["logits"] = output.logits
             outputs["value"] = self.v_head(last_hidden_state).squeeze(-1)
-
+            print("value", outputs["value"].shape)
+            print("logits", outputs["logits"].shape)
         if not self.training or generate:
             outputs["predicted_answer_ids"] = self.generate(batch, self.cfg).detach()
         return outputs

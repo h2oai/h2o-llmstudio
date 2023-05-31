@@ -279,20 +279,39 @@ def run_train(
                 log_plot(cfg, plot, "train_data")
 
             if cfg.training.use_rlhf:
+                logger.info("Generating response")
+                output_dict = {}
                 with torch.no_grad():
-                    output_dict = model.forward(batch, generate=True)
-
+                    output_dict["predicted_answer_ids"] = model.generate(
+                        batch, model.cfg, remove_prompt=True
+                    ).detach()
                 output_dict = train_dataloader.dataset.postprocess_batch_predictions(
                     cfg=cfg, output=output_dict
                 )
-                # tokenize prompt & output
-                scores = reward_model.get_score(
-                    batch["raw_prompt_text"], output_dict["predicted_text"]
-                )
+
+                logger.info("Reward model")
+                # tokenize prompt & output internally
+                with torch.no_grad():
+                    scores = reward_model.get_score(
+                        batch["raw_prompt_text"], output_dict["predicted_text"]
+                    )
 
                 # score by reward model
                 reward = [torch.tensor(score, dtype=torch.float32) for score in scores]
-                query_tensor = [input_ids for input_ids in batch["input_ids"]]
+
+                # logger.info(
+                #     f"SHAPE: input {batch['input_ids'].shape}, output {output_dict['predicted_answer_ids'].shape}"
+                # )
+
+                for i in range(len(reward)):
+                    print(batch["raw_prompt_text"][i])
+                    print(output_dict["predicted_text"][i])
+                    print("reward", reward[i])
+
+                idx = torch.where(batch["attention_mask"] == 1)[1]
+                query_tensor = [
+                    input_ids[id_:] for input_ids, id_ in zip(batch["input_ids"], idx)
+                ]
                 response_tensor = [
                     predicted_answer_ids
                     for predicted_answer_ids in output_dict["predicted_answer_ids"]
