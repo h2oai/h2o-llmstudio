@@ -1615,12 +1615,16 @@ async def experiment_download_model(q: Q, error: str = ""):
         model = unwrap_model(model)
         checkpoint_path = cfg.output_directory
 
+        logger.info(
+            f"Saving model weight (in  Hugging Face format) " f"at {checkpoint_path}."
+        )
         model.backbone.save_pretrained(checkpoint_path)
         tokenizer.save_pretrained(checkpoint_path)
 
         card = get_model_card(cfg, model, repo_id="<path_to_local_folder>")
         card.save(os.path.join(experiment_path, "model_card.md"))
 
+        logger.info(f"Creating Zip File at {zip_path}")
         zf = zipfile.ZipFile(zip_path, "w")
 
         FILES_TO_PUSH = [
