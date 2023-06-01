@@ -1595,9 +1595,21 @@ async def experiment_download_model(q: Q, error: str = ""):
 
     if not os.path.exists(zip_path):
         logger.info(f"Creating {zip_path} on demand")
+        cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
+
+        device = "cuda"
+        experiments = get_experiments(q)
+        num_running_queued = len(
+            experiments[experiments["status"].isin(["queued", "running"])]
+        )
+        if num_running_queued > 0 or (
+            cfg.training.lora and cfg.architecture.backbone_dtype in ("int4", "int8")
+        ):
+            logger.info("Preparing model on CPU. " "This might slow down the progress.")
+            device = "cpu"
 
         cfg, model, tokenizer = load_cfg_model_tokenizer(
-            experiment_path, merge=True, device="cpu"
+            experiment_path, merge=True, device=device
         )
 
         model = unwrap_model(model)
