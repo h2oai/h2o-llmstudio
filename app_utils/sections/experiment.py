@@ -1902,6 +1902,7 @@ def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
         if merge and cfg.training.lora:
             # merges the LoRa layers into the base model.
             # This is needed if one wants to use the base model as a standalone model.
+            logger.info("Merging LORA layers with base model.")
             model.backbone = model.backbone.merge_and_unload()
 
     model = model.to(device).eval()
