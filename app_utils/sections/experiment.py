@@ -1614,10 +1614,6 @@ async def experiment_download_model(q: Q, error: str = ""):
 
         model = unwrap_model(model)
         checkpoint_path = cfg.output_directory
-
-        logger.info(
-            f"Saving model weight (in  Hugging Face format) " f"at {checkpoint_path}."
-        )
         model.backbone.save_pretrained(checkpoint_path)
         tokenizer.save_pretrained(checkpoint_path)
 
