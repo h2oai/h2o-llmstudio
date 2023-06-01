@@ -1596,20 +1596,8 @@ async def experiment_download_model(q: Q, error: str = ""):
     if not os.path.exists(zip_path):
         logger.info(f"Creating {zip_path} on demand")
 
-        device = "cuda"
-        experiments = get_experiments(q)
-        num_running_queued = len(
-            experiments[experiments["status"].isin(["queued", "running"])]
-        )
-        if num_running_queued > 0:
-            logger.info(
-                "Preparing model on CPU as there are experiments running. "
-                "This might slow down the progress."
-            )
-            device = "cpu"
-
         cfg, model, tokenizer = load_cfg_model_tokenizer(
-            experiment_path, merge=True, device=device
+            experiment_path, merge=True, device="cpu"
         )
 
         model = unwrap_model(model)
