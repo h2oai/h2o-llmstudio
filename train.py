@@ -217,7 +217,15 @@ def run_train(
             batch_size=cfg.training.batch_size,
         )
         tokenizer = get_tokenizer(cfg)
-        ppo_trainer = PPOTrainer(ppo_config, model, model_ref, tokenizer)
+        ppo_trainer = PPOTrainer(
+            cfg=cfg,
+            ppo_config=ppo_config,
+            model=model,
+            ref_model=model_ref,
+            tokenizer=tokenizer,
+            optimizer=optimizer,
+            lr_scheduler=scheduler,
+        )
 
     for epoch in range(start_epoch, cfg.training.epochs):
         set_seed(

@@ -144,7 +144,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values[
             "differential_learning_rate_layers"
         ] = possible_values.String(
-            values=["encoder", "decoder"],
+            values=["backbone", "value_head"],
             allow_custom=False,
             placeholder="Select optional layers...",
         )
@@ -170,8 +170,8 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._visibility["loss_function"] = -1
         self._visibility["loss_class"] = -1
         self._visibility["drop_last_batch"] = -1
-        self._visibility["differential_learning_rate_layers"] = -1
-        self._visibility["differential_learning_rate"] = -1
+        self._visibility["differential_learning_rate_layers"] = 1
+        self._visibility["differential_learning_rate"] = 1
 
         self._nesting.add(
             ["differential_learning_rate"],

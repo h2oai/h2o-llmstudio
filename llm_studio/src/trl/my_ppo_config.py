@@ -23,16 +23,6 @@ class PPOConfig(object):
     Configuration class for PPOTrainer
     """
 
-    model_name: Optional[str] = field(
-        default=None,
-        metadata={"help": "Name of model to use - used only for tracking purposes"},
-    )
-    steps: Optional[int] = field(
-        default=20000, metadata={"help": "Number of training steps"}
-    )
-    learning_rate: Optional[float] = field(
-        default=1e-6, metadata={"help": "Adam learning rate"}
-    )
     adap_kl_ctrl: Optional[bool] = field(
         default=True, metadata={"help": "Use adaptive KL control, otherwise linear"}
     )

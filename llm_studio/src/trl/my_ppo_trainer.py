@@ -140,13 +140,6 @@ def stats_to_np(stats_dict):
     return new_dict
 
 
-def is_torch_greater_2_0():
-    from importlib.metadata import version
-
-    torch_version = version("torch")
-    return torch_version >= "2.0"
-
-
 class AdaptiveKLController:
     """
     Adaptive KL controller described in the paper:
@@ -175,22 +168,6 @@ class FixedKLController:
         pass
 
 
-"""
-If you want to use the model for training or to obtain the outputs from the value head, load the model as follows:
-
-```python
-from transformers import AutoTokenizer
-from trl import AutoModelForCausalLMWithValueHead
-
-tokenizer = AutoTokenizer.from_pretrained("{model_id}")
-model = AutoModelForCausalLMWithValueHead.from_pretrained("{model_id}")
-
-inputs = tokenizer("Hello, my llama is cute", return_tensors="pt")
-outputs = model(**inputs, labels=inputs["input_ids"])
-```
-"""
-
-
 class PPOTrainer(PyTorchModelHubMixin):
     """
     The PPOTrainer uses Proximal Policy Optimization to optimise language models.
@@ -198,8 +175,10 @@ class PPOTrainer(PyTorchModelHubMixin):
     https://github.com/openai/summarize-from-feedback
 
     Attributes:
+        **cfg** (`LLM Studio Config`) -- Experiment configuration object. Check the documentation of `LLM Studio Config`
+            for more details.
         **config** (`PPOConfig`) -- Configuration object for PPOTrainer. Check the documentation of `PPOConfig` for more
-         details.
+            details.
         **model** (`PreTrainedModelWrapper`) -- Model to be optimized, Hugging Face transformer model with a value head.
             Check the documentation of `PreTrainedModelWrapper` for more details.
         **ref_model** (`PreTrainedModelWrapper`, *optional*) -- Reference model to be used for KL penalty, Hugging Face
@@ -209,15 +188,14 @@ class PPOTrainer(PyTorchModelHubMixin):
         **tokenizer** (`Union[PreTrainedTokenizer, PreTrainedTokenizerFast]`) -- Tokenizer to be used for encoding the
             data. Check the documentation of `transformers.PreTrainedTokenizer` and
             `transformers.PreTrainedTokenizerFast` for more details.
-        **optimizer** (`torch.optim.Optimizer`, *optional*) -- Optimizer to be used for training. If no optimizer is
-            provided, the trainer will create an Adam optimizer with the learning rate specified in the configuration
-            object.
-        **lr_scheduler** (`torch.optim.lr_scheduler`, *optional*) -- Learning rate scheduler to be used for training.
+        **optimizer** (`torch.optim.Optimizer`) -- Optimizer to be used for training.
+        **lr_scheduler** (`torch.optim.lr_scheduler`) -- Learning rate scheduler to be used for training.
     """
 
     def __init__(
         self,
-        config=None,
+        cfg=None,
+        ppo_config=None,
         model=None,
         ref_model=None,
         tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = None,
@@ -228,7 +206,9 @@ class PPOTrainer(PyTorchModelHubMixin):
         Initialize PPOTrainer.
 
         Args:
-            config (`PPOConfig`):
+            cfg (`LLM Studio Config`):
+                experiment configuration object. Check the documentation of `LLM Studio Config` for more details.
+            ppo_config (`PPOConfig`):
                 Configuration object for PPOTrainer. Check the documentation of `PPOConfig` for more details.
             model (`PreTrainedModelWrapper`):
                 Hugging Face transformer model with a value head.
@@ -236,12 +216,13 @@ class PPOTrainer(PyTorchModelHubMixin):
                 Hugging Face transformer model with a casual language modelling head. Used for KL penalty
             tokenizer (`transformers.PreTrainedTokenizer`):
                 Hugging Face tokenizer
-            optimizer (Optional[`torch.optim.Optimizer`]):
-                Optimizer used for training. If `None`, the `Adam` is used as default.
-            lr_scheduler (Optional[`torch.optim.lr_scheduler`]):
+            optimizer (`torch.optim.Optimizer`):
+                Optimizer used for training.
+            lr_scheduler (`torch.optim.lr_scheduler`):
                 Learning rate scheduler used for training.
         """
-        self.config = config
+        self.cfg = cfg
+        self.config = ppo_config
 
         # Step 1: Initialize Model
         self.model = model
@@ -250,26 +231,8 @@ class PPOTrainer(PyTorchModelHubMixin):
 
         # Step 3: Initialize optimizer and data collator
         self.data_collator = DataCollatorForLanguageModeling(self.tokenizer, mlm=False)
-        if optimizer is None:
-            self.optimizer = Adam(
-                filter(lambda p: p.requires_grad, self.model.parameters()),
-                lr=self.config.learning_rate,
-            )
-        else:
-            self.optimizer = optimizer
-
+        self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
-        if self.lr_scheduler is not None:
-            lr_scheduler_class = (
-                torch.optim.lr_scheduler._LRScheduler
-                if not is_torch_greater_2_0()
-                else torch.optim.lr_scheduler.LRScheduler
-            )
-
-            if not isinstance(self.lr_scheduler, lr_scheduler_class):
-                raise ValueError(
-                    "lr_scheduler must be a torch.optim.lr_scheduler._LRScheduler or torch.optim.lr_scheduler.LRScheduler (for torch >= 2.0)"
-                )
 
         if self.config.adap_kl_ctrl:
             self.kl_ctl = AdaptiveKLController(
@@ -278,9 +241,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         else:
             self.kl_ctl = FixedKLController(self.config.init_kl_coef)
 
-        self.current_device = (
-            torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-        )
+        self.current_device = self.cfg.environment._device
 
         # init the current step
         self.current_step = 0
