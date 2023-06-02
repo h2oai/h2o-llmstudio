@@ -163,8 +163,8 @@ class Model(nn.Module):
 
             self.v_head = ValueHead(self.backbone_config)
             # random init by default
-            self.v_head.summary.weight.data.normal_(mean=0.0, std=0.2)
-            self.v_head.summary.bias.data.zero_()
+            # self.v_head.summary.weight.data.normal_(mean=0.0, std=0.2)
+            # self.v_head.summary.bias.data.zero_()
 
         self.loss_fn = self.cfg.training.loss_class.get(self.cfg.training.loss_function)
 
@@ -331,8 +331,8 @@ class Model(nn.Module):
 
             outputs["logits"] = output.logits
             outputs["value"] = self.v_head(last_hidden_state).squeeze(-1)
-            print("value", outputs["value"].shape)
-            print("logits", outputs["logits"].shape)
+            # print("value", outputs["value"].shape)
+            # print("logits", outputs["logits"].shape)
         if not self.training or generate:
             outputs["predicted_answer_ids"] = self.generate(batch, self.cfg).detach()
         return outputs
