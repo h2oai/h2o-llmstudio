@@ -71,7 +71,7 @@ def load_model_weights(
     model_weights = {
         k: v
         if not (
-            v.dtype is torch.int8
+            v.dtype is torch.int8 or v.dtype is torch.uint8  # used for 4bit
             and cfg.architecture.backbone_dtype not in ("int4", "int8")
         )
         else model_state_dict[k]
