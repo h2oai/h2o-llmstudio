@@ -71,7 +71,8 @@ def load_model_weights(
     model_weights = {
         k: v
         if not (
-            v.dtype is torch.int8 or v.dtype is torch.uint8  # used for 4bit
+            v.dtype is torch.int8
+            or v.dtype is torch.uint8  # used for 4bit
             and cfg.architecture.backbone_dtype not in ("int4", "int8")
         )
         else model_state_dict[k]
@@ -499,8 +500,9 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         backbone.resize_token_embeddings(cfg.tokenizer._vocab_length)
 
     if cfg.training.lora:
+        # if used, gradient checkpointing will be enabled below
         backbone = prepare_model_for_kbit_training(
-            backbone, use_gradient_checkpointing=cfg.architecture.gradient_checkpointing
+            backbone, use_gradient_checkpointing=False
         )
     else:
         if cfg.architecture.backbone_dtype != "float32":
