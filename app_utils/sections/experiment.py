@@ -1605,7 +1605,7 @@ async def experiment_download_model(q: Q, error: str = ""):
         if num_running_queued > 0 or (
             cfg.training.lora and cfg.architecture.backbone_dtype in ("int4", "int8")
         ):
-            logger.info("Preparing model on CPU. " "This might slow down the progress.")
+            logger.info("Preparing model on CPU. This might slow down the progress.")
             device = "cpu"
 
         cfg, model, tokenizer = load_cfg_model_tokenizer(

@@ -228,7 +228,7 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
         super().__post_init__()
 
         self._possible_values["backbone_dtype"] = possible_values.String(
-            values=("float16", "bfloat16", "int8", "int4", "float32"),
+            values=("float32", "bfloat16", "float16", "int8", "int4"),
             allow_custom=False,
         )
         self._possible_values["intermediate_dropout"] = (0, 0.5, 0.05)
