@@ -176,6 +176,8 @@ class Model(nn.Module):
         if "prompt_attention_mask" in batch:
             mask_key = "prompt_attention_mask"
             pad_keys = [
+                "input_ids",
+                "attention_mask",
                 "prompt_input_ids",
                 "prompt_attention_mask",
             ]
@@ -262,6 +264,8 @@ class Model(nn.Module):
             if "prompt_attention_mask" in batch:
                 mask_key = "prompt_attention_mask"
                 pad_keys = [
+                    "input_ids",
+                    "attention_mask",
                     "prompt_input_ids",
                     "prompt_attention_mask",
                     "special_tokens_mask",
@@ -296,6 +300,8 @@ class Model(nn.Module):
             if "prompt_attention_mask" in batch:
                 mask_key = "prompt_attention_mask"
                 pad_keys = [
+                    "input_ids",
+                    "attention_mask",
                     "prompt_input_ids",
                     "prompt_attention_mask",
                     "special_tokens_mask",
