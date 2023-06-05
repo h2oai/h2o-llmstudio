@@ -12,15 +12,15 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Tutorials",
-      link: { type: "doc", id: "tutorials/tutorials-overview" },
+      label: "Guide",
       items: [
         {
           type: "category",
           label: "Datasets",
           items: [
-            "tutorials/datasets/tutorial-2a",
-            "tutorials/datasets/tutorial-3a",
+            "user-guide/data-connectors-format",
+            "user-guide/import-dataset",
+            "user-guide/view-dataset",
           ],
         },
         {
@@ -44,12 +44,6 @@ module.exports = {
       ],
     },
     "concepts",
-    {
-      "User guide": [
-      "user-guide/data-connectors-format",
-      "user-guide/import-dataset",
-      ],
-    },
     "key-terms",
     "release-notes",
     "faqs",

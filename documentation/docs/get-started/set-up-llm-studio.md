@@ -20,14 +20,25 @@ Atleast 24GB of GPU memory is recommended for larger models.
 <Tabs className="unique-tabs">
   <TabItem value="recommended-install" label="Recommended installation" default>
   <p>The recommended way to install H2O LLM Studio is using pipenv with Python 3.10. To install Python 3.10 on Ubuntu 16.04+, execute the following commands.</p>
-  <p><b>System installs (Python 3.10)</b>
+  <p><b>System installs (Python 3.10)</b></p>
   <pre><code>
     sudo add-apt-repository ppa:deadsnakes/ppa   <br></br>
     sudo apt install python3.10  <br></br>
     sudo apt-get install python3.10-distutils  <br></br>
     curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 
   </code></pre>
-  <b>Create virtual environment (pipenv)</b>  <br></br>
+  <p><b>Install NVIDIA drivers (if required)</b><br></br>
+  If you are deploying on a 'bare metal' machine running Ubuntu, you may need to install the required Nvidia drivers and CUDA. The following commands show how to retrieve the latest drivers for a machine running Ubuntu 20.04 as an example. You can update the following based on your respective operating system.</p>
+  <pre><code>
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin <br></br>
+    sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 <br></br>
+    wget https://developer.download.nvidia.com/compute/cuda/11.4.3/local_installers/cuda-repo-ubuntu2004-11-4-local_11.4.3-470.82.01-1_amd64.deb <br></br>
+    sudo dpkg -i cuda-repo-ubuntu2004-11-4-local_11.4.3-470.82.01-1_amd64.deb <br></br>
+    sudo apt-key add /var/cuda-repo-ubuntu2004-11-4-local/7fa2af80.pub <br></br>
+    sudo apt-get -y update <br></br>
+    sudo apt-get -y install cuda
+  </code></pre>
+  <p><b>Create virtual environment (pipenv)</b>  <br></br>
   The following command creates a virtual environment using pipenv and will install the dependencies using pipenv.
   <pre><code>make setup</code></pre>
    </p>

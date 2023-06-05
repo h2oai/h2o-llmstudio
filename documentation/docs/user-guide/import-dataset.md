@@ -16,7 +16,7 @@ For more information, see [Supported data connectors and format](data-connectors
 
 Follow the relevant steps below to import a dataset to H2O LLM Studio.
 
-1. On the H2O LLM Studio navigation pane, click **Import dataset**.
+1. On the H2O LLM Studio left-navigation pane, click **Import dataset**.
 
 2. Select the relevant **Source** (data connector) that you want to use from the dropdown list .
     :::note Data sources
@@ -105,6 +105,25 @@ Follow the relevant steps below to import a dataset to H2O LLM Studio.
     </Tabs>
     :::
  
+## Configure dataset
+
+Once you have successfully uploaded or imported your dataset, you can configure the dataset settings.
+
+**Dataset name:** A suitable name for the whole dataset which includes both the train dataframe and validation dataframe. 
+
+<!-- Internal notes: ** include tooltip .mdx files here for the rest of the configs!! ** -->
+
+![configure-dataset](configure-dataset.png)
 
 
+## Data validity check
 
+H2O LLM Studio will provide a preview of the dataset input (sample questions) and output (sample answers) according to the content of the imported dataset. Review the text to ensure that the input and output is as intended, and then click **Continue**. 
+
+## View dataset
+
+You will now be redirected to the **View datasets** screen. You should be able to see the dataset you just imported listed on the screen. 
+
+![view-dataset](view-imported-dataset.png)
+
+For more information about viewing dataset summary and statistics, see [View and manage datasets](./view-dataset.md)
