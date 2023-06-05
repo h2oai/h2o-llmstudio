@@ -471,11 +471,12 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         kwargs["device_map"] = {"": cfg.environment._device}
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_compute_dtype=torch.float16,
             bnb_4bit_quant_type="nf4",
         )
         # need to force pretrained
         cfg.architecture.pretrained = True
+        kwargs["torch_dtype"] = torch.float16
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
 
