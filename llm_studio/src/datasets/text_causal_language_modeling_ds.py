@@ -28,6 +28,8 @@ class CustomDataset(Dataset):
         self.mode = mode
         self.df = df.copy()
 
+        self.indices = np.arange(len(self.df))
+
         assert self.mode in [
             "train",
             "validation",
@@ -76,6 +78,12 @@ class CustomDataset(Dataset):
                 self.parent_ids = self.df[self.cfg.dataset.parent_id_column].values
                 self.df_id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
 
+                # filter all indices where parent_id is set to -1
+                self.indices = self.indices[(self.parent_ids != -1) & (self.parent_ids != "-1")]
+
+                # filter all indices where id column in df is never a parent_id of another row
+                self.indices = self.indices[[id not in self.parent_ids for id in self.df["id"].values]]
+
         self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.prompts]
 
         if self.cfg.environment._local_rank == 0:
@@ -95,7 +103,7 @@ class CustomDataset(Dataset):
         return prompt
 
     def __len__(self) -> int:
-        return len(self.df)
+        return len(self.indices)
 
     @staticmethod
     def get_input_columns(cfg: Any) -> Tuple[str, ...]:
@@ -260,7 +268,7 @@ class CustomDataset(Dataset):
         sample: Dict = dict()
 
         # Read data
-        sample = self._read_data(idx=idx, sample=sample)
+        sample = self._read_data(idx=self.indices[idx], sample=sample)
 
         return sample
 
