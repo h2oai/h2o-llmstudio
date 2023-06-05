@@ -1,5 +1,5 @@
 {
-    "name": "new-makersaurus-project",
+    "name": "h2o-llmstudio-docs",
     "version": "0.0.0",
     "scripts": {
       "start": "makersaurus start",
