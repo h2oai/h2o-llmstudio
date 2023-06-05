@@ -486,11 +486,11 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     if cfg.architecture.gradient_checkpointing:
         config.use_cache = False
 
+    kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
             config=config,
-            trust_remote_code=cfg.environment.trust_remote_code,
             quantization_config=quantization_config,
             **kwargs,
         )
