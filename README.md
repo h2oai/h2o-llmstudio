@@ -58,6 +58,7 @@ Using CLI for fine-tuning LLMs:
 - [PR 12](https://github.com/h2oai/h2o-llmstudio/pull/12). Experiment configurations are now stored in yaml format,
 allowing for more flexibility in the configuration while making it much easier to be backward compatible. Old experiment configurations that are stored in pickle format will be converted to yaml format automatically.
 - [PR 40](https://github.com/h2oai/h2o-llmstudio/pull/40) Added functionality for supporting nested conversations in data. A new `parent_id_column` can be selected for datasets to support tree-like structures in your conversational data. Additional `augmentation` settings have been added for this feature.
+- [PR 132](https://github.com/h2oai/h2o-llmstudio/pull/131) Add 4bit training that allows training of larger LLM backbones with less GPU memory. See [here](https://huggingface.co/blog/4bit-transformers-bitsandbytes) for a comprehensive summary of this method.
 
 Please note that due to current rapid development we cannot guarantee full backwards compatibility of new functionality. We thus recommend to pin the version of the framework to the one you used for your experiments. For resetting, please delete/backup your `data` and `output` folders.
 
@@ -319,6 +320,13 @@ The majority of the LLM backbones are trained on a very similar corpus of data. 
 > ❓ What if my data is not in question and answer form, I just have documents? How can I fine-tune the LLM model?
 
 To train a chatbot style model, you need to convert your data into a question and answer format.
+
+> ❓ I encounter GPU out-of-memory issues. What can I change to be able to train large models? 
+
+There are various parameters that can be tuned while keeping a specific LLM backbone fixed.
+It is advised to choose 4bit/8bit precision as a backbone dtype to be able to train models >=7B on a consumer type GPU.
+LORA should be enabled. Besides that there are the usual parameters such as batch size and maximum sequence length that can be decreased to save GPU memory 
+(please ensure that your prompt+answer text is not truncated too much by checking the train data insights).
 
 ## License
 
