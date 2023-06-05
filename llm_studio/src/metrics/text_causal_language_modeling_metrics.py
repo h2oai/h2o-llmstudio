@@ -41,8 +41,8 @@ def call_openai_api(template, model):
                 "content": template,
             },
         ],
-        temperature=0.1,
-        max_tokens=1024,
+        temperature=0.0,
+        max_tokens=4096,
     )
     ret = response["choices"][0]["message"]["content"]
     ret = ret.split("\n")
