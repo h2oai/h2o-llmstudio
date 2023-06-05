@@ -27,9 +27,11 @@ module.exports = {
           type: "category",
           label: "Experiments",
           items: [
-            "tutorials/experiments/tutorial-1b",
-            "tutorials/experiments/tutorial-2b",
-            "tutorials/experiments/tutorial-3b",
+            "user-guide/experiments/experiment-settings",
+            "user-guide/experiments/view-an-experiment",
+            "user-guide/experiments/compare-experiments",
+            "user-guide/experiments/create-an-experiment",
+            "user-guide/experiments/monitoring-experiments",
           ],
         },
         {
