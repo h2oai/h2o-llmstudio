@@ -62,8 +62,7 @@ print(generate_text.preprocess("Why is drinking water so healthy?")["prompt_text
 {{text_prompt_start}}Why is drinking water so healthy?{{end_of_sentence}}{{text_answer_separator}}
 ```
 
-Alternatively, if you prefer to not use `trust_remote_code=True` you can download [h2oai_pipeline.py](h2oai_pipeline.py), store it alongside your notebook, and construct the pipeline yourself from the loaded model and tokenizer. Note that some models still require you to allow remote code if they have not been added to the `transformers` package, yet. 
-
+Alternatively, you can download [h2oai_pipeline.py](h2oai_pipeline.py), store it alongside your notebook, and construct the pipeline yourself from the loaded model and tokenizer. For models and tokenizers that are fully supported in the `transformers` package, this will allow you to set `trust_remote_code=False`.
 
 ```python
 import torch
