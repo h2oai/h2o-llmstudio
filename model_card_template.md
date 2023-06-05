@@ -33,7 +33,7 @@ from transformers import pipeline
 
 generate_text = pipeline(
     model="{{repo_id}}",
-    torch_dtype=torch.float16,
+    torch_dtype="auto",
     trust_remote_code=True,
     use_fast={{use_fast}},
     device_map={"": "cuda:0"},
@@ -78,7 +78,7 @@ tokenizer = AutoTokenizer.from_pretrained(
 )
 model = AutoModelForCausalLM.from_pretrained(
     "{{repo_id}}",
-    torch_dtype=torch.float16,
+    torch_dtype="auto",
     device_map={"": "cuda:0"},
     trust_remote_code={{trust_remote_code}},
 )
@@ -115,7 +115,7 @@ tokenizer = AutoTokenizer.from_pretrained(
 )
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
-    torch_dtype=torch.float16,
+    torch_dtype="auto",
     device_map={"": "cuda:0"},
     trust_remote_code={{trust_remote_code}},
 )
