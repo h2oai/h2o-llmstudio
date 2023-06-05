@@ -1470,8 +1470,8 @@ async def experiment_artifact_build_error_dialog(q: Q, error: str):
 
 async def experiment_download_artifact(
     q: Q,
-    get_artifact_path_fn: Callable[[str, str, str], str],
-    save_artifact_fn: Callable[[str, str, str, str], str],
+    get_artifact_path_fn: Callable[[str, str], str],
+    save_artifact_fn: Callable[[str, str, str], str],
     additional_log: Optional[str] = "",
     min_disk_space: Optional[float] = 0.0,
 ):
@@ -1595,17 +1595,17 @@ async def experiment_download_model(q: Q, error: str = ""):
 
     if not os.path.exists(zip_path):
         logger.info(f"Creating {zip_path} on demand")
+        cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
 
         device = "cuda"
         experiments = get_experiments(q)
         num_running_queued = len(
             experiments[experiments["status"].isin(["queued", "running"])]
         )
-        if num_running_queued > 0:
-            logger.info(
-                "Preparing model on CPU as there are experiments running. "
-                "This might slow down the progress."
-            )
+        if num_running_queued > 0 or (
+            cfg.training.lora and cfg.architecture.backbone_dtype in ("int4", "int8")
+        ):
+            logger.info("Preparing model on CPU. This might slow down the progress.")
             device = "cpu"
 
         cfg, model, tokenizer = load_cfg_model_tokenizer(
@@ -1614,13 +1614,13 @@ async def experiment_download_model(q: Q, error: str = ""):
 
         model = unwrap_model(model)
         checkpoint_path = cfg.output_directory
-
         model.backbone.save_pretrained(checkpoint_path)
         tokenizer.save_pretrained(checkpoint_path)
 
         card = get_model_card(cfg, model, repo_id="<path_to_local_folder>")
         card.save(os.path.join(experiment_path, "model_card.md"))
 
+        logger.info(f"Creating Zip File at {zip_path}")
         zf = zipfile.ZipFile(zip_path, "w")
 
         FILES_TO_PUSH = [
@@ -1883,7 +1883,11 @@ def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
     gc.collect()
     torch.cuda.empty_cache()
 
-    if merge and cfg.training.lora and cfg.architecture.backbone_dtype == "int8":
+    if (
+        merge
+        and cfg.training.lora
+        and cfg.architecture.backbone_dtype in ("int4", "int8")
+    ):
         logger.info("Loading backbone in float16 for merging LORA weights.")
         cfg.architecture.backbone_dtype = "float16"
         cfg.architecture.pretrained = True
@@ -1898,6 +1902,7 @@ def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
         if merge and cfg.training.lora:
             # merges the LoRa layers into the base model.
             # This is needed if one wants to use the base model as a standalone model.
+            logger.info("Merging LORA layers with base model.")
             model.backbone = model.backbone.merge_and_unload()
 
     model = model.to(device).eval()
