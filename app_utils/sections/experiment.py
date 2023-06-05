@@ -6,10 +6,12 @@ import shutil
 import zipfile
 from typing import Callable, List, Optional
 
+import accelerate
 import huggingface_hub
 import numpy as np
 import pandas as pd
 import torch
+import transformers
 import yaml
 from h2o_wave import Q, data, ui
 from jinja2 import Environment, FileSystemLoader
@@ -1863,6 +1865,10 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
         repetition_penalty=cfg.prediction.repetition_penalty,
         text_prompt_start=cfg.dataset.text_prompt_start,
         text_answer_separator=cfg.dataset.text_answer_separator,
+        trust_remote_code=cfg.environment.trust_remote_code,
+        transformers_version=transformers.__version__,
+        accelerate_version=accelerate.__version__,
+        torch_version=torch.__version__.split("+")[0],
         end_of_sentence=cfg._tokenizer_eos_token
         if cfg.dataset.add_eos_token_to_prompt
         else "",
