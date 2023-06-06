@@ -20,7 +20,18 @@ You will see the following tabs that provide details and different aspects of yo
 
     ![charts tab](charts-tab.png)
 
-- **Summary** : This tab summarizes the basic details of the selected experiment such as name, dataset, problem type, seed, Gpu list, loss, metric, and Val metric. 
+- **Summary** : This tab contains the following details about an experiment.  
+
+    | Name      | Description                          |
+    | ----------- | ------------------------------------ |
+    | **Name**        | Name of the experiment.  |
+    | **Dataset**  | Name of the dataset. |
+    | **Problem type** | The problem type of the experiment. |
+    | **Seed** | The random seed value that H2O LLM Studio uses during model training. |
+    | **GPU list** | The list of GPUs H2O LLM Studio can use for the experiment. |
+    | **Loss** | The loss function. |
+    | **Metric** | The metric to evaluate the model’s performance. |
+    | **Val metric** | The measure of how well the experiment was performed. |
 
 - **Train data insights** : This tab displays the model’s first batch, so you can verify that the input data representation is correct. Also, it provides insight into how your data is being processed and can help identify potential issues early on in the experiment.
 
@@ -32,6 +43,6 @@ You will see the following tabs that provide details and different aspects of yo
 
 - **Logs and Config tabs** : These two tabs show you the logs and configuration of the experiment. You can keep track of any changes made and quickly troubleshoot the issues that arise.
 
-- **Chat** : This tab provides a unique opportunity to interact with your trained model and get instant feedback on its performance. The **Chat** tab becomes available after the training is completed and can be used to evaluate how well your model performs in a conversational setting.
+- **Chat** : This tab provides a unique opportunity to interact with your trained model and get instant feedback on its performance. The **Chat** tab becomes available after the training is completed and can be used to evaluate how well your model performs in a conversational setting. 
 
     ![chat tab](chat-tab.png)
