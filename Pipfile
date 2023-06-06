@@ -16,6 +16,10 @@ torch = {index = "pytorch", version = "==2.0.0+cu117"}
 torchvision = {index = "pytorch", version = "==0.15.1+cu117"}
 torchaudio = {index = "pytorch", version = "==2.0.1+cu117"}
 tqdm = ">=4.65.0, <5.0.0"
+# Replace transformers main branch with >4.29.2 release. 4.29.2 does not contain 4bit quantization, see:
+# https://github.com/huggingface/transformers/commit/9d73b922692776d1cf268b8c95fd90c68e561add
+# Currently handled in makefile as pipfile lock produces
+# https://github.com/python-poetry/poetry/issues/1900
 transformers = "==4.29.2"
 numpy = ">=1.23.2, <2.0.0"
 pandas = ">=1.4.2, <2.0.0"
@@ -39,7 +43,7 @@ gputil = "==1.4.0"
 huggingface-hub = "==0.14.1"
 starlette= ">=0.27.0, <0.28.0"
 peft = {ref = "main", git = "https://github.com/huggingface/peft"}
-bitsandbytes = "==0.38.1"
+bitsandbytes = "==0.39.0"
 accelerate = "==0.19.0"
 openai = "==0.27.7"
 einops = "==0.6.1"
