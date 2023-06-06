@@ -260,77 +260,33 @@ class Model(nn.Module):
 
         kwargs = {}
 
-        if self.cfg.training.use_rlhf:
+        if self.training and self.cfg.training.use_rlhf:
             kwargs["output_hidden_states"] = True
 
-        # model's forward only works with labels
-        if "labels" in batch:
-            if "prompt_attention_mask" in batch:
-                mask_key = "prompt_attention_mask"
-                pad_keys = [
-                    "input_ids",
-                    "attention_mask",
-                    "prompt_input_ids",
-                    "prompt_attention_mask",
-                    "special_tokens_mask",
-                    "labels",
-                ]
-            else:
-                mask_key = "attention_mask"
-                pad_keys = [
-                    "input_ids",
-                    "attention_mask",
-                    "special_tokens_mask",
-                    "labels",
-                ]
+        mask_key = "attention_mask"
+        pad_keys = [
+            "input_ids",
+            "attention_mask",
+            "special_tokens_mask",
+            "labels",
+        ]
 
-            batch = batch_padding(
-                self.cfg,
-                batch,
-                self.training,
-                mask_key=mask_key,
-                pad_keys=pad_keys,
-            )
-            output = self.backbone(
-                input_ids=batch["input_ids"],
-                attention_mask=batch["attention_mask"],
-                labels=batch["labels"],
-                **kwargs,
-            )
-            if calculate_loss:
-                assert self.cfg.training.loss_function == "CrossEntropy"
-                outputs["loss"] = output.loss
-        else:
-            if "prompt_attention_mask" in batch:
-                mask_key = "prompt_attention_mask"
-                pad_keys = [
-                    "input_ids",
-                    "attention_mask",
-                    "prompt_input_ids",
-                    "prompt_attention_mask",
-                    "special_tokens_mask",
-                ]
-            else:
-                mask_key = "attention_mask"
-                pad_keys = [
-                    "input_ids",
-                    "attention_mask",
-                    "special_tokens_mask",
-                ]
-
-            batch = batch_padding(
-                self.cfg,
-                batch,
-                self.training,
-                mask_key=mask_key,
-                pad_keys=pad_keys,
-            )
-
-            output = self.backbone(
-                input_ids=batch["input_ids"],
-                attention_mask=batch["attention_mask"],
-                **kwargs,
-            )
+        batch = batch_padding(
+            self.cfg,
+            batch,
+            self.training,
+            mask_key=mask_key,
+            pad_keys=pad_keys,
+        )
+        output = self.backbone(
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+            labels=batch["labels"] if "labels" in batch else None,
+            **kwargs,
+        )
+        if calculate_loss:
+            assert self.cfg.training.loss_function == "CrossEntropy"
+            outputs["loss"] = output.loss
 
         if self.training and self.cfg.training.use_rlhf:
             last_hidden_state = output.hidden_states[-1]
