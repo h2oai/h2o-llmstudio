@@ -9,8 +9,10 @@ from joblib import Parallel, delayed
 from sacrebleu import BLEU
 from sacrebleu.metrics.base import Metric
 from tenacity import retry, stop_after_attempt, wait_random_exponential
+from tqdm import tqdm
 
 from llm_studio.src.datasets.text_utils import get_texts
+from llm_studio.src.utils.logging_utils import TqdmToLogger
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +43,7 @@ def call_openai_api(template, model):
                 "content": template,
             },
         ],
-        temperature=0.1,
+        temperature=0.0,
         max_tokens=1024,
     )
     ret = response["choices"][0]["message"]["content"]
@@ -82,8 +84,15 @@ def gpt_score(
 
     ret = Parallel(n_jobs=8, backend="multiprocessing")(
         delayed(rate_reply)(prompt, target_text, predicted_text, model)
-        for prompt, predicted_text, target_text in zip(
-            prompts, results["predicted_text"], results["target_text"]
+        for prompt, predicted_text, target_text in tqdm(
+            zip(
+                prompts,
+                results["predicted_text"],
+                results["target_text"],
+            ),
+            file=TqdmToLogger(logger, level=logging.INFO),
+            desc="GPT eval",
+            total=len(prompts),
         )
     )
     scores = [x[0] for x in ret]
