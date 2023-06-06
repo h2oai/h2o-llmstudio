@@ -347,8 +347,8 @@ def run_train(
                     raise LLMTrainingException(
                         "NaN caught in loss during training. "
                         "Please, reduce learning rate, change dtype, "
-                        "or disable mixed precision. "
-                        "Alternatively, gradient clipping may help to stabilize training."
+                        "or disable mixed precision. Alternatively, "
+                        "gradient clipping may help to stabilize training."
                     )
                 losses.append(loss.item())
 

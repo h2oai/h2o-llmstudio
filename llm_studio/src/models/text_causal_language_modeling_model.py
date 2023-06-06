@@ -220,6 +220,20 @@ class Model(nn.Module):
             ]
         )
 
+        # The KL-div estimation assumes sampling and specific settings
+        if self.training and cfg.training.use_rlhf:
+            do_sample = True
+            temperature = 1.0
+            top_k = 0.0
+            top_p = 1.0
+            repetition_penalty = 1.0
+        else:
+            do_sample = cfg.prediction.do_sample
+            temperature = float(cfg.prediction.temperature)
+            top_k = cfg.prediction.top_k
+            top_p = float(cfg.prediction.top_p)
+            repetition_penalty = float(cfg.prediction.repetition_penalty)
+
         transformers_logging.set_verbosity_error()
         output = generation_function(
             inputs=input_ids,
@@ -227,12 +241,12 @@ class Model(nn.Module):
             pad_token_id=pad_token_id,
             min_new_tokens=cfg.prediction.min_length_inference,
             max_new_tokens=cfg.prediction.max_length_inference,
-            do_sample=cfg.prediction.do_sample,
+            do_sample=do_sample,
             num_beams=cfg.prediction.num_beams,
-            temperature=float(cfg.prediction.temperature),
-            repetition_penalty=float(cfg.prediction.repetition_penalty),
-            top_k=cfg.prediction.top_k,
-            top_p=float(cfg.prediction.top_p),
+            temperature=temperature,
+            repetition_penalty=repetition_penalty,
+            top_k=top_k,
+            top_p=top_p,
             stopping_criteria=stopping_criteria,
             renormalize_logits=True,
             return_dict_in_generate=False,
@@ -449,9 +463,7 @@ class GPTNeoXRewardModel(GPTNeoXPreTrainedModel):
 
 
 class RewardModel(nn.Module):
-    def __init__(
-        self, cfg, reward_model="OpenAssistant/reward-model-deberta-v3-large-v2"
-    ):
+    def __init__(self, cfg):
         super(RewardModel, self).__init__()
 
         AutoConfig.register("gpt_neox_reward_model", GPTNeoXRewardModelConfig)
