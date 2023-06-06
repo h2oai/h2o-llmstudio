@@ -301,7 +301,10 @@ def run_train(
                     )
 
                 # score by reward model
-                reward = [torch.tensor(score, dtype=torch.float32) for score in scores]
+                reward = [
+                    torch.tensor(score, dtype=torch.float32)
+                    for score in scores.detach().cpu()
+                ]
 
                 for i in range(len(reward)):
                     print(batch["raw_prompt_text"][i])
@@ -310,14 +313,20 @@ def run_train(
 
                 idx = torch.where(batch["attention_mask"] == 1)[1]
                 query_tensor = [
-                    input_ids[id_:] for input_ids, id_ in zip(batch["input_ids"], idx)
+                    input_ids[id_:]
+                    for input_ids, id_ in zip(batch["input_ids"].detach().cpu(), idx)
                 ]
                 response_tensor = [
                     predicted_answer_ids
                     for predicted_answer_ids in output_dict["predicted_answer_ids"]
+                    .detach()
+                    .cpu()
                 ]
                 del output_dict
+                del batch
+
                 output_dict = ppo_trainer.step(query_tensor, response_tensor, reward)
+                del query_tensor, response_tensor, reward, scores
 
                 loss = output_dict["ppo/loss/total"]
                 losses.append(loss)

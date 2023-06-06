@@ -404,6 +404,9 @@ def run_inference(
             cfg=cfg, output=output
         )
 
+        if "predicted_answer_ids" in output.keys():
+            del output["predicted_answer_ids"]
+
         for key, val in output.items():
             if isinstance(val, torch.Tensor):
                 val = val.detach().cpu()

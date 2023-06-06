@@ -323,7 +323,7 @@ class Model(nn.Module):
                 **kwargs,
             )
 
-        if self.cfg.training.use_rlhf:
+        if self.training and self.cfg.training.use_rlhf:
             last_hidden_state = output.hidden_states[-1]
 
             # force upcast in fp32 if logits are in half-precision
@@ -332,8 +332,7 @@ class Model(nn.Module):
 
             outputs["logits"] = output.logits
             outputs["value"] = self.value_head(last_hidden_state).squeeze(-1)
-            # print("value", outputs["value"].shape)
-            # print("logits", outputs["logits"].shape)
+
         if not self.training or generate:
             outputs["predicted_answer_ids"] = self.generate(batch, self.cfg).detach()
         return outputs
