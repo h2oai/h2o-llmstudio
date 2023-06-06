@@ -307,16 +307,14 @@ def run_train(
                         )
 
                 # score by reward model
-                reward = [
-                    torch.tensor(score, dtype=torch.float32)
-                    for score in scores.detach().cpu()
-                ]
+                reward = [torch.tensor(score, dtype=torch.float32) for score in scores]
 
                 for i in range(len(reward)):
                     print(batch["raw_prompt_text"][i])
                     print(output_dict["predicted_text"][i])
                     print("reward", reward[i])
 
+                # remove padding from query and response
                 idx = torch.where(batch["attention_mask"] == 1)[1]
                 query_tensor = [
                     input_ids[id_:]
