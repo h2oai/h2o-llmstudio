@@ -299,7 +299,9 @@ class Model(nn.Module):
             outputs["value"] = self.value_head(last_hidden_state).squeeze(-1)
 
         if not self.training or generate:
-            outputs["predicted_answer_ids"] = self.generate(batch, self.cfg).detach()
+            outputs["predicted_answer_ids"] = (
+                self.generate(batch, self.cfg).detach().cpu()
+            )
         return outputs
 
 
