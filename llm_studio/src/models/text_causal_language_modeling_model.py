@@ -170,8 +170,6 @@ class Model(nn.Module):
             self.value_head = ValueHead(self.backbone_config)
             self.value_head.summary.bias.data.zero_()
 
-        self.loss_fn = self.cfg.training.loss_class.get(self.cfg.training.loss_function)
-
     def generate(self, batch: Dict, cfg: Any, remove_prompt=False):
         pad_token_id = (
             self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
@@ -299,7 +297,6 @@ class Model(nn.Module):
             **kwargs,
         )
         if calculate_loss:
-            assert self.cfg.training.loss_function == "CrossEntropy"
             outputs["loss"] = output.loss
 
         if self.training and self.cfg.training.use_rlhf:
