@@ -245,7 +245,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         scores: List[torch.FloatTensor],
     ):
         """
-        Check if the input data is valid for training.
+        Check if the input data is valid for training and move the data to the correct device.
 
         Args:
             batch_size (int):
@@ -481,46 +481,57 @@ class PPOTrainer(PyTorchModelHubMixin):
                     shape (`batch_size`, `response_length`)
                 - all_values (`torch.FloatTensor`): Values of the responses, shape (`batch_size`, `response_length`)
         """
+        bs = len(queries)
+        ppo_bs = self.cfg.training.ppo_batch_size
+
         all_logprobs = []
         all_logits = []
         all_masks = []
         all_values = []
 
-        outputs = model(model_inputs)
-        logits = outputs["logits"]
-        values = outputs["value"]
+        for i in range(int(bs / ppo_bs)):
+            model_inputs_batch = {
+                key: value[i * ppo_bs : (i + 1) * ppo_bs]
+                for key, value in model_inputs.items()
+            }
+            query_batch = queries[i * ppo_bs : (i + 1) * ppo_bs]
+            response_batch = responses[i * ppo_bs : (i + 1) * ppo_bs]
 
-        input_ids = model_inputs["input_ids"]
-        attention_mask = model_inputs["attention_mask"]
+            outputs = model(model_inputs_batch)
+            logits = outputs["logits"]
+            values = outputs["value"]
 
-        logprobs = logprobs_from_logits(logits[:, :-1, :], input_ids[:, 1:])
-        masks = torch.zeros_like(attention_mask)
-        masks[:, :-1] = attention_mask[:, 1:]
+            input_ids = model_inputs_batch["input_ids"]
+            attention_mask = model_inputs_batch["attention_mask"]
 
-        for j in range(len(queries)):
-            start = len(queries[j]) - 1
-            if attention_mask[j, 0] == 0:  # offset left padding
-                start += attention_mask[j, :].nonzero()[0]
-            end = start + len(responses[j])
+            logprobs = logprobs_from_logits(logits[:, :-1, :], input_ids[:, 1:])
+            masks = torch.zeros_like(attention_mask)
+            masks[:, :-1] = attention_mask[:, 1:]
 
-            if len(logprobs[j, start:end]) < 2:
-                raise ValueError(
-                    "Responses are too short. Make sure they are at least 4 tokens long."
-                )
+            for j in range(ppo_bs):
+                start = len(query_batch[j]) - 1
+                if attention_mask[j, 0] == 0:  # offset left padding
+                    start += attention_mask[j, :].nonzero()[0]
+                end = start + len(response_batch[j])
 
-            masks[j, :start] = 0
-            masks[j, end:] = 0
+                if len(logprobs[j, start:end]) < 2:
+                    raise ValueError(
+                        "Responses are too short. Make sure they are at least 2 tokens long."
+                    )
 
-        if return_logits:
-            all_logits.append(logits)
-        else:
-            del logits
-        if return_values:
-            all_values.append(values)
-        else:
-            del values
-        all_logprobs.append(logprobs)
-        all_masks.append(masks)
+                masks[j, :start] = 0
+                masks[j, end:] = 0
+
+            if return_logits:
+                all_logits.append(logits)
+            else:
+                del logits
+            if return_values:
+                all_values.append(values)
+            else:
+                del values
+            all_logprobs.append(logprobs)
+            all_masks.append(masks)
 
         return (
             torch.cat(all_logprobs),

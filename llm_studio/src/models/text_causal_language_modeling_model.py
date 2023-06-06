@@ -5,7 +5,6 @@ from typing import Any, Dict, Literal, Optional
 import torch
 import torch.nn as nn
 from peft import LoraConfig, get_peft_model
-from torch import nn
 from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
@@ -491,17 +490,17 @@ class GPTNeoXRewardModel(GPTNeoXPreTrainedModel):
         return GPTNeoXRewardModelOutput(logits=logits)
 
 
-AutoConfig.register("gpt_neox_reward_model", GPTNeoXRewardModelConfig)
-AutoModelForSequenceClassification.register(
-    GPTNeoXRewardModelConfig, GPTNeoXRewardModel
-)
-
-
 class RewardModel(nn.Module):
     def __init__(
         self, cfg, reward_model="OpenAssistant/reward-model-deberta-v3-large-v2"
     ):
         super(RewardModel, self).__init__()
+
+        AutoConfig.register("gpt_neox_reward_model", GPTNeoXRewardModelConfig)
+        AutoModelForSequenceClassification.register(
+            GPTNeoXRewardModelConfig, GPTNeoXRewardModel
+        )
+
         self.cfg = cfg
         self.model_name = cfg.training.reward_model
         self.device = cfg.environment._device
