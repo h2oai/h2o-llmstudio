@@ -362,8 +362,9 @@ class CustomDataset(Dataset):
             )
         )
 
-        if not self.cfg.training.use_rlhf:
+        if not self.cfg.training.use_rlhf or self.mode != "train":
             samples[-1][1] = torch.empty(0)
+
         prompt_input_ids = torch.cat([torch.cat(sample) for sample in samples])
         prompt_attention_mask = torch.ones_like(prompt_input_ids)
 
