@@ -46,3 +46,12 @@ You will see the following tabs that provide details and different aspects of yo
 - **Chat** : This tab provides a unique opportunity to interact with your trained model and get instant feedback on its performance. The **Chat** tab becomes available after the training is completed and can be used to evaluate how well your model performs in a conversational setting. 
 
     ![chat tab](chat-tab.png)
+
+## Delete an experiment
+
+When an experiment is no longer needed, you can delete it. Deleted experiments are permanently removed from the H2O LLM Studio instance.
+
+1. On the H2O LLM Studio left-navigation pane, click **View experiments**.
+2. Click **Delete experiments**.
+3. Select the experiment(s) that you want to delete and click **Delete experiments**.
+4. Click **Delete** to confirm deletion.
