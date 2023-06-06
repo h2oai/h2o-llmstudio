@@ -154,17 +154,7 @@ class Model(nn.Module):
             self.backbone.print_trainable_parameters()
 
         if self.cfg.training.use_rlhf:
-            # logger.info("Loading reference model for RLHF")
-            # self.ref_model, self.ref_model_config = create_nlp_backbone(
-            #     cfg, model_class=AutoModelForCausalLM, kwargs=kwargs
-            # )
-            # self.ref_model.eval()
-            # self.ref_model.requires_grad_(False)
-
             self.value_head = ValueHead(self.backbone_config)
-            # random init by default
-            # self.value_head.summary.weight.data.normal_(mean=0.0, std=0.2)
-            # self.value_head.summary.bias.data.zero_()
 
         self.loss_fn = self.cfg.training.loss_class.get(self.cfg.training.loss_function)
 

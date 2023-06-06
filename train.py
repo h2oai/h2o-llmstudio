@@ -23,7 +23,6 @@ from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from tqdm import tqdm
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
-from llm_studio.src.trl.my_ppo_config import PPOConfig
 from llm_studio.src.trl.my_ppo_trainer import PPOTrainer
 from llm_studio.src.loggers import MainLogger
 from llm_studio.src.utils.config_utils import (
@@ -213,13 +212,9 @@ def run_train(
 
     if cfg.training.use_rlhf:
         # initialize trainer
-        ppo_config = PPOConfig(
-            batch_size=cfg.training.batch_size,
-        )
         tokenizer = get_tokenizer(cfg)
         ppo_trainer = PPOTrainer(
             cfg=cfg,
-            ppo_config=ppo_config,
             model=model,
             ref_model=model_ref,
             tokenizer=tokenizer,
@@ -287,7 +282,7 @@ def run_train(
                 log_plot(cfg, plot, "train_data")
 
             if cfg.training.use_rlhf:
-                logger.info("Generating response")
+                logger.debug("Rollout: Generating response from active model")
                 output_dict = {}
                 with torch.no_grad():
                     output_dict["predicted_answer_ids"] = model.generate(
@@ -297,19 +292,16 @@ def run_train(
                     cfg=cfg, output=output_dict
                 )
 
-                logger.info("Reward model")
+                logger.debug("Evaluation: Score from reward model")
                 # tokenize prompt & output internally
                 with torch.no_grad():
+                    # TODO: Add previous question and answers to prompt. Format?
                     scores = reward_model.get_score(
                         batch["raw_prompt_text"], output_dict["predicted_text"]
                     )
 
                 # score by reward model
                 reward = [torch.tensor(score, dtype=torch.float32) for score in scores]
-
-                # logger.info(
-                #     f"SHAPE: input {batch['input_ids'].shape}, output {output_dict['predicted_answer_ids'].shape}"
-                # )
 
                 for i in range(len(reward)):
                     print(batch["raw_prompt_text"][i])
@@ -384,6 +376,7 @@ def run_train(
 
             if cfg.environment._local_rank == 0:
                 if cfg.training.use_rlhf:
+                    # additional RLHF specific logging
                     for key in output_dict.keys():
                         if isinstance(output_dict[key], (float, int)) or (
                             isinstance(output_dict[key], np.ndarray)
@@ -577,6 +570,7 @@ def run(cfg: Any) -> None:
             evaluation_epochs=cfg.training.evaluation_epochs,
         )
         val_batch_size = get_inference_batch_size(cfg)
+
         # if zero shot, validate once before training
         total_validation_steps = (
             len(val_dataloader)
@@ -595,6 +589,8 @@ def run(cfg: Any) -> None:
                 cfg.training.reward_model
             )
             reward_model.eval()
+
+            logger.info("Using RLHF - Loading reference model")
             model_ref = cfg.architecture.ref_model_class(cfg)
             model_ref.eval()
         else:

@@ -146,14 +146,14 @@ class AdaptiveKLController:
     https://arxiv.org/pdf/1909.08593.pdf
     """
 
-    def __init__(self, init_kl_coef, target, horizon):
-        self.value = init_kl_coef
-        self.target = target
-        self.horizon = horizon
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.value = self.cfg.training.initial_kl_coefficient
+        self.target = self.cfg.training.kl_target
+        self.horizon = self.cfg.training.kl_horizon
 
     def update(self, current, n_steps):
-        target = self.target
-        proportional_error = np.clip(current / target - 1, -0.2, 0.2)
+        proportional_error = np.clip(current / self.target - 1, -0.2, 0.2)
         mult = 1 + proportional_error * n_steps / self.horizon
         self.value *= mult
 
@@ -161,8 +161,9 @@ class AdaptiveKLController:
 class FixedKLController:
     """Fixed KL controller."""
 
-    def __init__(self, kl_coef):
-        self.value = kl_coef
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.value = self.cfg.training.initial_kl_coefficient
 
     def update(self, current, n_steps):
         pass
@@ -177,8 +178,6 @@ class PPOTrainer(PyTorchModelHubMixin):
     Attributes:
         **cfg** (`LLM Studio Config`) -- Experiment configuration object. Check the documentation of `LLM Studio Config`
             for more details.
-        **config** (`PPOConfig`) -- Configuration object for PPOTrainer. Check the documentation of `PPOConfig` for more
-            details.
         **model** (`PreTrainedModelWrapper`) -- Model to be optimized, Hugging Face transformer model with a value head.
             Check the documentation of `PreTrainedModelWrapper` for more details.
         **ref_model** (`PreTrainedModelWrapper`, *optional*) -- Reference model to be used for KL penalty, Hugging Face
@@ -195,7 +194,6 @@ class PPOTrainer(PyTorchModelHubMixin):
     def __init__(
         self,
         cfg=None,
-        ppo_config=None,
         model=None,
         ref_model=None,
         tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = None,
@@ -208,8 +206,6 @@ class PPOTrainer(PyTorchModelHubMixin):
         Args:
             cfg (`LLM Studio Config`):
                 experiment configuration object. Check the documentation of `LLM Studio Config` for more details.
-            ppo_config (`PPOConfig`):
-                Configuration object for PPOTrainer. Check the documentation of `PPOConfig` for more details.
             model (`PreTrainedModelWrapper`):
                 Hugging Face transformer model with a value head.
             ref_model (`PreTrainedModelWrapper`):
@@ -222,7 +218,6 @@ class PPOTrainer(PyTorchModelHubMixin):
                 Learning rate scheduler used for training.
         """
         self.cfg = cfg
-        self.config = ppo_config
 
         # Step 1: Initialize Model
         self.model = model
@@ -234,12 +229,10 @@ class PPOTrainer(PyTorchModelHubMixin):
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
 
-        if self.config.adap_kl_ctrl:
-            self.kl_ctl = AdaptiveKLController(
-                self.config.init_kl_coef, self.config.target, self.config.horizon
-            )
+        if self.cfg.training.adaptive_kl_control:
+            self.kl_ctl = AdaptiveKLController(cfg)
         else:
-            self.kl_ctl = FixedKLController(self.config.init_kl_coef)
+            self.kl_ctl = FixedKLController(cfg)
 
         self.current_device = self.cfg.environment._device
 
@@ -320,7 +313,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         Returns:
             `dict[str, Any]`: A summary of the training statistics
         """
-        bs = self.config.batch_size
+        bs = self.cfg.training.batch_size
 
         queries, responses, scores = self._step_safety_checker(
             bs, queries, responses, scores
@@ -377,14 +370,14 @@ class PPOTrainer(PyTorchModelHubMixin):
         mini_batch_data.set_format("torch")
         mini_batch_dataloader = torch.utils.data.DataLoader(
             mini_batch_data,
-            batch_size=self.config.mini_batch_size,
+            batch_size=self.cfg.training.ppo_batch_size,
             shuffle=True,
             collate_fn=collator,
         )
 
         t = time.time()
         all_stats = []
-        for _ in range(self.config.ppo_epochs):
+        for _ in range(self.cfg.training.ppo_epochs):
             for batch in mini_batch_dataloader:
                 model_inputs = {k: batch[k] for k in model_inputs_names}
                 logprobs, logits, vpreds, _ = self.batched_forward_pass(
@@ -439,7 +432,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         stats["ppo/learning_rate"] = self.optimizer.param_groups[0]["lr"]
 
         # Update the KL control - multiply the batch_size by the number of processes
-        self.kl_ctl.update(stats["objective/kl"], self.config.batch_size)
+        self.kl_ctl.update(stats["objective/kl"], self.cfg.training.batch_size)
 
         # Log the total ppo time
         timing["time/ppo/total"] = time.time() - t0
@@ -653,8 +646,17 @@ class PPOTrainer(PyTorchModelHubMixin):
 
         for t in reversed(range(gen_len)):
             nextvalues = values[:, t + 1] if t < gen_len - 1 else 0.0
-            delta = rewards[:, t] + self.config.gamma * nextvalues - values[:, t]
-            lastgaelam = delta + self.config.gamma * self.config.lam * lastgaelam
+            delta = (
+                rewards[:, t]
+                + self.cfg.training.advantages_gamma * nextvalues
+                - values[:, t]
+            )
+            lastgaelam = (
+                delta
+                + self.cfg.training.advantages_gamma
+                * self.cfg.training.advantages_lambda
+                * lastgaelam
+            )
             advantages_reversed.append(lastgaelam)
         advantages = torch.stack(advantages_reversed[::-1]).transpose(0, 1)
 
@@ -664,8 +666,8 @@ class PPOTrainer(PyTorchModelHubMixin):
 
         vpredclipped = clip_by_value(
             vpreds,
-            values - self.config.cliprange_value,
-            values + self.config.cliprange_value,
+            values - self.cfg.training.ppo_clip_value,
+            values + self.cfg.training.ppo_clip_value,
         )
 
         vf_losses1 = (vpreds - returns) ** 2
@@ -676,13 +678,15 @@ class PPOTrainer(PyTorchModelHubMixin):
         ratio = torch.exp(logprobs - old_logprobs)
         pg_losses = -advantages * ratio
         pg_losses2 = -advantages * torch.clamp(
-            ratio, 1.0 - self.config.cliprange, 1.0 + self.config.cliprange
+            ratio,
+            1.0 - self.cfg.training.ppo_clip_policy,
+            1.0 + self.cfg.training.ppo_clip_policy,
         )
 
         pg_loss = masked_mean(torch.max(pg_losses, pg_losses2), mask)
         pg_clipfrac = masked_mean(torch.gt(pg_losses2, pg_losses).double(), mask)
 
-        loss = pg_loss + self.config.vf_coef * vf_loss
+        loss = pg_loss + self.cfg.training.scaling_factor_value_loss * vf_loss
 
         entropy = masked_mean(entropy_from_logits(logits), mask)
         approxkl = 0.5 * masked_mean((logprobs - old_logprobs) ** 2, mask)
@@ -712,7 +716,11 @@ class PPOTrainer(PyTorchModelHubMixin):
                 var=value_var.detach(),
             ),
         )
-        return pg_loss, self.config.vf_coef * vf_loss, flatten_dict(stats)
+        return (
+            pg_loss,
+            self.cfg.training.scaling_factor_value_loss * vf_loss,
+            flatten_dict(stats),
+        )
 
     def record_step_stats(self, kl_coef: float, **data):
         """
