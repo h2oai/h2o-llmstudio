@@ -78,11 +78,11 @@ class CustomDataset(Dataset):
                 self.parent_ids = self.df[self.cfg.dataset.parent_id_column].values
                 self.df_id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
 
-                # filter all indices where parent_id is set to -1
-                self.indices = self.indices[(self.parent_ids != -1) & (self.parent_ids != "-1")]
-
                 # filter all indices where id column in df is never a parent_id of another row
-                self.indices = self.indices[[id not in self.parent_ids for id in self.df["id"].values]]
+                if self.cfg.dataset.limit_chained_samples:
+                    self.indices = self.indices[
+                        [id not in self.parent_ids for id in self.df["id"].values]
+                    ]
 
         self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.prompts]
 
