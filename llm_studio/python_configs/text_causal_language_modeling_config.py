@@ -354,7 +354,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     use_fsdp: bool = False
 
     find_unused_parameters: bool = False
-    trust_remote_code: bool = False
+    trust_remote_code: bool = True
     number_of_workers: int = 4
     seed: int = -1
 
