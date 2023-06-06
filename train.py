@@ -296,9 +296,15 @@ def run_train(
                 # tokenize prompt & output internally
                 with torch.no_grad():
                     # TODO: Add previous question and answers to prompt. Format?
-                    scores = reward_model.get_score(
-                        batch["raw_prompt_text"], output_dict["predicted_text"]
-                    )
+                    if cfg.environment.mixed_precision:
+                        with autocast():
+                            scores = reward_model.get_score(
+                                batch["raw_prompt_text"], output_dict["predicted_text"]
+                            )
+                    else:
+                        scores = reward_model.get_score(
+                            batch["raw_prompt_text"], output_dict["predicted_text"]
+                        )
 
                 # score by reward model
                 reward = [
@@ -594,9 +600,7 @@ def run(cfg: Any) -> None:
 
         if cfg.training.use_rlhf:
             logger.info("Using RLHF - Loading reward model")
-            reward_model = cfg.architecture.reward_model_class(
-                cfg.training.reward_model
-            )
+            reward_model = cfg.architecture.reward_model_class(cfg)
             reward_model.eval()
 
             logger.info("Using RLHF - Loading reference model")
