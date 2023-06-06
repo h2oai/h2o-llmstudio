@@ -10,5 +10,9 @@ Follow the relevant steps below to create an experiment in H2O LLM Studio.
 
 4. Provide a meaningful experiment name.
 
-5. Select the LLM Backbone, the foundation model that you continue training. H2O LLM Studio has a predefined list of recommended types of foundation models, but you can also use [huggingface models](https://huggingface.co/models). 
+5. Select the LLM Backbone, the foundation model that you continue training. H2O LLM Studio has a predefined list of recommended types of foundation models, but you can also use [Hugging Face models](https://huggingface.co/models). 
+ :::info note
+ H2O LLM Studio provides an overview of all the parameters you need to specify for your experiment. The default settings are suitable when you first start an experiment. To learn more about the parameters, see [Experiment settings](experiment-settings.md).
+ :::
 
+6. Click **Run experiment**.
