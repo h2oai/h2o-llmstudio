@@ -164,7 +164,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         ]
 
         self._possible_values["batch_size"] = (1, 256, 1)
-        self._possible_values["epochs"] = (0, 50, 1)
+        self._possible_values["epochs"] = (0, 10, 1)
         self._possible_values["schedule"] = Schedulers.names()
         self._possible_values["warmup_epochs"] = (0.0, 5, 0.05)
 
@@ -315,7 +315,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     batch_size_inference: int = 0
 
     do_sample: bool = False
-    num_beams: int = 2
+    num_beams: int = 1
     temperature: float = 0.3
     repetition_penalty: float = 1.2
     stop_tokens: str = ""
@@ -332,7 +332,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._possible_values["min_length_inference"] = (0, 1024, 1)
         self._possible_values["max_length_inference"] = (1, 1024, 1)
 
-        self._possible_values["num_beams"] = (1, 10, 1)
+        self._possible_values["num_beams"] = (1, 4, 1)
         self._possible_values["temperature"] = (0, 10, 0.05)
         self._possible_values["repetition_penalty"] = (1, 10, 0.05)
         self._possible_values["top_k"] = (0, 100, 1)
