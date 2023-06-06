@@ -23,8 +23,8 @@ from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from tqdm import tqdm
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
-from llm_studio.src.trl.trainer import PPOTrainer
 from llm_studio.src.loggers import MainLogger
+from llm_studio.src.trl.trainer import PPOTrainer
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,

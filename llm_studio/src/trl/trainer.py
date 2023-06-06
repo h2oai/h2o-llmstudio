@@ -15,20 +15,18 @@
 import time
 import warnings
 from typing import List, Optional, Union
+
 import numpy as np
 import torch
+import torch.nn.functional as F
 from datasets import Dataset
-from torch.optim import Adam
+from huggingface_hub import PyTorchModelHubMixin
+from torch.nn.utils.rnn import pad_sequence
 from transformers import (
     DataCollatorForLanguageModeling,
     PreTrainedTokenizer,
     PreTrainedTokenizerFast,
 )
-
-from huggingface_hub import PyTorchModelHubMixin
-
-import torch.nn.functional as F
-from torch.nn.utils.rnn import pad_sequence
 
 try:
     from collections.abc import Mapping

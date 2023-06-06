@@ -4,10 +4,15 @@ from typing import Any, Dict
 import torch
 from peft import LoraConfig, get_peft_model
 from torch import nn
-from transformers import AutoModelForCausalLM, StoppingCriteria, StoppingCriteriaList
+from transformers import (
+    AutoModelForCausalLM,
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    StoppingCriteria,
+    StoppingCriteriaList,
+)
 from transformers.generation.utils import GenerationMixin
 from transformers.utils import logging as transformers_logging
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import create_nlp_backbone
