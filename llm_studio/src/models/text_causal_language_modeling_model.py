@@ -169,6 +169,7 @@ class Model(nn.Module):
 
         if self.cfg.training.use_rlhf:
             self.value_head = ValueHead(self.backbone_config)
+            self.value_head.summary.bias.data.zero_()
 
         self.loss_fn = self.cfg.training.loss_class.get(self.cfg.training.loss_function)
 
