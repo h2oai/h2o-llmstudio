@@ -170,23 +170,28 @@ class FixedKLController:
 class PPOTrainer(PyTorchModelHubMixin):
     """
     The PPOTrainer uses Proximal Policy Optimization to optimise language models.
-    Note, this trainer is heavily inspired by the original OpenAI learning to summarize work here:
-    https://github.com/openai/summarize-from-feedback
+    Note, this trainer is heavily inspired by the original OpenAI learning to summarize
+    work here: https://github.com/openai/summarize-from-feedback
 
     Attributes:
-        **cfg** (`LLM Studio Config`) -- Experiment configuration object. Check the documentation of `LLM Studio Config`
-            for more details.
-        **model** (`PreTrainedModelWrapper`) -- Model to be optimized, Hugging Face transformer model with a value head.
-            Check the documentation of `PreTrainedModelWrapper` for more details.
-        **ref_model** (`PreTrainedModelWrapper`, *optional*) -- Reference model to be used for KL penalty, Hugging Face
-            transformer model with a casual language modelling head. Check the documentation of `PreTrainedModelWrapper`
-            for more details. If no reference model is provided, the trainer will create a reference model with the same
-             architecture as the model to be optimized with shared layers.
-        **tokenizer** (`Union[PreTrainedTokenizer, PreTrainedTokenizerFast]`) -- Tokenizer to be used for encoding the
-            data. Check the documentation of `transformers.PreTrainedTokenizer` and
+        **cfg** (`LLM Studio Config`) -- Experiment configuration object. Check the
+            documentation of `LLM Studio Config` for more details.
+        **model** (`PreTrainedModelWrapper`) -- Model to be optimized, Hugging Face
+            transformer model with a value head. Check the documentation of
+            `PreTrainedModelWrapper` for more details.
+        **ref_model** (`PreTrainedModelWrapper`, *optional*) -- Reference model to be
+            used for KL penalty, Hugging Face transformer model with a casual language
+            modelling head. Check the documentation of `PreTrainedModelWrapper`
+            for more details. If no reference model is provided, the trainer will
+            create a reference model with the same architecture as the model to be
+            optimized with shared layers.
+        **tokenizer** (`Union[PreTrainedTokenizer, PreTrainedTokenizerFast]`)
+            Tokenizer to be used for encoding the data. Check the documentation of
+            `transformers.PreTrainedTokenizer` and
             `transformers.PreTrainedTokenizerFast` for more details.
         **optimizer** (`torch.optim.Optimizer`) -- Optimizer to be used for training.
-        **lr_scheduler** (`torch.optim.lr_scheduler`) -- Learning rate scheduler to be used for training.
+        **lr_scheduler** (`torch.optim.lr_scheduler`) -- Learning rate scheduler to be
+            used for training.
     """
 
     def __init__(
@@ -203,11 +208,13 @@ class PPOTrainer(PyTorchModelHubMixin):
 
         Args:
             cfg (`LLM Studio Config`):
-                experiment configuration object. Check the documentation of `LLM Studio Config` for more details.
+                experiment configuration object. Check the documentation of
+                `LLM Studio Config` for more details.
             model (`PreTrainedModelWrapper`):
                 Hugging Face transformer model with a value head.
             ref_model (`PreTrainedModelWrapper`):
-                Hugging Face transformer model with a casual language modelling head. Used for KL penalty
+                Hugging Face transformer model with a casual language modelling head.
+                Used for KL penalty
             tokenizer (`transformers.PreTrainedTokenizer`):
                 Hugging Face tokenizer
             optimizer (`torch.optim.Optimizer`):
@@ -245,7 +252,8 @@ class PPOTrainer(PyTorchModelHubMixin):
         scores: List[torch.FloatTensor],
     ):
         """
-        Check if the input data is valid for training and move the data to the correct device.
+        Check if the input data is valid for training and move the data to the correct
+        device.
 
         Args:
             batch_size (int):
@@ -253,7 +261,8 @@ class PPOTrainer(PyTorchModelHubMixin):
             queries (List[`torch.LongTensor`]):
                 List of tensors containing the encoded queries of shape (`query_length`)
             responses (List[`torch.LongTensor`]):
-                List of tensors containing the encoded responses of shape (`response_length`)
+                List of tensors containing the encoded responses of shape
+                (`response_length`)
             scores (List[`torch.FloatTensor`]):
                 List of tensors containing the scores.
         Returns:
@@ -272,7 +281,8 @@ class PPOTrainer(PyTorchModelHubMixin):
                 )
             if batch_size is not None and len(tensor_list) != batch_size:
                 raise ValueError(
-                    f"Batch size ({batch_size}) does not match number of examples - but got {len(tensor_list)} for: {name}"
+                    f"Batch size ({batch_size}) does not match number of examples"
+                    f" - but got {len(tensor_list)} for: {name}"
                 )
 
         # add queries, scores and responses on the correct device
@@ -298,13 +308,15 @@ class PPOTrainer(PyTorchModelHubMixin):
         scores: List[torch.FloatTensor],
     ):
         """
-        Run a PPO optimisation step given a list of queries, model responses, and rewards.
+        Run a PPO optimisation step given a list of queries, model responses, and
+        rewards.
 
         Args:
             queries (List[`torch.LongTensor`]):
                 List of tensors containing the encoded queries of shape (`query_length`)
             responses (List[`torch.LongTensor`]):
-                List of tensors containing the encoded responses of shape (`response_length`)
+                List of tensors containing the encoded responses of shape
+                (`response_length`)
             scores (List[`torch.FloatTensor`]):
                 List of tensors containing the scores.
 
@@ -468,19 +480,24 @@ class PPOTrainer(PyTorchModelHubMixin):
 
         Args:
             queries (`torch.LongTensor`):
-                List of tensors containing the encoded queries, shape (`batch_size`, `query_length`)
+                List of tensors containing the encoded queries, shape (`batch_size`,
+                `query_length`)
             responses (`torch.LongTensor`):
-                List of tensors containing the encoded responses, shape (`batch_size`, `response_length`)
+                List of tensors containing the encoded responses, shape (`batch_size`,
+                `response_length`)
             return_logits (`bool`, *optional*, defaults to `False`):
-                Whether to return all_logits. Set to `False` if logits are not needed to reduce memory consumption.
+                Whether to return all_logits. Set to `False` if logits are not needed
+                to reduce memory consumption.
         Returns:
             (tuple):
-                - all_logprobs (`torch.FloatTensor`): Log probabilities of the responses,
-                    shape (`batch_size`, `response_length`)
-                - all_ref_logprobs (`torch.FloatTensor`): Log probabilities of the responses,
-                    shape (`batch_size`, `response_length`)
-                - all_values (`torch.FloatTensor`): Values of the responses, shape (`batch_size`, `response_length`)
+                - all_logprobs (`torch.FloatTensor`): Log probabilities of the
+                    responses, shape (`batch_size`, `response_length`)
+                - all_ref_logprobs (`torch.FloatTensor`): Log probabilities of the
+                    responses, shape (`batch_size`, `response_length`)
+                - all_values (`torch.FloatTensor`): Values of the responses, shape
+                    (`batch_size`, `response_length`)
         """
+
         bs = len(queries)
         ppo_bs = self.cfg.training.ppo_batch_size
 
@@ -516,7 +533,8 @@ class PPOTrainer(PyTorchModelHubMixin):
 
                 if len(logprobs[j, start:end]) < 2:
                     raise ValueError(
-                        "Responses are too short. Make sure they are at least 2 tokens long."
+                        "Responses are too short. Make sure they are at least 2"
+                        " tokens long."
                     )
 
                 masks[j, :start] = 0
@@ -565,7 +583,8 @@ class PPOTrainer(PyTorchModelHubMixin):
             response (`torch.LongTensor`):
                 Encoded responses, shape [batch_size, response_length]
             model_input (`torch.LongTensor`):
-                Concatenated queries and responses, shape [batch_size, query_length+response_length]
+                Concatenated queries and responses, shape [batch_size,
+                query_length+response_length]
 
         Returns:
             train_stats (dict[str, `torch.Tensor`]):
@@ -601,7 +620,8 @@ class PPOTrainer(PyTorchModelHubMixin):
             logprobs (`torch.FloatTensor`):
                 Log probabilities of the model, shape (`batch_size`, `response_length`)
             ref_logprobs (`torch.FloatTensor`):
-                Log probabilities of the reference model, shape (`batch_size`, `response_length`)
+                Log probabilities of the reference model, shape (`batch_size`,
+                `response_length`)
         """
         rewards, non_score_rewards = [], []
         for score, logprob, ref_logprob, mask in zip(
@@ -640,7 +660,8 @@ class PPOTrainer(PyTorchModelHubMixin):
             rewards (`torch.FloatTensor`):
                 Rewards from the reward model, shape (`batch_size`, `response_length`)
             logits (`torch.FloatTensor`):
-                Logits of the model, shape (`batch_size`, `response_length`, `vocab_size`)
+                Logits of the model, shape (`batch_size`, `response_length`,
+                `vocab_size`)
             v_pred (`torch.FloatTensor`):
                 Values of the value head, shape (`batch_size`, `response_length`)
             logprobs (`torch.FloatTensor`):
@@ -760,9 +781,11 @@ class PPOTrainer(PyTorchModelHubMixin):
 
         if mean_kl.item() < -1.0:
             warnings.warn(
-                f"KL divergence is starting to become negative: {mean_kl.item():.2f} - this might be a precursor for failed training."
-                " sometimes this happens because the generation kwargs are not correctly set. Please make sure"
-                " that the generation kwargs are set correctly, or review your training hyperparameters."
+                f"KL divergence is starting to become negative: {mean_kl.item():.2f} -"
+                " this might be a precursor for failed training."
+                " sometimes this happens because the generation kwargs are not"
+                " correctly set. Please make sure that the generation kwargs are set"
+                " correctly, or review your training hyperparameters."
             )
 
         stats = {
