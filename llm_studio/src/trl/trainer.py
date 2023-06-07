@@ -511,6 +511,10 @@ class PPOTrainer(PyTorchModelHubMixin):
                 key: value[i * ppo_bs : (i + 1) * ppo_bs]
                 for key, value in model_inputs.items()
             }
+
+            # print("input shape", model_inputs_batch["input_ids"].shape)
+            # print("attention sum", model_inputs_batch["attention_mask"].sum())
+
             query_batch = queries[i * ppo_bs : (i + 1) * ppo_bs]
             response_batch = responses[i * ppo_bs : (i + 1) * ppo_bs]
 

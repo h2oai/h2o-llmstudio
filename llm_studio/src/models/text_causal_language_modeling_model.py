@@ -259,7 +259,6 @@ class Model(nn.Module):
             # Mask the prompt tokens
             output[:, : input_ids.shape[1]] = pad_token_id
 
-        logger.info(f"SHAPE: input {input_ids.shape}, output {output.shape}")
         return output
 
     def forward(

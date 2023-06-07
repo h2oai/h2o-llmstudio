@@ -309,23 +309,39 @@ def run_train(
                 # score by reward model
                 reward = [torch.tensor(score, dtype=torch.float32) for score in scores]
 
-                for i in range(len(reward)):
-                    print(batch["raw_prompt_text"][i])
-                    print(output_dict["predicted_text"][i])
-                    print("reward", reward[i])
-
                 # remove padding from query and response
-                idx = torch.where(batch["attention_mask"] == 1)[1]
+                batch["input_ids"] = batch["input_ids"].detach().cpu()
                 query_tensor = [
-                    input_ids[id_:]
-                    for input_ids, id_ in zip(batch["input_ids"].detach().cpu(), idx)
+                    input_ids[torch.where(att_mask == 1)[0].min() :]
+                    if len(torch.where(att_mask == 1)[0]) > 0
+                    else input_ids
+                    for input_ids, att_mask in zip(
+                        batch["input_ids"].detach().cpu(), batch["attention_mask"]
+                    )
                 ]
+                pad_tok_id = (
+                    model.backbone.config.pad_token_id
+                    or model.backbone.config.eos_token_id
+                )
+                output_dict["predicted_answer_ids"] = (
+                    output_dict["predicted_answer_ids"].detach().cpu()
+                )
                 response_tensor = [
-                    predicted_answer_ids
+                    predicted_answer_ids[
+                        : torch.where(predicted_answer_ids == pad_tok_id)[0].min()
+                    ]
+                    if len(torch.where(predicted_answer_ids == pad_tok_id)[0]) > 0
+                    else predicted_answer_ids
                     for predicted_answer_ids in output_dict["predicted_answer_ids"]
-                    .detach()
-                    .cpu()
                 ]
+
+                # for i in range(len(reward)):
+                #     print("Raw prompt text:", batch["raw_prompt_text"][i])
+                #     print("Predicted text:", output_dict["predicted_text"][i])
+                #     print("reward", reward[i])
+                #     print("query_tensor", query_tensor[i].shape)
+                #     print("response_tensor", response_tensor[i].shape)
+
                 del output_dict
                 del batch
 
