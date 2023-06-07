@@ -482,7 +482,7 @@ def run_train(
     if cfg.environment._distributed:
         torch.distributed.barrier()
 
-    return val_data, val_loss, val_metric, batch
+    return val_data, val_loss, val_metric
 
 
 def run(cfg: Any) -> None:
@@ -669,7 +669,7 @@ def run(cfg: Any) -> None:
         # re-save config
         save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
-    val_data, val_loss, val_metric, last_batch = run_train(
+    val_data, val_loss, val_metric = run_train(
         cfg=cfg,
         model=model,
         model_ref=model_ref,
