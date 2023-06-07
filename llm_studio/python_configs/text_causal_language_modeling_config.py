@@ -162,6 +162,14 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["differential_learning_rate"] = self._possible_values[
             "learning_rate"
         ]
+        self._possible_values["reward_model"] = possible_values.String(
+            values=(
+                "OpenAssistant/reward-model-deberta-v3-large-v2",
+                "OpenAssistant/oasst-rm-2.1-pythia-1.4b-epoch-2.5",
+                "OpenAssistant/oasst-rm-2-pythia-6.9b-epoch-1",
+            ),
+            allow_custom=True,
+        )
 
         self._possible_values["batch_size"] = (1, 256, 1)
         self._possible_values["epochs"] = (0, 10, 1)
