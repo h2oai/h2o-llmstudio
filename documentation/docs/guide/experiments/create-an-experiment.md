@@ -16,3 +16,5 @@ Follow the relevant steps below to create an experiment in H2O LLM Studio.
  :::
 
 6. Click **Run experiment**.
+
+    ![run-experiment](run-experiment.png)

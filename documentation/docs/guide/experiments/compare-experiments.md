@@ -1,6 +1,6 @@
 # Compare experiments
 
-The H2O LLM studio provides a useful feature to compare experiments which allows comparing multiple experiments and analyzing how different model parameters affect model performance. 
+The H2O LLM studio provides a useful feature to compare experiments which allow comparing multiple experiments and analyzing how different model parameters affect model performance. 
 
 Follow the relevant steps below to compare experiments in H2O LLM Studio.
 
@@ -10,3 +10,5 @@ Follow the relevant steps below to compare experiments in H2O LLM Studio.
 4. Click **Compare experiments**.
 
     ![compare experiments](compare-experiments.png)
+
+    The **Charts** tab visually represents the comparison of train/validation loss, metrics, and learning rate of selected experiments. The **Config** tab compares the configuration settings of selected experiments.  

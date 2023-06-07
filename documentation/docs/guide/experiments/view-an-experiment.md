@@ -14,7 +14,7 @@ To view an experiment:
 
 ## Experiment tabs
 
-You will see the following tabs that provide details and different aspects of your experiment.
+Once you click the name of the experiment, you will see the following tabs that provide details and different aspects of your experiment.
 
 - **Charts** : This tab visually represents the train/validation loss, metrics, and learning rate. These charts allow you to easily track your model’s performance as it trains.
 
