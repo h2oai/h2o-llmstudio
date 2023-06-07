@@ -480,23 +480,39 @@ class RewardModel(nn.Module):
 
     def get_score(
         self,
-        questions=None,
+        prompts=None,
         answers=None,
     ):
         scores = []
-        for question, answer in zip(questions, answers):
+        for prompt, answer in zip(prompts, answers):
             if self.model_name == "OpenAssistant/reward-model-deberta-v3-large-v2":
                 inputs = self.tokenizer(
-                    question, answer, return_tensors="pt", max_length=2048
+                    " ".join(prompt.split("<|endoftext|>")),
+                    answer,
+                    return_tensors="pt",
+                    max_length=2048,
                 ).to(self.device)
             elif self.model_name in [
                 "OpenAssistant/oasst-rm-2.1-pythia-1.4b-epoch-2.5",
                 "OpenAssistant/oasst-rm-2-pythia-6.9b-epoch-1",
             ]:
-                input_text = f"<|prompter|>{question}<|endoftext|><|assistant|>{answer}<|endoftext|>"
+                prompt = prompt.split("<|endoftext|>")
+
+                input_text = ""
+
+                for i, prompt_part in enumerate(prompt[::-1]):
+                    if i % 2 == 0:
+                        prefix = "<|prompter|>"
+                    else:
+                        prefix = "<|assistant|>"
+                    input_text = f"{prefix}{prompt_part}<|endoftext|>" + input_text
+
+                input_text = input_text + f"<|assistant|>{answer}<|endoftext|>"
+
                 inputs = self.tokenizer(
                     input_text, return_tensors="pt", max_length=2048
                 ).to(self.device)
+
             scores.append(self.model(**inputs).logits[0].cpu().detach().item())
             del inputs
         return scores

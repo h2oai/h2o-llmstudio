@@ -295,15 +295,16 @@ def run_train(
                 logger.debug("Evaluation: Score from reward model")
                 # tokenize prompt & output internally
                 with torch.no_grad():
-                    # TODO: Add previous question and answers to prompt. Format?
                     if cfg.environment.mixed_precision:
                         with autocast():
                             scores = reward_model.get_score(
-                                batch["raw_prompt_text"], output_dict["predicted_text"]
+                                batch["reward_model_prompt_text"],
+                                output_dict["predicted_text"],
                             )
                     else:
                         scores = reward_model.get_score(
-                            batch["raw_prompt_text"], output_dict["predicted_text"]
+                            batch["reward_model_prompt_text"],
+                            output_dict["predicted_text"],
                         )
 
                 # score by reward model
@@ -336,7 +337,7 @@ def run_train(
                 ]
 
                 # for i in range(len(reward)):
-                #     print("Raw prompt text:", batch["raw_prompt_text"][i])
+                #     print("Raw prompt text:", batch["reward_model_prompt_text"][i])
                 #     print("Predicted text:", output_dict["predicted_text"][i])
                 #     print("reward", reward[i])
                 #     print("query_tensor", query_tensor[i].shape)

@@ -303,6 +303,7 @@ class CustomDataset(Dataset):
         """Reads a single text observation."""
 
         samples = [self._get_sample(idx)]
+        sample["reward_model_prompt_text"] = self.raw_prompts[idx]
 
         if self.parent_ids is not None:
             parent_idx = idx
@@ -316,6 +317,11 @@ class CustomDataset(Dataset):
                 ):
                     break
                 samples.insert(0, self._get_sample(int(parent_idx)))
+                sample["reward_model_prompt_text"] = (
+                    self.raw_prompts[int(parent_idx)]
+                    + "<|endoftext|>"
+                    + sample["reward_model_prompt_text"]
+                )
 
         if (
             self.mode == "train"
@@ -377,8 +383,6 @@ class CustomDataset(Dataset):
                 prefix="prompt_",
             )
         )
-
-        sample["raw_prompt_text"] = self.raw_prompts[idx]
 
         return sample
 
