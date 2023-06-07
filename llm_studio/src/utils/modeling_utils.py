@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, Tuple
 import coolname
 import torch
 from peft import prepare_model_for_kbit_training
+from torch.cuda.amp import autocast
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
     MixedPrecision,
@@ -338,6 +339,7 @@ def contains_nan(output: Dict):
     )
 
 
+@torch.inference_mode(mode=True)
 def run_inference(
     cfg: Any,
     model: torch.nn.Module,
@@ -387,18 +389,15 @@ def run_inference(
         batch = cfg.dataset.dataset_class.batch_to_device(data, cfg.environment._device)
 
         calculate_loss = True
-        if cfg.environment.mixed_precision:
-            with torch.cuda.amp.autocast():
-                output = model.forward(batch, calculate_loss=calculate_loss)
-            if contains_nan(output):
-                raise LLMModelException(
-                    "NaN caught during mixed precision inference. "
-                    "Please disable mixed precision inference. "
-                    "Alternatively, reducing learning rate or "
-                    "gradient clipping may help to stabilize training."
-                )
-        else:
+        with autocast(enabled=cfg.environment.mixed_precision):
             output = model.forward(batch, calculate_loss=calculate_loss)
+        if contains_nan(output) and cfg.environment.mixed_precision:
+            raise LLMModelException(
+                "NaN caught during mixed precision inference. "
+                "Please disable mixed precision inference. "
+                "Alternatively, reducing learning rate or "
+                "gradient clipping may help to stabilize training."
+            )
 
         output = dataloader.dataset.postprocess_batch_predictions(
             cfg=cfg, output=output

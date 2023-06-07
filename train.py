@@ -63,6 +63,7 @@ from llm_studio.src.utils.utils import kill_ddp_processes, set_environment, set_
 logger = logging.getLogger(__name__)
 
 
+@torch.inference_mode(mode=True)
 def run_eval(
     cfg,
     model: torch.nn.Module,
@@ -83,11 +84,10 @@ def run_eval(
         Validation loss
     """
 
-    with torch.no_grad():
-        model.eval()
-        val_data: Dict[str, Any] = run_inference(
-            cfg, model, val_dataloader, mode
-        )  # type: ignore
+    model.eval()
+    val_data: Dict[str, Any] = run_inference(
+        cfg, model, val_dataloader, mode
+    )  # type: ignore
 
     # Sync validation predictions across GPUs
     if cfg.environment._distributed and cfg.environment._distributed_inference:
@@ -96,7 +96,6 @@ def run_eval(
                 value, cfg.environment._world_size, group=cfg.environment._cpu_comm
             )
 
-    torch.inference_mode(mode=True)
     # Drop any extra observations
     for k, v in val_data.items():
         val_data[k] = v[: len(val_dataloader.dataset)]  # type: ignore
@@ -139,8 +138,6 @@ def run_eval(
 
     if cfg.environment._distributed:
         torch.distributed.barrier()
-
-    torch.inference_mode(mode=False)
 
     return val_data, val_loss, val_metric
 
@@ -282,30 +279,24 @@ def run_train(
                 log_plot(cfg, plot, "train_data")
 
             if cfg.training.use_rlhf:
+                torch.inference_mode(mode=True)
                 logger.debug("Rollout: Generating response from active model")
                 output_dict = {}
-                with torch.no_grad():
-                    output_dict["predicted_answer_ids"] = model.generate(
-                        batch, model.cfg, remove_prompt=True
-                    ).detach()
+                output_dict["predicted_answer_ids"] = model.generate(
+                    batch, model.cfg, remove_prompt=True
+                ).detach()
                 output_dict = train_dataloader.dataset.postprocess_batch_predictions(
                     cfg=cfg, output=output_dict
                 )
 
                 logger.debug("Evaluation: Score from reward model")
                 # tokenize prompt & output internally
-                with torch.no_grad():
-                    if cfg.environment.mixed_precision:
-                        with autocast():
-                            scores = reward_model.get_score(
-                                batch["reward_model_prompt_text"],
-                                output_dict["predicted_text"],
-                            )
-                    else:
-                        scores = reward_model.get_score(
-                            batch["reward_model_prompt_text"],
-                            output_dict["predicted_text"],
-                        )
+                with autocast(enabled=cfg.environment.mixed_precision):
+                    scores = reward_model.get_score(
+                        batch["reward_model_prompt_text"],
+                        output_dict["predicted_text"],
+                    )
+                torch.inference_mode(mode=False)
 
                 # score by reward model
                 reward = [torch.tensor(score, dtype=torch.float32) for score in scores]
@@ -353,10 +344,7 @@ def run_train(
                 losses.append(loss)
             else:
                 # Forward pass
-                if cfg.environment.mixed_precision:
-                    with autocast():
-                        output_dict = model.forward(batch)
-                else:
+                with autocast(enabled=cfg.environment.mixed_precision):
                     output_dict = model.forward(batch)
 
                 loss = output_dict["loss"]

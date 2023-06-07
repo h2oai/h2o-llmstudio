@@ -338,13 +338,14 @@ class PPOTrainer(PyTorchModelHubMixin):
 
         model_inputs_names = list(model_inputs.keys())
 
-        with torch.no_grad():
-            all_logprobs, _, values, masks = self.batched_forward_pass(
-                self.model, queries, responses, model_inputs
-            )
-            ref_logprobs, _, _, _ = self.batched_forward_pass(
-                self.ref_model, queries, responses, model_inputs, return_values=False
-            )
+        torch.inference_mode(mode=True)
+        all_logprobs, _, values, masks = self.batched_forward_pass(
+            self.model, queries, responses, model_inputs
+        )
+        ref_logprobs, _, _, _ = self.batched_forward_pass(
+            self.ref_model, queries, responses, model_inputs, return_values=False
+        )
+        torch.inference_mode(mode=False)
 
         timing["time/ppo/forward_pass"] = time.time() - t
 
