@@ -47,6 +47,19 @@ Once you click the name of the experiment, you will see the following tabs that 
 
     ![chat tab](chat-tab.png)
 
+## Stop an experiment
+
+You can stop a running experiment if you no longer need it to be complted. 
+
+1. On the H2O LLM Studio left-navigation pane, click **View experiments**.
+2. Click **Stop experiments**.
+3. Select the experiment(s) that you want to stop. 
+4. Click **Stop experiments**.
+
+You can also click **Stop experiment** in the kebab menu of the relevant experiment row to stop an experiment from running. 
+
+  ![stop experiment](stop-experiment.png)
+
 ## Delete an experiment
 
 When an experiment is no longer needed, you can delete it. Deleted experiments are permanently removed from the H2O LLM Studio instance.
@@ -55,3 +68,7 @@ When an experiment is no longer needed, you can delete it. Deleted experiments a
 2. Click **Delete experiments**.
 3. Select the experiment(s) that you want to delete and click **Delete experiments**.
 4. Click **Delete** to confirm deletion.
+
+You can also click **Delete experiment** in the kebab menu of the relevant experiment row to delete an experiment. 
+
+  ![delete experiment](delete-experiment.png)
