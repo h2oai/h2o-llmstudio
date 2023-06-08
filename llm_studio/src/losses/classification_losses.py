@@ -1,7 +1,7 @@
 import logging
 from typing import Any, List
 
-import torch
+from torch import nn
 
 __all__ = ["Losses"]
 
