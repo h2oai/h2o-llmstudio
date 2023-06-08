@@ -25,6 +25,13 @@ import ASGradientcheckpointing from '../../tooltips/experiments/_gradient-checkp
 import ASforceEmbeddingGradients from '../../tooltips/experiments/_force-embedding-gradients.mdx';
 import ASintermediateDropout from '../../tooltips/experiments/_intermediate-dropout.mdx';
 import ASpretrainedWeights from '../../tooltips/experiments/_pretrained-weights.mdx';
+import TSoptimizer from '../../tooltips/experiments/_optimizer.mdx';
+import TSlearningRate from '../../tooltips/experiments/_learning-rate.mdx';
+import TSbatchSize from '../../tooltips/experiments/_batch-size.mdx';
+import TSepochs from '../../tooltips/experiments/_epochs.mdx';
+import TSschedule from '../../tooltips/experiments/_schedule.mdx';
+import TSwarmupEpochs from '../../tooltips/experiments/_warmup-epochs.mdx';
+import TSweightDecay from '../../tooltips/experiments/_weight-decay.mdx';
 
 # Experiment settings
 
@@ -162,3 +169,68 @@ Whether or not to use a Fast tokenizer if possible. Some LLM backbones only offe
 <ASpretrainedWeights/>
 
 ## Training settings
+
+### Optimizer
+
+Defines the algorithm or method (optimizer) to use for model training. The selected algorithm or method defines how the model should change the attributes of the neural network, such as weights and learning rate. Optimizers solve optimization problems and make more accurate updates to attributes to reduce learning losses.
+
+
+Options
+ - **Adadelta**
+    -  To learn about Adadelta, see <a href="https://arxiv.org/abs/1212.5701" target="_blank" >ADADELTA: An Adaptive Learning Rate Method</a>. 
+ - **Adam**
+    - To learn about Adam, see <a href="https://arxiv.org/abs/1412.6980" target="_blank" >Adam: A Method for Stochastic Optimization</a>. 
+ - **AdamW**
+    - To learn about AdamW, see <a href="https://arxiv.org/abs/1711.05101" target="_blank" >Decoupled Weight Decay Regularization</a>.
+ - **AdamW8bit**
+    - To learn about AdamW, see <a href="https://arxiv.org/abs/1711.05101" target="_blank" >Decoupled Weight Decay Regularization</a>.
+ - **RMSprop** 
+    - To learn about RMSprop, see <a href="https://www.cs.toronto.edu/~tijmen/csc321/slides/lecture_slides_lec6.pdf" target="_blank" >Neural Networks for Machine Learning</a>.
+ - **SGD** 
+    - H2O LLM Studio uses a stochastic gradient descent optimizer.
+
+### Learning rate
+
+<TSlearningRate/>
+
+### Batch size
+
+<TSbatchSize/>
+
+### Epochs
+
+<TSepochs/>
+
+### Schedule
+
+<TSschedule/>
+
+### Warmup epochs
+
+<TSwarmupEpochs/>
+
+### Weight decay
+
+<TSweightDecay/>
+
+### Gradient clip
+
+### Grad accumulation
+
+### Lora
+
+### Lora R
+
+### Lora Alpha
+
+### Lora dropout
+
+### Lora target modules
+
+### Save best checkpoint
+
+### Evaluation epochs
+
+### Evaluate before training
+
+### Train validation data
