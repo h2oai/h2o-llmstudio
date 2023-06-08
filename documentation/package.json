@@ -8,6 +8,7 @@
       "deploy": "makersaurus deploy"
     },
     "dependencies": {
-      "@h2oai/makersaurus": "^0.4.0"
+      "@h2oai/makersaurus": "^0.4.0",
+      "docusaurus-plugin-includes": "^1.1.4"
     }
   }

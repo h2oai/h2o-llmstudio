@@ -15,7 +15,7 @@ To view an imported dataset:
     ![view-datasets](view-imported-dataset.png)
 
     :::info
-    For more information about the dataset details you see on the table above, see [dataset configurations](addlink).
+    For more information about the dataset details you see on the table above, see [dataset configurations](import-dataset.md#configure-a-dataset).
     :::
 
 ## Dataset tabs
@@ -51,7 +51,7 @@ To edit an imported dataset,
 
 3. Select **Edit dataset**.
 
-4. Make the desired changes to the dataset configuration. You can also [merge the dataset with an existing dataset](addlink) at this point.
+4. Make the desired changes to the dataset configuration. You can also [merge the dataset with an existing dataset](merge-datasets) at this point.
 
 5. Click **Continue** and review the dataset with your changes. 
 
