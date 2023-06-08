@@ -32,19 +32,52 @@ import TSepochs from '../../tooltips/experiments/_epochs.mdx';
 import TSschedule from '../../tooltips/experiments/_schedule.mdx';
 import TSwarmupEpochs from '../../tooltips/experiments/_warmup-epochs.mdx';
 import TSweightDecay from '../../tooltips/experiments/_weight-decay.mdx';
+import TSGradientclip from '../../tooltips/experiments/_gradient-clip.mdx';
+import TSgradAccumulation from '../../tooltips/experiments/_grad-accumulation.mdx';
+import TSlora from '../../tooltips/experiments/_lora.mdx';
+import TSloraR from '../../tooltips/experiments/_lora-r.mdx';
+import TSloraAlpha from '../../tooltips/experiments/_lora-alpha.mdx';
+import TSloraDropout from '../../tooltips/experiments/_lora-dropout.mdx';
+import TSloraTargetModules from '../../tooltips/experiments/_lora-target-modules.mdx';
+import TSsavebestcheckpoint from '../../tooltips/experiments/_save-best-checkpoint.mdx';
+import TSevaluationepochs from '../../tooltips/experiments/_evaluation-epochs.mdx';
+import TSevaluationbeforetraining from '../../tooltips/experiments/_evaluate-before-training.mdx';
+import TStrainvalidationdata from '../../tooltips/experiments/_train-validation-data.mdx';
+import AStokenmaskprobability from '../../tooltips/experiments/_token-mask-probability.mdx';
+import ASskipParentprobability from '../../tooltips/experiments/_skip-parent-probability.mdx';
+import ASrandomparentprobability from '../../tooltips/experiments/_random-parent-probability.mdx';
+import PSmetric from '../../tooltips/experiments/_metric.mdx';
+import PSminlengthinference from '../../tooltips/experiments/_min-length-inference.mdx';
+import PSmaxlengthinference from '../../tooltips/experiments/_max-length-inference.mdx';
+import PSbatchsizeinference from '../../tooltips/experiments/_batch-size-inference.mdx';
+import PSdosample from '../../tooltips/experiments/_do-sample.mdx';
+import PSnumbeams from '../../tooltips/experiments/_num-beams.mdx';
+import PStemperature from '../../tooltips/experiments/_temperature.mdx';
+import PSrepetitionpenalty from '../../tooltips/experiments/_repetition-penalty.mdx';
+import PSstoptokens from '../../tooltips/experiments/_stop-tokens.mdx';
+import ESgpus from '../../tooltips/experiments/_gpus.mdx';
+import ESmixedprecision from '../../tooltips/experiments/_mixed-precision.mdx';
+import EScompilemodel from '../../tooltips/experiments/_compile-model.mdx';
+import ESusefsdp from '../../tooltips/experiments/_use_fsdp.mdx';
+import ESfindunusedparameters from '../../tooltips/experiments/_find-unused-parameters.mdx';
+import EStrustremotecode from '../../tooltips/experiments/_trust-remote-code.mdx';
+import ESnumofworkers from '../../tooltips/experiments/_number-of-workers.mdx';
+import ESseed from '../../tooltips/experiments/_seed.mdx';
+import LSlogger from '../../tooltips/experiments/_logger.mdx';
+import LSnumoftexts from '../../tooltips/experiments/_number-of-texts.mdx';
 
 # Experiment settings
 
 The settings for creating an experiment are grouped into the following sections: 
- - General settings 
- - Dataset settings
- - Tokenizer settings
- - Architecture settings
- - Training settings
- - Augmentation settings
- - Prediction settings
- - Environment settings
- - Logging settings
+ - [General settings](#general-settings) 
+ - [Dataset settings](#dataset-settings)
+ - [Tokenizer settings](#tokenizer-settings)
+ - [Architecture settings](#architecture-settings)
+ - [Training settings](#training-settings)
+ - [Augmentation settings](#augmentation-settings)
+ - [Prediction settings](#prediction-settings)
+ - [Environment settings](#environment-settings)
+ - [Logging settings](#logging-settings)
 
 The settings under each category are listed and described below.
 
@@ -215,22 +248,148 @@ Options
 
 ### Gradient clip
 
+<TSGradientclip/>
+
 ### Grad accumulation
+
+<TSgradAccumulation/>
 
 ### Lora
 
+<TSlora/>
+
 ### Lora R
+
+<TSloraR/>
 
 ### Lora Alpha
 
+<TSloraAlpha/>
+
 ### Lora dropout
+
+<TSloraDropout/>
 
 ### Lora target modules
 
+<TSloraTargetModules/>
+
 ### Save best checkpoint
+
+<TSsavebestcheckpoint/>
 
 ### Evaluation epochs
 
+<TSevaluationepochs/>
+
 ### Evaluate before training
 
+<TSevaluationbeforetraining/>
+
 ### Train validation data
+
+<TStrainvalidationdata/>
+
+## Augmentation settings
+
+### Token mask probability
+
+<AStokenmaskprobability/>
+
+### Skip parent probability
+
+<ASskipParentprobability/>
+
+### Random parent probability
+
+<ASrandomparentprobability/>
+
+## Prediction settings
+
+### Metric
+
+<PSmetric/>
+
+### Min length inference
+
+<PSminlengthinference/>
+
+### Max length inference
+
+<PSmaxlengthinference/>
+
+### Batch size inference
+
+<PSbatchsizeinference/>
+
+### Do sample
+
+<PSdosample/>
+
+### Num beams
+
+<PSnumbeams/>
+
+### Temperature 
+
+<PStemperature/>
+
+### Repetition penalty
+
+<PSrepetitionpenalty/>
+
+### Stop tokens
+
+<PSstoptokens/>
+
+### Top K
+
+If > 0, only keep the top k tokens with the highest probability (top-k filtering).
+
+### Top P
+
+If = top_p (nucleus filtering).
+
+## Environment settings
+
+### GPUs
+
+<ESgpus/>
+
+### Mixed precision
+
+<ESmixedprecision/>
+
+### Compile model
+
+<EScompilemodel/>
+
+### Use FSDP
+
+<ESusefsdp/>
+
+### Find unused parameters
+
+<ESfindunusedparameters/>
+
+### Trust remote code
+
+<EStrustremotecode/>
+
+### Number of workers
+
+<ESnumofworkers/>
+
+### Seed
+
+<ESseed/>
+
+## Logging settings
+
+### Logger
+
+<LSlogger/>
+
+### Number of texts
+
+<LSnumoftexts/>
