@@ -1,12 +1,10 @@
 import logging
 from typing import Any, List
 
-import torch.nn.functional as F
+import torch
 
 __all__ = ["Losses"]
 
-import torch
-from torch import nn
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +23,6 @@ class TokenCrossEntropyLoss(nn.Module):
         shift_labels = shift_labels.view(-1)
 
         return self.loss_fn(shift_logits, shift_labels)
-        # print(shift_logits.shape, shift_labels.shape)
-        loss = 0
-        for i in range(labels.shape[0]):
-            loss += self.loss_fn(shift_logits[i], shift_labels[i])
-        loss /= labels.shape[0]
-        return self.loss_fn(x, target)
 
 
 class SampleCrossEntropyLoss(nn.Module):
