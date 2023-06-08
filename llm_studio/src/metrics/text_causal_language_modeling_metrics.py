@@ -1,4 +1,5 @@
 import logging
+import os
 from functools import partial
 from typing import Any, Dict, List
 
@@ -29,8 +30,9 @@ def sacrebleu_score(
 
 
 @retry(wait=wait_random_exponential(multiplier=1, max=60), stop=stop_after_attempt(3))
-def call_openai_api(template, model):
+def call_openai_api(template, model, deployment_id=None):
     response = openai.ChatCompletion.create(
+        deployment_id=deployment_id,
         model=model,
         messages=[
             {
@@ -54,7 +56,7 @@ def call_openai_api(template, model):
     return score, " ".join(ret[1:]).strip()
 
 
-def rate_reply(question, reference_answer, assistant_answer, model):
+def rate_reply(question, reference_answer, assistant_answer, model, deployment_id=None):
     # motivated by https://github.com/lm-sys/FastChat/tree/main/fastchat/eval
     template = open("prompts/eval_template.txt", "r").read()
 
@@ -65,7 +67,7 @@ def rate_reply(question, reference_answer, assistant_answer, model):
     )
 
     try:
-        return call_openai_api(template, model)
+        return call_openai_api(template, model, deployment_id)
     except Exception:
         logger.warning("error in api call")
         return 0.0, ""
@@ -82,8 +84,19 @@ def gpt_score(
         return np.mean(results["metrics"].detach().cpu().numpy())
     prompts = get_texts(val_df, cfg, separator="")
 
+    if os.getenv("OPENAI_API_TYPE", "open_ai") == "azure":
+        deployment_id = os.getenv("OPENAI_API_DEPLOYMENT_ID")
+    else:
+        deployment_id = None
+
     ret = Parallel(n_jobs=8, backend="multiprocessing")(
-        delayed(rate_reply)(prompt, target_text, predicted_text, model)
+        delayed(rate_reply)(
+            prompt,
+            target_text,
+            predicted_text,
+            model,
+            deployment_id=deployment_id,
+        )
         for prompt, predicted_text, target_text in tqdm(
             zip(
                 prompts,
