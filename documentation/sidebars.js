@@ -32,6 +32,7 @@ module.exports = {
             "guide/experiments/create-an-experiment",
             "guide/experiments/view-an-experiment",
             "guide/experiments/compare-experiments",
+            "guide/experiments/export-trained-model",
           ],
         },
       ],
