@@ -9,7 +9,7 @@ import pandas as pd
 from joblib import Parallel, delayed
 from sacrebleu import BLEU
 from sacrebleu.metrics.base import Metric
-from tenacity import retry, stop_after_attempt, wait_random_exponential
+from tenacity import retry, RetryError, stop_after_attempt, wait_random_exponential
 from tqdm import tqdm
 
 from llm_studio.src.datasets.text_utils import get_texts
@@ -29,7 +29,11 @@ def sacrebleu_score(
     return np.mean(scores)
 
 
-@retry(wait=wait_random_exponential(multiplier=1, max=60), stop=stop_after_attempt(3))
+@retry(
+    reraise=True,
+    wait=wait_random_exponential(multiplier=1, max=60),
+    stop=stop_after_attempt(3),
+)
 def call_openai_api(template, model, deployment_id=None):
     response = openai.ChatCompletion.create(
         deployment_id=deployment_id,
@@ -49,10 +53,19 @@ def call_openai_api(template, model, deployment_id=None):
         max_tokens=1024,
     )
     ret = response["choices"][0]["message"]["content"]
-    ret = ret.split("\n")
-    score = ret[0]
-    score = score.lower().replace("score:", "").strip()
-    score = float(score)
+    try:
+        score = (
+            ret.lower()
+            .replace("score:", "")
+            .strip()
+            .split("\n")[0]
+            .split(".")[0]
+            .split(",")[0]
+            .split(" ")[0]
+        )
+        score = float(score)
+    except ValueError:
+        raise ValueError(f"Could not parse score from response: {ret}")
     return score, " ".join(ret[1:]).strip()
 
 
@@ -68,6 +81,9 @@ def rate_reply(question, reference_answer, assistant_answer, model, deployment_i
 
     try:
         return call_openai_api(template, model, deployment_id)
+    except RetryError as e:
+        logger.warning(f"Exception caught in api call: {e}")
+        return 0.0, ""
     except Exception as e:
         logger.warning(f"Exception caught in api call: {e}")
         return 0.0, ""
