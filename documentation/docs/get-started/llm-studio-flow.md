@@ -22,8 +22,8 @@ As the first step in the experiment flow, prep your data and import your dataset
 
 As the second step in the experiment flow, create an experiment using the imported dataset. H2O LLM Studio offers several hyperparameter settings that you can adjust for your experiment model. To ensure that your training process is effective, you may need to specify the hyperparameters like learning rate, batch size, and the number of epochs. H2O LLM Studio provides an overview of all the parameters you’ll need to specify for your experiment.
 
+- To learn about creating a new experiment, see [Create an experiment](../guide/experiments/create-an-experiment.md).
 - To learn about the settings available for creating an experiment, see [Experiment settings](../guide/experiments/experiment-settings.md).
-- To learn about creating a new experiment, see [Create an experiment](../guide/experiments/create-an-experiment.md)
 
 ## Step 3: Monitor an experiment
 
