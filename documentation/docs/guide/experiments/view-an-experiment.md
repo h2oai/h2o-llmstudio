@@ -41,11 +41,17 @@ Once you click the name of the experiment, you will see the following tabs that 
 
     ![worst validation sample](worst-validation-sample.png)
 
+    The **Worst validation samples** give you an idea of where the model is having issues, and the model can be used to fine-tune further.
+
 - **Logs and Config tabs** : These two tabs show you the logs and configuration of the experiment. You can keep track of any changes made and quickly troubleshoot the issues that arise.
 
 - **Chat** : This tab provides a unique opportunity to interact with your trained model and get instant feedback on its performance. The **Chat** tab becomes available after the training is completed and can be used to evaluate how well your model performs in a conversational setting. 
 
-    ![chat tab](chat-tab.png)
+ :::info note
+ You can use the **Chat** feature only when there are no other experiments running. The chatbot is unavailable if the GPU is occupied by another experiment.
+ :::
+
+ ![chat tab](chat-tab.png)
 
 ## Stop an experiment
 
