@@ -5,6 +5,11 @@ import upload_dataset from './upload-dataset.png';
 import upload_local_file from './upload-local-file.png';
 import import_s3_bucket from './import-s3-bucket.png';
 import import_kaggle_dataset from './import-kaggle-dataset.png';
+import TrainDataframeTooltip from '../../tooltips/experiments/_train-dataframe.mdx';
+import ValidationDataframeTooltip from '../../tooltips/experiments/_validation-dataframe.mdx';
+import PromptColumnTooltip from '../../tooltips/experiments/_prompt-column.mdx';
+import AnswerColumnTooltip from '../../tooltips/experiments/_answer-column.mdx';
+import ParentIdColumnTooltip from '../../tooltips/experiments/_parent-id-column.mdx';
 
 # Import a dataset
 
@@ -109,12 +114,19 @@ Follow the relevant steps below to import a dataset to H2O LLM Studio.
 
 Once you have successfully uploaded or imported your dataset, you can configure the dataset settings.
 
-**Dataset name:** A suitable name for the whole dataset which includes both the train dataframe and validation dataframe. 
+- **Dataset name:** A suitable name for the whole dataset which includes both the train dataframe and validation dataframe.
 
-<!-- Internal notes: ** include tooltip .mdx files here for the rest of the configs!! ** -->
+- **Train Dataframe:** <TrainDataframeTooltip />
+
+- **Validation Dataframe:** <ValidationDataframeTooltip />
+
+- **Prompt Column:** <PromptColumnTooltip />
+
+- **Answer Column:** <AnswerColumnTooltip />
+
+- **Parent Id Column:** <ParentIdColumnTooltip />
 
 ![configure-dataset](configure-dataset.png)
-
 
 ## Data validity check
 
@@ -126,4 +138,4 @@ You will now be redirected to the **View datasets** screen. You should be able t
 
 ![view-dataset](view-imported-dataset.png)
 
-For more information about viewing dataset summary and statistics, see [View and manage datasets](./view-dataset.md)
+For more information about viewing dataset summary and statistics, see [View and manage datasets](view-dataset)

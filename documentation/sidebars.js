@@ -19,9 +19,10 @@ module.exports = {
           type: "category",
           label: "Datasets",
           items: [
-            "guide/data-connectors-format",
-            "guide/import-dataset",
-            "guide/view-dataset",
+            "guide/datasets/data-connectors-format",
+            "guide/datasets/import-dataset",
+            "guide/datasets/view-dataset",
+            "guide/datasets/merge-datasets",
           ],
         },
         {
