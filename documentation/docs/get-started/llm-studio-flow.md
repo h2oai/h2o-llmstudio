@@ -16,7 +16,7 @@ As the first step in the experiment flow, prep your data and import your dataset
 
 - To learn about supported data connectors and data format, see [Supported data connectors and format](../guide/data-connectors-format).
 - To learn about how to import a dataset to H2O LLM Studio, see [Import a dataset](../guide/import-dataset).
-- To learn about reviewing and editing a dataset, see [View and manage dataset](../guide/datasets/view-dataset.md)
+- To learn about reviewing and editing a dataset, see [View and manage dataset](../guide/datasets/view-dataset.md).
 
 ## Step 2: Create an experiment
 
@@ -41,5 +41,5 @@ To learn about comparing multiple experiments, see [Compare experiments](../guid
 
 As the final step in the experiment flow, you can export the fine-tuned model to Hugging Face with a single click.
 
-To learn about exporting a trained model to Hugging Face Hub, see, [Export trained model to Hugging Face](../guide/experiments/export-trained-model.md)
+To learn about exporting a trained model to Hugging Face Hub, see, [Export trained model to Hugging Face](../guide/experiments/export-trained-model.md).
 
