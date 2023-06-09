@@ -27,7 +27,7 @@ As the second step in the experiment flow, create an experiment using the import
 
 ## Step 3: Monitor an experiment
 
-As the third step in the experiment flow, monitor the launced experiment. H2O LLM Studio allows you to inspect your experiment (model) during and after model training. Simple interactive graphs in H2O LLM Studio allow you to understand the impact of selected hyperparameter values during and after model training.
+As the third step in the experiment flow, monitor the launched experiment. H2O LLM Studio allows you to inspect your experiment (model) during and after model training. Simple interactive graphs in H2O LLM Studio allow you to understand the impact of selected hyperparameter values during and after model training. You can then adjust the hyperparameters to further optimize model performance. 
 
 To learn about viewing and monitoring an experiment, see [View and manage experiments](../guide/experiments/view-an-experiment.md).
 
