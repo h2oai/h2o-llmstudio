@@ -266,6 +266,7 @@ class Model(nn.Module):
         batch: Dict,
         calculate_loss: bool = True,
         generate: bool = False,
+        padding=True,
     ) -> Dict:
         outputs: Dict = {}
 
@@ -282,13 +283,15 @@ class Model(nn.Module):
             "labels",
         ]
 
-        batch = batch_padding(
-            self.cfg,
-            batch,
-            self.training,
-            mask_key=mask_key,
-            pad_keys=pad_keys,
-        )
+        if padding:
+            batch = batch_padding(
+                self.cfg,
+                batch,
+                self.training,
+                mask_key=mask_key,
+                pad_keys=pad_keys,
+            )
+
         output = self.backbone(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
@@ -341,20 +344,23 @@ class RefModel(nn.Module):
         self,
         batch: Dict,
         calculate_loss: bool = False,
+        padding: bool = True,
     ) -> Dict:
         outputs: Dict = {}
 
-        batch = batch_padding(
-            self.cfg,
-            batch,
-            self.training,
-            pad_keys=[
-                "input_ids",
-                "attention_mask",
-                "special_tokens_mask",
-                "labels",
-            ],
-        )
+        if padding:
+            batch = batch_padding(
+                self.cfg,
+                batch,
+                self.training,
+                pad_keys=[
+                    "input_ids",
+                    "attention_mask",
+                    "special_tokens_mask",
+                    "labels",
+                ],
+            )
+
         output = self.backbone(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],

@@ -521,7 +521,7 @@ class PPOTrainer(PyTorchModelHubMixin):
             query_batch = queries[i * ppo_bs : (i + 1) * ppo_bs]
             response_batch = responses[i * ppo_bs : (i + 1) * ppo_bs]
 
-            outputs = model(model_inputs_batch)
+            outputs = model(model_inputs_batch, padding=False)
             logits = outputs["logits"]
             values = outputs["value"]
 
