@@ -143,6 +143,8 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     scaling_factor_value_loss: float = 0.1
     ppo_epochs: int = 4
     ppo_batch_size: int = 1
+    offload_reference_model: bool = False
+    offload_reward_model: bool = False
 
     def __post_init__(self):
         super().__post_init__()

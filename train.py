@@ -291,11 +291,15 @@ def run_train(
 
                 logger.debug("Evaluation: Score from reward model")
                 # tokenize prompt & output internally
+                if cfg.training.offload_reward_model:
+                    reward_model.to(cfg.environment._device)
                 with autocast(enabled=cfg.environment.mixed_precision):
                     scores = reward_model.get_score(
                         batch["reward_model_prompt_text"],
                         output_dict["predicted_text"],
                     )
+                if cfg.training.offload_reward_model:
+                    reward_model.to("cpu")
                 torch.inference_mode(mode=False)
 
                 # score by reward model
@@ -337,8 +341,14 @@ def run_train(
                 del output_dict
                 del batch
 
+                if cfg.training.offload_reference_model:
+                    model_ref.to(cfg.environment._device)
+
                 output_dict = ppo_trainer.step(query_tensor, response_tensor, reward)
                 del query_tensor, response_tensor, reward, scores
+
+                if cfg.training.offload_reference_model:
+                    model_ref.to("cpu")
 
                 loss = output_dict["ppo/loss/total"]
                 losses.append(loss)
@@ -620,8 +630,14 @@ def run(cfg: Any) -> None:
 
     model.to(cfg.environment._device)
     if cfg.training.use_rlhf:
-        reward_model.to(cfg.environment._device)
-        model_ref.to(cfg.environment._device)
+        if cfg.training.offload_reward_model:
+            reward_model.to("cpu")
+        else:
+            reward_model.to(cfg.environment._device)
+        if cfg.training.offload_reference_model:
+            model_ref.to("cpu")
+        else:
+            model_ref.to(cfg.environment._device)
 
     if cfg.architecture.force_embedding_gradients:
         for module in model.modules():

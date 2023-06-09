@@ -472,7 +472,7 @@ class RewardModel(nn.Module):
         self.device = cfg.environment._device
         self.model = AutoModelForSequenceClassification.from_pretrained(
             self.model_name,
-            torch_dtype=getattr(torch, self.cfg.architecture.backbone_dtype),
+            torch_dtype=torch.float16,
         ).to(self.device)
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.model_name, max_model_input_sizes=2048
