@@ -14,9 +14,9 @@ To export a trained model to Hugging Face Hub:
 
 3. Click **Push checkpoint to huggingface**.
 
-4. Enter the account name on Hugging Face that you want to push the model. Leaving it empty will push it to the default user account.
+4. Enter the **Account name** on Hugging Face that you want to push the model. Leaving it empty will push it to the default user account.
 
-5. Enter the Huggingface API Key with the write access.
+5. Enter the **Huggingface API** Key with the write access.
 
 6. Click **Export**.
 
