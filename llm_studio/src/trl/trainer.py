@@ -409,6 +409,8 @@ class PPOTrainer(PyTorchModelHubMixin):
                     batch["masks"],
                 )
 
+                del logprobs, logits, vpreds
+
                 all_stats.append(train_stats)
 
         timing["time/ppo/optimize_step"] = time.time() - t
@@ -555,6 +557,8 @@ class PPOTrainer(PyTorchModelHubMixin):
                 del values
             all_logprobs.append(logprobs)
             all_masks.append(masks)
+
+        del outputs
 
         return (
             torch.cat(all_logprobs),
