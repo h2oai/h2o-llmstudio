@@ -9,7 +9,7 @@ import pandas as pd
 from joblib import Parallel, delayed
 from sacrebleu import BLEU
 from sacrebleu.metrics.base import Metric
-from tenacity import retry, RetryError, stop_after_attempt, wait_random_exponential
+from tenacity import RetryError, retry, stop_after_attempt, wait_random_exponential
 from tqdm import tqdm
 
 from llm_studio.src.datasets.text_utils import get_texts
@@ -54,15 +54,8 @@ def call_openai_api(template, model, deployment_id=None):
     )
     ret = response["choices"][0]["message"]["content"]
     try:
-        score = (
-            ret.lower()
-            .replace("score:", "")
-            .strip()
-            .split("\n")[0]
-            .split(".")[0]
-            .split(",")[0]
-            .split(" ")[0]
-        )
+        ret = ret.split("\n")
+        score = ret[0].lower().replace("score:", "").strip().split(",")[0].split(" ")[0]
         score = float(score)
     except ValueError:
         raise ValueError(f"Could not parse score from response: {ret}")

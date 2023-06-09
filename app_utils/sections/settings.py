@@ -255,7 +255,10 @@ async def settings(q: Q) -> None:
                     ui.toggle(
                         name="default_openai_azure",
                         value=q.client["default_openai_azure"],
-                        tooltip="Toggle to use Microsoft Azure Endpoints for the OpenAI API.",
+                        tooltip=(
+                            "Toggle to use Microsoft Azure Endpoints for the "
+                            "OpenAI API."
+                        ),
                         trigger=True,
                     ),
                 ]
@@ -270,7 +273,10 @@ async def settings(q: Q) -> None:
                         width=textbox_width,
                         password=False,
                         trigger=False,
-                        tooltip="Set the value for the OpenAI API endpoint. Use when on Azure.",
+                        tooltip=(
+                            "Set the value for the OpenAI API endpoint. "
+                            "Use when on Azure."
+                        ),
                     ),
                 ]
             ),
@@ -284,7 +290,10 @@ async def settings(q: Q) -> None:
                         width=textbox_width,
                         password=False,
                         trigger=False,
-                        tooltip="Set the value for the OpenAI API deployment ID. Use when on Azure.",
+                        tooltip=(
+                            "Set the value for the OpenAI API deployment ID. "
+                            "Use when on Azure."
+                        ),
                     ),
                 ]
             ),
@@ -298,7 +307,10 @@ async def settings(q: Q) -> None:
                         width=textbox_width,
                         password=False,
                         trigger=False,
-                        tooltip="Set the value for the OpenAI API version. Use when on Azure.",
+                        tooltip=(
+                            "Set the value for the OpenAI API version. "
+                            "Use when on Azure."
+                        ),
                     ),
                 ]
             ),
