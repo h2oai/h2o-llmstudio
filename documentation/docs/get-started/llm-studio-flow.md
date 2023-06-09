@@ -33,7 +33,7 @@ To learn about viewing and monitoring an experiment, see [View and manage experi
 
 ## Step 4: Compare experiments
 
-The H2O LLM studio provides a useful feature called Compare experiments, that allows comparing various experiments and analyzing how different model parameters affect model performance. This feature is a powerful tool for fine-tuning your machine-learning models and ensuring they meet your desired performance metrics.
+The H2O LLM studio provides a useful feature  that allows comparing various experiments and analyzing how different model parameters affect model performance. This feature is a powerful tool for fine-tuning your machine-learning models and ensuring they meet your desired performance metrics.
 
 To learn about comparing multiple experiments, see [Compare experiments](../guide/experiments/compare-experiments.md).
 
