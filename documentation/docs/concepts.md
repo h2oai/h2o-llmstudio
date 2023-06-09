@@ -6,6 +6,11 @@ H2O LLM Studio is based on a few key concepts and uses several key terms across 
 
 A Large Language Model (LLM) is a type of AI model that uses deep learning techniques and uses massive datasets to analyze and generate human-like language. For example, many AI chatbots or AI search engines are powered by LLMs.  
 
+## LLM Backbone
+
+LLM Backbone is the foundation model that you continue training. This option is the most important setting in experiment creation as it sets the pretrained model weights. For more information about LLM Backbone, see [Experiment settings](guide/experiments/experiment-settings.md#llm-backbone).
+
+
 ## Generative AI
 
 Generative AI refers to AI models that can generate new content, such as images, videos, or text, that did not exist before. These models learn from large datasets and use this knowledge to create new content that is similar in style or content to the original dataset.
