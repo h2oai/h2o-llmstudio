@@ -21,12 +21,15 @@ import torch
 import torch.nn.functional as F
 from datasets import Dataset
 from huggingface_hub import PyTorchModelHubMixin
+from torch.cuda.amp import autocast
 from torch.nn.utils.rnn import pad_sequence
 from transformers import (
     DataCollatorForLanguageModeling,
     PreTrainedTokenizer,
     PreTrainedTokenizerFast,
 )
+
+from llm_studio.src.utils.modeling_utils import unwrap_model
 
 try:
     from collections.abc import Mapping
@@ -331,7 +334,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         all_logprobs, _, values, masks = self.batched_forward_pass(
             self.model, queries, responses, model_inputs
         )
-        with self.model.backbone.disable_adapter():
+        with unwrap_model(self.model).backbone.disable_adapter():
             ref_logprobs, _, _, _ = self.batched_forward_pass(
                 self.model,
                 queries,
@@ -523,9 +526,11 @@ class PPOTrainer(PyTorchModelHubMixin):
             query_batch = queries[i * ppo_bs : (i + 1) * ppo_bs]
             response_batch = responses[i * ppo_bs : (i + 1) * ppo_bs]
 
-            outputs = model(
-                model_inputs_batch, padding=False, is_ref_model=is_ref_model
-            )
+            with autocast(enabled=self.cfg.environment.mixed_precision):
+                outputs = model(
+                    model_inputs_batch, padding=False, is_ref_model=is_ref_model
+                )
+
             logits = outputs["logits"]
             values = outputs["value"]
 
