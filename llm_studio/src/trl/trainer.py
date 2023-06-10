@@ -179,12 +179,6 @@ class PPOTrainer(PyTorchModelHubMixin):
         **model** (`PreTrainedModelWrapper`) -- Model to be optimized, Hugging Face
             transformer model with a value head. Check the documentation of
             `PreTrainedModelWrapper` for more details.
-        **ref_model** (`PreTrainedModelWrapper`, *optional*) -- Reference model to be
-            used for KL penalty, Hugging Face transformer model with a casual language
-            modelling head. Check the documentation of `PreTrainedModelWrapper`
-            for more details. If no reference model is provided, the trainer will
-            create a reference model with the same architecture as the model to be
-            optimized with shared layers.
         **tokenizer** (`Union[PreTrainedTokenizer, PreTrainedTokenizerFast]`)
             Tokenizer to be used for encoding the data. Check the documentation of
             `transformers.PreTrainedTokenizer` and
@@ -198,7 +192,6 @@ class PPOTrainer(PyTorchModelHubMixin):
         self,
         cfg=None,
         model=None,
-        ref_model=None,
         tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = None,
         optimizer: Optional[torch.optim.Optimizer] = None,
         lr_scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
@@ -212,9 +205,6 @@ class PPOTrainer(PyTorchModelHubMixin):
                 `LLM Studio Config` for more details.
             model (`PreTrainedModelWrapper`):
                 Hugging Face transformer model with a value head.
-            ref_model (`PreTrainedModelWrapper`):
-                Hugging Face transformer model with a casual language modelling head.
-                Used for KL penalty
             tokenizer (`transformers.PreTrainedTokenizer`):
                 Hugging Face tokenizer
             optimizer (`torch.optim.Optimizer`):
@@ -226,7 +216,6 @@ class PPOTrainer(PyTorchModelHubMixin):
 
         # Step 1: Initialize Model
         self.model = model
-        self.ref_model = ref_model
         self.tokenizer = tokenizer
 
         # Step 3: Initialize optimizer and data collator
@@ -342,9 +331,10 @@ class PPOTrainer(PyTorchModelHubMixin):
         all_logprobs, _, values, masks = self.batched_forward_pass(
             self.model, queries, responses, model_inputs
         )
-        ref_logprobs, _, _, _ = self.batched_forward_pass(
-            self.ref_model, queries, responses, model_inputs, return_values=False
-        )
+        with self.model.backbone.disable_adapter():
+            ref_logprobs, _, _, _ = self.batched_forward_pass(
+                self.model, queries, responses, model_inputs, return_values=False
+            )
         torch.inference_mode(mode=False)
 
         timing["time/ppo/forward_pass"] = time.time() - t

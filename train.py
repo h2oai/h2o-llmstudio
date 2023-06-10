@@ -145,7 +145,6 @@ def run_eval(
 def run_train(
     cfg: Any,
     model: torch.nn.Module,
-    model_ref: Any,
     reward_model: Any,
     train_dataloader: torch.utils.data.DataLoader,
     val_dataloader: torch.utils.data.DataLoader,
@@ -213,7 +212,6 @@ def run_train(
         ppo_trainer = PPOTrainer(
             cfg=cfg,
             model=model,
-            ref_model=model_ref,
             tokenizer=tokenizer,
             optimizer=optimizer,
             lr_scheduler=scheduler,
@@ -341,14 +339,8 @@ def run_train(
                 del output_dict
                 del batch
 
-                if cfg.training.offload_reference_model:
-                    model_ref.to(cfg.environment._device)
-
                 output_dict = ppo_trainer.step(query_tensor, response_tensor, reward)
                 del query_tensor, response_tensor, reward, scores
-
-                if cfg.training.offload_reference_model:
-                    model_ref.to("cpu")
 
                 loss = output_dict["ppo/loss/total"]
                 losses.append(loss)
@@ -615,13 +607,8 @@ def run(cfg: Any) -> None:
             logger.info("Using RLHF - Loading reward model")
             reward_model = cfg.architecture.reward_model_class(cfg)
             reward_model.eval()
-
-            logger.info("Using RLHF - Loading reference model")
-            model_ref = cfg.architecture.ref_model_class(cfg)
-            model_ref.eval()
         else:
             reward_model = None
-            model_ref = None
 
         # load model weights
         if cfg.architecture.pretrained_weights != "":
@@ -634,10 +621,6 @@ def run(cfg: Any) -> None:
             reward_model.to("cpu")
         else:
             reward_model.to(cfg.environment._device)
-        if cfg.training.offload_reference_model:
-            model_ref.to("cpu")
-        else:
-            model_ref.to(cfg.environment._device)
 
     if cfg.architecture.force_embedding_gradients:
         for module in model.modules():
@@ -693,7 +676,6 @@ def run(cfg: Any) -> None:
     val_data, val_loss, val_metric = run_train(
         cfg=cfg,
         model=model,
-        model_ref=model_ref,
         reward_model=reward_model,
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,

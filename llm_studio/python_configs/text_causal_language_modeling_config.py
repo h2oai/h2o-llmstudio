@@ -127,7 +127,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
 
     save_best_checkpoint: bool = False
     evaluation_epochs: float = 1.0
-    evaluate_before_training: bool = True
+    evaluate_before_training: bool = False
     train_validation_data: bool = False
 
     use_rlhf: bool = False
@@ -143,7 +143,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     scaling_factor_value_loss: float = 0.1
     ppo_epochs: int = 4
     ppo_batch_size: int = 1
-    offload_reference_model: bool = False
     offload_reward_model: bool = False
 
     def __post_init__(self):
@@ -271,7 +270,6 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 @dataclass
 class ConfigNLPCausalLMArchitecture(DefaultConfig):
     model_class: Any = text_causal_language_modeling_model.Model
-    ref_model_class: Any = text_causal_language_modeling_model.RefModel
     reward_model_class: Any = text_causal_language_modeling_model.RewardModel
     pretrained: bool = True
 
@@ -296,7 +294,6 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
         )
 
         self._visibility["model_class"] = -1
-        self._visibility["ref_model_class"] = -1
         self._visibility["reward_model_class"] = -1
         self._visibility["pretrained"] = -1
 
