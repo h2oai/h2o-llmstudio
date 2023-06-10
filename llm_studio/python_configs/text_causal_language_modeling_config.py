@@ -188,7 +188,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
 
         self._possible_values["evaluation_epochs"] = (0.1, 1, 0.05)
 
-        self._possible_values["initial_kl_coefficient"] = (0.1, 0.8, 0.05)
+        self._possible_values["initial_kl_coefficient"] = (0.01, 0.5, 0.01)
         self._possible_values["kl_target"] = (0.1, 16, 0.1)
         self._possible_values["kl_horizon"] = (1000, 20000, 1000)
         self._possible_values["advantages_gamma"] = (0.800, 0.999, 0.001)
