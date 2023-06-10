@@ -199,6 +199,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["ppo_epochs"] = (1, 16, 1)
         self._possible_values["ppo_batch_size"] = (1, 1024, 1)
 
+        self._visibility["lora"] = -1
         self._visibility["loss_function"] = -1
         self._visibility["loss_class"] = -1
         self._visibility["drop_last_batch"] = -1
