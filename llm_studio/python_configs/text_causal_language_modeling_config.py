@@ -136,7 +136,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     initial_kl_coefficient: float = 0.2
     kl_target: float = 6.0
     kl_horizon: int = 10000
-    advantages_gamma: float = 1.00
+    advantages_gamma: float = 0.99
     advantages_lambda: float = 0.95
     ppo_clip_policy: float = 0.2
     ppo_clip_value: float = 0.2
@@ -151,7 +151,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["optimizer"] = Optimizers.names()
 
         self._possible_values["learning_rate"] = possible_values.Number(
-            step=0.000001, min=0.000001
+            step=0.0000001, min=0.0000001
         )
         self._possible_values[
             "differential_learning_rate_layers"
@@ -190,8 +190,8 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["initial_kl_coefficient"] = (0.1, 0.8, 0.05)
         self._possible_values["kl_target"] = (0.1, 16, 0.1)
         self._possible_values["kl_horizon"] = (1000, 20000, 1000)
-        self._possible_values["advantages_gamma"] = (0.6, 1.1, 0.05)
-        self._possible_values["advantages_lambda"] = (0.6, 1.1, 0.05)
+        self._possible_values["advantages_gamma"] = (0.800, 0.999, 0.001)
+        self._possible_values["advantages_lambda"] = (0.8, 1.0, 0.01)
         self._possible_values["ppo_clip_policy"] = (0.1, 0.5, 0.05)
         self._possible_values["ppo_clip_value"] = (0.1, 0.5, 0.05)
         self._possible_values["scaling_factor_value_loss"] = (0.01, 1, 0.01)
