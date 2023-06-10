@@ -1216,6 +1216,7 @@ async def chat_tab(q: Q, load_model=True):
     )
 
 
+@torch.inference_mode(mode=True)
 async def chat_update(q: Q) -> None:
     """
     Update the chatbot with the new message.
@@ -1267,10 +1268,8 @@ async def chat_update(q: Q) -> None:
     )
 
     output = {}
-    torch.inference_mode(mode=True)
     with torch.cuda.amp.autocast():
         output["predicted_answer_ids"] = model.generate(inputs, cfg).detach().cpu()
-    torch.inference_mode(mode=False)
 
     predicted_text = [
         tokenizer.decode(ids, skip_special_tokens=True)
