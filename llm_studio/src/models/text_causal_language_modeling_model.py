@@ -266,7 +266,8 @@ class Model(nn.Module):
         batch: Dict,
         calculate_loss: bool = True,
         generate: bool = False,
-        padding=True,
+        padding: bool = True,
+        is_ref_model: bool = False,
     ) -> Dict:
         outputs: Dict = {}
 
@@ -298,7 +299,7 @@ class Model(nn.Module):
             labels=batch["labels"] if "labels" in batch else None,
             **kwargs,
         )
-        if calculate_loss:
+        if calculate_loss and not is_ref_model:
             outputs["loss"] = output.loss
 
         if self.training and self.cfg.training.use_rlhf:
@@ -309,70 +310,16 @@ class Model(nn.Module):
                 output.logits = output.logits.float()
 
             outputs["logits"] = output.logits
-            outputs["value"] = self.value_head(last_hidden_state).squeeze(-1)
+            outputs["value"] = (
+                self.value_head(last_hidden_state).squeeze(-1)
+                if not is_ref_model
+                else None
+            )
 
         if not self.training or generate:
             outputs["predicted_answer_ids"] = (
                 self.generate(batch, self.cfg).detach().cpu()
             )
-        return outputs
-
-
-class RefModel(nn.Module):
-    """
-    Model for causal language modeling problem type.
-    """
-
-    def __init__(self, cfg: Any):
-        """
-        Args:
-            cfg: config with all the hyperparameters
-        """
-
-        super(RefModel, self).__init__()
-
-        self.cfg = cfg
-
-        logger.info("Loading reference model for RLHF")
-        self.backbone, self.backbone_config = create_nlp_backbone(
-            cfg, model_class=AutoModelForCausalLM
-        )
-        self.backbone.eval()
-        self.backbone.requires_grad_(False)
-
-    def forward(
-        self,
-        batch: Dict,
-        calculate_loss: bool = False,
-        padding: bool = True,
-    ) -> Dict:
-        outputs: Dict = {}
-
-        if padding:
-            batch = batch_padding(
-                self.cfg,
-                batch,
-                self.training,
-                pad_keys=[
-                    "input_ids",
-                    "attention_mask",
-                    "special_tokens_mask",
-                    "labels",
-                ],
-            )
-
-        output = self.backbone(
-            input_ids=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
-        )
-
-        # force upcast in fp32 if logits are in half-precision
-        if output.logits.dtype != torch.float32:
-            output.logits = output.logits.float()
-
-        outputs["logits"] = output.logits
-        outputs["value"] = None
-
         return outputs
 
 
