@@ -221,7 +221,7 @@ class Model(nn.Module):
         # The KL-div estimation assumes sampling and specific settings
         if self.training and cfg.training.use_rlhf:
             do_sample = True
-            temperature = 1.0
+            temperature = cfg.training.ppo_generate_temperature
             top_k = 0.0
             top_p = 1.0
             repetition_penalty = 1.0

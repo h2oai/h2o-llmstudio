@@ -29,8 +29,6 @@ from transformers import (
     PreTrainedTokenizerFast,
 )
 
-from llm_studio.src.utils.modeling_utils import unwrap_model
-
 try:
     from collections.abc import Mapping
 except ImportError:

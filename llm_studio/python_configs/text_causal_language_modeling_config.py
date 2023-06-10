@@ -143,6 +143,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     scaling_factor_value_loss: float = 0.1
     ppo_epochs: int = 4
     ppo_batch_size: int = 1
+    ppo_generate_temperature: float = 1.0
     offload_reward_model: bool = False
 
     def __post_init__(self):
@@ -196,6 +197,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["ppo_clip_value"] = (0.1, 0.5, 0.05)
         self._possible_values["scaling_factor_value_loss"] = (0.01, 1, 0.01)
         self._possible_values["ppo_epochs"] = (1, 16, 1)
+        self._possible_values["ppo_generate_temperature"] = (0.1, 1.0, 0.1)
         self._possible_values["ppo_batch_size"] = (1, 1024, 1)
 
         self._visibility["lora"] = -1
