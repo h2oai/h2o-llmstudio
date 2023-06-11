@@ -38,6 +38,7 @@
 - use a **graphic user interface (GUI)** specially designed for large language models.
 - finetune any LLM using a large variety of hyperparameters.
 - use recent finetuning techniques such as [Low-Rank Adaptation (LoRA)](https://arxiv.org/abs/2106.09685) and 8-bit model training with a low memory footprint.
+- use Reinforcement Learning (RL) to finetune your model (experimental)
 - use advanced evaluation metrics to judge generated answers by the model.
 - track and compare your model performance visually. In addition, [Neptune](https://neptune.ai/) integration can be used.
 - chat with your model and get instant feedback on your model performance.
@@ -261,7 +262,7 @@ tokens = model.generate(
     max_new_tokens=256,
     temperature=0.3,
     repetition_penalty=1.2,
-    num_beams=2
+    num_beams=1
 )[0]
 tokens = tokens[inputs["input_ids"].shape[1]:]
 answer = tokenizer.decode(tokens, skip_special_tokens=True)
@@ -321,12 +322,11 @@ The majority of the LLM backbones are trained on a very similar corpus of data. 
 
 To train a chatbot style model, you need to convert your data into a question and answer format.
 
-> ❓ I encounter GPU out-of-memory issues. What can I change to be able to train large models? 
+> ❓ I encounter GPU out-of-memory issues. What can I change to be able to train large models?
 
 There are various parameters that can be tuned while keeping a specific LLM backbone fixed.
 It is advised to choose 4bit/8bit precision as a backbone dtype to be able to train models >=7B on a consumer type GPU.
-LORA should be enabled. Besides that there are the usual parameters such as batch size and maximum sequence length that can be decreased to save GPU memory 
-(please ensure that your prompt+answer text is not truncated too much by checking the train data insights).
+LORA should be enabled. Besides that there are the usual parameters such as batch size and maximum sequence length that can be decreased to save GPU memory (please ensure that your prompt+answer text is not truncated too much by checking the train data insights).
 
 ## License
 
