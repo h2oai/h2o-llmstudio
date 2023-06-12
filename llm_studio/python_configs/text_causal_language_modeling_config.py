@@ -276,7 +276,7 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
     pretrained: bool = True
 
     backbone_dtype: str = "float16"
-    gradient_checkpointing: bool = False
+    gradient_checkpointing: bool = True
     force_embedding_gradients: bool = False
     intermediate_dropout: float = 0
     pretrained_weights: str = ""
@@ -449,9 +449,11 @@ class ConfigProblemBase(DefaultConfig):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
+                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-7b-v2",
+                "h2oai/h2ogpt-gm-oasst1-en-2048-open-llama-7b",
+                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-40b-v1",
                 "h2oai/h2ogpt-oig-oasst1-512-6.9b",
                 "h2oai/h2ogpt-oasst1-512-20b",
-                "h2oai/h2ogpt-gm-oasst1-en-1024-12b",
                 "EleutherAI/gpt-neo-1.3B",
                 "EleutherAI/gpt-j-6B",
                 "EleutherAI/gpt-neox-20b",
