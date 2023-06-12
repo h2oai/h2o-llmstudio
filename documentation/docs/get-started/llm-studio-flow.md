@@ -14,8 +14,8 @@ In the below sections, each step above, in turn, is summarized.
 
 As the first step in the experiment flow, prep your data and import your dataset to H2O LLM Studio. 
 
-- To learn about supported data connectors and data format, see [Supported data connectors and format](../guide/data-connectors-format).
-- To learn about how to import a dataset to H2O LLM Studio, see [Import a dataset](../guide/import-dataset).
+- To learn about supported data connectors and data format, see [Supported data connectors and format](../guide/datasets/data-connectors-format).
+- To learn about how to import a dataset to H2O LLM Studio, see [Import a dataset](../guide/datasets/import-dataset).
 - To learn about reviewing and editing a dataset, see [View and manage dataset](../guide/datasets/view-dataset.md).
 
 ## Step 2: Create an experiment
