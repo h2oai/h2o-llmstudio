@@ -9,7 +9,7 @@ import pandas as pd
 from joblib import Parallel, delayed
 from sacrebleu import BLEU
 from sacrebleu.metrics.base import Metric
-from tenacity import RetryError, retry, stop_after_attempt, wait_random_exponential
+from tenacity import retry, stop_after_attempt, wait_random_exponential
 from tqdm import tqdm
 
 from llm_studio.src.datasets.text_utils import get_texts
