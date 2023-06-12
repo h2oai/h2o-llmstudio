@@ -20,7 +20,7 @@ def get_size(x):
         return 2**31
 
 
-version = "0.0.1"
+version = "0.0.4-dev"
 
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -42,7 +42,6 @@ default_cfg = {
     "min_experiment_disk_space": get_size(
         os.getenv("MIN_DISK_SPACE_FOR_EXPERIMENTS", "2GB")
     ),
-    "separate_user_space": False,
     "allowed_file_extensions": os.getenv(
         "ALLOWED_FILE_EXTENSIONS", ".zip,.csv,.pq"
     ).split(","),

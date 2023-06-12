@@ -127,7 +127,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
 
     save_best_checkpoint: bool = False
     evaluation_epochs: float = 1.0
-    evaluate_before_training: bool = True
+    evaluate_before_training: bool = False
     train_validation_data: bool = False
 
     def __post_init__(self):
@@ -199,6 +199,7 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
     max_length: int = 512
     add_prompt_answer_tokens: bool = False
     padding_quantile: float = 1.0
+    use_fast: bool = True
     add_prefix_space: bool = False
 
     def __post_init__(self):
@@ -218,7 +219,7 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
     pretrained: bool = True
 
     backbone_dtype: str = "float16"
-    gradient_checkpointing: bool = False
+    gradient_checkpointing: bool = True
     force_embedding_gradients: bool = False
     intermediate_dropout: float = 0
     pretrained_weights: str = ""
@@ -227,7 +228,8 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
         super().__post_init__()
 
         self._possible_values["backbone_dtype"] = possible_values.String(
-            values=("float16", "bfloat16", "int8", "float32"), allow_custom=False
+            values=("float32", "bfloat16", "float16", "int8", "int4"),
+            allow_custom=False,
         )
         self._possible_values["intermediate_dropout"] = (0, 0.5, 0.05)
 
@@ -265,10 +267,14 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     batch_size_inference: int = 0
 
     do_sample: bool = False
-    num_beams: int = 2
+    num_beams: int = 1
     temperature: float = 0.3
     repetition_penalty: float = 1.2
     stop_tokens: str = ""
+    top_k: int = 0
+    top_p: float = 1.0
+
+    num_history: int = 2
 
     def __post_init__(self):
         super().__post_init__()
@@ -281,8 +287,13 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._possible_values["num_beams"] = (1, 10, 1)
         self._possible_values["temperature"] = (0, 10, 0.05)
         self._possible_values["repetition_penalty"] = (1, 10, 0.05)
+        self._possible_values["top_k"] = (0, 100, 1)
+        self._possible_values["top_p"] = (0.5, 1, 0.05)
+        self._possible_values["num_history"] = (1, 50, 1)
 
         self._visibility["metric_class"] = -1
+        # possible values for num_history are only used in chatbot tab
+        self._visibility["num_history"] = -1
 
 
 @dataclass
@@ -295,7 +306,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     use_fsdp: bool = False
 
     find_unused_parameters: bool = False
-    trust_remote_code: bool = False
+    trust_remote_code: bool = True
     number_of_workers: int = 4
     seed: int = -1
 
@@ -352,7 +363,7 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
 class ConfigProblemBase(DefaultConfig):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
-    llm_backbone: str = "EleutherAI/pythia-12b-deduped"
+    llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
 
     dataset: ConfigNLPCausalLMDataset = field(default_factory=ConfigNLPCausalLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
@@ -380,14 +391,20 @@ class ConfigProblemBase(DefaultConfig):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
+                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-7b-v2",
+                "h2oai/h2ogpt-gm-oasst1-en-2048-open-llama-7b",
+                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-40b-v1",
+                "h2oai/h2ogpt-oig-oasst1-512-6.9b",
                 "h2oai/h2ogpt-oasst1-512-20b",
                 "EleutherAI/gpt-neo-1.3B",
                 "EleutherAI/gpt-j-6B",
+                "EleutherAI/gpt-neox-20b",
                 "facebook/opt-125m",
                 "facebook/opt-2.7b",
                 "facebook/opt-6.7b",
                 "facebook/opt-13b",
-                "EleutherAI/pythia-1b",
+                "EleutherAI/pythia-1b-deduped",
+                "EleutherAI/pythia-2.8b-deduped",
                 "EleutherAI/pythia-6.9b-deduped",
                 "EleutherAI/pythia-12b-deduped",
                 "cerebras/Cerebras-GPT-13B",

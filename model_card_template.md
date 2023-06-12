@@ -19,11 +19,12 @@ This model was trained using [H2O LLM Studio](https://github.com/h2oai/h2o-llmst
 
 ## Usage
 
-To use the model with the `transformers` library on a machine with GPUs, first make sure you have the `transformers` and `torch` libraries installed.
+To use the model with the `transformers` library on a machine with GPUs, first make sure you have the `transformers`, `accelerate` and `torch` libraries installed.
 
 ```bash
-pip install transformers==4.28.1
-pip install torch==2.0.0
+pip install transformers=={{transformers_version}}
+pip install accelerate=={{accelerate_version}}
+pip install torch=={{torch_version}}
 ```
 
 ```python
@@ -32,8 +33,9 @@ from transformers import pipeline
 
 generate_text = pipeline(
     model="{{repo_id}}",
-    torch_dtype=torch.float16,
+    torch_dtype="auto",
     trust_remote_code=True,
+    use_fast={{use_fast}},
     device_map={"": "cuda:0"},
 )
 
@@ -45,6 +47,7 @@ res = generate_text(
     num_beams={{num_beams}},
     temperature=float({{temperature}}),
     repetition_penalty=float({{repetition_penalty}}),
+    renormalize_logits=True
 )
 print(res[0]["generated_text"])
 ```
@@ -59,8 +62,7 @@ print(generate_text.preprocess("Why is drinking water so healthy?")["prompt_text
 {{text_prompt_start}}Why is drinking water so healthy?{{end_of_sentence}}{{text_answer_separator}}
 ```
 
-Alternatively, if you prefer to not use `trust_remote_code=True` you can download [h2oai_pipeline.py](h2oai_pipeline.py), store it alongside your notebook, and construct the pipeline yourself from the loaded model and tokenizer:
-
+Alternatively, you can download [h2oai_pipeline.py](h2oai_pipeline.py), store it alongside your notebook, and construct the pipeline yourself from the loaded model and tokenizer. If the model and the tokenizer are fully supported in the `transformers` package, this will allow you to set `trust_remote_code=False`.
 
 ```python
 import torch
@@ -69,12 +71,15 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 tokenizer = AutoTokenizer.from_pretrained(
     "{{repo_id}}",
-    padding_side="left"
+    use_fast={{use_fast}},
+    padding_side="left",
+    trust_remote_code={{trust_remote_code}},
 )
 model = AutoModelForCausalLM.from_pretrained(
     "{{repo_id}}",
-    torch_dtype=torch.float16,
-    device_map={"": "cuda:0"}
+    torch_dtype="auto",
+    device_map={"": "cuda:0"},
+    trust_remote_code={{trust_remote_code}},
 )
 generate_text = H2OTextGenerationPipeline(model=model, tokenizer=tokenizer)
 
@@ -86,6 +91,7 @@ res = generate_text(
     num_beams={{num_beams}},
     temperature=float({{temperature}}),
     repetition_penalty=float({{repetition_penalty}}),
+    renormalize_logits=True
 )
 print(res[0]["generated_text"])
 ```
@@ -96,14 +102,22 @@ You may also construct the pipeline from the loaded model and tokenizer yourself
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-
 model_name = "{{repo_id}}"  # either local folder or huggingface model name
 # Important: The prompt needs to be in the same format the model was trained with.
 # You can find an example prompt in the experiment logs.
 prompt = "{{text_prompt_start}}How are you?{{end_of_sentence}}{{text_answer_separator}}"
 
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(
+    model_name,
+    use_fast={{use_fast}},
+    trust_remote_code={{trust_remote_code}},
+)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype="auto",
+    device_map={"": "cuda:0"},
+    trust_remote_code={{trust_remote_code}},
+)
 model.cuda().eval()
 inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
 
@@ -116,6 +130,7 @@ tokens = model.generate(
     num_beams={{num_beams}},
     temperature=float({{temperature}}),
     repetition_penalty=float({{repetition_penalty}}),
+    renormalize_logits=True
 )[0]
 
 tokens = tokens[inputs["input_ids"].shape[1]:]

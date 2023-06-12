@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, Tuple
 
 import coolname
 import torch
+from peft import prepare_model_for_kbit_training
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
     MixedPrecision,
@@ -66,16 +67,20 @@ def load_model_weights(
     orig_num_items = len(model_weights)
     model_state_dict = model.state_dict()
 
-    # needed to load models trained in int8 with other dtypes
+    # needed to load models trained in int4/int8 with other dtypes
     model_weights = {
         k: v
-        if not (v.dtype is torch.int8 and cfg.architecture.backbone_dtype != "int8")
+        if not (
+            v.dtype is torch.int8
+            or v.dtype is torch.uint8  # used for 4bit
+            and cfg.architecture.backbone_dtype not in ("int4", "int8")
+        )
         else model_state_dict[k]
         for k, v in model_weights.items()
-        if not ("SCB" in k and cfg.architecture.backbone_dtype != "int8")
+        if not ("SCB" in k and cfg.architecture.backbone_dtype not in ("int4", "int8"))
     }
 
-    # Need to ignore int8 weights so undo strict loading requirement
+    # Need to ignore int4/int8 weights so undo strict loading requirement
     if len(model_weights) != orig_num_items:
         strict = False
 
@@ -425,6 +430,9 @@ def run_inference(
                 step=cfg.environment._curr_val_step,
             )
 
+        if cfg.environment._distributed:
+            torch.distributed.barrier()
+
     progress_bar.close()
     del progress_bar
     out = cat_batches(out)
@@ -442,46 +450,6 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
     val_df.to_csv(csv_preds_name, index=False)
 
 
-def prepare_model_for_lora_training(
-    model, output_embedding_layer_name="lm_head", layer_norm_names=["layer_norm"]
-):
-    loaded_in_8bit = getattr(model, "is_loaded_in_8bit", False)
-
-    for name, param in model.named_parameters():
-        # freeze base model's layers
-        param.requires_grad = False
-
-        if loaded_in_8bit:
-            # cast layer norm in fp32 for stability for 8bit models
-            if param.ndim == 1 and any(
-                layer_norm_name in name for layer_norm_name in layer_norm_names
-            ):
-                param.data = param.data.to(torch.float32)
-
-    if hasattr(model, output_embedding_layer_name):
-        output_embedding_layer = getattr(model, output_embedding_layer_name)
-        input_dtype = output_embedding_layer.weight.dtype
-
-        class CastOutputToFloat(torch.nn.Sequential):
-            r"""
-            Manually cast to the expected dtype of the lm_head
-            as sometimes there is a final layer norm that is casted
-            in fp32
-
-            """
-
-            def forward(self, x):
-                return super().forward(x.to(input_dtype)).to(torch.float32)
-
-        setattr(
-            model,
-            output_embedding_layer_name,
-            CastOutputToFloat(output_embedding_layer),
-        )
-
-    return model
-
-
 def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     """
     Creates a backbone model for NLP tasks.
@@ -496,26 +464,36 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     quantization_config = None
     if cfg.architecture.backbone_dtype == "int8":
         kwargs["device_map"] = {"": cfg.environment._device}
-        kwargs["torch_dtype"] = torch.float16
-        kwargs["load_in_8bit"] = True
         quantization_config = BitsAndBytesConfig(
             load_in_8bit=True,
             llm_int8_threshold=0.0,
         )
         # need to force pretrained
         cfg.architecture.pretrained = True
+        kwargs["torch_dtype"] = torch.float16
+    elif cfg.architecture.backbone_dtype == "int4":
+        kwargs["device_map"] = {"": cfg.environment._device}
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_quant_type="nf4",
+        )
+        # need to force pretrained
+        cfg.architecture.pretrained = True
+        kwargs["torch_dtype"] = torch.float16
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
-    logger.info("dtype: {dtype}".format(dtype=kwargs["torch_dtype"]))
+
+    logger.info(f"Using {cfg.architecture.backbone_dtype} for backbone")
 
     if cfg.architecture.gradient_checkpointing:
         config.use_cache = False
 
+    kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
             config=config,
-            trust_remote_code=cfg.environment.trust_remote_code,
             quantization_config=quantization_config,
             **kwargs,
         )
@@ -527,7 +505,10 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         backbone.resize_token_embeddings(cfg.tokenizer._vocab_length)
 
     if cfg.training.lora:
-        backbone = prepare_model_for_lora_training(backbone, layer_norm_names=[])
+        # if used, gradient checkpointing will be enabled below
+        backbone = prepare_model_for_kbit_training(
+            backbone, use_gradient_checkpointing=False
+        )
     else:
         if cfg.architecture.backbone_dtype != "float32":
             if cfg.environment.mixed_precision:
