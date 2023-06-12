@@ -349,15 +349,17 @@ class CustomDataset(Dataset):
         prompt_input_ids = torch.cat([torch.cat(sample) for sample in samples])
         prompt_attention_mask = torch.ones_like(prompt_input_ids)
 
-        sample.update(
-            self.pad_tokens(
-                prompt_input_ids,
-                prompt_attention_mask,
-                self.cfg.tokenizer.max_length_prompt,
-                self.tokenizer.pad_token_id,
-                prefix="prompt_",
+        if len(prompt_input_ids) > 0:
+            # Do not pad prompt if prompt is empty (continued pretraining)
+            sample.update(
+                self.pad_tokens(
+                    prompt_input_ids,
+                    prompt_attention_mask,
+                    self.cfg.tokenizer.max_length_prompt,
+                    self.tokenizer.pad_token_id,
+                    prefix="prompt_",
+                )
             )
-        )
 
         return sample
 
