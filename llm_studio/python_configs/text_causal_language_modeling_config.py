@@ -194,9 +194,9 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
 
 @dataclass
 class ConfigNLPCausalLMTokenizer(DefaultConfig):
-    max_length_prompt: int = 512
-    max_length_answer: int = 512
-    max_length: int = 1024
+    max_length_prompt: int = 256
+    max_length_answer: int = 256
+    max_length: int = 512
     add_prompt_answer_tokens: bool = False
     padding_quantile: float = 1.0
     use_fast: bool = True
