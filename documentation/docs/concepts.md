@@ -6,9 +6,26 @@ H2O LLM Studio is based on a few key concepts and uses several key terms across 
 
 A Large Language Model (LLM) is a type of AI model that uses deep learning techniques and uses massive datasets to analyze and generate human-like language. For example, many AI chatbots or AI search engines are powered by LLMs.  
 
+Generally speaking, LLMs can be characterized by the following parameters: 
+- size of the training dataset
+- cost of training (computational power)
+- size of the model (parameters)
+- performance after training (or how well the model is able to respond to a particular question)
+
+## Parameters and hyperparameters
+
+In the context of an LLM, parameters and hyperparameters are a crucial part of determinining the model's performance and overall behaviour. 
+
+- **Parameters:** The internal variables of the model that are learned during the training process. In the case of an LLM, parameters typically include the weights and biases associated with the neural network layers. The values of parameters directly influence the model's predictions and the quality of generated text.
+
+- **Hyperparameters:** The configuration choices that are set before training the model and are not learned directly from the data (e.g., number of epochs, batch size etc.). These choices impact the learning process and influence the model's overall behavior. Hyperparameters need to be tuned and optimized to achieve the best performance. H2O LLM Studio GUI shows tooltips next to each hyperparameter to explain what each hyperparameter is for. You can also see the following references for more details about hyperparameters in H2O LLM Studio.
+    - Dataset settings
+    - [Experiment settings](./guide/experiments/experiment-settings)
+
+
 ## LLM Backbone
 
-LLM Backbone is the foundation model that you continue training. This option is the most important setting in experiment creation as it sets the pretrained model weights. For more information about LLM Backbone, see [Experiment settings](guide/experiments/experiment-settings.md#llm-backbone).
+LLM Backbone is a key hyperparamter that determines the model's architecture. This option is the most important setting when it comes to experiment creation, as it sets the pretrained model weights. For more information about LLM Backbone, see [Experiment settings](guide/experiments/experiment-settings.md#llm-backbone).
 
 
 ## Generative AI

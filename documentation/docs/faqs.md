@@ -20,6 +20,18 @@ The majority of the LLM backbones are trained on a very similar corpus of data. 
 
 To train a chatbot style model, you need to convert your data into a question and answer format.
 
+---
+
+### When does the model stop the fine-tuning process?
+
+The number of epochs are set by the user.
+
+---
+
+### How many records are recommended for fine-tuning?
+
+An order of 100K records is recommended for fine-tuning.
+
 
 
 
