@@ -521,8 +521,12 @@ def batch_padding(
     pad_keys: List[str] = ["input_ids", "attention_mask", "special_tokens_mask"],
 ) -> Dict:
     """Pads a batch according to set quantile, or cuts it at maximum length"""
+    print(batch[mask_key])
     if cfg.environment.compile_model:
         # logger.warning("Batch padding not functional with torch compile.")
+        return batch
+    elif batch[mask_key].sum() == 0:
+        # continued pretraining
         return batch
     elif cfg.tokenizer.padding_quantile == 0:
         return batch

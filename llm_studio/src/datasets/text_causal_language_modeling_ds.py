@@ -349,17 +349,15 @@ class CustomDataset(Dataset):
         prompt_input_ids = torch.cat([torch.cat(sample) for sample in samples])
         prompt_attention_mask = torch.ones_like(prompt_input_ids)
 
-        if len(prompt_input_ids) > 0:
-            # Do not pad prompt if prompt is empty (continued pretraining)
-            sample.update(
-                self.pad_tokens(
-                    prompt_input_ids,
-                    prompt_attention_mask,
-                    self.cfg.tokenizer.max_length_prompt,
-                    self.tokenizer.pad_token_id,
-                    prefix="prompt_",
-                )
+        sample.update(
+            self.pad_tokens(
+                prompt_input_ids,
+                prompt_attention_mask,
+                self.cfg.tokenizer.max_length_prompt,
+                self.tokenizer.pad_token_id,
+                prefix="prompt_",
             )
+        )
 
         return sample
 
@@ -372,10 +370,16 @@ class CustomDataset(Dataset):
             input_ids = input_ids[-max_length:]
             attention_mask = attention_mask[-max_length:]
 
-        sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
-        sample[f"{prefix}input_ids"][-len(input_ids) :] = input_ids
-        sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
-        sample[f"{prefix}attention_mask"][-len(input_ids) :] = attention_mask
+        if len(input_ids) > 0:
+            sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
+            sample[f"{prefix}input_ids"][-len(input_ids) :] = input_ids
+            sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
+            sample[f"{prefix}attention_mask"][-len(input_ids) :] = attention_mask
+        else:
+            # Pad everything if empty (continued pretraining)
+            sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
+            sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
+
         return sample
 
     @staticmethod
