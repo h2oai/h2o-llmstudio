@@ -74,9 +74,6 @@ def rate_reply(question, reference_answer, assistant_answer, model, deployment_i
 
     try:
         return call_openai_api(template, model, deployment_id)
-    except RetryError as e:
-        logger.warning(f"Exception caught in api call: {e}")
-        return 0.0, ""
     except Exception as e:
         logger.warning(f"Exception caught in api call: {e}")
         return 0.0, ""
