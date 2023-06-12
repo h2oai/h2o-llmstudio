@@ -29,7 +29,11 @@ module.exports = {
           type: "category",
           label: "Experiments",
           items: [
-            "guide/create-experiment",
+            "guide/experiments/experiment-settings",
+            "guide/experiments/create-an-experiment",
+            "guide/experiments/view-an-experiment",
+            "guide/experiments/compare-experiments",
+            "guide/experiments/export-trained-model",
           ],
         },
       ],

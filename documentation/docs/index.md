@@ -1,14 +1,14 @@
 ---
 slug: /
 displayed_sidebar: defaultSidebar
-title: Home
+title: H2O LLM Studio | Docs
 hide_table_of_contents: true
 hide_title: true
 ---
 
 import H2OHome from '@site/src/components/H2OHome';
 
-<H2OHome title="H2O LLM Studio | Docs" description="A framework and no-code GUI designed for fine-tuning state-of-the-art large language models (LLMs)" sections={[
+<H2OHome title="H2O LLM Studio" description="A framework and no-code GUI designed for fine-tuning state-of-the-art large language models (LLMs)" sections={[
   {
     subsections: [
       {
@@ -17,36 +17,62 @@ import H2OHome from '@site/src/components/H2OHome';
         items: [
           {
             label: "What is H2O LLM Studio?",
-            to: "/get-started/what-is-application-name",
+            to: "/get-started/what-is-h2o-llm-studio",
           },
           {
-            label: "Access H2O LLM Studio",
-            to: "/get-started/access-application-name",
+            label: "Set up H2O LLM Studioo",
+            to: "/get-started/set-up-llm-studio",
           },
           {
-            label: "H2O LLM Studio flow",
-            to: "/get-started/access-application-flow",
+            label: "Experiment (model) flow",
+            to: "/get-started/llm-studio-flow",
           },
           {
             label: "Tutorials",
-            to: "/get-started/tutorials/tutorials-overview",
+            to: "/get-started/tutorials",
           },
         ],
       },
       {
-        title: "Card 2",
+        title: "Datasets",
+        icon: "dataset",
         subtitle: null,
-        items: [],
+        items: [
+          {
+            label: "Data connectors and data format",
+            to: "/guide/datasets/data-connectors-format",
+          },
+          {
+            label: "Import a dataset",
+            to: "/guide/datasets/import-dataset",
+          },
+          {
+            label: "View and manage a dataset",
+            to: "/guide/datasets/view-dataset",
+          },
+        ],
       },
       {
-        title: "Card 3",
-        subtitle: null,
-        items: [],
-      },
-      {
-        title: "Card 4",
-        subtitle: null,
-        items: [],
+        title: "Experiments",
+        icon: "timeline",
+        items: [
+          {
+            label: "Experiment settings",
+            to: "/guide/experiments/experiment-settings",
+          },
+          {
+            label: "Create an experiment",
+            to: "/guide/experiments/create-an-experiment",
+          },
+          {
+            label: "Monitor experiments",
+            to: "/guide/experiments/view-an-experiment",
+          },
+          {
+            label: "Compare experiments",
+            to: "/guide/experiments/compare-experiments",
+          },
+        ],
       },
     ],
   },
