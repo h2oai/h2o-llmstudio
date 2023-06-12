@@ -1,3 +1,8 @@
+# This file borrows large pieces from the trl library, which is licensed under
+# the Apache 2.0 license.
+# https://github.com/lvwerra/trl/blob/main/trl/trainer/ppo_trainer.py
+
+
 # Copyright 2022 The HuggingFace Team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

@@ -32,6 +32,9 @@ class ValueHead(nn.Module):
     """
     The ValueHead class implements a head for GPT2 that returns a scalar for each
     output token.
+
+    Based on the implementation of trl library:
+    https://github.com/lvwerra/trl/blob/main/trl/models/modeling_value_head.py
     """
 
     def __init__(self, config):
