@@ -175,6 +175,9 @@ class CustomDataset(Dataset):
     def postprocess_batch_predictions(
         self, cfg: Any, input_batch: Dict, output: Dict
     ) -> Dict:
+        if cfg.prediction.metric == "Perplexity":
+            return output
+
         predicted_text = [
             self.tokenizer.decode(ids, skip_special_tokens=True).strip()
             for ids in output["predicted_answer_ids"]
@@ -201,35 +204,31 @@ class CustomDataset(Dataset):
         return output
 
     def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
-        output = self.clean_output(output, self.prompts, cfg)
+        if not cfg.prediction.metric == "Perplexity":
+            output = self.clean_output(output, self.prompts, cfg)
 
         output["target_text"] = self.answers
-        metric_func, _ = cfg.prediction.metric_class.get(cfg.prediction.metric)
-        predictions = output["predicted_text"]
-        labels = output["target_text"]
-        assert len(predictions) == len(labels)
+        if "predicted_text" not in output.keys():
+            # In perplexity metric, no predictions were made, use the target text
+            output["predicted_text"] = output["target_text"]
 
-        metrics = []
+        metric_func, _, _ = cfg.prediction.metric_class.get(cfg.prediction.metric)
 
         if "GPT" in cfg.prediction.metric:
             metrics, explanations = metric_func(
                 cfg,
-                {"predicted_text": predictions, "target_text": labels},
+                output,
                 df,
                 raw_results=True,
             )
             output["explanations"] = explanations
         else:
-            for i in range(len(labels)):
-                label = [labels[i]]
-                prediction = [predictions[i]]
-                act_metric = metric_func(
-                    cfg,
-                    {"predicted_text": prediction, "target_text": label},
-                    df.iloc[i : i + 1],
-                )
-                metrics.append(act_metric)
-        output["metrics"] = torch.tensor(metrics)
+            metrics = metric_func(
+                cfg,
+                output,
+                df,
+            )
+        output["metrics"] = metrics
 
         return output
 

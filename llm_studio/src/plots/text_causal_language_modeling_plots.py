@@ -168,7 +168,7 @@ class Plots:
     ) -> PlotData:
         assert mode in ["validation"]
 
-        metrics = val_outputs["metrics"].detach().cpu().numpy()
+        metrics = val_outputs["metrics"]
         best_samples, worst_samples = get_best_and_worst_sample_idxs(
             cfg, metrics, n_plots=min(cfg.logging.number_of_texts, len(val_df))
         )

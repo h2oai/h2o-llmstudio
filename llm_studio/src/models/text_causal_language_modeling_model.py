@@ -8,6 +8,7 @@ from transformers import AutoModelForCausalLM, StoppingCriteria, StoppingCriteri
 from transformers.generation.utils import GenerationMixin
 from transformers.utils import logging as transformers_logging
 
+from llm_studio.src.losses.classification_losses import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import create_nlp_backbone
 
@@ -118,6 +119,9 @@ class Model(nn.Module):
             self.cfg.training.loss_function
         )(self.cfg)
 
+        if self.cfg.prediction.metric == "Perplexity":
+            self.perplexity = Perplexity(self.cfg)
+
     def generate(self, batch: Dict, cfg: Any):
         pad_token_id = (
             self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
@@ -196,12 +200,12 @@ class Model(nn.Module):
                 input_ids=batch["input_ids"],
                 attention_mask=batch["attention_mask"],
             )
-
             if calculate_loss:
-                loss = self.loss_fn(output.logits, batch["labels"])
-                outputs["loss"] = loss
+                outputs["loss"] = self.loss_fn(output.logits, batch["labels"])
 
-        if not self.training:
+        if self.cfg.prediction.metric == "Perplexity":
+            outputs["perplexity"] = self.perplexity(output.logits, batch["labels"])
+        elif not self.training:
             outputs["predicted_answer_ids"] = self.generate(batch, self.cfg)
 
         return outputs

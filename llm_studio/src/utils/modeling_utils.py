@@ -5,6 +5,7 @@ from collections import OrderedDict
 from typing import Any, Callable, Dict, Tuple
 
 import coolname
+import numpy as np
 import torch
 from peft import prepare_model_for_kbit_training
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
@@ -269,42 +270,24 @@ def generate_experiment_name() -> str:
     return coolname.generate_slug(2)
 
 
-def compute_metric(
-    metric_func: Callable, cfg: Any, data: Any, df: Any
-) -> Tuple[float, Any]:
-    """Compute metric and return metric score (number) and full metric (number or dict)
+def compute_metric(output, reduce=None) -> float:
+    """Compute metric and return metric score (number)
 
     Args:
-        metric_func: metric function
-        cfg: input Config
-        data: data Dict
-        df: data DataFrame
+        output: output of the model
+        reduce: how to reduce the metric over the sample dimension
 
     Returns:
-        val_metric: single number score (using config threshold for threshold metrics)
-        full_val_metric: for threshold metrics return dictionary where keys are
-            different thresholds, values are metric scores, for regular metrics
-            just return the metric score (same as val_metric)
-
+        score: single number score (using config threshold for threshold metrics)
+        or non-reduced array of scores per sample.
     """
-    try:
-        full_val_metric = metric_func(cfg=cfg, results=data, val_df=df)
-    except Exception:
-        raise LLMMetricException()
 
-    if type(full_val_metric) is dict:  # threshold dependent clf metrics
-        if "argmax" in full_val_metric.keys():  # multiclass using argmax
-            val_metric = full_val_metric["argmax"]
-        elif hasattr(cfg.prediction, "probability_threshold"):
-            # retrieve score using selected threhshold
-            threshold = getattr(cfg.prediction, "probability_threshold")
-            val_metric = full_val_metric[threshold]
-        else:
-            raise ValueError("Config prediction misses probability threshold.")
+    if reduce == "mean":
+        score = np.mean(output["metrics"])
     else:
-        val_metric = full_val_metric
+        raise NotImplementedError()
 
-    return val_metric, full_val_metric
+    return score
 
 
 def get_number_of_validation_epochs(training_epochs: int, evaluation_epochs: float):

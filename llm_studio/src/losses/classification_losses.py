@@ -1,6 +1,7 @@
 import logging
 from typing import Any, List
 
+import torch
 from torch import nn
 
 __all__ = ["Losses"]
@@ -23,6 +24,24 @@ class TokenAveragedCrossEntropyLoss(nn.Module):
         shift_labels = shift_labels.view(-1)
 
         return self.loss_fn(shift_logits, shift_labels)
+
+
+class Perplexity(nn.Module):
+    def __init__(self, cfg: Any):
+        super().__init__()
+        self.cfg = cfg
+        self.loss_fn = nn.CrossEntropyLoss()
+
+    def forward(self, logits, labels):
+        shift_logits = logits[..., :-1, :].contiguous()
+        shift_labels = labels[..., 1:].contiguous()
+
+        perplexity = []
+        for i in range(labels.shape[0]):
+            perplexity.append(self.loss_fn(shift_logits[i], shift_labels[i]))
+        perplexity = torch.stack(perplexity, dim=0)
+        perplexity = torch.exp(perplexity)
+        return perplexity
 
 
 class SampleAveragedCrossEntropyLoss(nn.Module):

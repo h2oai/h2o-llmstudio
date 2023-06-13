@@ -25,7 +25,7 @@ def sacrebleu_score(
         results["predicted_text"], results["target_text"]
     ):
         scores.append(metric.sentence_score(predicted_text, [target_text]).score)
-    return np.mean(scores)
+    return np.array(scores)
 
 
 @retry(wait=wait_random_exponential(multiplier=1, max=60), stop=stop_after_attempt(3))
@@ -78,8 +78,6 @@ def gpt_score(
     model: str = "gpt-3.5-turbo",
     raw_results: bool = False,
 ) -> float:
-    if "metrics" in results:
-        return np.mean(results["metrics"].detach().cpu().numpy())
     prompts = get_texts(val_df, cfg, separator="")
 
     ret = Parallel(n_jobs=8, backend="multiprocessing")(
@@ -99,17 +97,34 @@ def gpt_score(
     explanations = [x[1] for x in ret]
 
     if raw_results:
-        return scores, explanations
+        return np.array(scores), explanations
     return np.mean(scores)
 
 
+def perplexity(cfg: Any, results: Dict, val_df: pd.DataFrame):
+    return results["perplexity"].detach().cpu().numpy()
+
+
 class Metrics:
-    """Metrics factory. Returns metric value and should it be maximized or minimized"""
+    """
+    Metrics factory. Returns:
+        - metric value
+        - should it be maximized or minimized
+        - Reduce function
+
+    Maximized or minimized is needed for early stopping (saving best checkpoint)
+    Reduce function to generate a single metric value, usually "mean" or "none"
+    """
 
     _metrics = {
-        "BLEU": (partial(sacrebleu_score, metric=BLEU(effective_order=True)), "max"),
-        "GPT3.5": (partial(gpt_score, model="gpt-3.5-turbo"), "max"),
-        "GPT4": (partial(gpt_score, model="gpt-4"), "max"),
+        "Perplexity": (perplexity, "min", "mean"),
+        "BLEU": (
+            partial(sacrebleu_score, metric=BLEU(effective_order=True)),
+            "max",
+            "mean",
+        ),
+        "GPT3.5": (partial(gpt_score, model="gpt-3.5-turbo"), "max", "mean"),
+        "GPT4": (partial(gpt_score, model="gpt-4"), "max", "mean"),
     }
 
     @classmethod
