@@ -50,36 +50,6 @@ Atleast 24GB of GPU memory is recommended for larger models.
 </Tabs>
 :::
 
-<!-- 
-## Recommended installation
-
-The recommended way to install H2O LLM Studio is using pipenv with Python 3.10. To install Python 3.10 on Ubuntu 16.04+, execute the following commands.
-
-**System installs (Python 3.10)**
-
-``` 
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt install python3.10
-sudo apt-get install python3.10-distutils
-curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
-```
-
-**Create virtual environment (pipenv)**
-
-The following command creates a virtual environment using pipenv and will install the dependencies using pipenv.
-
-```
-make setup
-```
-
-## Install using requirements.txt
-
-If you wish to use conda or another virtual environment, you can also install the dependencies using the requirements.txt file. 
-
-```
-pip install -r requirements.txt
-```
--->
 
 ## Run H2O LLM Studio
 

@@ -22,6 +22,12 @@ To train a chatbot style model, you need to convert your data into a question an
 
 ---
 
+###  I encounter GPU out-of-memory issues. What can I change to be able to train large models?
+
+There are various parameters that can be tuned while keeping a specific LLM backbone fixed. It is advised to choose 4bit/8bit precision as a backbone dtype to be able to train models >=7B on a consumer type GPU. [LORA](concepts#lora-low-rank-adaptation) should be enabled. Besides that there are the usual parameters such as batch size and maximum sequence length that can be decreased to save GPU memory (please ensure that your prompt+answer text is not truncated too much by checking the train data insights).
+
+---
+
 ### When does the model stop the fine-tuning process?
 
 The number of epochs are set by the user.

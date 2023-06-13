@@ -46,13 +46,9 @@ You will see the following tabs that provide details and different aspects of yo
 To edit an imported dataset,
 
 1. On the H2O LLM Studio left-navigation pane, click **View datasets**. You will see the datasets table with a list of all the datasets you have imported so far.
-
 2. Locate the row of the dataset you want to edit and click the <Icon>more_vert</Icon> Kebab menu.
-
 3. Select **Edit dataset**.
-
 4. Make the desired changes to the dataset configuration. You can also [merge the dataset with an existing dataset](merge-datasets) at this point.
-
 5. Click **Continue** and review the dataset with your changes. 
 
 <!-- 
@@ -66,7 +62,7 @@ link to start a new experiment page in the experiments sub page.  -->
 When a dataset is no longer needed, you can delete it. Deleted datasets are permanently removed from the H2O LLM Studio instance.
 
 :::caution
-You can only delete datasets that are not linked to any experiments. If you wish to delete a dataset that is linked to an experiment, first [delete the experiment](addlink), and then delete the dataset. 
+You can only delete datasets that are not linked to any experiments. If you wish to delete a dataset that is linked to an experiment, first [delete the experiment](../experiments/view-an-experiment#delete-an-experiment), and then delete the dataset. 
 :::
 
 1. On the H2O LLM Studio left-navigation pane, click **View datasets**.
