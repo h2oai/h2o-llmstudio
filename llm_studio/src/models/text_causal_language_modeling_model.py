@@ -114,7 +114,9 @@ class Model(nn.Module):
             self.backbone = get_peft_model(self.backbone, lora_config)
             self.backbone.print_trainable_parameters()
 
-        self.loss_fn = self.cfg.training.loss_class.get(self.cfg.training.loss_function)
+        self.loss_fn = self.cfg.training.loss_class.get(
+            self.cfg.training.loss_function
+        )(self.cfg)
 
     def generate(self, batch: Dict, cfg: Any):
         pad_token_id = (
@@ -193,11 +195,11 @@ class Model(nn.Module):
             output = self.backbone(
                 input_ids=batch["input_ids"],
                 attention_mask=batch["attention_mask"],
-                labels=batch["labels"],
             )
+
             if calculate_loss:
-                assert self.cfg.training.loss_function == "CrossEntropy"
-                outputs["loss"] = output.loss
+                loss = self.loss_fn(output.logits, batch["labels"])
+                outputs["loss"] = loss
 
         if not self.training:
             outputs["predicted_answer_ids"] = self.generate(batch, self.cfg)
