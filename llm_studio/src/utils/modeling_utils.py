@@ -430,6 +430,9 @@ def run_inference(
                 step=cfg.environment._curr_val_step,
             )
 
+        if cfg.environment._distributed:
+            torch.distributed.barrier()
+
     progress_bar.close()
     del progress_bar
     out = cat_batches(out)

@@ -134,7 +134,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
 
     save_best_checkpoint: bool = False
     evaluation_epochs: float = 1.0
-    evaluate_before_training: bool = True
+    evaluate_before_training: bool = False
     train_validation_data: bool = False
 
     def __post_init__(self):
@@ -225,7 +225,7 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
     pretrained: bool = True
 
     backbone_dtype: str = "float16"
-    gradient_checkpointing: bool = False
+    gradient_checkpointing: bool = True
     force_embedding_gradients: bool = False
     intermediate_dropout: float = 0
     pretrained_weights: str = ""
@@ -273,7 +273,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     batch_size_inference: int = 0
 
     do_sample: bool = False
-    num_beams: int = 2
+    num_beams: int = 1
     temperature: float = 0.3
     repetition_penalty: float = 1.2
     stop_tokens: str = ""
@@ -312,7 +312,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     use_fsdp: bool = False
 
     find_unused_parameters: bool = False
-    trust_remote_code: bool = False
+    trust_remote_code: bool = True
     number_of_workers: int = 4
     seed: int = -1
 
@@ -397,9 +397,11 @@ class ConfigProblemBase(DefaultConfig):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
+                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-7b-v2",
+                "h2oai/h2ogpt-gm-oasst1-en-2048-open-llama-7b",
+                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-40b-v1",
                 "h2oai/h2ogpt-oig-oasst1-512-6.9b",
                 "h2oai/h2ogpt-oasst1-512-20b",
-                "h2oai/h2ogpt-gm-oasst1-en-1024-12b",
                 "EleutherAI/gpt-neo-1.3B",
                 "EleutherAI/gpt-j-6B",
                 "EleutherAI/gpt-neox-20b",
