@@ -71,14 +71,18 @@ class Plots:
                 + get_line_separator_html()
             )
         for i in range(len(tokenized_texts)):
-            markup += f"<p><strong>Input Text: </strong>{texts[i]}</p>\n"
+            markup += f"<p><strong>Input Text: </strong>{text_to_html(texts[i])}</p>\n"
             markup += (
-                f"<p><strong>Tokenized Input Text: </strong>{tokenized_texts[i]}</p>\n"
+                "<p><strong>Tokenized Input Text: "
+                f"</strong>{text_to_html(tokenized_texts[i])}</p>\n"
             )
-            markup += f"<p><strong>Target Text: </strong>{target_texts[i]}</p>\n"
             markup += (
-                f"<p><strong>Tokenized Target Text:"
-                f" </strong>{tokenized_target_texts[i]}</p>\n"
+                "<p><strong>Target Text: "
+                f"</strong>{text_to_html(target_texts[i])}</p>\n"
+            )
+            markup += (
+                "<p><strong>Tokenized Target Text:"
+                f" </strong>{text_to_html(tokenized_target_texts[i])}</p>\n"
             )
             markup += get_line_separator_html()
         return PlotData(markup, encoding="html")
