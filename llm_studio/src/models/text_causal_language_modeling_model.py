@@ -195,7 +195,6 @@ class Model(nn.Module):
             output = self.backbone(
                 input_ids=batch["input_ids"],
                 attention_mask=batch["attention_mask"],
-                labels=None,
             )
 
             if calculate_loss:

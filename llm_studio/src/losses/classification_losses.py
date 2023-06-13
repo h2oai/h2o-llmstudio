@@ -9,7 +9,7 @@ __all__ = ["Losses"]
 logger = logging.getLogger(__name__)
 
 
-class TokenCrossEntropyLoss(nn.Module):
+class TokenAveragedCrossEntropyLoss(nn.Module):
     def __init__(self, cfg: Any):
         super().__init__()
         self.cfg = cfg
@@ -25,7 +25,7 @@ class TokenCrossEntropyLoss(nn.Module):
         return self.loss_fn(shift_logits, shift_labels)
 
 
-class SampleCrossEntropyLoss(nn.Module):
+class SampleAveragedCrossEntropyLoss(nn.Module):
     def __init__(self, cfg: Any):
         super().__init__()
         self.cfg = cfg
@@ -46,8 +46,8 @@ class Losses:
     """Losses factory."""
 
     _losses = {
-        "TokenCrossEntropy": TokenCrossEntropyLoss,
-        "SampleCrossEntropy": SampleCrossEntropyLoss,
+        "TokenAveragedCrossEntropy": TokenAveragedCrossEntropyLoss,
+        "SampleAveragedCrossEntropy": SampleAveragedCrossEntropyLoss,
     }
 
     @classmethod
