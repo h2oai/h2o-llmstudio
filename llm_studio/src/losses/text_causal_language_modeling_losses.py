@@ -1,38 +1,58 @@
 import logging
 from typing import Any, List
 
+from torch import nn
+
 __all__ = ["Losses"]
 
-import torch
-from torch import nn
 
 logger = logging.getLogger(__name__)
 
 
-class DenseCrossEntropy(nn.Module):
+class TokenAveragedCrossEntropyLoss(nn.Module):
     def __init__(self, cfg: Any):
         super().__init__()
         self.cfg = cfg
+        self.loss_fn = nn.CrossEntropyLoss()
 
-    def forward(self, x, target):
-        x = x.float()
-        target = target.float()
-        logprobs = torch.nn.functional.log_softmax(x, dim=-1)
-        loss = -logprobs * target
-        loss = loss.sum(-1)
-        return loss.mean()
+    def forward(self, logits, labels):
+        shift_logits = logits[..., :-1, :].contiguous()
+        shift_labels = labels[..., 1:].contiguous()
+
+        shift_logits = shift_logits.view(-1, shift_logits.size(-1))
+        shift_labels = shift_labels.view(-1)
+
+        return self.loss_fn(shift_logits, shift_labels)
+
+
+class SampleAveragedCrossEntropyLoss(nn.Module):
+    def __init__(self, cfg: Any):
+        super().__init__()
+        self.cfg = cfg
+        self.loss_fn = nn.CrossEntropyLoss()
+
+    def forward(self, logits, labels):
+        shift_logits = logits[..., :-1, :].contiguous()
+        shift_labels = labels[..., 1:].contiguous()
+
+        loss = 0
+        for i in range(labels.shape[0]):
+            loss += self.loss_fn(shift_logits[i], shift_labels[i])
+        loss /= labels.shape[0]
+        return loss
 
 
 class Losses:
     """Losses factory."""
 
     _losses = {
-        "CrossEntropy": DenseCrossEntropy,
+        "TokenAveragedCrossEntropy": TokenAveragedCrossEntropyLoss,
+        "SampleAveragedCrossEntropy": SampleAveragedCrossEntropyLoss,
     }
 
     @classmethod
     def names(cls) -> List[str]:
-        return sorted(cls._losses.keys())
+        return cls._losses.keys()
 
     @classmethod
     def get(cls, name: str) -> Any:

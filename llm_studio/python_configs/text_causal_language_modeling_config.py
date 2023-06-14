@@ -108,7 +108,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
 
 @dataclass
 class ConfigNLPCausalLMTraining(DefaultConfig):
-    loss_class: Any = classification_losses.Losses
+    loss_class: Any = text_causal_language_modeling_losses.Losses
     loss_function: str = "TokenAveragedCrossEntropy"
     optimizer: str = "AdamW"
 
