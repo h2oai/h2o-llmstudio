@@ -3,7 +3,7 @@
 accelerate==0.19.0
 aiohttp==3.8.4 ; python_version >= '3.6'
 aiosignal==1.3.1 ; python_version >= '3.7'
-anyio==3.6.2 ; python_full_version >= '3.6.2'
+anyio==3.7.0 ; python_version >= '3.7'
 arrow==1.2.3 ; python_version >= '3.6'
 async-timeout==4.0.2 ; python_version >= '3.6'
 attrs==23.1.0 ; python_version >= '3.7'
@@ -17,18 +17,19 @@ bravado-core==5.17.1 ; python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and pytho
 certifi==2023.5.7 ; python_version >= '3.6'
 charset-normalizer==3.1.0 ; python_full_version >= '3.7.0'
 click==8.1.3 ; python_version >= '3.7'
-cmake==3.26.3
+cmake==3.26.4
 colorama==0.4.6 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6'
 coolname==1.1.0
 cramjam==2.6.2 ; python_version >= '3.7'
 datasets==2.11.0
 dill==0.3.4
 einops==0.6.1
+exceptiongroup==1.1.1 ; python_version < '3.11'
 fastparquet==0.8.1
-filelock==3.12.0 ; python_version >= '3.7'
+filelock==3.12.2 ; python_version >= '3.7'
 fqdn==1.5.1
 frozenlist==1.3.3 ; python_version >= '3.7'
-fsspec[http]==2023.5.0 ; python_version >= '3.8'
+fsspec[http]==2023.6.0 ; python_version >= '3.8'
 future==0.18.3 ; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'
 gitdb==4.0.10 ; python_version >= '3.7'
 gitpython==3.1.31 ; python_version >= '3.7'
@@ -44,8 +45,8 @@ jsonpointer==2.3
 jsonref==1.1.0 ; python_version >= '3.7'
 jsonschema==4.17.3 ; python_version >= '3.7'
 kaggle==1.5.13
-lit==16.0.5
-markupsafe==2.1.2 ; python_version >= '3.7'
+lit==16.0.5.post0
+markupsafe==2.1.3 ; python_version >= '3.7'
 monotonic==1.6
 mpmath==1.3.0
 msgpack==1.0.5
@@ -58,7 +59,7 @@ oauthlib==3.2.2 ; python_version >= '3.6'
 openai==0.27.7
 packaging==23.1 ; python_version >= '3.7'
 pandas==1.5.3
-git+https://github.com/huggingface/peft@3714aa2fff158fdfa637b2b65952580801d890b2#egg=peft
+git+https://github.com/huggingface/peft@eb75374fb12aedb369c6bbc2c153047720d4b38d#egg=peft
 pillow==9.5.0 ; python_version >= '3.7'
 portalocker==2.7.0 ; python_version >= '3.5'
 protobuf==3.20.3
@@ -70,7 +71,7 @@ python-dateutil==2.8.2 ; python_version >= '2.7' and python_version not in '3.0,
 python-slugify==8.0.1 ; python_version >= '3.7'
 pytz==2023.3
 pyyaml==6.0
-regex==2023.5.5 ; python_version >= '3.6'
+regex==2023.6.3 ; python_version >= '3.6'
 requests==2.31.0 ; python_version >= '3.7'
 requests-oauthlib==1.3.1 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'
 responses==0.18.0 ; python_version >= '3.7'
@@ -78,6 +79,7 @@ rfc3339-validator==0.1.4
 rfc3987==1.3.8
 s3transfer==0.5.2 ; python_version >= '3.6'
 sacrebleu==2.0.0
+safetensors==0.3.1
 scikit-learn==1.0.2
 scipy==1.10.1 ; python_version < '3.12' and python_version >= '3.8'
 sentencepiece==0.1.96
@@ -102,13 +104,13 @@ torchaudio==2.0.1+cu117
 torchvision==0.15.1+cu117
 tornado==6.3.2 ; python_version >= '3.8'
 tqdm==4.65.0
-transformers==4.29.2
+transformers==4.30.1
 triton==2.0.0 ; platform_system == 'Linux' and platform_machine == 'x86_64'
-typing-extensions==4.6.2 ; python_version >= '3.7'
+typing-extensions==4.6.3 ; python_version >= '3.7'
 uri-template==1.2.0
 urllib3==1.26.16 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'
 webcolors==1.13
-websocket-client==1.5.2 ; python_version >= '3.7'
+websocket-client==1.5.3 ; python_version >= '3.7'
 xxhash==3.2.0 ; python_version >= '3.6'
 yarl==1.9.2 ; python_version >= '3.7'
 https://github.com/h2oai/wave/releases/download/nightly/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl
