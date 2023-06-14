@@ -40,6 +40,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     text_prompt_start: str = "<|prompt|>"
     text_answer_separator: str = "<|answer|>"
 
+    limit_chained_samples: bool = False
     add_eos_token_to_prompt: bool = True
     add_eos_token_to_answer: bool = True
     mask_prompt_labels: bool = True
@@ -91,9 +92,15 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
             ["validation_size"],
             [Dependency(key="validation_strategy", value="automatic", is_set=True)],
         )
+
         self._nesting.add(
             ["data_sample_choice"],
             [Dependency(key="data_sample", value=1, is_set=False)],
+        )
+
+        self._nesting.add(
+            ["limit_chained_samples"],
+            [Dependency(key="parent_id_column", value="None", is_set=False)],
         )
 
         self._visibility["dataset_class"] = -1
@@ -101,8 +108,8 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
 
 @dataclass
 class ConfigNLPCausalLMTraining(DefaultConfig):
-    loss_class: Any = text_causal_language_modeling_losses.Losses
-    loss_function: str = "CrossEntropy"
+    loss_class: Any = classification_losses.Losses
+    loss_function: str = "TokenAveragedCrossEntropy"
     optimizer: str = "AdamW"
 
     learning_rate: float = 0.0001
@@ -148,7 +155,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self._possible_values["loss_function"] = ("CrossEntropy",)
+        self._possible_values["loss_function"] = self.loss_class.names()
         self._possible_values["optimizer"] = Optimizers.names()
 
         self._possible_values["learning_rate"] = possible_values.Number(
@@ -201,7 +208,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["ppo_batch_size"] = (1, 1024, 1)
 
         self._visibility["lora"] = -1
-        self._visibility["loss_function"] = -1
         self._visibility["loss_class"] = -1
         self._visibility["drop_last_batch"] = -1
         self._visibility["differential_learning_rate_layers"] = 1

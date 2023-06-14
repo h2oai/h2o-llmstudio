@@ -322,6 +322,10 @@ The majority of the LLM backbones are trained on a very similar corpus of data. 
 
 To train a chatbot style model, you need to convert your data into a question and answer format.
 
+If you really want to continue pretraining on your own data without teaching a question answering style, prepare a dataset with all your data in a single column Dataframe. Make sure that the length of the text in each row is not too long. In the experiment setup, remove all additional tokens (e.g. `<|prompt|>`, `<|answer|>`, for `Text Prompt Start` and `Text Answer Start` respectively) and disable `Add Eos Token To Prompt` and `Add Eos Token To Answer`. Deselect everything in the `Prompt Column`.
+
+Your setup should look like [this](https://github.com/h2oai/h2o-llmstudio/assets/1069138/316c380d-76e4-4264-a64e-8ae9be893e76).
+
 > ❓ I encounter GPU out-of-memory issues. What can I change to be able to train large models?
 
 There are various parameters that can be tuned while keeping a specific LLM backbone fixed.

@@ -169,6 +169,10 @@ class Model(nn.Module):
             self.backbone = get_peft_model(self.backbone, lora_config)
             self.backbone.print_trainable_parameters()
 
+        self.loss_fn = self.cfg.training.loss_class.get(
+            self.cfg.training.loss_function
+        )(self.cfg)
+
         if self.cfg.training.use_rlhf:
             self.value_head = ValueHead(self.backbone_config)
             self.value_head.summary.bias.data.zero_()
@@ -299,11 +303,12 @@ class Model(nn.Module):
         output = self.backbone(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
-            labels=batch["labels"] if "labels" in batch else None,
             **kwargs,
         )
+
         if calculate_loss and not is_ref_model:
-            outputs["loss"] = output.loss
+            loss = self.loss_fn(output.logits, batch["labels"])
+            outputs["loss"] = loss
 
         if self.training and self.cfg.training.use_rlhf:
             last_hidden_state = output.hidden_states[-1]

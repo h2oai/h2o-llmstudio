@@ -64,9 +64,8 @@ from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
 
 logger = logging.getLogger(__name__)
 
-USER_ON_LEFT = False
-USER = USER_ON_LEFT
-BOT = not USER_ON_LEFT
+USER = True
+BOT = False
 
 
 async def experiment_start(q: Q) -> None:

@@ -28,6 +28,8 @@ class CustomDataset(Dataset):
         self.mode = mode
         self.df = df.copy()
 
+        self.indices = np.arange(len(self.df))
+
         assert self.mode in [
             "train",
             "validation",
@@ -78,6 +80,12 @@ class CustomDataset(Dataset):
                 self.parent_ids = self.df[self.cfg.dataset.parent_id_column].values
                 self.df_id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
 
+                # limit chained samples to the longest chain
+                if self.cfg.dataset.limit_chained_samples:
+                    self.indices = self.indices[
+                        [id not in self.parent_ids for id in self.df["id"].values]
+                    ]
+
         if self.cfg.environment._local_rank == 0:
             logger.info(f"Sample prompt: {self.prompts[0]}")
 
@@ -95,7 +103,7 @@ class CustomDataset(Dataset):
         return prompt
 
     def __len__(self) -> int:
-        return len(self.df)
+        return len(self.indices)
 
     @staticmethod
     def get_input_columns(cfg: Any) -> Tuple[str, ...]:
@@ -267,7 +275,7 @@ class CustomDataset(Dataset):
         sample: Dict = dict()
 
         # Read data
-        sample = self._read_data(idx=idx, sample=sample)
+        sample = self._read_data(idx=self.indices[idx], sample=sample)
 
         return sample
 
@@ -395,10 +403,16 @@ class CustomDataset(Dataset):
             input_ids = input_ids[-max_length:]
             attention_mask = attention_mask[-max_length:]
 
-        sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
-        sample[f"{prefix}input_ids"][-len(input_ids) :] = input_ids
-        sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
-        sample[f"{prefix}attention_mask"][-len(input_ids) :] = attention_mask
+        if len(input_ids) > 0:
+            sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
+            sample[f"{prefix}input_ids"][-len(input_ids) :] = input_ids
+            sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
+            sample[f"{prefix}attention_mask"][-len(input_ids) :] = attention_mask
+        else:
+            # Pad everything if empty (continued pretraining)
+            sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
+            sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
+
         return sample
 
     @staticmethod
