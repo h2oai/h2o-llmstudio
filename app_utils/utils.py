@@ -1561,6 +1561,17 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
         "OPENAI_API_KEY": q.client["default_openai_api_token"],
         "GPT_EVAL_MAX": str(q.client["default_gpt_eval_max"]),
     }
+    if q.client["default_openai_azure"]:
+        env_vars.update(
+            {
+                "OPENAI_API_TYPE": "azure",
+                "OPENAI_API_BASE": q.client["default_openai_api_base"],
+                "OPENAI_API_VERSION": q.client["default_openai_api_version"],
+                "OPENAI_API_DEPLOYMENT_ID": q.client[
+                    "default_openai_api_deployment_id"
+                ],
+            }
+        )
     cfg = copy_config(cfg)
     cfg.output_directory = f"{get_output_dir(q)}/{cfg.experiment_name}/"
     os.makedirs(cfg.output_directory)
