@@ -269,8 +269,8 @@ def generate_experiment_name() -> str:
     return coolname.generate_slug(2)
 
 
-def compute_metric(output, reduce=None) -> float:
-    """Compute metric and return metric score (number)
+def reduce_metric(output, reduce=None) -> float:
+    """Reduces metric and return metric score (number)
 
     Args:
         output: output of the model

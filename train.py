@@ -46,7 +46,7 @@ from llm_studio.src.utils.logging_utils import (
     write_flag,
 )
 from llm_studio.src.utils.modeling_utils import (
-    compute_metric,
+    reduce_metric,
     get_number_of_validation_epochs,
     get_optimizer,
     get_scheduler,
@@ -119,7 +119,7 @@ def run_eval(
 
         # Calculate reduced validation metric
         _, _, reduce = cfg.prediction.metric_class.get(cfg.prediction.metric)
-        val_metric = compute_metric(val_data, reduce=reduce)
+        val_metric = reduce_metric(val_data, reduce=reduce)
 
         logger.info(f"{mode.capitalize()} {cfg.prediction.metric}: {val_metric:.5f}")
         cfg.logging._logger.log(
