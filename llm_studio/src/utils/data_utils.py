@@ -524,6 +524,9 @@ def batch_padding(
     if cfg.environment.compile_model:
         # logger.warning("Batch padding not functional with torch compile.")
         return batch
+    elif batch[mask_key].sum() == 0:
+        # continued pretraining
+        return batch
     elif cfg.tokenizer.padding_quantile == 0:
         return batch
     elif training and cfg.tokenizer.padding_quantile < 1.0:
