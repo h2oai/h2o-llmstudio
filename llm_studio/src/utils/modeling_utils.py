@@ -2,7 +2,7 @@ import logging
 import os
 import re
 from collections import OrderedDict
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Dict
 
 import coolname
 import numpy as np
@@ -21,7 +21,6 @@ from llm_studio.src.schedulers import Schedulers
 from llm_studio.src.utils.data_utils import cat_batches, get_inference_batch_size
 from llm_studio.src.utils.exceptions import (
     LLMDataException,
-    LLMMetricException,
     LLMModelException,
 )
 from llm_studio.src.utils.logging_utils import TqdmToLogger
