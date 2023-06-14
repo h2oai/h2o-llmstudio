@@ -249,6 +249,71 @@ async def settings(q: Q) -> None:
                     ),
                 ]
             ),
+            ui.inline(
+                items=[
+                    ui.label("Use OpenAI API on Azure", width=label_width),
+                    ui.toggle(
+                        name="default_openai_azure",
+                        value=q.client["default_openai_azure"],
+                        tooltip=(
+                            "Toggle to use Microsoft Azure Endpoints for the "
+                            "OpenAI API."
+                        ),
+                        trigger=True,
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
+                    ui.label("OpenAI API Endpoint", width=label_width),
+                    ui.textbox(
+                        name="default_openai_api_base",
+                        label=None,
+                        value=q.client["default_openai_api_base"],
+                        width=textbox_width,
+                        password=False,
+                        trigger=False,
+                        tooltip=(
+                            "Set the value for the OpenAI API endpoint. "
+                            "Use when on Azure."
+                        ),
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
+                    ui.label("OpenAI API Deployment ID", width=label_width),
+                    ui.textbox(
+                        name="default_openai_api_deployment_id",
+                        label=None,
+                        value=q.client["default_openai_api_deployment_id"],
+                        width=textbox_width,
+                        password=False,
+                        trigger=False,
+                        tooltip=(
+                            "Set the value for the OpenAI API deployment ID. "
+                            "Use when on Azure."
+                        ),
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
+                    ui.label("OpenAI API version", width=label_width),
+                    ui.textbox(
+                        name="default_openai_api_version",
+                        label=None,
+                        value=q.client["default_openai_api_version"],
+                        width=textbox_width,
+                        password=False,
+                        trigger=False,
+                        tooltip=(
+                            "Set the value for the OpenAI API version. "
+                            "Use when on Azure."
+                        ),
+                    ),
+                ]
+            ),
             ui.separator("Experiment Maximum Settings"),
             ui.inline(
                 items=[
