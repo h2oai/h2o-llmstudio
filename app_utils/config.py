@@ -81,12 +81,8 @@ default_cfg = {
     "user_settings": {
         "theme_dark": True,
         "default_aws_bucket_name": f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
-        "default_aws_access_key": os.environ["AWS_ACCESS_KEY_ID"]
-        if "AWS_ACCESS_KEY_ID" in os.environ
-        else "",
-        "default_aws_secret_key": os.environ["AWS_SECRET_ACCESS_KEY"]
-        if "AWS_SECRET_ACCESS_KEY" in os.environ
-        else "",
+        "default_aws_access_key": os.getenv("AWS_ACCESS_KEY_ID", ""),
+        "default_aws_secret_key": os.getenv("AWS_SECRET_ACCESS_KEY", ""),
         "default_kaggle_username": "",
         "default_kaggle_secret_key": "",
         "set_max_epochs": 50,
@@ -97,7 +93,15 @@ default_cfg = {
         "default_neptune_project": os.getenv("NEPTUNE_PROJECT", ""),
         "default_neptune_api_token": os.getenv("NEPTUNE_API_TOKEN", ""),
         "default_huggingface_api_token": os.getenv("HUGGINGFACE_TOKEN", ""),
+        "default_openai_azure": os.getenv("OPENAI_API_TYPE", "open_ai") == "azure",
         "default_openai_api_token": os.getenv("OPENAI_API_KEY", ""),
+        "default_openai_api_base": os.getenv(
+            "OPENAI_API_BASE", "https://example-endpoint.openai.azure.com"
+        ),
+        "default_openai_api_deployment_id": os.getenv(
+            "OPENAI_API_DEPLOYMENT_ID", "deployment-name"
+        ),
+        "default_openai_api_version": os.getenv("OPENAI_API_VERSION", "2023-05-15"),
         "default_gpt_eval_max": os.getenv("GPT_EVAL_MAX", 100),
         "delete_dialogs": True,
         "chart_plot_max_points": 1000,
