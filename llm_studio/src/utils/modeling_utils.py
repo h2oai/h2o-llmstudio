@@ -388,9 +388,8 @@ def run_inference(
 
         batch = cfg.dataset.dataset_class.batch_to_device(data, cfg.environment._device)
 
-        calculate_loss = True
         with autocast(enabled=cfg.environment.mixed_precision):
-            output = model.forward(batch, calculate_loss=calculate_loss)
+            output = model.forward(batch)
         if contains_nan(output) and cfg.environment.mixed_precision:
             raise LLMModelException(
                 "NaN caught during mixed precision inference. "

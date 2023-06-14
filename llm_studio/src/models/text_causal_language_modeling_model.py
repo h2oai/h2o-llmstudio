@@ -271,7 +271,6 @@ class Model(nn.Module):
     def forward(
         self,
         batch: Dict,
-        calculate_loss: bool = True,
         generate: bool = False,
         padding: bool = True,
         is_ref_model: bool = False,
@@ -306,7 +305,7 @@ class Model(nn.Module):
             **kwargs,
         )
 
-        if calculate_loss and not is_ref_model:
+        if "labels" in batch and not is_ref_model:
             loss = self.loss_fn(output.logits, batch["labels"])
             outputs["loss"] = loss
 
