@@ -1,4 +1,0 @@
-Defines the number of gradient accumulations before H2O LLM Studio updates the neural network weights during model training.
-
-- Grad accumulation can be beneficial if only small batches are selected for training. With gradient accumulation, the loss and gradients are calculated after each batch, but it waits for the selected accumulations before updating the model weights. You can control the batch size through the **Batch size** setting.
-- Changing the default value of *Grad Accumulation* might require adjusting the learning rate and batch size.

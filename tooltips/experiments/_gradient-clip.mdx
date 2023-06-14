@@ -1,3 +1,0 @@
-Defines the maximum norm of the gradients H2O LLM Studio specifies during model training. Defaults to **0**, no clipping. When a value greater than 0 is specified, H2O LLM Studio modifies the gradients during model training. H2O LLM Studio uses the specified value as an upper limit for the norm of the gradients, calculated using the Euclidean norm over all gradients per batch.
-
-This setting can help model convergence when extreme gradient values cause high volatility of weight updates.

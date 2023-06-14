@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass
 
 CLEANR = re.compile("<[^<]+?>")
-tooltip_files = glob.glob("tooltips/**/*.mdx", recursive=True)
+tooltip_files = glob.glob("documentation/docs/tooltips/**/*.mdx", recursive=True)
 
 
 def read_tooltip_file(path: str) -> str:

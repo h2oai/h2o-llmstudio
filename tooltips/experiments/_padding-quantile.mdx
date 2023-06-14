@@ -1,6 +1,0 @@
-Defines the padding quantile H2O LLM Studio uses to select the maximum token length per batch. H2O LLM Studio performs padding of shorter sequences up to the specified padding quantile instead of the selected **Max length**. H2O LLM Studio truncates longer sequences.
-
-- Lowering the quantile can significantly increase training runtime and reduce memory usage in unevenly distributed sequence lengths but can hurt performance 
-- The setting depends on the batch size and should be adjusted accordingly 
-- No padding is done in inference, and the selected **Max Length** is guaranteed
-- Setting to 0 disables padding
