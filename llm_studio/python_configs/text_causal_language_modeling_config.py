@@ -370,6 +370,9 @@ class ConfigProblemBase(DefaultConfig):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
+    personalize: bool = True
+    chatbot_name: str = "h2oGPT"
+    chatbot_author: str = "H2O.ai"
 
     dataset: ConfigNLPCausalLMDataset = field(default_factory=ConfigNLPCausalLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
@@ -418,4 +421,9 @@ class ConfigProblemBase(DefaultConfig):
                 "togethercomputer/GPT-NeoXT-Chat-Base-20B",
             ),
             allow_custom=True,
+        )
+
+        self._nesting.add(
+            ["chatbot_name", "chatbot_author"],
+            [Dependency(key="personalize", value=True, is_set=True)],
         )
