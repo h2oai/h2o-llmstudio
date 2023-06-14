@@ -19,10 +19,7 @@ from transformers import AutoConfig, AutoModel, BitsAndBytesConfig
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
 from llm_studio.src.utils.data_utils import cat_batches, get_inference_batch_size
-from llm_studio.src.utils.exceptions import (
-    LLMDataException,
-    LLMModelException,
-)
+from llm_studio.src.utils.exceptions import LLMDataException, LLMModelException
 from llm_studio.src.utils.logging_utils import TqdmToLogger
 from llm_studio.src.utils.utils import save_pickle
 

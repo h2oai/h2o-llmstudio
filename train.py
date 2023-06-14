@@ -46,11 +46,11 @@ from llm_studio.src.utils.logging_utils import (
     write_flag,
 )
 from llm_studio.src.utils.modeling_utils import (
-    reduce_metric,
     get_number_of_validation_epochs,
     get_optimizer,
     get_scheduler,
     load_checkpoint,
+    reduce_metric,
     run_inference,
     save_checkpoint,
     save_predictions,
