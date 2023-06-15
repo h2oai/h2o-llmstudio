@@ -91,8 +91,12 @@ docker-build-nightly:
 
 .PHONY: docker-run-nightly
 docker-run-nightly:
-	mkdir -p data
-	mkdir -p output
+ifeq (,$(wildcard ./data))
+	mkdir data
+endif
+ifeq (,$(wildcard ./output))
+	mkdir output
+endif
 	docker run \
 		--runtime=nvidia \
 		--shm-size=64g \
