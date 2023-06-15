@@ -85,6 +85,10 @@ wave-no-reload:
 	H2O_WAVE_PRIVATE_DIR="/download/@$(PWD)/output/download" \
 	$(PIPENV) run wave run --no-reload app
 
+.PHONY: docker-build-nightly
+docker-build-nightly:
+	docker build -t gcr.io/vorvan/h2oai/h2o-llmstudio:nightly .
+
 .PHONY: shell
 shell:
 	$(PIPENV) shell
