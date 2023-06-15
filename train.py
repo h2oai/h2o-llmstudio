@@ -225,27 +225,21 @@ def run_train(
         )
         if cfg.environment._local_rank == 0:
             logger.info(f"Training Epoch: {epoch + 1} / {cfg.training.epochs}")
-            if cfg.training.evaluation_epochs != 1:
-                logger.info(
-                    "Training progress bar is not "
-                    "displayed (evaluation epoch is not set to 1)"
-                )
 
         if cfg.environment._distributed and hasattr(
             train_dataloader.sampler, "set_epoch"
         ):
             train_dataloader.sampler.set_epoch(epoch)  # type: ignore
 
-        if cfg.training.evaluation_epochs == 1:
-            tqdm_out = TqdmToLogger(logger, level=logging.INFO)
-            progress_bar = tqdm(
-                total=epoch_steps,
-                disable=cfg.environment._local_rank != 0,
-                file=tqdm_out,
-                ascii=True,
-                desc="train loss",
-                mininterval=0,
-            )
+        tqdm_out = TqdmToLogger(logger, level=logging.INFO)
+        progress_bar = tqdm(
+            total=epoch_steps,
+            disable=cfg.environment._local_rank != 0,
+            file=tqdm_out,
+            ascii=True,
+            desc="train loss",
+            mininterval=0,
+        )
         tr_it = iter(train_dataloader)
 
         losses = []
@@ -434,9 +428,7 @@ def run_train(
                 )
 
                 # Show logs each 5% of the epoch (only if doing per epoch evaluation)
-                if cfg.training.evaluation_epochs == 1 and (
-                    (itr + 1) % log_update_steps == 0 or itr == epoch_steps - 1
-                ):
+                if (itr + 1) % log_update_steps == 0 or itr == epoch_steps - 1:
                     progress_bar.set_description(
                         f"train loss: {np.mean(losses[-10:]):.2f}", refresh=False
                     )
@@ -473,9 +465,8 @@ def run_train(
 
                 model.train()
 
-        if cfg.training.evaluation_epochs == 1:
-            progress_bar.close()
-            del progress_bar
+        progress_bar.close()
+        del progress_bar
 
         if cfg.environment._distributed:
             torch.cuda.synchronize(device=cfg.environment._local_rank)
