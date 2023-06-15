@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     && apt install -y python3.10 \
     && apt install -y python3.10-distutils \
     && rm -rf /var/lib/apt/lists/*
+USER llmstudio
 WORKDIR /workspace
 RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 COPY Makefile .

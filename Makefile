@@ -89,6 +89,21 @@ wave-no-reload:
 docker-build-nightly:
 	docker build -t gcr.io/vorvan/h2oai/h2o-llmstudio:nightly .
 
+.PHONY: docker-run-nightly
+docker-run-nightly:
+	mkdir -p data
+	mkdir -p output
+	docker run \
+		--runtime=nvidia \
+		--shm-size=64g \
+		--init \
+		--rm \
+		-u `id -u`:`id -g` \
+		-p 10101:10101 \
+		-v `pwd`/data:/workspace/data \
+		-v `pwd`/output:/workspace/output \
+		gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+
 .PHONY: shell
 shell:
 	$(PIPENV) shell
