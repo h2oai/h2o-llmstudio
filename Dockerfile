@@ -12,8 +12,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /workspace
 RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
-COPY . .
+COPY Makefile .
+COPY Pipfile .
+COPY Pipfile.lock .
 RUN make setup
+COPY . .
 ENV H2O_WAVE_MAX_REQUEST_SIZE=25MB
 ENV H2O_WAVE_NO_LOG=True
 ENV H2O_WAVE_PRIVATE_DIR="/download/@/workspace/output/download"
