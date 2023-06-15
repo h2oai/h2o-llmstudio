@@ -6,10 +6,12 @@ from typing import Any, Dict, List
 import numpy as np
 import openai
 import pandas as pd
+import torch
 from joblib import Parallel, delayed
 from sacrebleu import BLEU
 from sacrebleu.metrics.base import Metric
 from tenacity import retry, stop_after_attempt, wait_random_exponential
+from torch import nn
 from tqdm import tqdm
 
 from llm_studio.src.datasets.text_utils import get_texts
@@ -118,6 +120,27 @@ def gpt_score(
     if raw_results:
         return np.array(scores), explanations
     return np.mean(scores)
+
+
+class Perplexity(nn.Module):
+    def __init__(self, cfg: Any, reduce: bool = True):
+        super().__init__()
+        self.cfg = cfg
+        self.loss_fn = nn.CrossEntropyLoss()
+        self.reduce = reduce
+
+    def forward(self, logits, labels):
+        shift_logits = logits[..., :-1, :].contiguous()
+        shift_labels = labels[..., 1:].contiguous()
+
+        perplexity = []
+        for i in range(labels.shape[0]):
+            perplexity.append(self.loss_fn(shift_logits[i], shift_labels[i]))
+        perplexity = torch.stack(perplexity, dim=0)
+        perplexity = torch.exp(perplexity)
+        if self.reduce:
+            perplexity = torch.mean(perplexity)
+        return perplexity
 
 
 def perplexity(cfg: Any, results: Dict, val_df: pd.DataFrame):

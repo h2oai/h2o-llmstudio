@@ -30,6 +30,8 @@ class Plots:
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
 
+        texts = [text_to_html(text) for text in texts]
+
         tokenized_texts = [
             color_code_tokenized_text(
                 tokenizer.convert_ids_to_tokens(input_ids), tokenizer
@@ -71,18 +73,15 @@ class Plots:
                 + get_line_separator_html()
             )
         for i in range(len(tokenized_texts)):
-            markup += f"<p><strong>Input Text: </strong>{text_to_html(texts[i])}</p>\n"
+            markup += f"<p><strong>Input Text: </strong>{texts[i]}</p>\n"
             markup += (
                 "<p><strong>Tokenized Input Text: "
-                f"</strong>{text_to_html(tokenized_texts[i])}</p>\n"
+                f"</strong>{tokenized_texts[i]}</p>\n"
             )
-            markup += (
-                "<p><strong>Target Text: "
-                f"</strong>{text_to_html(target_texts[i])}</p>\n"
-            )
+            markup += "<p><strong>Target Text: " f"</strong>{target_texts[i]}</p>\n"
             markup += (
                 "<p><strong>Tokenized Target Text:"
-                f" </strong>{text_to_html(tokenized_target_texts[i])}</p>\n"
+                f" </strong>{tokenized_target_texts[i]}</p>\n"
             )
             markup += get_line_separator_html()
         return PlotData(markup, encoding="html")
@@ -118,13 +117,19 @@ class Plots:
         val_outputs: Dict,
         cfg: Any,
         val_df: pd.DataFrame,
-        true_labels: Any,
-        pred_labels: Any,
         metrics: Any,
         sample_idx: Any,
     ) -> str:
         input_texts = get_texts(val_df, cfg, separator="")
         markup = ""
+
+        true_labels = val_outputs["target_text"]
+        if "predicted_text" in val_outputs.keys():
+            pred_labels = val_outputs["predicted_text"]
+        else:
+            pred_labels = [
+                "No predictions are generated for the selected metric"
+            ] * len(true_labels)
 
         for idx in sample_idx:
             input_text = input_texts[idx]
@@ -182,8 +187,6 @@ class Plots:
                 val_outputs=val_outputs,
                 cfg=cfg,
                 val_df=val_df,
-                true_labels=(val_outputs["target_text"]),
-                pred_labels=(val_outputs["predicted_text"]),
                 metrics=metrics,
                 sample_idx=indices,
             )

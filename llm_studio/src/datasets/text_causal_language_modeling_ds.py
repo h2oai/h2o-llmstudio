@@ -208,9 +208,6 @@ class CustomDataset(Dataset):
             output = self.clean_output(output, self.prompts, cfg)
 
         output["target_text"] = self.answers
-        if "predicted_text" not in output.keys():
-            # In perplexity metric, no predictions were made, use the target text
-            output["predicted_text"] = output["target_text"]
 
         metric_func, _, _ = cfg.prediction.metric_class.get(cfg.prediction.metric)
 
@@ -243,14 +240,17 @@ class CustomDataset(Dataset):
 
         output.pop("target_text", None)
 
-        output["predicted_text"] = np.array(output["predicted_text"])
+        if "predicted_text" in output.keys():
+            output["predicted_text"] = np.array(output["predicted_text"])
 
         if isinstance(cfg.dataset.prompt_column, tuple):
             for col in cfg.dataset.prompt_column:
                 output[col] = df[col].values
         else:
             output[cfg.dataset.prompt_column] = df[cfg.dataset.prompt_column].values
-        df[f"pred_{cfg.dataset.answer_column}"] = output["predicted_text"]
+
+        if "predicted_text" in output.keys():
+            df[f"pred_{cfg.dataset.answer_column}"] = output["predicted_text"]
 
         return output, df
 
