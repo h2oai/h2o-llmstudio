@@ -25,6 +25,11 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     dataset_class: Any = (
         llm_studio.src.datasets.text_causal_language_modeling_ds.CustomDataset
     )
+
+    personalize: bool = False
+    chatbot_name: str = "h2oGPT"
+    chatbot_author: str = "H2O.ai"
+
     train_dataframe: str = "/path/to/train.csv"
     validation_strategy: str = "automatic"
     validation_dataframe: str = ""
@@ -81,6 +86,11 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
         )
         self._possible_values["parent_id_column"] = possible_values.Columns(
             prefer_with=lambda column: column in ("parent",), add_none=True
+        )
+
+        self._nesting.add(
+            ["chatbot_name", "chatbot_author"],
+            [Dependency(key="personalize", value=True, is_set=True)],
         )
 
         self._nesting.add(
@@ -370,9 +380,6 @@ class ConfigProblemBase(DefaultConfig):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
-    personalize: bool = True
-    chatbot_name: str = "h2oGPT"
-    chatbot_author: str = "H2O.ai"
 
     dataset: ConfigNLPCausalLMDataset = field(default_factory=ConfigNLPCausalLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
@@ -421,9 +428,4 @@ class ConfigProblemBase(DefaultConfig):
                 "togethercomputer/GPT-NeoXT-Chat-Base-20B",
             ),
             allow_custom=True,
-        )
-
-        self._nesting.add(
-            ["chatbot_name", "chatbot_author"],
-            [Dependency(key="personalize", value=True, is_set=True)],
         )
