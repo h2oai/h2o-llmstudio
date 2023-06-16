@@ -19,19 +19,21 @@ USER llmstudio
 
 # Python virtualenv is installed in /home/llmstudio/.local
 # Application code and data lives in /workspace
-WORKDIR /workspace
-RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
-COPY Makefile .
-COPY Pipfile .
-COPY Pipfile.lock .
-RUN make setup
-
+#
 # Make all of the files in the llmstudio directory writable so that the
 # application can install other (non-persisted) new packages and other things
 # if it wants to.  This is really not advisable, though, since it's lost when
 # the container exits.
-RUN chmod -R a+w /home/llmstudio
-
+WORKDIR /workspace
+RUN \
+    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 && \
+    chmod -R a+w /home/llmstudio
+COPY Makefile .
+COPY Pipfile .
+COPY Pipfile.lock .
+RUN \
+    make setup && \
+    chmod -R a+w /home/llmstudio
 COPY . .
 
 ENV HOME=/home/llmstudio
