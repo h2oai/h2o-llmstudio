@@ -154,6 +154,39 @@ class CustomDataset(Dataset):
             the processed dataframe
         """
 
+        def personalize(text):
+            text = text.replace("Open Assistant", cfg.chatbot_name)
+            text = text.replace("Open-Assistant", cfg.chatbot_name)
+            text = text.replace("open-assistant", cfg.chatbot_name)
+            text = text.replace("OpenAssistant", cfg.chatbot_name)
+            text = text.replace("open assistant", cfg.chatbot_name)
+            text = text.replace("Open Assistand", cfg.chatbot_name)
+            text = text.replace("Open Assitant", cfg.chatbot_name)
+            text = text.replace("Open Assistent", cfg.chatbot_name)
+            text = text.replace("Open Assisstant", cfg.chatbot_name)
+            text = text.replace("Open Assitent", cfg.chatbot_name)
+            text = text.replace("Open Assitiant", cfg.chatbot_name)
+            text = text.replace("Open Assistiant", cfg.chatbot_name)
+            text = text.replace("Open Assitan ", cfg.chatbot_name + " ")
+            text = text.replace("Open Assistan ", cfg.chatbot_name + " ")
+            text = text.replace("Open Asistant", cfg.chatbot_name)
+            text = text.replace("Open Assiant", cfg.chatbot_name)
+            text = text.replace("Assistant", cfg.chatbot_name)
+            text = text.replace("LAION AI", cfg.chatbot_author)
+            text = text.replace("LAION-AI", cfg.chatbot_author)
+            text = text.replace("LAION,", cfg.chatbot_author + ",")
+            text = text.replace("LAION.ai", cfg.chatbot_author)
+            text = text.replace("LAION.", cfg.chatbot_author + ".")
+            text = text.replace("LAION", cfg.chatbot_author)
+            return text
+
+        if cfg.personalize:
+            for prompt_col in cfg.dataset.prompt_column:
+                df[prompt_col] = df[prompt_col].apply(personalize)
+            df[cfg.dataset.answer_column] = df[cfg.dataset.answer_column].apply(
+                personalize
+            )
+
         return df
 
     def get_train_collate_fn(self):
