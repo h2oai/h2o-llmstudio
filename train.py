@@ -46,11 +46,11 @@ from llm_studio.src.utils.logging_utils import (
     write_flag,
 )
 from llm_studio.src.utils.modeling_utils import (
-    compute_metric,
     get_number_of_validation_epochs,
     get_optimizer,
     get_scheduler,
     load_checkpoint,
+    reduce_metric,
     run_inference,
     save_checkpoint,
     save_predictions,
@@ -117,9 +117,9 @@ def run_eval(
                 mode, "loss", val_loss, step=cfg.environment._curr_step
             )
 
-        # Calculate validation metric
-        metric_func, _ = cfg.prediction.metric_class.get(cfg.prediction.metric)
-        val_metric, full_val_metric = compute_metric(metric_func, cfg, val_data, val_df)
+        # Calculate reduced validation metric
+        _, _, reduce = cfg.prediction.metric_class.get(cfg.prediction.metric)
+        val_metric = reduce_metric(val_data, reduce=reduce)
 
         logger.info(f"{mode.capitalize()} {cfg.prediction.metric}: {val_metric:.5f}")
         cfg.logging._logger.log(
@@ -140,7 +140,7 @@ def run_eval(
 
     torch.inference_mode(mode=False)
 
-    return val_data, val_loss, val_metric
+    return val_loss, val_metric
 
 
 def run_train(
@@ -189,7 +189,7 @@ def run_train(
 
     start_epoch = 0
 
-    _, metric_mode = cfg.prediction.metric_class.get(cfg.prediction.metric)
+    _, metric_mode, _ = cfg.prediction.metric_class.get(cfg.prediction.metric)
     objective_op: Callable[[float, float], bool]
     if metric_mode == "max":
         best_val_metric = -np.inf
@@ -202,7 +202,7 @@ def run_train(
 
     batch = None
     if cfg.training.evaluate_before_training:
-        val_data, val_loss, val_metric = run_eval(
+        val_loss, val_metric = run_eval(
             cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
         )
 
@@ -351,7 +351,7 @@ def run_train(
                 if cfg.training.evaluation_epochs == 1:
                     progress_bar.close()
 
-                val_data, val_loss, val_metric = run_eval(
+                val_loss, val_metric = run_eval(
                     cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
                 )
                 if cfg.environment._local_rank == 0:
@@ -387,7 +387,7 @@ def run_train(
     if cfg.environment._distributed:
         torch.distributed.barrier()
 
-    return val_data, val_loss, val_metric, batch
+    return val_loss, val_metric
 
 
 def run(cfg: Any) -> None:
@@ -558,7 +558,7 @@ def run(cfg: Any) -> None:
         # re-save config
         save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
-    val_data, val_loss, val_metric, last_batch = run_train(
+    val_loss, val_metric = run_train(
         cfg=cfg,
         model=model,
         train_dataloader=train_dataloader,
