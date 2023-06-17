@@ -22,6 +22,7 @@ from transformers.models.gpt_neox.modeling_gpt_neox import (
 from transformers.utils import ModelOutput
 from transformers.utils import logging as transformers_logging
 
+from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import create_nlp_backbone
 
@@ -173,6 +174,9 @@ class Model(nn.Module):
             self.cfg.training.loss_function
         )(self.cfg)
 
+        if self.cfg.prediction.metric == "Perplexity":
+            self.perplexity = Perplexity(self.cfg, reduce=False)
+
         if self.cfg.training.use_rlhf:
             self.value_head = ValueHead(self.backbone_config)
             self.value_head.summary.bias.data.zero_()
@@ -309,6 +313,11 @@ class Model(nn.Module):
             loss = self.loss_fn(output.logits, batch["labels"])
             outputs["loss"] = loss
 
+
+        if self.cfg.prediction.metric == "Perplexity":
+            outputs["perplexity"] = self.perplexity(output.logits, batch["labels"])
+
+
         if self.training and self.cfg.training.use_rlhf:
             last_hidden_state = output.hidden_states[-1]
 
@@ -323,7 +332,7 @@ class Model(nn.Module):
                 else None
             )
 
-        if not self.training or generate:
+        if (not self.training and self.cfg.prediction.metric != "Perplexity") or generate:
             outputs["predicted_answer_ids"] = (
                 self.generate(batch, self.cfg).detach().cpu()
             )
