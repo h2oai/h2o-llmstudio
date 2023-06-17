@@ -202,7 +202,6 @@ def run_train(
 
     num_updates = 0
 
-    batch = None
     if cfg.training.evaluate_before_training:
         val_loss, val_metric = run_eval(
             cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df

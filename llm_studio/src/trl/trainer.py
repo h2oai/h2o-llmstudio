@@ -75,15 +75,6 @@ def logprobs_from_logits(logits, labels):
     return logpy
 
 
-def whiten(values, shift_mean=True):
-    """Whiten values."""
-    mean, var = torch.mean(values), torch.var(values)
-    whitened = (values - mean) * torch.rsqrt(var + 1e-8)
-    if not shift_mean:
-        whitened += mean
-    return whitened
-
-
 def masked_mean(values, mask, axis=None):
     """Compute mean of tensor with a masked values."""
     if axis is not None:
