@@ -180,7 +180,7 @@ class CustomDataset(Dataset):
             text = text.replace("LAION", cfg.chatbot_author)
             return text
 
-        if cfg.personalize:
+        if cfg.dataset.personalize:
             for prompt_col in cfg.dataset.prompt_column:
                 df[prompt_col] = df[prompt_col].apply(personalize)
             df[cfg.dataset.answer_column] = df[cfg.dataset.answer_column].apply(
