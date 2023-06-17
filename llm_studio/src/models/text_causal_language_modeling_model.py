@@ -331,7 +331,11 @@ class Model(nn.Module):
                 else None
             )
 
-        if (not self.training and self.cfg.prediction.metric != "Perplexity") or generate:
+        if self.cfg.prediction.metric != "Perplexity":
+            # do not generate new text in forward if perplexity is the metric
+            generate = False
+
+        if generate:
             outputs["predicted_answer_ids"] = (
                 self.generate(batch, self.cfg).detach().cpu()
             )

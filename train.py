@@ -343,7 +343,7 @@ def run_train(
             else:
                 # Forward pass
                 with autocast(enabled=cfg.environment.mixed_precision):
-                    output_dict = model.forward(batch)
+                    output_dict = model.forward(batch, generate=False)
 
                 loss = output_dict["loss"]
                 if ~np.isfinite(loss.item()) and (num_updates > 20):

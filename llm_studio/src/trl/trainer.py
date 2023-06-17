@@ -530,7 +530,10 @@ class PPOTrainer(PyTorchModelHubMixin):
 
             with autocast(enabled=self.cfg.environment.mixed_precision):
                 outputs = model(
-                    model_inputs_batch, padding=False, is_ref_model=is_ref_model
+                    model_inputs_batch,
+                    padding=False,
+                    is_ref_model=is_ref_model,
+                    generate=False,
                 )
 
             logits = outputs["logits"]
