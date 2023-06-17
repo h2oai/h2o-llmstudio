@@ -512,6 +512,10 @@ def run(cfg: Any) -> None:
     else:
         cfg.environment._distributed = False
 
+    # TODO: allow DDP with RLHF and remove this
+    if cfg.environment._distributed and cfg.training.use_rlhf:
+        raise LLMTrainingException("RLHF is not supported with DDP.")
+
     if cfg.environment._distributed:
         cfg.environment._local_rank = int(os.environ["LOCAL_RANK"])
         cfg.environment._device = "cuda:%d" % cfg.environment._local_rank
