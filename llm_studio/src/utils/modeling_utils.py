@@ -467,6 +467,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     logger.info(f"Using {cfg.architecture.backbone_dtype} for backbone")
 
     if cfg.architecture.gradient_checkpointing:
+        logger.warning("Disabling cache for gradient checkpointing")
         config.use_cache = False
 
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code

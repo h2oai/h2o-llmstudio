@@ -181,6 +181,7 @@ class Model(nn.Module):
             self.value_head = ValueHead(self.backbone_config)
             self.value_head.summary.bias.data.zero_()
 
+    @torch.inference_mode(mode=True)
     def generate(self, batch: Dict, cfg: Any, remove_prompt=False):
         pad_token_id = (
             self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
@@ -313,10 +314,8 @@ class Model(nn.Module):
             loss = self.loss_fn(output.logits, batch["labels"])
             outputs["loss"] = loss
 
-
         if self.cfg.prediction.metric == "Perplexity":
             outputs["perplexity"] = self.perplexity(output.logits, batch["labels"])
-
 
         if self.training and self.cfg.training.use_rlhf:
             last_hidden_state = output.hidden_states[-1]
