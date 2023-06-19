@@ -1,5 +1,6 @@
 import codecs
 import logging
+import os
 from typing import Any
 
 from transformers import AutoTokenizer
@@ -38,6 +39,7 @@ def get_tokenizer(cfg: Any):
         add_prefix_space=cfg.tokenizer.add_prefix_space,
         use_fast=cfg.tokenizer.use_fast,
         trust_remote_code=cfg.environment.trust_remote_code,
+        use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
     )
     tokenizer.padding_side = getattr(
         cfg.tokenizer, "_padding_side", tokenizer.padding_side

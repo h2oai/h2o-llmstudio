@@ -435,7 +435,9 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     This is needed for Gradient Checkpointing in DDP mode.
     """
     config = AutoConfig.from_pretrained(
-        cfg.llm_backbone, trust_remote_code=cfg.environment.trust_remote_code
+        cfg.llm_backbone,
+        trust_remote_code=cfg.environment.trust_remote_code,
+        use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
     )
     config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
     config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
@@ -469,6 +471,8 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         config.use_cache = False
 
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
+    kwargs["use_auth_token"] = os.getenv("HUGGINGFACE_TOKEN")
+
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
