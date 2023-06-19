@@ -335,7 +335,6 @@ class PPOTrainer(PyTorchModelHubMixin):
                     responses,
                     model_inputs,
                     return_values=False,
-                    is_ref_model=True,
                 )
 
         timing["time/ppo/forward_pass"] = time.time() - t
@@ -468,7 +467,6 @@ class PPOTrainer(PyTorchModelHubMixin):
         model_inputs: dict,
         return_logits: bool = False,
         return_values: bool = True,
-        is_ref_model: bool = False,
     ):
         """
         Calculate model outputs in multiple batches.
@@ -486,9 +484,6 @@ class PPOTrainer(PyTorchModelHubMixin):
             return_values (`bool`, *optional*, defaults to `True`):
                 Whether to return values. Set to `False` if values are not needed to
                 reduce memory consumption.
-            is_ref_model (`bool`, *optional*, defaults to `False`):
-                Whether the model is a reference model. If `False`, the model will
-                not return the values or loss.
         Returns:
             (tuple):
                 - all_logprobs (`torch.FloatTensor`): Log probabilities of the
@@ -523,7 +518,6 @@ class PPOTrainer(PyTorchModelHubMixin):
                 outputs = model(
                     model_inputs_batch,
                     padding=False,
-                    is_ref_model=is_ref_model,
                     generate=False,
                 )
 

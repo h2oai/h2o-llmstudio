@@ -282,7 +282,6 @@ class Model(nn.Module):
         batch: Dict,
         generate: bool = False,
         padding: bool = True,
-        is_ref_model: bool = False,
     ) -> Dict:
         outputs: Dict = {}
 
@@ -314,7 +313,7 @@ class Model(nn.Module):
             **kwargs,
         )
 
-        if "labels" in batch and not is_ref_model:
+        if "labels" in batch:
             loss = self.loss_fn(output.logits, batch["labels"])
             outputs["loss"] = loss
 
@@ -329,11 +328,7 @@ class Model(nn.Module):
                 output.logits = output.logits.float()
 
             outputs["logits"] = output.logits
-            outputs["value"] = (
-                self.value_head(last_hidden_state).squeeze(-1)
-                if not is_ref_model
-                else None
-            )
+            outputs["value"] = self.value_head(last_hidden_state).squeeze(-1)
 
         if self.cfg.prediction.metric != "Perplexity":
             # do not generate new text in forward if perplexity is the metric
