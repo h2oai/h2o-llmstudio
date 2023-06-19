@@ -10,7 +10,7 @@ To view, edit, and cut a version of the documentation, the following is required
 - To install Node.js and npm with nvm in Mac or Ubuntu, run: `curl -o-
 https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash` and `nvm install node`
 
-- Makersaurus (the H2O themed documentation site) is hosted on H2O's Github npm registry. npm must authenticate to the registry before you can download Makersaurus.
+- Makersaurus (the H2O themed documentation site) is hosted on H2O's Github npm registry. npm must authenticate to the registry before you can download Makersaurus. Follow the 3 steps below to authenticate the npm package.
 
  If you have already installed `@h2oai/ui-kit` or any other private `@h2oai`-prefixed npm package you can skip this step.
 
