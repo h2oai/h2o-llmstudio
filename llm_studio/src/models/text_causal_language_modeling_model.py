@@ -171,7 +171,6 @@ class Model(nn.Module):
             self.value_head = ValueHead(self.backbone_config)
             self.value_head.summary.bias.data.zero_()
 
-    @torch.inference_mode(mode=True)
     def generate(self, batch: Dict, cfg: Any, remove_prompt=False):
         pad_token_id = (
             self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
@@ -321,7 +320,8 @@ class Model(nn.Module):
             generate = False
 
         if generate:
-            outputs["predicted_answer_ids"] = (
-                self.generate(batch, self.cfg).detach().cpu()
-            )
+            with torch.no_grad():
+                outputs["predicted_answer_ids"] = (
+                    self.generate(batch, self.cfg).detach().cpu()
+                )
         return outputs
