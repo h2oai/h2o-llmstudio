@@ -356,7 +356,7 @@ The update process does not remove or erase any existing data folders or experim
 This means that all your old data, including the user database, uploaded datasets, and experiment results, 
 will still be available to you within the updated version of H2O LLM Studio.
 
-We recommend running the command `git rev-parse --short HEAD` before updating and saving the commit hash. 
+Before updating, we recommend running the command `git rev-parse --short HEAD` and saving the commit hash. 
 This will allow you to revert to your existing version if needed. 
 
 
