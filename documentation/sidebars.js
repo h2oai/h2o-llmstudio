@@ -38,8 +38,6 @@ module.exports = {
         },
       ],
     },
-    "tutorial",
-    "release-notes",
     "faqs",
   ],
 };
