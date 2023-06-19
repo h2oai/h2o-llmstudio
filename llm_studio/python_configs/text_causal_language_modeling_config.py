@@ -12,7 +12,7 @@ from llm_studio.src.augmentations.nlp_aug import BaseNLPAug
 from llm_studio.src.loggers import Loggers
 from llm_studio.src.losses import text_causal_language_modeling_losses
 from llm_studio.src.metrics import text_causal_language_modeling_metrics
-from llm_studio.src.models import text_causal_language_modeling_model
+from llm_studio.src.models import text_causal_language_modeling_model, text_reward_model
 from llm_studio.src.nesting import Dependency
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.plots import text_causal_language_modeling_plots
@@ -296,7 +296,7 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 @dataclass
 class ConfigNLPCausalLMArchitecture(DefaultConfig):
     model_class: Any = text_causal_language_modeling_model.Model
-    reward_model_class: Any = text_causal_language_modeling_model.RewardModel
+    reward_model_class: Any = text_reward_model.RewardModel
     pretrained: bool = True
 
     backbone_dtype: str = "float16"
