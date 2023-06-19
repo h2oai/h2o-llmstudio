@@ -12,18 +12,16 @@ https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash` and 
 
 - Makersaurus (the H2O themed documentation site) is hosted on H2O's Github npm registry. npm must authenticate to the registry before you can download Makersaurus.
 
- :::tip
  If you have already installed `@h2oai/ui-kit` or any other private `@h2oai`-prefixed npm package you can skip this step.
- :::
 
- - ** Step 1:** Create a "classic" [personal access token](https://github.com/settings/tokens) (PAT) on Github
+ **Step 1:** Create a "classic" [personal access token](https://github.com/settings/tokens) (PAT) on Github
 
- - ** Step 2:** Add the PAT to your `~/.npmrc` file. Create this file if it doesn't exist yet. 
+ **Step 2:** Add the PAT to your `~/.npmrc` file. Create this file if it doesn't exist yet. 
  ```
  @h2oai:registry=https://npm.pkg.github.com/
  //npm.pkg.github.com/:_authToken=YOUR-GENERATED-TOKEN
  ```
- - ** Step 3:** Verify that it worked by running the following command:
+ **Step 3:** Verify that it worked by running the following command:
  ```
  npm whoami --registry=https://npm.pkg.github.com
  ```
