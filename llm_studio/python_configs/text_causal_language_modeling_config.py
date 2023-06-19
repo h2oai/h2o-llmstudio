@@ -380,6 +380,7 @@ class ConfigProblemBase(DefaultConfig):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
+    backbone_branch: str = "main"
 
     dataset: ConfigNLPCausalLMDataset = field(default_factory=ConfigNLPCausalLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(

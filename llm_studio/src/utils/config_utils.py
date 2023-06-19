@@ -190,6 +190,7 @@ def save_config_yaml(path: str, cfg: ConfigProblemBase) -> None:
     cfg_dict["experiment_name"] = cfg.experiment_name
     cfg_dict["output_directory"] = cfg.output_directory
     cfg_dict["llm_backbone"] = cfg.llm_backbone
+    cfg_dict["backbone_branch"] = cfg.backbone_branch
     cfg_dict["problem_type"] = "text_causal_language_modeling"
     with open(path, "w") as fp:
         yaml.dump(cfg_dict, fp, indent=4)
@@ -212,6 +213,7 @@ def load_config_yaml(path: str) -> ConfigProblemBase:
         ),
         experiment_name=cfg_dict.get("experiment_name", generate_experiment_name()),
         llm_backbone=cfg_dict.get("llm_backbone", ConfigProblemBase.llm_backbone),
+        backbone_branch=cfg_dict.get("backbone_branch", ConfigProblemBase.backbone_branch),
         dataset=ConfigNLPCausalLMDataset.from_dict(cfg_dict.get("dataset", {})),
         tokenizer=ConfigNLPCausalLMTokenizer.from_dict(cfg_dict.get("tokenizer", {})),
         augmentation=ConfigNLPAugmentation.from_dict(cfg_dict.get("augmentation", {})),
