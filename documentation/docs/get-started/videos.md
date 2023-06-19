@@ -5,7 +5,7 @@ import ReactPlayer from 'react-player'
 
 ## The Fine Art of Fine-Tuning Large Language Models
 
-<iframe width="860" height="515" src="https://www.youtube.com/embed/YWAS3QDFg40" title="The Fine Art of Fine-Tuning LLMs" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+<iframe width="930" height="515" src="https://www.youtube.com/embed/YWAS3QDFg40" title="The Fine Art of Fine-Tuning LLMs" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 
 :::info Note 
@@ -14,7 +14,7 @@ import ReactPlayer from 'react-player'
 
 ## Basic introduction to H2O LLM Studio 
 
-<iframe width="860" height="515" src="https://www.youtube.com/embed/aFU3VRGE2gk" title="Introduction to H2O LLM Studio" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+<iframe width="930" height="515" src="https://www.youtube.com/embed/aFU3VRGE2gk" title="Introduction to H2O LLM Studio" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 
 :::info Note 

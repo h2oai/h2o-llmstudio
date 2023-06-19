@@ -13,18 +13,22 @@ import H2OHome from '@site/src/components/H2OHome';
     subsections: [
       {
         title: "Get started",
-        subtitle: null,
+        icon: "rocket_launch",
         items: [
           {
             label: "What is H2O LLM Studio?",
             to: "/get-started/what-is-h2o-llm-studio",
           },
           {
-            label: "Set up H2O LLM Studioo",
+            label: "Set up H2O LLM Studio",
             to: "/get-started/set-up-llm-studio",
           },
           {
-            label: "Experiment (model) flow",
+            label: "Core features",
+            to: "/get-started/core-features",
+          },
+          {
+            label: "Model flow",
             to: "/get-started/llm-studio-flow",
           },
         ],
@@ -45,6 +49,10 @@ import H2OHome from '@site/src/components/H2OHome';
           {
             label: "View and manage a dataset",
             to: "/guide/datasets/view-dataset",
+          },
+          {
+            label: "Merge datasets",
+            to: "/guide/datasets/merge-datasets",
           },
         ],
       },
@@ -67,6 +75,28 @@ import H2OHome from '@site/src/components/H2OHome';
           {
             label: "Compare experiments",
             to: "/guide/experiments/compare-experiments",
+          },
+          {
+            label: "Publish model",
+            to: "/guide/experiments/export-trained-model",
+          },
+        ],
+      },
+            {
+        title: "Helpful links",
+        icon: "link",
+        items: [
+          {
+            label: "FAQs",
+            to: "/faqs",
+          },
+          {
+            label: "Concepts",
+            to: "/concepts",
+          },
+          {
+            label: "Videos",
+            to: "/videos",
           },
         ],
       },
