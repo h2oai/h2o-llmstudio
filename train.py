@@ -618,6 +618,11 @@ def run(cfg: Any) -> None:
         else:
             reward_model.to(cfg.environment._device)
 
+    if cfg.architecture.force_embedding_gradients and cfg.training.use_rlhf:
+        raise LLMTrainingException(
+            "RLHF is not supported with force_embedding_gradients."
+        )
+
     if cfg.architecture.force_embedding_gradients:
         for module in model.modules():
             if isinstance(module, torch.nn.Embedding):
