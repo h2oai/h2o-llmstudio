@@ -337,6 +337,7 @@ H2O LLM Studio stores its data in two folders located in the root directory. The
 - `data/dbs`: This folder contains the user database used within the app.
 - `data/user`: This folder is where uploaded datasets from the user are stored.
 - `output/user`: All experiments conducted in H2O LLM Studio are stored in this folder. For each experiment, a separate folder is created within the `output/user` directory, which contains all the relevant data associated with that particular experiment.
+- `output/download`: Utility folder that is used to store data the user downloads within the app. 
 
 > ❓ How can I update H2O LLM Studio?
 
