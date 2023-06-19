@@ -66,11 +66,11 @@ def get_database_dir(q):
 
 
 def get_output_dir(q):
-    return os.path.join(default_cfg.data_folder, "user")
+    return os.path.join(default_cfg.output_folder, "user")
 
 
 def get_download_dir(q):
-    return os.path.join(default_cfg.data_folder, "download")
+    return os.path.join(default_cfg.output_folder, "download")
 
 
 def get_user_db_path(q):
