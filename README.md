@@ -349,9 +349,6 @@ To update H2O LLM Studio, you have two options:
 1. Using the latest main branch: Execute the commands `git checkout main` and `git pull` to obtain the latest updates from the main branch.
 2. Using the latest release tag: Execute the commands `git pull` and `git checkout v0.0.3` (replace 'v0.0.3' with the desired version number) to switch to the latest release branch.
 
-H2O LLM Studio follows the practices of [Semantic Versioning 2.0.0](https://semver.org/),
-ensuring backward compatibility for all minor versions.
-That is, after updating to a newer minor version of H2O LLM Studio, you will be able to access and view your previous data and experiments.
 The update process does not remove or erase any existing data folders or experiment records.
 This means that all your old data, including the user database, uploaded datasets, and experiment results, 
 will still be available to you within the updated version of H2O LLM Studio.
