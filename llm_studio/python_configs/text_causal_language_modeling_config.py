@@ -255,11 +255,20 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
                 "advantages_lambda",
                 "ppo_clip_policy",
                 "ppo_clip_value",
+                "ppo_generate_temperature",
                 "scaling_factor_value_loss",
                 "ppo_epochs",
                 "ppo_batch_size",
+                "offload_reward_model",
             ],
             [Dependency(key="use_rlhf", value=False, is_set=False)],
+        )
+        self._nesting.add(
+            [
+                "gradient_clip",
+                "grad_accumulation",
+            ],
+            [Dependency(key="use_rlhf", value=True, is_set=False)],
         )
 
 
