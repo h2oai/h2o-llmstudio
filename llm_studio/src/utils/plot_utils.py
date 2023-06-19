@@ -186,5 +186,5 @@ def is_lower_score_better(cfg: Any) -> bool:
     Returns:
         sort order
     """
-    metric_func, optimize = cfg.prediction.metric_class.get(cfg.prediction.metric)
+    _, optimize, _ = cfg.prediction.metric_class.get(cfg.prediction.metric)
     return optimize != "max"
