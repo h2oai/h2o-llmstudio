@@ -316,7 +316,7 @@ class Model(nn.Module):
             outputs["logits"] = output.logits
             outputs["value"] = self.value_head(last_hidden_state).squeeze(-1)
 
-        if self.cfg.prediction.metric != "Perplexity":
+        if self.cfg.prediction.metric == "Perplexity":
             # do not generate new text in forward if perplexity is the metric
             generate = False
 
