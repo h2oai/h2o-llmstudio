@@ -334,15 +334,16 @@ class CustomDataset(Dataset):
                 dim=0,
             )
 
-        if self.cfg.training.use_rlhf and self.mode == "train":
-            return [prompt_encodings]
-        else:
-            return [prompt_encodings, answer_encodings]
+        return [prompt_encodings, answer_encodings]
 
     def _read_data(self, idx: int, sample: Dict) -> Dict:
         """Reads a single text observation."""
 
-        samples = [self._get_sample(idx)]
+        if self.cfg.training.use_rlhf and self.mode == "train":
+            samples = [[self._get_sample(idx)[0]]]
+        else:
+            samples = [self._get_sample(idx)]
+
         sample["reward_model_prompt_text"] = self.raw_prompts[idx]
 
         if self.parent_ids is not None:
@@ -359,7 +360,7 @@ class CustomDataset(Dataset):
                 samples.insert(0, self._get_sample(int(parent_idx)))
                 sample["reward_model_prompt_text"] = (
                     self.raw_prompts[int(parent_idx)]
-                    + "<|endoftext|>"
+                    + "<|endoftext|>"  # this is replaced later in the pipeline
                     + sample["reward_model_prompt_text"]
                 )
 
@@ -385,7 +386,7 @@ class CustomDataset(Dataset):
             ).to(torch.bool)
         attention_mask = torch.ones_like(input_ids)
 
-        if not self.cfg.training.use_rlhf:
+        if not self.cfg.training.use_rlhf and self.mode == "train":
             labels = input_ids.clone()
 
             if self.cfg.dataset.mask_prompt_labels:
