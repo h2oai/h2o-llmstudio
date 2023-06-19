@@ -213,7 +213,9 @@ def load_config_yaml(path: str) -> ConfigProblemBase:
         ),
         experiment_name=cfg_dict.get("experiment_name", generate_experiment_name()),
         llm_backbone=cfg_dict.get("llm_backbone", ConfigProblemBase.llm_backbone),
-        backbone_branch=cfg_dict.get("backbone_branch", ConfigProblemBase.backbone_branch),
+        backbone_branch=cfg_dict.get(
+            "backbone_branch", ConfigProblemBase.backbone_branch
+        ),
         dataset=ConfigNLPCausalLMDataset.from_dict(cfg_dict.get("dataset", {})),
         tokenizer=ConfigNLPCausalLMTokenizer.from_dict(cfg_dict.get("tokenizer", {})),
         augmentation=ConfigNLPAugmentation.from_dict(cfg_dict.get("augmentation", {})),
