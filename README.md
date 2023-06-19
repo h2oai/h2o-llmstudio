@@ -331,6 +331,31 @@ There are various parameters that can be tuned while keeping a specific LLM back
 It is advised to choose 4bit/8bit precision as a backbone dtype to be able to train models >=7B on a consumer type GPU.
 LORA should be enabled. Besides that there are the usual parameters such as batch size and maximum sequence length that can be decreased to save GPU memory (please ensure that your prompt+answer text is not truncated too much by checking the train data insights).
 
+> ❓ Where does H2O LLM Studio store its data?
+
+H2O LLM Studio stores its data in two folders located in the root directory. The folders are named `data` and `output`. Here is the breakdown of the data storage structure:
+- `data/dbs`: This folder contains the user database used within the app.
+- `data/user`: This folder is where uploaded datasets from the user are stored.
+- `output/user`: All experiments conducted in H2O LLM Studio are stored in this folder. For each experiment, a separate folder is created within the `output/user` directory, which contains all the relevant data associated with that particular experiment.
+
+> ❓ How can I update H2O LLM Studio?
+
+To update H2O LLM Studio, you have two options:
+
+1. Using the latest main branch: Execute the commands `git checkout main` and `git pull` to obtain the latest updates from the main branch.
+2. Using the latest release branch: Execute the commands `git pull` and `git checkout v0.0.3` (replace 'v0.0.3' with the desired version number) to switch to the latest release branch.
+
+H2O LLM Studio follows the practices of [Semantic Versioning 2.0.0](https://semver.org/),
+ensuring backward compatibility for all minor versions.
+That is, after updating to a newer minor version of H2O LLM Studio, you will be able to access and view your previous data and experiments.
+The update process does not remove or erase any existing data folders or experiment records.
+This means that all your old data, including the user database, uploaded datasets, and experiment results, 
+will still be available to you within the updated version of H2O LLM Studio.
+
+We recommend running the command `git rev-parse --short HEAD` before updating and saving the commit hash. 
+This will allow you to revert to your existing version if needed. 
+
+
 ## License
 
 H2O LLM Studio is licensed under the Apache 2.0 license. Please see the [LICENSE](LICENSE) file for more information.
