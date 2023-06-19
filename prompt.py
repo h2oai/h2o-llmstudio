@@ -122,12 +122,11 @@ if __name__ == "__main__":
             )
 
             output = {}
-            torch.inference_mode(mode=True)
-            with torch.cuda.amp.autocast():
-                output["predicted_answer_ids"] = (
-                    model.generate(inputs, cfg).detach().cpu()
-                )
-            torch.inference_mode(mode=False)
+            with torch.no_grad():
+                with torch.cuda.amp.autocast():
+                    output["predicted_answer_ids"] = (
+                        model.generate(inputs, cfg).detach().cpu()
+                    )
 
             predicted_text = [
                 tokenizer.decode(ids, skip_special_tokens=True)

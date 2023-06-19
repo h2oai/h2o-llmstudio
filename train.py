@@ -139,8 +139,6 @@ def run_eval(
     if cfg.environment._distributed:
         torch.distributed.barrier()
 
-    torch.inference_mode(mode=False)
-
     return val_loss, val_metric
 
 
@@ -272,28 +270,29 @@ def run_train(
                 log_plot(cfg, plot, "train_data")
 
             if cfg.training.use_rlhf:
-                torch.inference_mode(mode=True)
-                logger.debug("Rollout: Generating response from active model")
-                output_dict = {}
-                output_dict["predicted_answer_ids"] = model.generate(
-                    batch, model.cfg, remove_prompt=True
-                ).detach()
-                output_dict = train_dataloader.dataset.postprocess_batch_predictions(
-                    cfg=cfg, output=output_dict
-                )
-
-                logger.debug("Evaluation: Score from reward model")
-                # tokenize prompt & output internally
-                if cfg.training.offload_reward_model:
-                    reward_model.to(cfg.environment._device)
-                with autocast(enabled=cfg.environment.mixed_precision):
-                    scores = reward_model.get_score(
-                        batch["reward_model_prompt_text"],
-                        output_dict["predicted_text"],
+                with torch.no_grad():
+                    logger.debug("Rollout: Generating response from active model")
+                    output_dict = {}
+                    output_dict["predicted_answer_ids"] = model.generate(
+                        batch, model.cfg, remove_prompt=True
+                    ).detach()
+                    output_dict = (
+                        train_dataloader.dataset.postprocess_batch_predictions(
+                            cfg=cfg, output=output_dict
+                        )
                     )
-                if cfg.training.offload_reward_model:
-                    reward_model.to("cpu")
-                torch.inference_mode(mode=False)
+
+                    logger.debug("Evaluation: Score from reward model")
+                    # tokenize prompt & output internally
+                    if cfg.training.offload_reward_model:
+                        reward_model.to(cfg.environment._device)
+                    with autocast(enabled=cfg.environment.mixed_precision):
+                        scores = reward_model.get_score(
+                            batch["reward_model_prompt_text"],
+                            output_dict["predicted_text"],
+                        )
+                    if cfg.training.offload_reward_model:
+                        reward_model.to("cpu")
 
                 # score by reward model
                 reward = [torch.tensor(score, dtype=torch.float32) for score in scores]
