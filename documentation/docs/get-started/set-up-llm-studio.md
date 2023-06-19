@@ -143,7 +143,7 @@ To start an interactive chat with your trained model, run:
 python prompt.py -e {experiment_name}
 ```
     
-`experiment_name` is the output folder of the experiment you want to chat with (see [configuration](addlink)). The interactive chat will also work with models that were fine-tuned using the GUI.
+`experiment_name` is the output folder of the experiment you want to chat with. The interactive chat will also work with models that were fine-tuned using the GUI.
 
 
 

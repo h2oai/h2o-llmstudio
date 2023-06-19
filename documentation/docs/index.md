@@ -27,10 +27,6 @@ import H2OHome from '@site/src/components/H2OHome';
             label: "Experiment (model) flow",
             to: "/get-started/llm-studio-flow",
           },
-          {
-            label: "Tutorials",
-            to: "/get-started/tutorials",
-          },
         ],
       },
       {
