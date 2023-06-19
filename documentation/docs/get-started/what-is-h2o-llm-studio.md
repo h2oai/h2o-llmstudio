@@ -2,7 +2,7 @@
 
 H2O LLM Studio is an open-source, no-code [LLM](../concepts#llm) graphical user interface (GUI) designed for fine-tuning state-of-the-art large language models. 
 
-[Fine-tuning](../concepts#fine-tuning) a pretrained language model requires coding expertise and extensive knowledge about the model and its hyperparameters, however  H2O LLM Studio enables NLP practioners to fine-tune their LLMs easily with no need for coding and better flexibility over customization. 
+[Fine-tuning](../concepts#fine-tuning) a pretrained language model requires coding expertise and extensive knowledge about the model and its [hyperparameters](../concepts#parameters-and-hyperparameters), however  H2O LLM Studio enables NLP practioners to fine-tune their LLMs easily with no need for coding and better flexibility over customization. 
 
 H2O LLM Studio also lets you chat with the fine-tuned model and recieve instant feedback about model performance.
 

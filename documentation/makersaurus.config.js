@@ -5,6 +5,15 @@ module.exports = {
   baseUrl: "/",
   projectName: "h2o-llmstudio", // Usually your repo name
   feedbackAssignee: "sherenem", // Should be a github username
+  feedbackLabels: ["llmstudio"],
+  showLastUpdateAuthor: false,
+  includeCurrentVersion: true,
+  versions: {
+    current: {
+      label: "current",
+      path: "/",
+    },
+  },
   dependencies: {
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
