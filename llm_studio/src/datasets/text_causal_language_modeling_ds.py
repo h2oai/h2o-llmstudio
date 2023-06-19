@@ -385,19 +385,20 @@ class CustomDataset(Dataset):
             ).to(torch.bool)
         attention_mask = torch.ones_like(input_ids)
 
-        labels = input_ids.clone()
+        if not self.cfg.training.use_rlhf:
+            labels = input_ids.clone()
 
-        if self.cfg.dataset.mask_prompt_labels:
-            labels.masked_fill_(prompt_mask, -100)
-        if self.cfg.dataset.add_eos_token_to_answer:
-            # eos_token may be equal to pad_token. Add the label back manually.
-            labels[-1] = self.tokenizer.eos_token_id
+            if self.cfg.dataset.mask_prompt_labels:
+                labels.masked_fill_(prompt_mask, -100)
+            if self.cfg.dataset.add_eos_token_to_answer:
+                # eos_token may be equal to pad_token. Add the label back manually.
+                labels[-1] = self.tokenizer.eos_token_id
 
-        if self.cfg.tokenizer.max_length < len(input_ids):
-            labels = labels[-self.cfg.tokenizer.max_length :]
+            if self.cfg.tokenizer.max_length < len(input_ids):
+                labels = labels[-self.cfg.tokenizer.max_length :]
 
-        sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), -100)
-        sample["labels"][-len(labels) :] = labels
+            sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), -100)
+            sample["labels"][-len(labels) :] = labels
 
         sample.update(
             self.pad_tokens(
