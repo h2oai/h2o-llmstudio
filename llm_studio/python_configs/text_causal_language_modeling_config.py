@@ -217,7 +217,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["ppo_generate_temperature"] = (0.1, 1.0, 0.1)
         self._possible_values["ppo_batch_size"] = (1, 1024, 1)
 
-        self._visibility["lora"] = -1
         self._visibility["loss_class"] = -1
         self._visibility["drop_last_batch"] = -1
         self._visibility["differential_learning_rate_layers"] = 1

@@ -150,6 +150,10 @@ class Model(nn.Module):
         self.cfg = cfg
         kwargs = {}
 
+        if cfg.training.use_rlhf and not cfg.training.lora:
+            logger.warning("Forcing LoRA to be True for RLHF")
+            cfg.training.lora = True
+
         self.backbone, self.backbone_config = create_nlp_backbone(
             cfg, model_class=AutoModelForCausalLM, kwargs=kwargs
         )
