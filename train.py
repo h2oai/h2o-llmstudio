@@ -327,13 +327,6 @@ def run_train(
                     for predicted_answer_ids in output_dict["predicted_answer_ids"]
                 ]
 
-                # for i in range(len(reward)):
-                #     print("Raw prompt text:", batch["reward_model_prompt_text"][i])
-                #     print("Predicted text:", output_dict["predicted_text"][i])
-                #     print("reward", reward[i])
-                #     print("query_tensor", query_tensor[i].shape)
-                #     print("response_tensor", response_tensor[i].shape)
-
                 del output_dict
                 del batch
 
