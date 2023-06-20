@@ -449,7 +449,7 @@ class PPOTrainer(PyTorchModelHubMixin):
                         self.optimizer.zero_grad(set_to_none=True)
 
                 if self.cfg.environment._distributed:
-                    torch.cuda.synchronize(device=self.cfg.environment._local_rank)
+                    torch.cuda.synchronize(device=self.current_device)
 
                 if self.lr_scheduler is not None:
                     self.lr_scheduler.step()
