@@ -112,7 +112,12 @@ class Model(nn.Module):
 
     def prepare_lora(self):
         target_modules = (
-            self.cfg.training.lora_target_modules.split(",")
+            [
+                lora_target_module.strip()
+                for lora_target_module in self.cfg.training.lora_target_modules.split(
+                    ","
+                )
+            ]
             if self.cfg.training.lora_target_modules
             else None
         )
