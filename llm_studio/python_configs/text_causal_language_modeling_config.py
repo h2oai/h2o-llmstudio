@@ -187,7 +187,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
                 "OpenAssistant/oasst-rm-2.1-pythia-1.4b-epoch-2.5",
                 "OpenAssistant/oasst-rm-2-pythia-6.9b-epoch-1",
             ),
-            allow_custom=True,
+            allow_custom=False,
         )
 
         self._possible_values["batch_size"] = (1, 256, 1)
