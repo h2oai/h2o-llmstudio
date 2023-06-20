@@ -1,6 +1,6 @@
 # H2O LLM Studio Documentation
 
-- The LLM Studio documentation is built using [Makersaurus](https://h2oai.github.io/makersaurus/) which is a very thin wrapper around Facebook's Docusaurus.
+- The LLM Studio documentation is built using [Makersaurus](https://github.com/h2oai/makersaurus/pkgs/npm/makersaurus) which is a very thin wrapper around Facebook's Docusaurus.
 - The documentation is displayed at {{ https://docs.h2o.ai/h2o-llm-studio/ }}
 
 To view, edit, and cut a version of the documentation, the following is required:
