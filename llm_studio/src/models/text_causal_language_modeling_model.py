@@ -171,7 +171,7 @@ class Model(nn.Module):
             self.value_head = ValueHead(self.backbone_config)
             self.value_head.summary.bias.data.zero_()
 
-    def generate(self, batch: Dict, cfg: Any, remove_prompt=False):
+    def generate(self, batch: Dict, cfg: Any):
         pad_token_id = (
             self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
         )
@@ -253,12 +253,8 @@ class Model(nn.Module):
         )
         transformers_logging.set_verbosity(verbosity)
 
-        if remove_prompt:
-            # remove the prompt tokens
-            output = output[:, input_ids.shape[1] :]
-        else:
-            # Mask the prompt tokens
-            output[:, : input_ids.shape[1]] = pad_token_id
+        # remove the prompt tokens
+        output = output[:, input_ids.shape[1] :]
 
         return output
 
