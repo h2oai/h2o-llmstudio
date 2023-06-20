@@ -358,9 +358,14 @@ class CustomDataset(Dataset):
                 ):
                     break
                 samples.insert(0, self._get_sample(int(parent_idx)))
+
+                # <|endoftext|> is replaced later in the pipeline
+                # and <prompt> + <answer> is prepended
                 sample["reward_model_prompt_text"] = (
                     self.raw_prompts[int(parent_idx)]
-                    + "<|endoftext|>"  # this is replaced later in the pipeline
+                    + "<|endoftext|>"
+                    + self.answers[int(parent_idx)]
+                    + "<|endoftext|>"
                     + sample["reward_model_prompt_text"]
                 )
 
