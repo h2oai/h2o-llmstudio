@@ -56,8 +56,8 @@ from llm_studio.src.utils.modeling_utils import (
     run_inference,
     save_checkpoint,
     save_predictions,
-    wrap_model_distributed,
     unwrap_model,
+    wrap_model_distributed,
 )
 from llm_studio.src.utils.utils import kill_ddp_processes, set_environment, set_seed
 
