@@ -51,6 +51,7 @@ style: reports pipenv
 	@echo
 
 	@if [ -s reports/flake8.log ]; then exit 1; fi
+	@if [ -s reports/mypy.log ]; then exit 1; fi
 
 .PHONY: format
 format: pipenv
