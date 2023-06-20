@@ -57,6 +57,7 @@ from llm_studio.src.utils.modeling_utils import (
     save_checkpoint,
     save_predictions,
     wrap_model_distributed,
+    unwrap_model,
 )
 from llm_studio.src.utils.utils import kill_ddp_processes, set_environment, set_seed
 
@@ -214,6 +215,7 @@ def run_train(
             tokenizer=tokenizer,
             optimizer=optimizer,
             lr_scheduler=scheduler,
+            scaler=scaler,
         )
 
     for epoch in range(start_epoch, cfg.training.epochs):
@@ -273,8 +275,8 @@ def run_train(
                 with torch.no_grad():
                     logger.debug("Rollout: Generating response from active model")
                     output_dict = {}
-                    output_dict["predicted_answer_ids"] = model.generate(
-                        batch, model.cfg, remove_prompt=True
+                    output_dict["predicted_answer_ids"] = unwrap_model(model).generate(
+                        batch, unwrap_model(model).cfg, remove_prompt=True
                     ).detach()
                     output_dict = (
                         train_dataloader.dataset.postprocess_batch_predictions(
@@ -308,8 +310,8 @@ def run_train(
                     )
                 ]
                 pad_tok_id = (
-                    model.backbone.config.pad_token_id
-                    or model.backbone.config.eos_token_id
+                    unwrap_model(model).backbone.config.pad_token_id
+                    or unwrap_model(model).backbone.config.eos_token_id
                 )
                 output_dict["predicted_answer_ids"] = (
                     output_dict["predicted_answer_ids"].detach().cpu()
@@ -332,6 +334,10 @@ def run_train(
 
                 del output_dict
                 del batch
+
+                # needed?
+                # if cfg.environment._distributed:
+                #     torch.distributed.barrier()
 
                 output_dict = ppo_trainer.step(query_tensor, response_tensor, reward)
                 del query_tensor, response_tensor, reward, scores
@@ -510,9 +516,9 @@ def run(cfg: Any) -> None:
     else:
         cfg.environment._distributed = False
 
-    # TODO: allow DDP with RLHF and remove this
-    if cfg.environment._distributed and cfg.training.use_rlhf:
-        raise LLMTrainingException("RLHF is not supported with DDP.")
+    # # TODO: allow DDP with RLHF and remove this
+    # if cfg.environment._distributed and cfg.training.use_rlhf:
+    #     raise LLMTrainingException("RLHF is not supported with DDP.")
 
     if cfg.environment._distributed:
         cfg.environment._local_rank = int(os.environ["LOCAL_RANK"])

@@ -33,6 +33,7 @@ from transformers import (
     PreTrainedTokenizer,
     PreTrainedTokenizerFast,
 )
+from llm_studio.src.utils.modeling_utils import unwrap_model
 
 try:
     from collections.abc import Mapping
@@ -183,6 +184,8 @@ class PPOTrainer(PyTorchModelHubMixin):
         **optimizer** (`torch.optim.Optimizer`) -- Optimizer to be used for training.
         **lr_scheduler** (`torch.optim.lr_scheduler`) -- Learning rate scheduler to be
             used for training.
+        **scaler** (`torch.cuda.amp.GradScaler`) -- Gradient scaler to be used for
+            training.
     """
 
     def __init__(
@@ -192,6 +195,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         tokenizer: Union[PreTrainedTokenizer, PreTrainedTokenizerFast] = None,
         optimizer: Optional[torch.optim.Optimizer] = None,
         lr_scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+        scaler=None,
     ):
         """
         Initialize PPOTrainer.
@@ -208,6 +212,8 @@ class PPOTrainer(PyTorchModelHubMixin):
                 Optimizer used for training.
             lr_scheduler (`torch.optim.lr_scheduler`):
                 Learning rate scheduler used for training.
+            scaler (`torch.cuda.amp.GradScaler`):
+                Gradient scaler used for training.
         """
         self.cfg = cfg
 
@@ -219,6 +225,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         self.data_collator = DataCollatorForLanguageModeling(self.tokenizer, mlm=False)
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
+        self.scaler = scaler
 
         if self.cfg.training.adaptive_kl_control:
             self.kl_ctl = AdaptiveKLController(cfg)
@@ -328,7 +335,7 @@ class PPOTrainer(PyTorchModelHubMixin):
             all_logprobs, _, values, masks = self.batched_forward_pass(
                 self.model, queries, responses, model_inputs
             )
-            with self.model.backbone.disable_adapter():
+            with unwrap_model(self.model).backbone.disable_adapter():
                 ref_logprobs, _, _, _ = self.batched_forward_pass(
                     self.model,
                     queries,
@@ -378,8 +385,19 @@ class PPOTrainer(PyTorchModelHubMixin):
 
         t = time.time()
         all_stats = []
+        num_updates = 0
+
+        if (
+            self.cfg.training.ppo_epochs * self.cfg.training.ppo_batch_size
+        ) % self.cfg.training.grad_accumulation != 0:
+            raise ValueError(
+                "ppo_epochs*ppo_batch_size must be multiply of grad_accumulation"
+            )
+
         for _ in range(self.cfg.training.ppo_epochs):
             for batch in mini_batch_dataloader:
+                num_updates += 1
+
                 model_inputs = {k: batch[k] for k in model_inputs_names}
                 logprobs, logits, vpreds, _ = self.batched_forward_pass(
                     self.model,
@@ -389,21 +407,57 @@ class PPOTrainer(PyTorchModelHubMixin):
                     return_logits=True,
                 )
 
-                train_stats = self.train_minibatch(
+                loss_p, loss_v, train_stats = self.loss(
                     batch["logprobs"],
                     batch["values"],
                     batch["rewards"],
-                    logprobs,
                     logits,
                     vpreds,
+                    logprobs,
                     batch["masks"],
                 )
+                loss = loss_p + loss_v
+
+                # loss is a mean loss per batch/sample
+                # as grad_accumulations sums up the gradients, this loss must be scaled
+                # by the number of grad_accumulations, to have similar behavior for
+                # BS * grad_accumulations = const.
+                if self.cfg.training.grad_accumulation != 1:
+                    loss = loss / self.cfg.training.grad_accumulation
+
+                # Backward pass
+                if self.cfg.environment.mixed_precision:
+                    self.scaler.scale(loss).backward()
+                    if num_updates % self.cfg.training.grad_accumulation == 0:
+                        if self.cfg.training.gradient_clip > 0:
+                            self.scaler.unscale_(self.optimizer)
+                            torch.nn.utils.clip_grad_norm_(
+                                self.model.parameters(), self.cfg.training.gradient_clip
+                            )
+                        self.scaler.step(self.optimizer)
+                        self.scaler.update()
+                        self.optimizer.zero_grad(set_to_none=True)
+                else:
+                    loss.backward()
+                    if num_updates % self.cfg.training.grad_accumulation == 0:
+                        if self.cfg.training.gradient_clip > 0:
+                            torch.nn.utils.clip_grad_norm_(
+                                self.model.parameters(), self.cfg.training.gradient_clip
+                            )
+                        self.optimizer.step()
+                        self.optimizer.zero_grad(set_to_none=True)
+
+                if self.cfg.environment._distributed:
+                    torch.cuda.synchronize(device=self.cfg.environment._local_rank)
+
+                if self.lr_scheduler is not None:
+                    self.lr_scheduler.step()
 
                 del logprobs, logits, vpreds
 
                 all_stats.append(train_stats)
 
-        timing["time/ppo/optimize_step"] = time.time() - t
+        timing["time/ppo/ppo_steps"] = time.time() - t
 
         t = time.time()
         train_stats = stack_dicts(all_stats)
@@ -440,9 +494,6 @@ class PPOTrainer(PyTorchModelHubMixin):
         # Log the total ppo time
         timing["time/ppo/total"] = time.time() - t0
         stats.update(timing)
-
-        if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
 
         return stats
 
@@ -565,52 +616,6 @@ class PPOTrainer(PyTorchModelHubMixin):
             torch.cat(all_values)[:, :-1] if return_values else None,
             torch.cat(all_masks)[:, :-1],
         )
-
-    def train_minibatch(
-        self,
-        old_logprobs: torch.FloatTensor,
-        values: torch.FloatTensor,
-        rewards: torch.FloatTensor,
-        logprobs: torch.FloatTensor,
-        logits: torch.FloatTensor,
-        vpreds: torch.FloatTensor,
-        mask: torch.LongTensor,
-    ):
-        """
-        Train one PPO minibatch
-
-        Args:
-            logprobs (`torch.FloatTensor`):
-                Log probabilities of the model, shape [batch_size, response_length]
-            values (`torch.FloatTensor`):
-                Values of the value head, shape [batch_size, response_length]
-            rewards (`torch.FloatTensor`):
-                Rewards from the reward model, shape [batch_size, response_length]
-            query (`torch.LongTensor`):
-                Encoded queries, shape [batch_size, query_length]
-            response (`torch.LongTensor`):
-                Encoded responses, shape [batch_size, response_length]
-            model_input (`torch.LongTensor`):
-                Concatenated queries and responses, shape [batch_size,
-                query_length+response_length]
-
-        Returns:
-            train_stats (dict[str, `torch.Tensor`]):
-                Dictionary of training statistics
-        """
-        loss_p, loss_v, train_stats = self.loss(
-            old_logprobs, values, rewards, logits, vpreds, logprobs, mask
-        )
-        loss = loss_p + loss_v
-        self.optimizer.zero_grad()
-        loss.backward()
-
-        t = time.time()
-        self.optimizer.step()
-        train_stats["time/ppo/optimizer_step"] = torch.Tensor([time.time() - t]).to(
-            self.current_device
-        )
-        return train_stats
 
     def compute_rewards(
         self,
