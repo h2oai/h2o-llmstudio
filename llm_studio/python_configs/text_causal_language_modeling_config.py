@@ -263,13 +263,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
             ],
             [Dependency(key="use_rlhf", value=False, is_set=False)],
         )
-        self._nesting.add(
-            [
-                "gradient_clip",
-                "grad_accumulation",
-            ],
-            [Dependency(key="use_rlhf", value=True, is_set=False)],
-        )
 
 
 @dataclass
