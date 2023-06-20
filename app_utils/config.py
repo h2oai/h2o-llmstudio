@@ -45,7 +45,8 @@ default_cfg = {
     "allowed_file_extensions": os.getenv(
         "ALLOWED_FILE_EXTENSIONS", ".zip,.csv,.pq"
     ).split(","),
-    "dbs_path": "data/dbs/",
+    "data_folder": "data/",
+    "output_folder": "output/",
     "s3_bucket": f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
     "s3_filename": os.path.join(
         f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
