@@ -64,7 +64,6 @@ from llm_studio.src.utils.utils import kill_ddp_processes, set_environment, set_
 logger = logging.getLogger(__name__)
 
 
-@torch.inference_mode(mode=True)
 def run_eval(
     cfg,
     model: torch.nn.Module,
@@ -85,10 +84,11 @@ def run_eval(
         Validation loss
     """
 
-    model.eval()
-    val_data: Dict[str, Any] = run_inference(
-        cfg, model, val_dataloader, mode
-    )  # type: ignore
+    with torch.no_grad():
+        model.eval()
+        val_data: Dict[str, Any] = run_inference(
+            cfg, model, val_dataloader, mode
+        )  # type: ignore
 
     # Sync validation predictions across GPUs
     if cfg.environment._distributed and cfg.environment._distributed_inference:
@@ -97,6 +97,7 @@ def run_eval(
                 value, cfg.environment._world_size, group=cfg.environment._cpu_comm
             )
 
+    torch.inference_mode(mode=True)
     # Drop any extra observations
     for k, v in val_data.items():
         val_data[k] = v[: len(val_dataloader.dataset)]  # type: ignore
@@ -139,6 +140,8 @@ def run_eval(
 
     if cfg.environment._distributed:
         torch.distributed.barrier()
+
+    torch.inference_mode(mode=False)
 
     return val_loss, val_metric
 
