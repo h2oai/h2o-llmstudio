@@ -4,6 +4,7 @@ from typing import TypedDict
 
 import pandas as pd
 from h2o_wave import Q, expando_to_dict, ui
+from h2o_wave.types import Component
 
 from app_utils.sections.common import clean_dashboard
 
@@ -87,7 +88,7 @@ def ui_table_from_df(
     # the server side as well does not make a visible difference but we avoid
     # sending excessive amounts of data.
     max_char_length: int = 500,
-) -> ui.table:
+) -> Component:
     """
     Convert a Pandas dataframe into Wave ui.table format.
     """

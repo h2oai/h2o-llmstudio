@@ -172,13 +172,12 @@ def run_train(
     optimizer = get_optimizer(model=model, cfg=cfg)
     scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
 
+    scaler: GradScaler | ShardedGradScaler | None = None
     if cfg.environment.mixed_precision:
         if cfg.environment.use_fsdp:
             scaler = ShardedGradScaler()
         else:
             scaler = GradScaler()
-    else:
-        scaler = None
 
     optimizer.zero_grad(set_to_none=True)
 
@@ -285,14 +284,14 @@ def run_train(
 
             # Backward pass
             if cfg.environment.mixed_precision:
-                scaler.scale(loss).backward()
+                scaler.scale(loss).backward()  # type: ignore
                 if num_updates % cfg.training.grad_accumulation == 0:
                     if cfg.training.gradient_clip > 0:
-                        scaler.unscale_(optimizer)
+                        scaler.unscale_(optimizer)  # type: ignore
                         torch.nn.utils.clip_grad_norm_(
                             model.parameters(), cfg.training.gradient_clip
                         )
-                    scaler.step(optimizer)
+                    scaler.step(optimizer)  # type: ignore
                     scaler.update()
                     optimizer.zero_grad(set_to_none=True)
             else:
