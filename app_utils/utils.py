@@ -107,16 +107,6 @@ def start_process(
     config_name = os.path.join(cfg.output_directory, "cfg.yaml")
     env = {**os.environ, **env_vars}
 
-    # # TODO: allow DDP with RLHF and remove this
-    # if cfg.training.use_rlhf:
-    #     if num_gpus > 1:
-    #         logger.warning(
-    #             "RLHF is not supported with DDP. "
-    #             "Training will be run on a single GPU."
-    #         )
-    #     num_gpus = 1
-    #     gpu_list = [gpu_list[0]]
-
     if num_gpus == 0:
         p = subprocess.Popen(
             [
