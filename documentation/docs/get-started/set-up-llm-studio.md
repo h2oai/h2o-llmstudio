@@ -83,7 +83,7 @@ wave run app
 
 ### Run using Docker from a nightly build
 
-First, install Docker by following the instructions from the [NVIDIA Container Instalation Guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker). H2O LLM Studio images are stored in the `h2oai GCR vorvan` container repository.
+First, install Docker by following the instructions from the [NVIDIA Container Installation Guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker). H2O LLM Studio images are stored in the `h2oai GCR vorvan` container repository.
 
 ```
 mkdir -p `pwd`/data
