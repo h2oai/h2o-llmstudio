@@ -275,9 +275,11 @@ def run_train(
                 with torch.no_grad():
                     logger.debug("Rollout: Generating response from active model")
                     output_dict = {}
-                    output_dict["predicted_answer_ids"] = unwrap_model(model).generate(
-                        batch, unwrap_model(model).cfg, remove_prompt=True
-                    ).detach()
+                    output_dict["predicted_answer_ids"] = (
+                        unwrap_model(model)
+                        .generate(batch, unwrap_model(model).cfg, remove_prompt=True)
+                        .detach()
+                    )
                     output_dict = (
                         train_dataloader.dataset.postprocess_batch_predictions(
                             cfg=cfg, output=output_dict
