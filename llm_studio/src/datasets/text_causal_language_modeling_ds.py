@@ -303,7 +303,77 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict:
         """Returns a single dataset item."""
-        return self._read_data(idx=self.indices[idx])
+        """Reads a single text observation."""
+        sample = dict()
+        prompt_encoding, answer_encoding = self._get_prompt_and_answer_encoding(idx)
+        rlhf_is_in_training_mode = self.cfg.training.use_rlhf and self.mode == "train"
+
+        if rlhf_is_in_training_mode:
+            # ground truth answer not used in RLHF training
+            encodings = [[prompt_encoding, torch.empty(0)]]
+        else:
+            encodings = [[prompt_encoding, answer_encoding]]
+
+        parent_encodings, reward_model_parent_prompt_text = self.get_parent_encodings(
+            idx
+        )
+        encodings = parent_encodings + encodings
+
+        sample["reward_model_prompt_text"] = (
+                reward_model_parent_prompt_text + self.raw_prompts[idx]
+        )
+
+        input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
+        if not rlhf_is_in_training_mode:  # no labels required for RLHF during training
+            labels = input_ids.clone()
+
+            if self.cfg.dataset.mask_prompt_labels:
+                prompt_mask = torch.cat(
+                    [
+                        torch.cat(
+                            [
+                                torch.ones_like(prompt_encoding),
+                                torch.zeros_like(answer_encoding),
+                            ]
+                        )
+                        for prompt_encoding, answer_encoding in encodings
+                    ]
+                ).to(torch.bool)
+                labels.masked_fill_(prompt_mask, -100)
+            if self.cfg.dataset.add_eos_token_to_answer:
+                # eos_token may be equal to pad_token. Add the label back manually.
+                labels[-1] = self.tokenizer.eos_token_id
+
+            if self.cfg.tokenizer.max_length < len(input_ids):
+                labels = labels[-self.cfg.tokenizer.max_length:]
+
+            sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), -100)
+            sample["labels"][-len(labels):] = labels
+
+        sample.update(
+            self.pad_tokens(
+                input_ids,
+                attention_mask=torch.ones_like(input_ids),
+                max_length=self.cfg.tokenizer.max_length,
+                pad_token_id=self.tokenizer.pad_token_id,
+            )
+        )
+
+        # Remove last answer from encoding to create the prompt for inference
+        encodings[-1][1] = torch.empty(0)
+        prompt_input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
+        prompt_attention_mask = torch.ones_like(prompt_input_ids)
+
+        sample.update(
+            self.pad_tokens(
+                prompt_input_ids,
+                attention_mask=prompt_attention_mask,
+                max_length=self.cfg.tokenizer.max_length_prompt,
+                pad_token_id=self.tokenizer.pad_token_id,
+                prefix="prompt_",
+            )
+        )
+        return sample
 
     def _get_prompt_and_answer_encoding(self, idx) -> List:
         prompt = self.prompts[idx]
@@ -329,79 +399,6 @@ class CustomDataset(Dataset):
             )
 
         return [prompt_encoding, answer_encoding]
-
-    def _read_data(self, idx: int) -> Dict:
-        """Reads a single text observation."""
-        sample = dict()
-        prompt_encoding, answer_encoding = self._get_prompt_and_answer_encoding(idx)
-        rlhf_is_in_training_mode = self.cfg.training.use_rlhf and self.mode == "train"
-
-        if rlhf_is_in_training_mode:
-            # ground truth answer not used in RLHF training
-            encodings = [[prompt_encoding, torch.empty(0)]]
-        else:
-            encodings = [[prompt_encoding, answer_encoding]]
-
-        parent_encodings, reward_model_parent_prompt_text = self.get_parent_encodings(
-            idx
-        )
-        encodings = parent_encodings + encodings
-
-        sample["reward_model_prompt_text"] = (
-            reward_model_parent_prompt_text + self.raw_prompts[idx]
-        )
-
-        input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
-        if not rlhf_is_in_training_mode:  # no labels required for RLHF during training
-            labels = input_ids.clone()
-
-            if self.cfg.dataset.mask_prompt_labels:
-                prompt_mask = torch.cat(
-                    [
-                        torch.cat(
-                            [
-                                torch.ones_like(prompt_encoding),
-                                torch.zeros_like(answer_encoding),
-                            ]
-                        )
-                        for prompt_encoding, answer_encoding in encodings
-                    ]
-                ).to(torch.bool)
-                labels.masked_fill_(prompt_mask, -100)
-            if self.cfg.dataset.add_eos_token_to_answer:
-                # eos_token may be equal to pad_token. Add the label back manually.
-                labels[-1] = self.tokenizer.eos_token_id
-
-            if self.cfg.tokenizer.max_length < len(input_ids):
-                labels = labels[-self.cfg.tokenizer.max_length :]
-
-            sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), -100)
-            sample["labels"][-len(labels) :] = labels
-
-        sample.update(
-            self.pad_tokens(
-                input_ids,
-                attention_mask=torch.ones_like(input_ids),
-                max_length=self.cfg.tokenizer.max_length,
-                pad_token_id=self.tokenizer.pad_token_id,
-            )
-        )
-
-        # Remove last answer from encoding to create the prompt for training
-        encodings[-1][1] = torch.empty(0)
-        prompt_input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
-        prompt_attention_mask = torch.ones_like(prompt_input_ids)
-
-        sample.update(
-            self.pad_tokens(
-                prompt_input_ids,
-                attention_mask=prompt_attention_mask,
-                max_length=self.cfg.tokenizer.max_length_prompt,
-                pad_token_id=self.tokenizer.pad_token_id,
-                prefix="prompt_",
-            )
-        )
-        return sample
 
     def get_parent_encodings(self, idx):
         parent_encodings: List = []
