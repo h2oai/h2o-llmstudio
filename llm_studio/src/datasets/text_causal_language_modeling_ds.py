@@ -378,7 +378,10 @@ class CustomDataset(Dataset):
 
         input_ids = torch.cat([torch.cat(sample) for sample in samples])
 
-        if not self.cfg.training.use_rlhf and self.mode == "train":
+        if self.cfg.training.use_rlhf and self.mode == "train":
+            # no labels for RLHF during training
+            pass
+        else:
             labels = input_ids.clone()
 
             if self.cfg.dataset.mask_prompt_labels:
