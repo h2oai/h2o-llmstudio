@@ -38,6 +38,7 @@
 - use a **graphic user interface (GUI)** specially designed for large language models.
 - finetune any LLM using a large variety of hyperparameters.
 - use recent finetuning techniques such as [Low-Rank Adaptation (LoRA)](https://arxiv.org/abs/2106.09685) and 8-bit model training with a low memory footprint.
+- use Reinforcement Learning (RL) to finetune your model (experimental)
 - use advanced evaluation metrics to judge generated answers by the model.
 - track and compare your model performance visually. In addition, [Neptune](https://neptune.ai/) integration can be used.
 - chat with your model and get instant feedback on your model performance.
@@ -261,7 +262,7 @@ tokens = model.generate(
     max_new_tokens=256,
     temperature=0.3,
     repetition_penalty=1.2,
-    num_beams=2
+    num_beams=1
 )[0]
 tokens = tokens[inputs["input_ids"].shape[1]:]
 answer = tokenizer.decode(tokens, skip_special_tokens=True)
@@ -330,6 +331,32 @@ Your setup should look like [this](https://github.com/h2oai/h2o-llmstudio/assets
 There are various parameters that can be tuned while keeping a specific LLM backbone fixed.
 It is advised to choose 4bit/8bit precision as a backbone dtype to be able to train models >=7B on a consumer type GPU.
 LORA should be enabled. Besides that there are the usual parameters such as batch size and maximum sequence length that can be decreased to save GPU memory (please ensure that your prompt+answer text is not truncated too much by checking the train data insights).
+
+> ❓ Where does H2O LLM Studio store its data?
+
+H2O LLM Studio stores its data in two folders located in the root directory. The folders are named `data` and `output`. Here is the breakdown of the data storage structure:
+- `data/dbs`: This folder contains the user database used within the app.
+- `data/user`: This folder is where uploaded datasets from the user are stored.
+- `output/user`: All experiments conducted in H2O LLM Studio are stored in this folder. For each experiment, a separate folder is created within the `output/user` directory, which contains all the relevant data associated with that particular experiment.
+- `output/download`: Utility folder that is used to store data the user downloads within the app. 
+
+It is possible to change the default folders `data` and `output` in [app_utils/config.py](app_utils/config.py) 
+(change `data_folder` and `output_folder`).
+
+> ❓ How can I update H2O LLM Studio?
+
+To update H2O LLM Studio, you have two options:
+
+1. Using the latest main branch: Execute the commands `git checkout main` and `git pull` to obtain the latest updates from the main branch.
+2. Using the latest release tag: Execute the commands `git pull` and `git checkout v0.0.3` (replace 'v0.0.3' with the desired version number) to switch to the latest release branch.
+
+The update process does not remove or erase any existing data folders or experiment records.
+This means that all your old data, including the user database, uploaded datasets, and experiment results, 
+will still be available to you within the updated version of H2O LLM Studio.
+
+Before updating, we recommend running the command `git rev-parse --short HEAD` and saving the commit hash. 
+This will allow you to revert to your existing version if needed. 
+
 
 ## License
 
