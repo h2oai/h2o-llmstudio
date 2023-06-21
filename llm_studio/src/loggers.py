@@ -151,7 +151,7 @@ class MainLogger:
     def reset_external(self):
         self.loggers["external"] = DummyLogger()
 
-    def log(self, subset: str, name: str, value: str, step: float = None):
+    def log(self, subset: str, name: str, value: str | float, step: float = None):
         for k, logger in self.loggers.items():
             if "validation_predictions" in name and k == "external":
                 continue

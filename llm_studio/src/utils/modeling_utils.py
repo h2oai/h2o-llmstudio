@@ -321,7 +321,7 @@ def contains_nan(output: Dict):
 def run_inference(
     cfg: Any,
     model: torch.nn.Module,
-    dataloader: torch.utils.data.DataLoader,
+    dataloader,
     mode: str,
 ) -> Dict[str, list]:
     """Runs inference
@@ -329,7 +329,7 @@ def run_inference(
     Args:
         cfg: config
         model: model
-        dataloader: dataloader
+        dataloader: custom dataloader
         mode: mode for inference
 
     Returns:

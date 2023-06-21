@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List
+from typing import Any, KeysView
 
 from torch import nn
 
@@ -51,7 +51,7 @@ class Losses:
     }
 
     @classmethod
-    def names(cls) -> List[str]:
+    def names(cls) -> KeysView:
         return cls._losses.keys()
 
     @classmethod

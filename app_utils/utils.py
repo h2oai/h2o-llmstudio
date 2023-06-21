@@ -282,12 +282,12 @@ class S3Progress:
             size: size of the file to download
         """
 
-        self._q = q
-        self._size = size
-        self._seen_so_far = 0
-        self._percentage = 0
+        self._q: Q = q
+        self._size: float = size
+        self._seen_so_far: float = 0.0
+        self._percentage: float = 0.0
 
-    def progress(self, bytes_amount):
+    def progress(self, bytes_amount: float):
         """Update progress
 
         Args:
@@ -295,7 +295,7 @@ class S3Progress:
         """
 
         self._seen_so_far += bytes_amount
-        self._percentage = (self._seen_so_far / self._size) * 100
+        self._percentage = (self._seen_so_far / self._size) * 100.0
 
     async def update_ui(self):
         """Update progress in UI"""
@@ -1409,7 +1409,7 @@ def make_config_label(config_file: str) -> str:
     return config_file
 
 
-def get_datasets_info(df: DataFrame, q: Q) -> DefaultDict:
+def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
     """For each dataset in given dataframe, return certain configuration settings
 
     Args:

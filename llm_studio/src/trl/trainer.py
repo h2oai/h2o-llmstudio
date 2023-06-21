@@ -19,7 +19,8 @@
 
 import time
 import warnings
-from typing import List, Optional, Union
+from collections.abc import Mapping
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
@@ -28,6 +29,7 @@ from datasets import Dataset
 from huggingface_hub import PyTorchModelHubMixin
 from torch.cuda.amp import autocast
 from torch.nn.utils.rnn import pad_sequence
+from torch.utils.data import DataLoader
 from transformers import (
     DataCollatorForLanguageModeling,
     PreTrainedTokenizer,
@@ -35,11 +37,6 @@ from transformers import (
 )
 
 from llm_studio.src.utils.modeling_utils import unwrap_model
-
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
 
 
 def flatten_dict(nested, sep="/"):
@@ -54,7 +51,7 @@ def flatten_dict(nested, sep="/"):
             else:
                 into[prefix + k] = v
 
-    flat = {}
+    flat: Dict[str, Any] = {}
     rec(nested, "", flat)
     return flat
 
@@ -114,16 +111,16 @@ def clip_by_value(x, tensor_min, tensor_max):
     return clipped
 
 
-def entropy_from_logits(logits):
+def entropy_from_logits(logits: torch.Tensor):
     """Calculate entropy from logits."""
     pd = torch.nn.functional.softmax(logits, dim=-1)
-    entropy = torch.logsumexp(logits, axis=-1) - torch.sum(pd * logits, axis=-1)
+    entropy = torch.logsumexp(logits, dim=-1) - torch.sum(pd * logits, dim=-1)
     return entropy
 
 
 def stats_to_np(stats_dict):
     """Cast all torch.tensors in dict to numpy arrays."""
-    new_dict = dict()
+    new_dict: Dict[str, Any] = dict()
     for k, v in stats_dict.items():
         if isinstance(v, torch.Tensor):
             new_dict[k] = v.detach().cpu()
@@ -228,6 +225,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         self.lr_scheduler = lr_scheduler
         self.scaler = scaler
 
+        self.kl_ctl: AdaptiveKLController | FixedKLController
         if self.cfg.training.adaptive_kl_control:
             self.kl_ctl = AdaptiveKLController(cfg)
         else:
@@ -243,7 +241,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         batch_size: int,
         queries: List[torch.LongTensor],
         responses: List[torch.LongTensor],
-        scores: List[torch.FloatTensor],
+        scores: List[torch.Tensor],
     ):
         """
         Check if the input data is valid for training and move the data to the correct
@@ -257,7 +255,7 @@ class PPOTrainer(PyTorchModelHubMixin):
             responses (List[`torch.LongTensor`]):
                 List of tensors containing the encoded responses of shape
                 (`response_length`)
-            scores (List[`torch.FloatTensor`]):
+            scores (List[`torch.Tensor`]):
                 List of tensors containing the scores.
         Returns:
             `tuple`: The input processed data.
@@ -299,7 +297,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         self,
         queries: List[torch.LongTensor],
         responses: List[torch.LongTensor],
-        scores: List[torch.FloatTensor],
+        scores: List[torch.Tensor],
     ):
         """
         Run a PPO optimisation step given a list of queries, model responses, and
@@ -311,7 +309,7 @@ class PPOTrainer(PyTorchModelHubMixin):
             responses (List[`torch.LongTensor`]):
                 List of tensors containing the encoded responses of shape
                 (`response_length`)
-            scores (List[`torch.FloatTensor`]):
+            scores (List[`torch.Tensor`]):
                 List of tensors containing the scores.
 
         Returns:
@@ -363,9 +361,10 @@ class PPOTrainer(PyTorchModelHubMixin):
             "masks": masks,
         }
 
-        def collator(data):
-            return_dict = dict()
-            for key in data[0]:
+        def collator(data: List[Dict[str, torch.Tensor]]):
+            return_dict: Dict[str, Any] = dict()
+            keys = data[0].keys()
+            for key in keys:
                 if key in ["queries", "responses"]:
                     return_dict[key] = [d[key] for d in data]
                 else:
@@ -377,7 +376,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         mini_batch_dict.update(model_inputs)
         mini_batch_data = Dataset.from_dict(mini_batch_dict)
         mini_batch_data.set_format("torch")
-        mini_batch_dataloader = torch.utils.data.DataLoader(
+        mini_batch_dataloader = DataLoader(
             mini_batch_data,
             batch_size=self.cfg.training.ppo_batch_size,
             shuffle=True,
@@ -678,24 +677,24 @@ class PPOTrainer(PyTorchModelHubMixin):
             logprobs (`torch.FloatTensor`):
                 Log probabilities of the model, shape (`batch_size`, `response_length`)
         """
-        lastgaelam = 0
-        advantages_reversed = []
+        lastgaelam = torch.tensor(0.0)
+        advantages_reversed: List[torch.Tensor] = []
         gen_len = rewards.shape[-1]
 
         values = values * mask
         rewards = rewards * mask
 
         for t in reversed(range(gen_len)):
-            nextvalues = values[:, t + 1] if t < gen_len - 1 else 0.0
-            delta = (
+            nextvalues = values[:, t + 1] if t < gen_len - 1 else torch.tensor(0.0)
+            delta: torch.Tensor = (
                 rewards[:, t]
-                + self.cfg.training.advantages_gamma * nextvalues
+                + torch.tensor(self.cfg.training.advantages_gamma) * nextvalues
                 - values[:, t]
             )
             lastgaelam = (
                 delta
-                + self.cfg.training.advantages_gamma
-                * self.cfg.training.advantages_lambda
+                + torch.tensor(self.cfg.training.advantages_gamma)
+                * torch.tensor(self.cfg.training.advantages_lambda)
                 * lastgaelam
             )
             advantages_reversed.append(lastgaelam)
@@ -831,7 +830,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         stats["tokens/responses_dist"] = response_lens.cpu().numpy()
 
         for k, v in data["train_stats"].items():
-            stats[f"ppo/{k}"] = torch.mean(v, axis=0)
+            stats[f"ppo/{k}"] = torch.mean(v, dim=0)
         stats["ppo/val/var_explained"] = (
             1 - stats["ppo/val/error"] / stats["ppo/returns/var"]
         )
