@@ -318,7 +318,6 @@ def contains_nan(output: Dict):
     )
 
 
-@torch.inference_mode(mode=True)
 def run_inference(
     cfg: Any,
     model: torch.nn.Module,
