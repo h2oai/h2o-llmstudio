@@ -157,7 +157,7 @@ class Model(nn.Module):
         target_modules = (
             [
                 lora_target_module.strip()
-                for lora_target_module in self.cfg.training.lora_target_modules.strip().split(
+                for lora_target_module in self.cfg.training.lora_target_modules.strip().split(  # noqa: E501
                     ","
                 )
             ]
