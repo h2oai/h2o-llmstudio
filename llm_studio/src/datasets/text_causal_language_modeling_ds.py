@@ -305,7 +305,7 @@ class CustomDataset(Dataset):
         """Returns a single dataset item."""
         return self._read_data(idx=self.indices[idx])
 
-    def _get_prompt_and_answer_encoding(self, idx):
+    def _get_prompt_and_answer_encoding(self, idx) -> List:
         prompt = self.prompts[idx]
         answer = self.answers[idx]
 
@@ -404,8 +404,8 @@ class CustomDataset(Dataset):
         return sample
 
     def get_parent_encodings(self, idx):
-        parent_encodings = []
-        reward_model_parent_prompt_text = ""
+        parent_encodings: List = []
+        reward_model_parent_prompt_text: str = ""
         if self.parent_ids is not None:
             parent_idx = idx
             while (
