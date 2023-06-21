@@ -333,10 +333,6 @@ def run_train(
                 del output_dict
                 del batch
 
-                # needed?
-                # if cfg.environment._distributed:
-                #     torch.distributed.barrier()
-
                 output_dict = ppo_trainer.step(query_tensor, response_tensor, reward)
                 del query_tensor, response_tensor, reward, scores
 
