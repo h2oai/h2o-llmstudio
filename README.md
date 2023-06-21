@@ -38,6 +38,7 @@
 - use a **graphic user interface (GUI)** specially designed for large language models.
 - finetune any LLM using a large variety of hyperparameters.
 - use recent finetuning techniques such as [Low-Rank Adaptation (LoRA)](https://arxiv.org/abs/2106.09685) and 8-bit model training with a low memory footprint.
+- use Reinforcement Learning (RL) to finetune your model (experimental)
 - use advanced evaluation metrics to judge generated answers by the model.
 - track and compare your model performance visually. In addition, [Neptune](https://neptune.ai/) integration can be used.
 - chat with your model and get instant feedback on your model performance.
@@ -261,7 +262,7 @@ tokens = model.generate(
     max_new_tokens=256,
     temperature=0.3,
     repetition_penalty=1.2,
-    num_beams=2
+    num_beams=1
 )[0]
 tokens = tokens[inputs["input_ids"].shape[1]:]
 answer = tokenizer.decode(tokens, skip_special_tokens=True)
