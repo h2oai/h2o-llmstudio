@@ -438,9 +438,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
         cfg.llm_backbone,
         trust_remote_code=cfg.environment.trust_remote_code,
         use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
-        cfg.llm_backbone,
         revision=cfg.environment.huggingface_branch,
-        trust_remote_code=cfg.environment.trust_remote_code,
     )
     config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
     config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
