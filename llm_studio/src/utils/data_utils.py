@@ -236,9 +236,7 @@ def worker_init_fn(worker_id: int) -> None:
     set_seed(seed)
 
 
-def get_train_dataset(
-    train_df: pd.DataFrame, cfg: Any, verbose=True
-) -> torch.utils.data.Dataset:
+def get_train_dataset(train_df: pd.DataFrame, cfg: Any, verbose=True):
     """Prepares train Dataset.
 
     Args:
@@ -257,9 +255,7 @@ def get_train_dataset(
     return train_dataset
 
 
-def get_train_dataloader(
-    train_ds: Any, cfg: Any, verbose=True
-) -> torch.utils.data.DataLoader:
+def get_train_dataloader(train_ds: Any, cfg: Any, verbose=True):
     """Prepares train DataLoader.
 
     Args:
@@ -314,9 +310,7 @@ def get_train_dataloader(
     return train_dataloader
 
 
-def get_val_dataset(
-    val_df: pd.DataFrame, cfg: Any, verbose: bool = True
-) -> torch.utils.data.Dataset:
+def get_val_dataset(val_df: pd.DataFrame, cfg: Any, verbose: bool = True):
     """Prepares validation Dataset.
 
     Args:
@@ -335,9 +329,7 @@ def get_val_dataset(
     return val_dataset
 
 
-def get_val_dataloader(
-    val_ds: Any, cfg: Any, verbose: bool = True
-) -> torch.utils.data.DataLoader:
+def get_val_dataloader(val_ds: Any, cfg: Any, verbose: bool = True):
     """Prepares validation DataLoader.
 
     Args:

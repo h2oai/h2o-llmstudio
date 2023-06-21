@@ -20,6 +20,7 @@ import pandas as pd
 import torch
 from torch.cuda.amp import GradScaler, autocast
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
@@ -67,7 +68,7 @@ logger = logging.getLogger(__name__)
 def run_eval(
     cfg,
     model: torch.nn.Module,
-    val_dataloader: torch.utils.data.DataLoader,
+    val_dataloader: DataLoader,
     val_df: pd.DataFrame,
     mode: str = "validation",
 ) -> Tuple:
@@ -150,8 +151,8 @@ def run_train(
     cfg: Any,
     model: torch.nn.Module,
     reward_model: Any,
-    train_dataloader: torch.utils.data.DataLoader,
-    val_dataloader: torch.utils.data.DataLoader,
+    train_dataloader,
+    val_dataloader,
     val_df: pd.DataFrame,
 ):
     """Runs the training loop.
@@ -159,9 +160,9 @@ def run_train(
     Args:
         cfg: config object
         model: model
-        train_dataloader: training Dataloader
+        train_dataloader: custom training Dataloader
         train_df: train DataFrame
-        val_dataloader: validation Dataloader
+        val_dataloader: custom validation Dataloader
         val_df: validation DataFrame
 
     Returns:
