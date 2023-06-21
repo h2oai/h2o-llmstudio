@@ -130,7 +130,7 @@ def convert_cfg_to_nested_dictionary(cfg: ConfigProblemBase) -> dict:
 
 
 def get_parent_element(cfg: ConfigProblemBase):
-    if hasattr(cfg, "_parent_experiment"):
+    if hasattr(cfg, "_parent_experiment") and cfg._parent_experiment != "":
         key = "Parent Experiment"
         value = cfg._parent_experiment
         return {key: value}
