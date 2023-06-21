@@ -248,15 +248,10 @@ def get_scheduler(
         Learning Rate Scheduler
     """
 
-    if cfg.training.use_rlhf:
-        ppo_multiplier = cfg.training.ppo_epochs
-    else:
-        ppo_multiplier = 1
-
     scheduler = Schedulers.get(cfg.training.schedule)(
         optimizer=optimizer,
-        num_warmup_steps=ppo_multiplier * cfg.training.warmup_epochs * epoch_steps,
-        num_training_steps=ppo_multiplier * cfg.training.epochs * epoch_steps,
+        num_warmup_steps=cfg.training.warmup_epochs * epoch_steps,
+        num_training_steps=cfg.training.epochs * epoch_steps,
     )
 
     return scheduler

@@ -451,9 +451,6 @@ class PPOTrainer(PyTorchModelHubMixin):
                 if self.cfg.environment._distributed:
                     torch.cuda.synchronize(device=self.current_device)
 
-                if self.lr_scheduler is not None:
-                    self.lr_scheduler.step()
-
                 del logprobs, logits, vpreds
 
                 all_stats.append(train_stats)
@@ -495,6 +492,9 @@ class PPOTrainer(PyTorchModelHubMixin):
         # Log the total ppo time
         timing["time/ppo/total"] = time.time() - t0
         stats.update(timing)
+
+        if self.lr_scheduler is not None:
+            self.lr_scheduler.step()
 
         return stats
 
