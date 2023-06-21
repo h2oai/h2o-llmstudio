@@ -25,9 +25,16 @@ def parse_param(cfg, prompt):
     parts = prompt.split(" ")
     args = [" ".join(parts[i : i + 2]) for i in range(0, len(parts), 2)]
     for arg in args:
-        arg = arg.split(" ")
-        setattr(cfg.prediction, arg[0], type(getattr(cfg.prediction, arg[0]))(arg[1]))
-        print(f"Permanently changed {arg[0]} to", getattr(cfg.prediction, arg[0]))
+        splitted_arg = arg.split(" ")
+        setattr(
+            cfg.prediction,
+            splitted_arg[0],
+            type(getattr(cfg.prediction, splitted_arg[0]))(splitted_arg[1]),
+        )
+        print(
+            f"Permanently changed {splitted_arg[0]} to",
+            getattr(cfg.prediction, splitted_arg[0]),
+        )
     return cfg
 
 
@@ -60,7 +67,6 @@ if __name__ == "__main__":
     cfg.architecture.gradient_checkpointing = False
     cfg.architecture.pretrained = False
 
-    cfg.prediction.max_length_prompt = 256
     cfg.prediction.max_length_inference = 256
 
     if cfg.dataset.text_prompt_start == "":

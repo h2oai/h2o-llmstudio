@@ -174,7 +174,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values[
             "differential_learning_rate_layers"
         ] = possible_values.String(
-            values=["backbone", "value_head"],
+            values=("backbone", "value_head"),
             allow_custom=False,
             placeholder="Select optional layers...",
         )
@@ -439,6 +439,7 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
 class ConfigProblemBase(DefaultConfig):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
+    _parent_experiment: str = ""
     llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
 
     dataset: ConfigNLPCausalLMDataset = field(default_factory=ConfigNLPCausalLMDataset)

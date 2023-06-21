@@ -20,6 +20,7 @@ import pandas as pd
 import torch
 from torch.cuda.amp import GradScaler, autocast
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
@@ -67,7 +68,7 @@ logger = logging.getLogger(__name__)
 def run_eval(
     cfg,
     model: torch.nn.Module,
-    val_dataloader: torch.utils.data.DataLoader,
+    val_dataloader: DataLoader,
     val_df: pd.DataFrame,
     mode: str = "validation",
 ) -> Tuple:
@@ -150,8 +151,8 @@ def run_train(
     cfg: Any,
     model: torch.nn.Module,
     reward_model: Any,
-    train_dataloader: torch.utils.data.DataLoader,
-    val_dataloader: torch.utils.data.DataLoader,
+    train_dataloader,
+    val_dataloader,
     val_df: pd.DataFrame,
 ):
     """Runs the training loop.
@@ -159,9 +160,9 @@ def run_train(
     Args:
         cfg: config object
         model: model
-        train_dataloader: training Dataloader
+        train_dataloader: custom training Dataloader
         train_df: train DataFrame
-        val_dataloader: validation Dataloader
+        val_dataloader: custom validation Dataloader
         val_df: validation DataFrame
 
     Returns:
@@ -176,13 +177,12 @@ def run_train(
     optimizer = get_optimizer(model=model, cfg=cfg)
     scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
 
+    scaler: GradScaler | ShardedGradScaler | None = None
     if cfg.environment.mixed_precision:
         if cfg.environment.use_fsdp:
             scaler = ShardedGradScaler()
         else:
             scaler = GradScaler()
-    else:
-        scaler = None
 
     optimizer.zero_grad(set_to_none=True)
 
@@ -362,14 +362,14 @@ def run_train(
 
                 # Backward pass
                 if cfg.environment.mixed_precision:
-                    scaler.scale(loss).backward()
+                    scaler.scale(loss).backward()  # type: ignore
                     if num_updates % cfg.training.grad_accumulation == 0:
                         if cfg.training.gradient_clip > 0:
-                            scaler.unscale_(optimizer)
+                            scaler.unscale_(optimizer)  # type: ignore
                             torch.nn.utils.clip_grad_norm_(
                                 model.parameters(), cfg.training.gradient_clip
                             )
-                        scaler.step(optimizer)
+                        scaler.step(optimizer)  # type: ignore
                         scaler.update()
                         optimizer.zero_grad(set_to_none=True)
                 else:
