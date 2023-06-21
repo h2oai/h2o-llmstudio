@@ -36,6 +36,7 @@ def get_tokenizer(cfg: Any):
         cfg.tokenizer.use_fast = False
     tokenizer = AutoTokenizer.from_pretrained(
         cfg.llm_backbone,
+        revision=cfg.environment.huggingface_branch,
         add_prefix_space=cfg.tokenizer.add_prefix_space,
         use_fast=cfg.tokenizer.use_fast,
         trust_remote_code=cfg.environment.trust_remote_code,
