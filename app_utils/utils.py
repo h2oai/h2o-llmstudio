@@ -1576,6 +1576,10 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
                 ],
             }
         )
+    if q.client["default_huggingface_api_token"]:
+        env_vars.update(
+            {"HUGGINGFACE_TOKEN": q.client["default_huggingface_api_token"]}
+        )
     cfg = copy_config(cfg)
     cfg.output_directory = f"{get_output_dir(q)}/{cfg.experiment_name}/"
     os.makedirs(cfg.output_directory)
