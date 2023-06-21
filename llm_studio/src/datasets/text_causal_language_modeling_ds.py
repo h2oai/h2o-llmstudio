@@ -302,7 +302,6 @@ class CustomDataset(Dataset):
         pass
 
     def __getitem__(self, idx: int) -> Dict:
-        """Returns a single dataset item."""
         """Reads a single text observation."""
         sample = dict()
         prompt_encoding, answer_encoding = self._get_prompt_and_answer_encoding(idx)
