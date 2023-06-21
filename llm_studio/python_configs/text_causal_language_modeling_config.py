@@ -382,6 +382,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
     find_unused_parameters: bool = False
     trust_remote_code: bool = True
+    huggingface_branch: str = "main"
     number_of_workers: int = 4
     seed: int = -1
 
