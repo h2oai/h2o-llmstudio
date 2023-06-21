@@ -2,7 +2,6 @@ import logging
 from typing import Any, Dict
 
 import torch
-import torch.nn as nn
 from peft import LoraConfig, get_peft_model
 from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
 from torch import nn
