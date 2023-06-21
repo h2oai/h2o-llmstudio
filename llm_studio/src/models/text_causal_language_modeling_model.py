@@ -72,7 +72,7 @@ class TokenStoppingCriteria(StoppingCriteria):
 
     def should_stop(
         self,
-        generated_ids: torch.LongTensor,
+        generated_ids: torch.Tensor,
         stop_word_id: torch.Tensor,
     ):
         if len(stop_word_id.shape) == 0:
@@ -105,10 +105,8 @@ class TokenStoppingCriteria(StoppingCriteria):
 
         return found
 
-    def __call__(
-        self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
-    ):
-        generated_ids = input_ids[:, self.prompt_input_ids_len :]
+    def __call__(self, input_ids: torch.Tensor, scores: torch.FloatTensor, **kwargs):
+        generated_ids: torch.Tensor = input_ids[:, self.prompt_input_ids_len :]
         for stop_word_id in self.stop_word_ids:
             if self.should_stop(generated_ids, stop_word_id.to(generated_ids.device)):
                 if generated_ids.shape[1] == 1:
@@ -134,7 +132,7 @@ class Model(nn.Module):
         super(Model, self).__init__()
 
         self.cfg = cfg
-        kwargs = {}
+        kwargs: Dict[str, Any] = {}
 
         if cfg.training.use_rlhf and not cfg.training.lora:
             logger.warning("Forcing LoRA to be True for RLHF")

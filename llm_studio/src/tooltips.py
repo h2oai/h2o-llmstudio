@@ -1,6 +1,7 @@
 import glob
 import re
 from dataclasses import dataclass
+from typing import Dict
 
 CLEANR = re.compile("<[^<]+?>")
 tooltip_files = glob.glob("tooltips/**/*.mdx", recursive=True)
@@ -99,7 +100,7 @@ class Tooltips:
     """
 
     def __init__(self):
-        self.tooltips = {}
+        self.tooltips: Dict[str, Tooltip] = {}
         for filename in tooltip_files:
             name = filename.split("/")[-1].split(".")[0]
             name = name.replace("-", "_")
