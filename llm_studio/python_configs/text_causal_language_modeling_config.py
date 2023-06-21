@@ -323,6 +323,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
     find_unused_parameters: bool = False
     trust_remote_code: bool = True
+    huggingface_branch: str = "main"
     number_of_workers: int = 4
     seed: int = -1
 
@@ -380,7 +381,6 @@ class ConfigProblemBase(DefaultConfig):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
-    backbone_branch: str = "main"
 
     dataset: ConfigNLPCausalLMDataset = field(default_factory=ConfigNLPCausalLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(

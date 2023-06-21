@@ -436,7 +436,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     """
     config = AutoConfig.from_pretrained(
         cfg.llm_backbone,
-        revision=cfg.backbone_branch,
+        revision=cfg.environment.huggingface_branch,
         trust_remote_code=cfg.environment.trust_remote_code,
     )
     config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
@@ -474,7 +474,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
-            revision=cfg.backbone_branch,
+            revision=cfg.environment.huggingface_branch,
             config=config,
             quantization_config=quantization_config,
             **kwargs,
