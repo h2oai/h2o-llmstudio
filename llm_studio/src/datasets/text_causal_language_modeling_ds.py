@@ -303,46 +303,42 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict:
         """Returns a single dataset item."""
+        return self._read_data(idx=self.indices[idx])
 
-        sample: Dict = dict()
-
-        # Read data
-        sample = self._read_data(idx=self.indices[idx], sample=sample)
-
-        return sample
-
-    def _get_sample(self, idx):
+    def _get_prompt_and_answer_encoding(self, idx):
         prompt = self.prompts[idx]
         answer = self.answers[idx]
 
-        prompt_encodings = self.encode(
+        prompt_encoding = self.encode(
             self.tokenizer, prompt, self.cfg.tokenizer.max_length_prompt, "left"
         )["input_ids"]
         if self.cfg.dataset.add_eos_token_to_answer:
             max_length_answer = self.cfg.tokenizer.max_length_answer - 1
         else:
             max_length_answer = self.cfg.tokenizer.max_length_answer
-        answer_encodings = self.encode(
+        answer_encoding = self.encode(
             self.tokenizer, answer, max_length_answer, "right"
         )["input_ids"]
         if self.cfg.dataset.add_eos_token_to_answer:
-            answer_encodings = torch.cat(
+            answer_encoding = torch.cat(
                 [
-                    answer_encodings,
+                    answer_encoding,
                     torch.Tensor([self.tokenizer.eos_token_id]),
                 ],
                 dim=0,
             )
 
-        return [prompt_encodings, answer_encodings]
+        return [prompt_encoding, answer_encoding]
 
-    def _read_data(self, idx: int, sample: Dict) -> Dict:
+    def _read_data(self, idx: int) -> Dict:
         """Reads a single text observation."""
+        sample = dict()
 
+        prompt_encoding, answer_encoding = self._get_prompt_and_answer_encoding(idx)
         if self.cfg.training.use_rlhf and self.mode == "train":
-            samples = [[self._get_sample(idx)[0]]]
+            encodings = [[prompt_encoding]]
         else:
-            samples = [self._get_sample(idx)]
+            encodings = [[prompt_encoding, answer_encoding]]
 
         sample["reward_model_prompt_text"] = self.raw_prompts[idx]
 
@@ -357,7 +353,7 @@ class CustomDataset(Dataset):
                     < self.cfg.augmentation.skip_parent_probability
                 ):
                     break
-                samples.insert(0, self._get_sample(int(parent_idx)))
+                encodings.insert(0, self._get_prompt_and_answer_encoding(int(parent_idx)))
 
                 # <|endoftext|> is replaced later in the pipeline
                 # and <prompt> + <answer> is prepended
@@ -374,9 +370,9 @@ class CustomDataset(Dataset):
             and np.random.random() < self.cfg.augmentation.random_parent_probability
         ):
             rnd_idx = np.random.randint(len(self))
-            samples.insert(0, self._get_sample(int(rnd_idx)))
+            encodings.insert(0, self._get_prompt_and_answer_encoding(int(rnd_idx)))
 
-        input_ids = torch.cat([torch.cat(sample) for sample in samples])
+        input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
 
         if self.cfg.training.use_rlhf and self.mode == "train":
             # no labels for RLHF during training
@@ -388,9 +384,9 @@ class CustomDataset(Dataset):
                 prompt_mask = torch.cat(
                     [
                         torch.cat(
-                            [torch.ones_like(sample[0]), torch.zeros_like(sample[1])]
+                            [torch.ones_like(prompt_encoding), torch.zeros_like(answer_encoding)]
                         )
-                        for sample in samples
+                        for prompt_encoding, answer_encoding in encodings
                     ]
                 ).to(torch.bool)
                 labels.masked_fill_(prompt_mask, -100)
@@ -414,9 +410,9 @@ class CustomDataset(Dataset):
         )
 
         if not self.cfg.training.use_rlhf or self.mode != "train":
-            samples[-1][1] = torch.empty(0)
+            encodings[-1][1] = torch.empty(0)
 
-        prompt_input_ids = torch.cat([torch.cat(sample) for sample in samples])
+        prompt_input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
         prompt_attention_mask = torch.ones_like(prompt_input_ids)
 
         sample.update(
