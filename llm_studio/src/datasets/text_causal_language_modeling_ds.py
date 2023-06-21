@@ -319,7 +319,7 @@ class CustomDataset(Dataset):
         encodings = parent_encodings + encodings
 
         sample["reward_model_prompt_text"] = (
-                reward_model_parent_prompt_text + self.raw_prompts[idx]
+            reward_model_parent_prompt_text + self.raw_prompts[idx]
         )
 
         input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
@@ -344,10 +344,10 @@ class CustomDataset(Dataset):
                 labels[-1] = self.tokenizer.eos_token_id
 
             if self.cfg.tokenizer.max_length < len(input_ids):
-                labels = labels[-self.cfg.tokenizer.max_length:]
+                labels = labels[-self.cfg.tokenizer.max_length :]
 
             sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), -100)
-            sample["labels"][-len(labels):] = labels
+            sample["labels"][-len(labels) :] = labels
 
         sample.update(
             self.pad_tokens(
