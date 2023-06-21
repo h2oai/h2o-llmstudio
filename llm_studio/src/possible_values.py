@@ -83,13 +83,30 @@ class Value:
     pass
 
 
+@dataclass
+class Number:
+    min: Optional[float] = None
+    max: Optional[float] = None
+    step: Union[str, float] = 1.0
+
+
+@dataclass
+class String:
+    # Each element of the tuple can be either:
+    # - a tuple of (value, name)
+    # - a string. In that case the same value will be used for name and value
+    values: Any = None
+    allow_custom: bool = False
+    placeholder: Optional[str] = None
+
+
 class DatasetValue:
     pass
 
     @abstractmethod
     def get_value(
         self, dataset: Any, value: Any, type_annotation: type, mode: str
-    ) -> Tuple[Value, Any]:
+    ) -> Tuple[String, Any]:
         pass
 
     @staticmethod
@@ -131,29 +148,12 @@ class DatasetValue:
 
 
 @dataclass
-class Number(Value):
-    min: Optional[float] = None
-    max: Optional[float] = None
-    step: Union[str, float] = 1.0
-
-
-@dataclass
-class String(Value):
-    # Each element of the tuple can be either:
-    # - a tuple of (value, name)
-    # - a string. In that case the same value will be used for name and value
-    values: Optional[Tuple[Union[Tuple[str, str], str], ...]] = None
-    allow_custom: bool = False
-    placeholder: Optional[str] = None
-
-
-@dataclass
 class Directories(DatasetValue):
     add_none: Union[bool, Callable[[str], bool]] = False
     prefer_with: Optional[Callable[[str], bool]] = None
     prefer_none: bool = True
 
-    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[Value, Any]:
+    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[String, Any]:
         if dataset is None:
             return String(tuple()), value
 
@@ -195,7 +195,7 @@ class Files(DatasetValue):
     # selecting any file or selecting no file
     prefer_none: bool = True
 
-    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[Value, Any]:
+    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[String, Any]:
         if dataset is None:
             return String(tuple()), value
 
@@ -234,7 +234,7 @@ class Columns(DatasetValue):
     add_none: Union[bool, Callable[[str], bool]] = False
     prefer_with: Optional[Callable[[str], bool]] = None
 
-    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[Value, Any]:
+    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[String, Any]:
         if dataset is None:
             return String(tuple()), value
 
@@ -266,7 +266,7 @@ class ColumnValue(DatasetValue):
     prefer_with: Optional[Callable[[str], bool]] = None
     dependency: Optional[Dependency] = None
 
-    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[Value, Any]:
+    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[String, Any]:
         if dataset is None:
             return String(tuple()), value
 

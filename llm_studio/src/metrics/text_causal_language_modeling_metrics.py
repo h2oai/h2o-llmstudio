@@ -1,13 +1,14 @@
 import logging
 import os
 from functools import partial
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import openai
 import pandas as pd
 import torch
 from joblib import Parallel, delayed
+from numpy.typing import NDArray
 from sacrebleu import BLEU
 from sacrebleu.metrics.base import Metric
 from tenacity import retry, stop_after_attempt, wait_random_exponential
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 def sacrebleu_score(
     cfg: Any, results: Dict, val_df: pd.DataFrame, metric: Metric
-) -> float:
+) -> NDArray:
     scores = []
     for predicted_text, target_text in zip(
         results["predicted_text"], results["target_text"]
@@ -87,7 +88,7 @@ def gpt_score(
     val_df: pd.DataFrame,
     model: str = "gpt-3.5-turbo",
     raw_results: bool = False,
-) -> float:
+) -> Union[NDArray, Tuple[NDArray, List[str]]]:
     prompts = get_texts(val_df, cfg, separator="")
 
     if os.getenv("OPENAI_API_TYPE", "open_ai") == "azure":

@@ -7,6 +7,7 @@ import traceback
 from typing import List, Optional
 
 from h2o_wave import Q, ui
+from h2o_wave.types import ImageCard, MarkupCard, StatListItem, Tab
 
 from app_utils.config import default_cfg
 from app_utils.db import Dataset
@@ -982,7 +983,7 @@ async def dataset_display(q: Q) -> None:
 
     data_string = "Train" if has_train_df else "Test"
 
-    items = [
+    items: List[Tab] = [
         ui.tab(name="dataset/display/data", label=f"Sample {data_string} Data"),
         ui.tab(
             name="dataset/display/statistics", label=f"{data_string} Data Statistics"
@@ -1035,6 +1036,7 @@ async def dataset_display(q: Q) -> None:
                 cfg, error="Error while plotting data."
             )
 
+        card: ImageCard | MarkupCard
         if plot.encoding == "png":
             card = ui.image_card(box="first", title="", type="png", image=plot.data)
         elif plot.encoding == "html":
@@ -1048,7 +1050,7 @@ async def dataset_display(q: Q) -> None:
     elif q.client["dataset/display/tab"] == "dataset/display/statistics":
         stats = get_frame_stats(read_dataframe(dataset["train_dataframe"]))
         if stats is None:
-            items = [
+            component_items = [
                 ui.text(
                     "Dataset does not contain numerical or text features. "
                     "No statistics available."
@@ -1059,7 +1061,7 @@ async def dataset_display(q: Q) -> None:
                 widths = {col: "77" for col in stats}
             else:  # only text features
                 widths = None
-            items = [
+            component_items = [
                 ui_table_from_df(
                     q=q,
                     df=stats,
@@ -1069,25 +1071,27 @@ async def dataset_display(q: Q) -> None:
                     min_widths=widths,
                 )
             ]
-        q.page["dataset/display/statistics"] = ui.form_card(box="first", items=items)
+        q.page["dataset/display/statistics"] = ui.form_card(
+            box="first", items=component_items
+        )
         q.client.delete_cards.add("dataset/display/statistics")
 
     elif q.client["dataset/display/tab"] == "dataset/display/summary":
         dataset_df = get_datasets(q)
         dataset_df = dataset_df[dataset_df.id == dataset_id]
 
-        items = []
+        stat_list_items: List[StatListItem] = []
 
         for col in dataset_df.columns:
             if col in ["id", "config_file", "path", "process_id", "status"]:
                 continue
             v = dataset_df[col].values[0]
-            t = ui.stat_list_item(label=make_label(col), value=str(v))
+            t: StatListItem = ui.stat_list_item(label=make_label(col), value=str(v))
 
-            items.append(t)
+            stat_list_items.append(t)
 
         q.page["dataset/display/summary"] = ui.stat_list_card(
-            box="first", items=items, title=""
+            box="first", items=stat_list_items, title=""
         )
 
         q.client.delete_cards.add("dataset/display/summary")

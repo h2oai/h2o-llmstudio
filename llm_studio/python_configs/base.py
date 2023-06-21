@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass, fields
-from typing import Any, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from llm_studio.src import possible_values
 from llm_studio.src.nesting import Dependency, Nesting
@@ -34,7 +34,7 @@ class DefaultConfig:
     """
 
     def __post_init__(self):
-        self._possible_values = {k: None for k in self.__dict__}
+        self._possible_values: Dict[str, Any] = {k: None for k in self.__dict__}
         self._visibility = {k: 0 for k in self.__dict__}
 
         # go up the class hierarchy until we are one below the `DefaultConfig`
@@ -111,12 +111,12 @@ class DefaultConfig:
 
         return self._visibility.get(field, None)
 
-    def _get_nesting_triggers(self) -> List[str]:
-        """Returns a List of keys other elements are depending on"""
+    def _get_nesting_triggers(self) -> Set[str]:
+        """Returns a Set of keys other elements are depending on"""
 
         return self._nesting.triggers
 
-    def _get_nesting_dependencies(self, key: str) -> List[Dependency]:
+    def _get_nesting_dependencies(self, key: str) -> List[Dependency] | None:
         """Returns a all dependencies for a given key"""
 
         if key in self._nesting.dependencies:
@@ -158,7 +158,7 @@ class DefaultConfig:
     def get_annotations(cls):
         """Returns type annotations through all the Parent config classes"""
 
-        d = {}
+        d: Dict[str, Any] = {}
         for c in cls.mro()[::-1]:
             try:
                 d.update(**c.__annotations__)
