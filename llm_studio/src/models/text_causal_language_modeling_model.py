@@ -233,6 +233,11 @@ class Model(nn.Module):
             top_p = float(cfg.prediction.top_p)
             repetition_penalty = float(cfg.prediction.repetition_penalty)
 
+        # force to use cache and disable gradient checkpointing if enabled
+        self.backbone.config.use_cache = True
+        if self.cfg.architecture.gradient_checkpointing:
+            self.backbone.gradient_checkpointing_disable()
+
         transformers_logging.set_verbosity_error()
         output = generation_function(
             inputs=input_ids,
@@ -252,6 +257,11 @@ class Model(nn.Module):
             use_cache=True,
         )
         transformers_logging.set_verbosity(verbosity)
+
+        # enable gradient checkpointing again
+        self.backbone.config.use_cache = False
+        if self.cfg.architecture.gradient_checkpointing:
+            self.backbone.gradient_checkpointing_enable()
 
         # remove the prompt tokens
         output = output[:, input_ids.shape[1] :]
