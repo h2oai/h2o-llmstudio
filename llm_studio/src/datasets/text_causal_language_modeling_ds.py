@@ -302,95 +302,40 @@ class CustomDataset(Dataset):
         pass
 
     def __getitem__(self, idx: int) -> Dict:
-        """Returns a single dataset item."""
-
-        sample: Dict = dict()
-
-        # Read data
-        sample = self._read_data(idx=self.indices[idx], sample=sample)
-
-        return sample
-
-    def _get_sample(self, idx):
-        prompt = self.prompts[idx]
-        answer = self.answers[idx]
-
-        prompt_encodings = self.encode(
-            self.tokenizer, prompt, self.cfg.tokenizer.max_length_prompt, "left"
-        )["input_ids"]
-        if self.cfg.dataset.add_eos_token_to_answer:
-            max_length_answer = self.cfg.tokenizer.max_length_answer - 1
-        else:
-            max_length_answer = self.cfg.tokenizer.max_length_answer
-        answer_encodings = self.encode(
-            self.tokenizer, answer, max_length_answer, "right"
-        )["input_ids"]
-        if self.cfg.dataset.add_eos_token_to_answer:
-            answer_encodings = torch.cat(
-                [
-                    answer_encodings,
-                    torch.Tensor([self.tokenizer.eos_token_id]),
-                ],
-                dim=0,
-            )
-
-        return [prompt_encodings, answer_encodings]
-
-    def _read_data(self, idx: int, sample: Dict) -> Dict:
         """Reads a single text observation."""
+        sample = dict()
+        prompt_encoding, answer_encoding = self._get_prompt_and_answer_encoding(idx)
+        rlhf_is_in_training_mode = self.cfg.training.use_rlhf and self.mode == "train"
 
-        if self.cfg.training.use_rlhf and self.mode == "train":
-            samples = [[self._get_sample(idx)[0]]]
+        if rlhf_is_in_training_mode:
+            # ground truth answer not used in RLHF training
+            encodings = [[prompt_encoding, torch.empty(0)]]
         else:
-            samples = [self._get_sample(idx)]
+            encodings = [[prompt_encoding, answer_encoding]]
 
-        sample["reward_model_prompt_text"] = self.raw_prompts[idx]
+        parent_encodings, reward_model_parent_prompt_text = self.get_parent_encodings(
+            idx
+        )
+        encodings = parent_encodings + encodings
 
-        if self.parent_ids is not None:
-            parent_idx = idx
-            while (
-                parent_idx := self.df_id_to_idx.get(self.parent_ids[parent_idx], None)
-            ) is not None:
-                if (
-                    self.mode == "train"
-                    and np.random.random()
-                    < self.cfg.augmentation.skip_parent_probability
-                ):
-                    break
-                samples.insert(0, self._get_sample(int(parent_idx)))
+        sample["reward_model_prompt_text"] = (
+                reward_model_parent_prompt_text + self.raw_prompts[idx]
+        )
 
-                # <|endoftext|> is replaced later in the pipeline
-                # and <prompt> + <answer> is prepended
-                sample["reward_model_prompt_text"] = (
-                    self.raw_prompts[int(parent_idx)]
-                    + "<|endoftext|>"
-                    + self.answers[int(parent_idx)]
-                    + "<|endoftext|>"
-                    + sample["reward_model_prompt_text"]
-                )
-
-        if (
-            self.mode == "train"
-            and np.random.random() < self.cfg.augmentation.random_parent_probability
-        ):
-            rnd_idx = np.random.randint(len(self))
-            samples.insert(0, self._get_sample(int(rnd_idx)))
-
-        input_ids = torch.cat([torch.cat(sample) for sample in samples])
-
-        if self.cfg.training.use_rlhf and self.mode == "train":
-            # no labels for RLHF during training
-            pass
-        else:
+        input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
+        if not rlhf_is_in_training_mode:  # no labels required for RLHF during training
             labels = input_ids.clone()
 
             if self.cfg.dataset.mask_prompt_labels:
                 prompt_mask = torch.cat(
                     [
                         torch.cat(
-                            [torch.ones_like(sample[0]), torch.zeros_like(sample[1])]
+                            [
+                                torch.ones_like(prompt_encoding),
+                                torch.zeros_like(answer_encoding),
+                            ]
                         )
-                        for sample in samples
+                        for prompt_encoding, answer_encoding in encodings
                     ]
                 ).to(torch.bool)
                 labels.masked_fill_(prompt_mask, -100)
@@ -399,10 +344,10 @@ class CustomDataset(Dataset):
                 labels[-1] = self.tokenizer.eos_token_id
 
             if self.cfg.tokenizer.max_length < len(input_ids):
-                labels = labels[-self.cfg.tokenizer.max_length :]
+                labels = labels[-self.cfg.tokenizer.max_length:]
 
             sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), -100)
-            sample["labels"][-len(labels) :] = labels
+            sample["labels"][-len(labels):] = labels
 
         sample.update(
             self.pad_tokens(
@@ -413,10 +358,9 @@ class CustomDataset(Dataset):
             )
         )
 
-        if not self.cfg.training.use_rlhf or self.mode != "train":
-            samples[-1][1] = torch.empty(0)
-
-        prompt_input_ids = torch.cat([torch.cat(sample) for sample in samples])
+        # Remove last answer from encoding to create the prompt for inference
+        encodings[-1][1] = torch.empty(0)
+        prompt_input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
         prompt_attention_mask = torch.ones_like(prompt_input_ids)
 
         sample.update(
@@ -428,8 +372,70 @@ class CustomDataset(Dataset):
                 prefix="prompt_",
             )
         )
-
         return sample
+
+    def _get_prompt_and_answer_encoding(self, idx) -> List:
+        prompt = self.prompts[idx]
+        answer = self.answers[idx]
+
+        prompt_encoding = self.encode(
+            self.tokenizer, prompt, self.cfg.tokenizer.max_length_prompt, "left"
+        )["input_ids"]
+        if self.cfg.dataset.add_eos_token_to_answer:
+            max_length_answer = self.cfg.tokenizer.max_length_answer - 1
+        else:
+            max_length_answer = self.cfg.tokenizer.max_length_answer
+        answer_encoding = self.encode(
+            self.tokenizer, answer, max_length_answer, "right"
+        )["input_ids"]
+        if self.cfg.dataset.add_eos_token_to_answer:
+            answer_encoding = torch.cat(
+                [
+                    answer_encoding,
+                    torch.Tensor([self.tokenizer.eos_token_id]),
+                ],
+                dim=0,
+            )
+
+        return [prompt_encoding, answer_encoding]
+
+    def get_parent_encodings(self, idx):
+        parent_encodings: List = []
+        reward_model_parent_prompt_text: str = ""
+        if self.parent_ids is not None:
+            parent_idx = idx
+            while (
+                parent_idx := self.df_id_to_idx.get(self.parent_ids[parent_idx], None)
+            ) is not None:
+                if (
+                    self.mode == "train"
+                    and np.random.random()
+                    < self.cfg.augmentation.skip_parent_probability
+                ):
+                    break
+                parent_encodings.insert(
+                    0, self._get_prompt_and_answer_encoding(int(parent_idx))
+                )
+
+                # <|endoftext|> is replaced later in the pipeline
+                # and <prompt> + <answer> is prepended
+                reward_model_parent_prompt_text = (
+                    self.raw_prompts[int(parent_idx)]
+                    + "<|endoftext|>"
+                    + self.answers[int(parent_idx)]
+                    + "<|endoftext|>"
+                    + reward_model_parent_prompt_text
+                )
+        if (
+            self.mode == "train"
+            and np.random.random() < self.cfg.augmentation.random_parent_probability
+        ):
+            rnd_idx = np.random.randint(len(self))
+            parent_encodings.insert(
+                0, self._get_prompt_and_answer_encoding(int(rnd_idx))
+            )
+
+        return parent_encodings, reward_model_parent_prompt_text
 
     def pad_tokens(
         self, input_ids, attention_mask, max_length, pad_token_id, prefix=""
