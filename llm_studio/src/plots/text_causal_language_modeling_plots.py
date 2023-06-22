@@ -39,24 +39,26 @@ class Plots:
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
 
-        input_ids_labels = batch["labels"].detach().cpu().numpy()
-        input_ids_labels = [
-            [input_id for input_id in input_ids if input_id != -100]
-            for input_ids in input_ids_labels
-        ]
+        if "labels" in batch.keys():
+            input_ids_labels = batch["labels"].detach().cpu().numpy()
+            input_ids_labels = [
+                [input_id for input_id in input_ids if input_id != -100]
+                for input_ids in input_ids_labels
+            ]
 
-        target_texts = [
-            tokenizer.decode(input_ids, skip_special_tokens=False)
-            for input_ids in input_ids_labels
-        ]
+            target_texts = [
+                tokenizer.decode(input_ids, skip_special_tokens=False)
+                for input_ids in input_ids_labels
+            ]
 
-        tokenized_target_texts = [
-            color_code_tokenized_text(
-                tokenizer.convert_ids_to_tokens(input_ids),
-                tokenizer,
-            )
-            for input_ids in input_ids_labels
-        ]
+            tokenized_target_texts = [
+                color_code_tokenized_text(
+                    tokenizer.convert_ids_to_tokens(input_ids),
+                    tokenizer,
+                )
+                for input_ids in input_ids_labels
+            ]
+
         if cfg.dataset.mask_prompt_labels:
             markup = ""
         else:
@@ -78,11 +80,12 @@ class Plots:
                 "<p><strong>Tokenized Input Text: "
                 f"</strong>{tokenized_texts[i]}</p>\n"
             )
-            markup += "<p><strong>Target Text: " f"</strong>{target_texts[i]}</p>\n"
-            markup += (
-                "<p><strong>Tokenized Target Text:"
-                f" </strong>{tokenized_target_texts[i]}</p>\n"
-            )
+            if "labels" in batch.keys():
+                markup += "<p><strong>Target Text: " f"</strong>{target_texts[i]}</p>\n"
+                markup += (
+                    "<p><strong>Tokenized Target Text:"
+                    f" </strong>{tokenized_target_texts[i]}</p>\n"
+                )
             markup += get_line_separator_html()
         return PlotData(markup, encoding="html")
 

@@ -2,8 +2,8 @@ import logging
 from typing import Any, Dict
 
 import torch
+import torch.nn as nn
 from peft import LoraConfig, get_peft_model
-from torch import nn
 from transformers import AutoModelForCausalLM, StoppingCriteria, StoppingCriteriaList
 from transformers.generation.utils import GenerationMixin
 from transformers.utils import logging as transformers_logging
@@ -13,6 +13,47 @@ from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import create_nlp_backbone
 
 logger = logging.getLogger(__name__)
+
+
+class ValueHead(nn.Module):
+    """
+    The ValueHead class implements a head for GPT2 that returns a scalar for each
+    output token.
+
+    Based on the implementation of trl library:
+    https://github.com/lvwerra/trl/blob/main/trl/models/modeling_value_head.py
+    """
+
+    def __init__(self, config):
+        super().__init__()
+        if not hasattr(config, "summary_dropout_prob"):
+            summary_dropout_prob = 0.1
+        else:
+            summary_dropout_prob = config.summary_dropout_prob
+
+        self.dropout = (
+            nn.Dropout(summary_dropout_prob) if summary_dropout_prob else nn.Identity()
+        )
+
+        # some models such as OPT have a projection layer before the word embeddings
+        # e.g. OPT-350m
+        if hasattr(config, "word_embed_proj_dim"):
+            hidden_size = config.word_embed_proj_dim
+        else:
+            hidden_size = config.hidden_size
+
+        self.summary = nn.Linear(hidden_size, 1)
+
+    def forward(self, hidden_states):
+        output = self.dropout(hidden_states)
+
+        # For now force upcast in fp32 if needed. Let's keep the
+        # output in fp32 for numerical stability.
+        if output.dtype != self.summary.weight.dtype:
+            output = output.to(self.summary.weight.dtype)
+
+        output = self.summary(output)
+        return output
 
 
 class TokenStoppingCriteria(StoppingCriteria):
@@ -31,7 +72,7 @@ class TokenStoppingCriteria(StoppingCriteria):
 
     def should_stop(
         self,
-        generated_ids: torch.LongTensor,
+        generated_ids: torch.Tensor,
         stop_word_id: torch.Tensor,
     ):
         if len(stop_word_id.shape) == 0:
@@ -64,10 +105,8 @@ class TokenStoppingCriteria(StoppingCriteria):
 
         return found
 
-    def __call__(
-        self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
-    ):
-        generated_ids = input_ids[:, self.prompt_input_ids_len :]
+    def __call__(self, input_ids: torch.Tensor, scores: torch.FloatTensor, **kwargs):
+        generated_ids: torch.Tensor = input_ids[:, self.prompt_input_ids_len :]
         for stop_word_id in self.stop_word_ids:
             if self.should_stop(generated_ids, stop_word_id.to(generated_ids.device)):
                 if generated_ids.shape[1] == 1:
@@ -93,9 +132,13 @@ class Model(nn.Module):
         super(Model, self).__init__()
 
         self.cfg = cfg
-        kwargs = {}
+        kwargs: Dict[str, Any] = {}
 
-        self.backbone = create_nlp_backbone(
+        if cfg.training.use_rlhf and not cfg.training.lora:
+            logger.warning("Forcing LoRA to be True for RLHF")
+            cfg.training.lora = True
+
+        self.backbone, self.backbone_config = create_nlp_backbone(
             cfg, model_class=AutoModelForCausalLM, kwargs=kwargs
         )
 
@@ -122,21 +165,44 @@ class Model(nn.Module):
         if self.cfg.prediction.metric == "Perplexity":
             self.perplexity = Perplexity(self.cfg, reduce=False)
 
+        if self.cfg.training.use_rlhf:
+            self.value_head = ValueHead(self.backbone_config)
+            self.value_head.summary.bias.data.zero_()
+
     def generate(self, batch: Dict, cfg: Any):
         pad_token_id = (
             self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
         )
 
+        if "prompt_attention_mask" in batch:
+            mask_key = "prompt_attention_mask"
+            pad_keys = [
+                "input_ids",
+                "attention_mask",
+                "prompt_input_ids",
+                "prompt_attention_mask",
+            ]
+        else:
+            mask_key = "attention_mask"
+            pad_keys = [
+                "input_ids",
+                "attention_mask",
+            ]
+
         batch = batch_padding(
             self.cfg,
             batch,
             self.training,
-            mask_key="prompt_attention_mask",
-            pad_keys=[
-                "prompt_input_ids",
-                "prompt_attention_mask",
-            ],
+            mask_key=mask_key,
+            pad_keys=pad_keys,
         )
+
+        if "prompt_attention_mask" in batch:
+            input_ids = batch["prompt_input_ids"]
+            attention_mask = batch["prompt_attention_mask"]
+        else:
+            input_ids = batch["input_ids"]
+            attention_mask = batch["attention_mask"]
 
         # Adding GenerationMixin type annotation for faster lookup
         generation_function: GenerationMixin.generate = self.backbone.generate
@@ -146,24 +212,43 @@ class Model(nn.Module):
             [
                 TokenStoppingCriteria(
                     stop_word_ids=self.cfg.tokenizer._stop_words_ids,
-                    prompt_input_ids_len=batch["prompt_input_ids"].shape[1],
+                    prompt_input_ids_len=input_ids.shape[1],
                 )
             ]
         )
 
+        # The KL-div estimation assumes sampling and specific settings
+        if self.training and cfg.training.use_rlhf:
+            do_sample = True
+            temperature = cfg.training.ppo_generate_temperature
+            top_k = 0.0
+            top_p = 1.0
+            repetition_penalty = 1.0
+        else:
+            do_sample = cfg.prediction.do_sample
+            temperature = float(cfg.prediction.temperature)
+            top_k = cfg.prediction.top_k
+            top_p = float(cfg.prediction.top_p)
+            repetition_penalty = float(cfg.prediction.repetition_penalty)
+
+        # force to use cache and disable gradient checkpointing if enabled
+        self.backbone.config.use_cache = True
+        if self.cfg.architecture.gradient_checkpointing:
+            self.backbone.gradient_checkpointing_disable()
+
         transformers_logging.set_verbosity_error()
         output = generation_function(
-            inputs=batch["prompt_input_ids"],
-            attention_mask=batch["prompt_attention_mask"],
+            inputs=input_ids,
+            attention_mask=attention_mask,
             pad_token_id=pad_token_id,
             min_new_tokens=cfg.prediction.min_length_inference,
             max_new_tokens=cfg.prediction.max_length_inference,
-            do_sample=cfg.prediction.do_sample,
+            do_sample=do_sample,
             num_beams=cfg.prediction.num_beams,
-            temperature=float(cfg.prediction.temperature),
-            repetition_penalty=float(cfg.prediction.repetition_penalty),
-            top_k=cfg.prediction.top_k,
-            top_p=float(cfg.prediction.top_p),
+            temperature=temperature,
+            repetition_penalty=repetition_penalty,
+            top_k=top_k,
+            top_p=top_p,
             stopping_criteria=stopping_criteria,
             renormalize_logits=True,
             return_dict_in_generate=False,
@@ -171,42 +256,76 @@ class Model(nn.Module):
         )
         transformers_logging.set_verbosity(verbosity)
 
-        # Mask the prompt tokens
-        output[:, : batch["prompt_input_ids"].shape[1]] = pad_token_id
+        # enable gradient checkpointing again
+        self.backbone.config.use_cache = False
+        if self.cfg.architecture.gradient_checkpointing:
+            self.backbone.gradient_checkpointing_enable()
+
+        # remove the prompt tokens
+        output = output[:, input_ids.shape[1] :]
 
         return output
 
     def forward(
         self,
         batch: Dict,
-        calculate_loss: bool = True,
+        generate: bool = False,
+        padding: bool = True,
     ) -> Dict:
         outputs: Dict = {}
 
-        # model's forward only works with labels
-        if "labels" in batch:
+        kwargs = {}
+
+        if self.training and self.cfg.training.use_rlhf:
+            kwargs["output_hidden_states"] = True
+
+        mask_key = "attention_mask"
+        pad_keys = [
+            "input_ids",
+            "attention_mask",
+            "special_tokens_mask",
+            "labels",
+        ]
+
+        if padding:
             batch = batch_padding(
                 self.cfg,
                 batch,
                 self.training,
-                pad_keys=[
-                    "input_ids",
-                    "attention_mask",
-                    "special_tokens_mask",
-                    "labels",
-                ],
+                mask_key=mask_key,
+                pad_keys=pad_keys,
             )
-            output = self.backbone(
-                input_ids=batch["input_ids"],
-                attention_mask=batch["attention_mask"],
-            )
-            if calculate_loss:
-                outputs["loss"] = self.loss_fn(output.logits, batch["labels"])
 
-            if self.cfg.prediction.metric == "Perplexity":
-                outputs["perplexity"] = self.perplexity(output.logits, batch["labels"])
+        output = self.backbone(
+            input_ids=batch["input_ids"],
+            attention_mask=batch["attention_mask"],
+            **kwargs,
+        )
 
-        if not self.training and self.cfg.prediction.metric != "Perplexity":
-            outputs["predicted_answer_ids"] = self.generate(batch, self.cfg)
+        if "labels" in batch:
+            loss = self.loss_fn(output.logits, batch["labels"])
+            outputs["loss"] = loss
 
+        if self.cfg.prediction.metric == "Perplexity":
+            outputs["perplexity"] = self.perplexity(output.logits, batch["labels"])
+
+        if self.training and self.cfg.training.use_rlhf:
+            last_hidden_state = output.hidden_states[-1]
+
+            # force upcast in fp32 if logits are in half-precision
+            if output.logits.dtype != torch.float32:
+                output.logits = output.logits.float()
+
+            outputs["logits"] = output.logits
+            outputs["value"] = self.value_head(last_hidden_state).squeeze(-1)
+
+        if self.cfg.prediction.metric == "Perplexity":
+            # do not generate new text in forward if perplexity is the metric
+            generate = False
+
+        if generate:
+            with torch.no_grad():
+                outputs["predicted_answer_ids"] = (
+                    self.generate(batch, self.cfg).detach().cpu()
+                )
         return outputs

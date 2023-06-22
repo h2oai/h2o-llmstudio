@@ -66,7 +66,10 @@ class Nesting:
             dependencies: key:value pairs to depend on
         """
 
+        if len(set(keys)) != len(keys):
+            raise ValueError("Nesting keys must be unique.")
+
         for dependency in dependencies:
             self.triggers.add(dependency.key)
-            for key in keys:
+            for key in set(keys):
                 self.dependencies[key].append(dependency)

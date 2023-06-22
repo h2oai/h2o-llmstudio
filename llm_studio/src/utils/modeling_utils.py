@@ -8,6 +8,7 @@ import coolname
 import numpy as np
 import torch
 from peft import prepare_model_for_kbit_training
+from torch.cuda.amp import autocast
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
     MixedPrecision,
@@ -320,7 +321,7 @@ def contains_nan(output: Dict):
 def run_inference(
     cfg: Any,
     model: torch.nn.Module,
-    dataloader: torch.utils.data.DataLoader,
+    dataloader,
     mode: str,
 ) -> Dict[str, list]:
     """Runs inference
@@ -328,7 +329,7 @@ def run_inference(
     Args:
         cfg: config
         model: model
-        dataloader: dataloader
+        dataloader: custom dataloader
         mode: mode for inference
 
     Returns:
@@ -365,23 +366,22 @@ def run_inference(
 
         batch = cfg.dataset.dataset_class.batch_to_device(data, cfg.environment._device)
 
-        calculate_loss = True
-        if cfg.environment.mixed_precision:
-            with torch.cuda.amp.autocast():
-                output = model.forward(batch, calculate_loss=calculate_loss)
-            if contains_nan(output):
-                raise LLMModelException(
-                    "NaN caught during mixed precision inference. "
-                    "Please disable mixed precision inference. "
-                    "Alternatively, reducing learning rate or "
-                    "gradient clipping may help to stabilize training."
-                )
-        else:
-            output = model.forward(batch, calculate_loss=calculate_loss)
+        with autocast(enabled=cfg.environment.mixed_precision):
+            output = model.forward(batch, generate=True)
+        if contains_nan(output) and cfg.environment.mixed_precision:
+            raise LLMModelException(
+                "NaN caught during mixed precision inference. "
+                "Please disable mixed precision inference. "
+                "Alternatively, reducing learning rate or "
+                "gradient clipping may help to stabilize training."
+            )
 
-        output = dataloader.dataset.postprocess_batch_predictions(  # type: ignore
-            cfg=cfg, input_batch=batch, output=output
+        output = dataloader.dataset.postprocess_batch_predictions(
+            cfg=cfg, output=output
         )
+
+        if "predicted_answer_ids" in output.keys():
+            del output["predicted_answer_ids"]
 
         for key, val in output.items():
             if isinstance(val, torch.Tensor):
@@ -435,7 +435,10 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     This is needed for Gradient Checkpointing in DDP mode.
     """
     config = AutoConfig.from_pretrained(
-        cfg.llm_backbone, trust_remote_code=cfg.environment.trust_remote_code
+        cfg.llm_backbone,
+        trust_remote_code=cfg.environment.trust_remote_code,
+        use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
+        revision=cfg.environment.huggingface_branch,
     )
     config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
     config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
@@ -465,13 +468,13 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
 
     logger.info(f"Using {cfg.architecture.backbone_dtype} for backbone")
 
-    if cfg.architecture.gradient_checkpointing:
-        config.use_cache = False
-
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
+    kwargs["use_auth_token"] = os.getenv("HUGGINGFACE_TOKEN")
+
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
+            revision=cfg.environment.huggingface_branch,
             config=config,
             quantization_config=quantization_config,
             **kwargs,
@@ -512,4 +515,4 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
 
-    return backbone
+    return backbone, config
