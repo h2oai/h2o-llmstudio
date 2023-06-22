@@ -321,7 +321,7 @@ def contains_nan(output: Dict):
 def run_inference(
     cfg: Any,
     model: torch.nn.Module,
-    dataloader: torch.utils.data.DataLoader,
+    dataloader,
     mode: str,
 ) -> Dict[str, list]:
     """Runs inference
@@ -329,7 +329,7 @@ def run_inference(
     Args:
         cfg: config
         model: model
-        dataloader: dataloader
+        dataloader: custom dataloader
         mode: mode for inference
 
     Returns:
@@ -435,7 +435,10 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     This is needed for Gradient Checkpointing in DDP mode.
     """
     config = AutoConfig.from_pretrained(
-        cfg.llm_backbone, trust_remote_code=cfg.environment.trust_remote_code
+        cfg.llm_backbone,
+        trust_remote_code=cfg.environment.trust_remote_code,
+        use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
+        revision=cfg.environment.huggingface_branch,
     )
     config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
     config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
@@ -466,9 +469,12 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     logger.info(f"Using {cfg.architecture.backbone_dtype} for backbone")
 
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
+    kwargs["use_auth_token"] = os.getenv("HUGGINGFACE_TOKEN")
+
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
+            revision=cfg.environment.huggingface_branch,
             config=config,
             quantization_config=quantization_config,
             **kwargs,
