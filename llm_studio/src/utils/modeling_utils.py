@@ -491,6 +491,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs=None) -> Any:
             **kwargs,
         )
     else:
+        kwargs.pop("use_auth_token", None)
         backbone = model_class.from_config(config, **kwargs)
 
     if cfg.tokenizer._vocab_length > config.vocab_size:
