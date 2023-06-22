@@ -445,8 +445,8 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs=None) -> Any:
         )
         kwargs["use_auth_token"] = os.getenv("HUGGINGFACE_TOKEN")
     except TypeError:
-        # TypeError: RWForCausalLM.__init__() got an unexpected keyword argument 'use_auth_token'
-        # Will potentially be fixed in transformers library directly
+        # TypeError: RWForCausalLM.__init__() got
+        # an unexpected keyword argument 'use_auth_token'
         config = AutoConfig.from_pretrained(
             cfg.llm_backbone,
             trust_remote_code=cfg.environment.trust_remote_code,

@@ -44,16 +44,12 @@ def get_tokenizer(cfg: Any):
     )
 
     try:
-        tokenizer = AutoTokenizer.from_pretrained(
-            cfg.llm_backbone,
-        )
+        tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
     except TypeError:
-        # TypeError: RWForCausalLM.__init__() got an unexpected keyword argument 'use_auth_token'
-        # Will potentially be fixed in transformers library directly
+        # TypeError: RWForCausalLM.__init__() got
+        # an unexpected keyword argument 'use_auth_token'
         kwargs.pop("use_auth_token")
-        tokenizer = AutoTokenizer.from_pretrained(
-            cfg.llm_backbone,
-        )
+        tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
     tokenizer.padding_side = getattr(
         cfg.tokenizer, "_padding_side", tokenizer.padding_side
     )
