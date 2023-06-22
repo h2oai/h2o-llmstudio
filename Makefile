@@ -40,17 +40,16 @@ reports:
 
 .PHONY: style
 style: reports pipenv
-	@echo -n > reports/flake8.log
+	@echo -n > reports/flake8_errors.log
+	@echo -n > reports/mypy_errors.log
 	@echo -n > reports/mypy.log
 	@echo
 
-	-$(PIPENV) run flake8 | tee -a reports/flake8.log
-	@echo
+	-$(PIPENV) run flake8 | tee -a reports/flake8_errors.log
+	@if [ -s reports/flake8_errors.log ]; then exit 1; fi
 
-	-$(PIPENV) run mypy . --check-untyped-defs | tee -a reports/mypy.log
-	@echo
-
-	@if [ -s reports/flake8.log ]; then exit 1; fi
+	-$(PIPENV) run mypy . --check-untyped-defs | tee -a reports/mypy.log || echo "mypy failed" >> reports/mypy_errors.log
+	@if [ -s reports/mypy_errors.log ]; then exit 1; fi
 
 .PHONY: format
 format: pipenv
