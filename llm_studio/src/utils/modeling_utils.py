@@ -434,12 +434,21 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     Creates a backbone model for NLP tasks.
     This is needed for Gradient Checkpointing in DDP mode.
     """
-    config = AutoConfig.from_pretrained(
-        cfg.llm_backbone,
-        trust_remote_code=cfg.environment.trust_remote_code,
-        use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
-        revision=cfg.environment.huggingface_branch,
-    )
+    try:
+        config = AutoConfig.from_pretrained(
+            cfg.llm_backbone,
+            trust_remote_code=cfg.environment.trust_remote_code,
+            use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
+            revision=cfg.environment.huggingface_branch,
+        )
+    except TypeError:
+        # TypeError: RWForCausalLM.__init__() got an unexpected keyword argument 'use_auth_token'
+        # Will potentially be fixed in transformers library directly
+        config = AutoConfig.from_pretrained(
+            cfg.llm_backbone,
+            trust_remote_code=cfg.environment.trust_remote_code,
+            revision=cfg.environment.huggingface_branch,
+        )
     config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
     config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
 
