@@ -1109,7 +1109,8 @@ async def chat_tab(q: Q, load_model=True):
         running_experiments.status.isin(["running"])
     ]
 
-    gpu_id = q.client["gpu_id_for_chat"]
+    # gpu id in UI is offset by 1 to be in sync with experiment UI
+    gpu_id = q.client["gpu_id_for_chat"] - 1
     gpu_blocked = any(
         [
             gpu_id in gpu_list

@@ -150,7 +150,7 @@ async def settings(q: Q) -> None:
                     ui.spinbox(
                         name="gpu_id_for_chat",
                         label=None,
-                        min=0,
+                        min=1,
                         max=torch.cuda.device_count(),
                         step=1,
                         value=q.client["gpu_id_for_chat"],
