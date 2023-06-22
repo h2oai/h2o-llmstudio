@@ -429,11 +429,13 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
     val_df.to_csv(csv_preds_name, index=False)
 
 
-def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
+def create_nlp_backbone(cfg, model_class=AutoModel, kwargs=None) -> Any:
     """
     Creates a backbone model for NLP tasks.
     This is needed for Gradient Checkpointing in DDP mode.
     """
+    if kwargs is None:
+        kwargs = {}
     try:
         config = AutoConfig.from_pretrained(
             cfg.llm_backbone,
@@ -441,6 +443,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
             use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
             revision=cfg.environment.huggingface_branch,
         )
+        kwargs["use_auth_token"] = os.getenv("HUGGINGFACE_TOKEN")
     except TypeError:
         # TypeError: RWForCausalLM.__init__() got an unexpected keyword argument 'use_auth_token'
         # Will potentially be fixed in transformers library directly
@@ -478,7 +481,6 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     logger.info(f"Using {cfg.architecture.backbone_dtype} for backbone")
 
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
-    kwargs["use_auth_token"] = os.getenv("HUGGINGFACE_TOKEN")
 
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
