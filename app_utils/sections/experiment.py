@@ -1712,7 +1712,10 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
                 choices=[ui.choice(str(d), str(d)) for d in devices],
                 tooltip=(
                     "The local device to prepare the model before pushing it to HF. "
-                    "CPU can be significantly slower."
+                    "CPU will never load the weights to the GPU, which can be useful "
+                    "for large models, but will be significantly slower. "
+                    "Cpu_shard will first load on CPU and then shard on all GPUs "
+                    "before pushing to HF."
                 ),
             ),
             ui.textbox(
