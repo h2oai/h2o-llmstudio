@@ -1109,9 +1109,10 @@ async def chat_tab(q: Q, load_model=True):
         running_experiments.status.isin(["running"])
     ]
 
+    gpu_id = q.client["gpu_id_for_chat"]
     gpu_blocked = any(
         [
-            "0" in gpu_list
+            gpu_id in gpu_list
             for gpu_list in running_experiments["gpu_list"]
             .apply(lambda x: x.split(","))
             .to_list()
@@ -1168,7 +1169,8 @@ async def chat_tab(q: Q, load_model=True):
 
     if load_model:
         cfg, model, tokenizer = load_cfg_model_tokenizer(
-            q.client["experiment/display/experiment_path"]
+            q.client["experiment/display/experiment_path"],
+            device=f"cuda:{gpu_id}"
         )
         q.client["experiment/display/chat/cfg"] = cfg
         q.client["experiment/display/chat/model"] = model

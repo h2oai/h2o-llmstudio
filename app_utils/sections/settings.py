@@ -1,5 +1,6 @@
 import multiprocessing
 
+import torch
 from h2o_wave import Q, ui
 
 from app_utils.sections.common import clean_dashboard
@@ -143,6 +144,22 @@ async def settings(q: Q) -> None:
                 ]
             ),
             ui.separator("Default Experiment Settings"),
+            ui.inline(
+                items=[
+                    ui.label("Gpu ID used for chat", width=label_width),
+                    ui.spinbox(
+                        name="gpu_id_for_chat",
+                        label=None,
+                        min=0,
+                        max=torch.cuda.device_count(),
+                        step=1,
+                        value=q.client["gpu_id_for_chat"],
+                        width=textbox_width,
+                        trigger=False,
+                        tooltip="Set the gpu id that is used for the chat window.",
+                    ),
+                ]
+            ),
             ui.inline(
                 items=[
                     ui.label("Number of Workers", width=label_width),
