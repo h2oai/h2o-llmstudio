@@ -485,9 +485,19 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
 
     if cfg.training.lora:
         # if used, gradient checkpointing will be enabled below
-        backbone = prepare_model_for_kbit_training(
-            backbone, use_gradient_checkpointing=False
+        loaded_in_kbit = getattr(backbone, "is_loaded_in_8bit", False) or getattr(
+            backbone, "is_loaded_in_4bit", False
         )
+
+        for name, param in backbone.named_parameters():
+            # freeze base model's layers
+            param.requires_grad = False
+
+        # cast all non INT8 parameters to fp32
+        if loaded_in_kbit:
+            for param in backbone.parameters():
+                if (param.dtype == torch.float16) or (param.dtype == torch.bfloat16):
+                    param.data = param.data.to(torch.float32)
     else:
         if cfg.architecture.backbone_dtype != "float32":
             if cfg.environment.mixed_precision:

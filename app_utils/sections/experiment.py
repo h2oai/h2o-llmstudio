@@ -1661,7 +1661,9 @@ async def experiment_download_model(q: Q, error: str = ""):
 
 async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
     if q.args["experiment/display/push_to_huggingface"] or error:
-        devices = ["cpu"] + [f"cuda:{idx}" for idx in range(torch.cuda.device_count())]
+        devices = ["cpu", "cpu_shard"] + [
+            f"cuda:{idx}" for idx in range(torch.cuda.device_count())
+        ]
         default_device = "cuda:0"
 
         experiments = get_experiments(q)
@@ -1879,7 +1881,7 @@ def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
     cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
     cfg.architecture.pretrained = False
     cfg.architecture.gradient_checkpointing = False
-    cfg.environment._device = device
+    cfg.environment._device = device.replace("_shard", "")
     cfg.environment._local_rank = 0
     cfg.prediction._visibility["num_history"] = 1
 
@@ -1897,20 +1899,33 @@ def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
         cfg.architecture.backbone_dtype = "float16"
         cfg.architecture.pretrained = True
 
-    with torch.device(device):
+    with torch.device(cfg.environment._device):
         model = cfg.architecture.model_class(cfg)
         cfg.architecture.pretrained_weights = os.path.join(
             experiment_path, "checkpoint.pth"
         )
         load_checkpoint(cfg, model, strict=False)
 
-        if merge and cfg.training.lora:
-            # merges the LoRa layers into the base model.
-            # This is needed if one wants to use the base model as a standalone model.
-            logger.info("Merging LORA layers with base model.")
-            model.backbone = model.backbone.merge_and_unload()
+    if merge and cfg.training.lora:
+        # merges the LoRa layers into the base model.
+        # This is needed if one wants to use the base model as a standalone model.
+        logger.info("Merging LORA layers with base model.")
+        model.backbone = model.backbone.merge_and_unload()
 
-    model = model.to(device).eval()
+    if device == "cpu_shard":
+        from accelerate import dispatch_model
+        from accelerate.utils import get_balanced_memory, infer_auto_device_map
+
+        max_memory = get_balanced_memory(
+            model,
+        )
+        device_map = infer_auto_device_map(model, max_memory=max_memory)
+        model = dispatch_model(
+            model,
+            device_map=device_map,
+        )
+
+    model = model.eval()
     model.backbone.use_cache = True
 
     return cfg, model, tokenizer
