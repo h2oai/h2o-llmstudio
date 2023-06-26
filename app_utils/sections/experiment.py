@@ -1110,7 +1110,7 @@ async def chat_tab(q: Q, load_model=True):
     ]
 
     # gpu id in UI is offset by 1 to be in sync with experiment UI
-    gpu_id = q.client["gpu_id_for_chat"]
+    gpu_id = q.client["gpu_id_for_chat"] - 1
     gpu_blocked = any(
         [
             gpu_id in gpu_list
@@ -1124,7 +1124,7 @@ async def chat_tab(q: Q, load_model=True):
             box="first",
             items=[
                 ui.text(
-                    f"""Chatbot is not available when GPU {gpu_id} "
+                    f"""Chatbot is not available when GPU {q.client["gpu_id_for_chat"]} "
                     is blocked by another experiment.
                     You can change "Gpu Id for Chat" in the settings tab
                      to use another GPU for the chatbot. """
