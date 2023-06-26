@@ -1124,8 +1124,11 @@ async def chat_tab(q: Q, load_model=True):
             box="first",
             items=[
                 ui.text(
-                    "Chatbot is not available when GPU "
-                    "is blocked by another experiment."
+                    f"""Chatbot is not available when GPU {gpu_id + 1} "
+                    is blocked by another experiment.
+                    You can change "Gpu Id for Chat" in the settings tab
+                     to use another GPU for the chatbot. 
+"""
                 )
             ],
             title="",
@@ -1170,8 +1173,7 @@ async def chat_tab(q: Q, load_model=True):
 
     if load_model:
         cfg, model, tokenizer = load_cfg_model_tokenizer(
-            q.client["experiment/display/experiment_path"],
-            device=f"cuda:{gpu_id}"
+            q.client["experiment/display/experiment_path"], device=f"cuda:{gpu_id}"
         )
         q.client["experiment/display/chat/cfg"] = cfg
         q.client["experiment/display/chat/model"] = model
