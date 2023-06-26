@@ -1267,9 +1267,11 @@ async def chat_update(q: Q) -> None:
     inputs = cfg.dataset.dataset_class.encode(
         tokenizer, full_prompt, cfg.tokenizer.max_length_prompt, "left"
     )
-    inputs["prompt_input_ids"] = inputs.pop("input_ids").unsqueeze(0).to("cuda")
+    inputs["prompt_input_ids"] = (
+        inputs.pop("input_ids").unsqueeze(0).to(cfg.environment._device)
+    )
     inputs["prompt_attention_mask"] = (
-        inputs.pop("attention_mask").unsqueeze(0).to("cuda")
+        inputs.pop("attention_mask").unsqueeze(0).to(cfg.environment._device)
     )
 
     output = {}
