@@ -143,6 +143,7 @@ docker run \
     --shm-size=64g \
     --init \
     --rm \
+    -u `id -u`:`id -g` \
     -p 10101:10101 \
     -v `pwd`/data:/workspace/data \
     -v `pwd`/output:/workspace/output \
@@ -162,6 +163,7 @@ docker run \
     --shm-size=64g \
     --init \
     --rm \
+    -u `id -u`:`id -g` \
     -p 10101:10101 \
     -v `pwd`/data:/workspace/data \
     -v `pwd`/output:/workspace/output \
