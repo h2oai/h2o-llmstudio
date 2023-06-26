@@ -1113,7 +1113,7 @@ async def chat_tab(q: Q, load_model=True):
     gpu_id = q.client["gpu_id_for_chat"] - 1
     gpu_blocked = any(
         [
-            gpu_id in gpu_list
+            q.client["gpu_id_for_chat"] in gpu_list
             for gpu_list in running_experiments["gpu_list"]
             .apply(lambda x: x.split(","))
             .to_list()
