@@ -1,15 +1,18 @@
 import logging
 import os
 from functools import partial
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import openai
 import pandas as pd
+import torch
 from joblib import Parallel, delayed
+from numpy.typing import NDArray
 from sacrebleu import BLEU
 from sacrebleu.metrics.base import Metric
 from tenacity import retry, stop_after_attempt, wait_random_exponential
+from torch import nn
 from tqdm import tqdm
 
 from llm_studio.src.datasets.text_utils import get_texts
@@ -20,13 +23,13 @@ logger = logging.getLogger(__name__)
 
 def sacrebleu_score(
     cfg: Any, results: Dict, val_df: pd.DataFrame, metric: Metric
-) -> float:
+) -> NDArray:
     scores = []
     for predicted_text, target_text in zip(
         results["predicted_text"], results["target_text"]
     ):
         scores.append(metric.sentence_score(predicted_text, [target_text]).score)
-    return np.mean(scores)
+    return np.array(scores)
 
 
 @retry(
@@ -85,9 +88,7 @@ def gpt_score(
     val_df: pd.DataFrame,
     model: str = "gpt-3.5-turbo",
     raw_results: bool = False,
-) -> float:
-    if "metrics" in results:
-        return np.mean(results["metrics"].detach().cpu().numpy())
+) -> Union[NDArray, Tuple[NDArray, List[str]]]:
     prompts = get_texts(val_df, cfg, separator="")
 
     if os.getenv("OPENAI_API_TYPE", "open_ai") == "azure":
@@ -118,17 +119,55 @@ def gpt_score(
     explanations = [x[1] for x in ret]
 
     if raw_results:
-        return scores, explanations
+        return np.array(scores), explanations
     return np.mean(scores)
 
 
+class Perplexity(nn.Module):
+    def __init__(self, cfg: Any, reduce: bool = True):
+        super().__init__()
+        self.cfg = cfg
+        self.loss_fn = nn.CrossEntropyLoss()
+        self.reduce = reduce
+
+    def forward(self, logits, labels):
+        shift_logits = logits[..., :-1, :].contiguous()
+        shift_labels = labels[..., 1:].contiguous()
+
+        perplexity = []
+        for i in range(labels.shape[0]):
+            perplexity.append(self.loss_fn(shift_logits[i], shift_labels[i]))
+        perplexity = torch.stack(perplexity, dim=0)
+        perplexity = torch.exp(perplexity)
+        if self.reduce:
+            perplexity = torch.mean(perplexity)
+        return perplexity
+
+
+def perplexity(cfg: Any, results: Dict, val_df: pd.DataFrame):
+    return results["perplexity"].detach().cpu().numpy()
+
+
 class Metrics:
-    """Metrics factory. Returns metric value and should it be maximized or minimized"""
+    """
+    Metrics factory. Returns:
+        - metric value
+        - should it be maximized or minimized
+        - Reduce function
+
+    Maximized or minimized is needed for early stopping (saving best checkpoint)
+    Reduce function to generate a single metric value, usually "mean" or "none"
+    """
 
     _metrics = {
-        "BLEU": (partial(sacrebleu_score, metric=BLEU(effective_order=True)), "max"),
-        "GPT3.5": (partial(gpt_score, model="gpt-3.5-turbo"), "max"),
-        "GPT4": (partial(gpt_score, model="gpt-4"), "max"),
+        "Perplexity": (perplexity, "min", "mean"),
+        "BLEU": (
+            partial(sacrebleu_score, metric=BLEU(effective_order=True)),
+            "max",
+            "mean",
+        ),
+        "GPT3.5": (partial(gpt_score, model="gpt-3.5-turbo"), "max", "mean"),
+        "GPT4": (partial(gpt_score, model="gpt-4"), "max", "mean"),
     }
 
     @classmethod

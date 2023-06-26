@@ -20,9 +20,12 @@ import pandas as pd
 import torch
 from torch.cuda.amp import GradScaler, autocast
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.loggers import MainLogger
+from llm_studio.src.trl.trainer import PPOTrainer
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,
@@ -46,14 +49,15 @@ from llm_studio.src.utils.logging_utils import (
     write_flag,
 )
 from llm_studio.src.utils.modeling_utils import (
-    compute_metric,
     get_number_of_validation_epochs,
     get_optimizer,
     get_scheduler,
     load_checkpoint,
+    reduce_metric,
     run_inference,
     save_checkpoint,
     save_predictions,
+    unwrap_model,
     wrap_model_distributed,
 )
 from llm_studio.src.utils.utils import kill_ddp_processes, set_environment, set_seed
@@ -64,7 +68,7 @@ logger = logging.getLogger(__name__)
 def run_eval(
     cfg,
     model: torch.nn.Module,
-    val_dataloader: torch.utils.data.DataLoader,
+    val_dataloader: DataLoader,
     val_df: pd.DataFrame,
     mode: str = "validation",
 ) -> Tuple:
@@ -117,9 +121,9 @@ def run_eval(
                 mode, "loss", val_loss, step=cfg.environment._curr_step
             )
 
-        # Calculate validation metric
-        metric_func, _ = cfg.prediction.metric_class.get(cfg.prediction.metric)
-        val_metric, full_val_metric = compute_metric(metric_func, cfg, val_data, val_df)
+        # Calculate reduced validation metric
+        _, _, reduce = cfg.prediction.metric_class.get(cfg.prediction.metric)
+        val_metric = reduce_metric(val_data, reduce=reduce)
 
         logger.info(f"{mode.capitalize()} {cfg.prediction.metric}: {val_metric:.5f}")
         cfg.logging._logger.log(
@@ -140,14 +144,15 @@ def run_eval(
 
     torch.inference_mode(mode=False)
 
-    return val_data, val_loss, val_metric
+    return val_loss, val_metric
 
 
 def run_train(
     cfg: Any,
     model: torch.nn.Module,
-    train_dataloader: torch.utils.data.DataLoader,
-    val_dataloader: torch.utils.data.DataLoader,
+    reward_model: Any,
+    train_dataloader,
+    val_dataloader,
     val_df: pd.DataFrame,
 ):
     """Runs the training loop.
@@ -155,9 +160,9 @@ def run_train(
     Args:
         cfg: config object
         model: model
-        train_dataloader: training Dataloader
+        train_dataloader: custom training Dataloader
         train_df: train DataFrame
-        val_dataloader: validation Dataloader
+        val_dataloader: custom validation Dataloader
         val_df: validation DataFrame
 
     Returns:
@@ -172,13 +177,12 @@ def run_train(
     optimizer = get_optimizer(model=model, cfg=cfg)
     scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
 
+    scaler: GradScaler | ShardedGradScaler | None = None
     if cfg.environment.mixed_precision:
         if cfg.environment.use_fsdp:
             scaler = ShardedGradScaler()
         else:
             scaler = GradScaler()
-    else:
-        scaler = None
 
     optimizer.zero_grad(set_to_none=True)
 
@@ -189,7 +193,7 @@ def run_train(
 
     start_epoch = 0
 
-    _, metric_mode = cfg.prediction.metric_class.get(cfg.prediction.metric)
+    _, metric_mode, _ = cfg.prediction.metric_class.get(cfg.prediction.metric)
     objective_op: Callable[[float, float], bool]
     if metric_mode == "max":
         best_val_metric = -np.inf
@@ -200,10 +204,21 @@ def run_train(
 
     num_updates = 0
 
-    batch = None
     if cfg.training.evaluate_before_training:
-        val_data, val_loss, val_metric = run_eval(
+        val_loss, val_metric = run_eval(
             cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
+        )
+
+    if cfg.training.use_rlhf:
+        # initialize trainer
+        tokenizer = get_tokenizer(cfg)
+        ppo_trainer = PPOTrainer(
+            cfg=cfg,
+            model=model,
+            tokenizer=tokenizer,
+            optimizer=optimizer,
+            lr_scheduler=scheduler,
+            scaler=scaler,
         )
 
     for epoch in range(start_epoch, cfg.training.epochs):
@@ -214,27 +229,21 @@ def run_train(
         )
         if cfg.environment._local_rank == 0:
             logger.info(f"Training Epoch: {epoch + 1} / {cfg.training.epochs}")
-            if cfg.training.evaluation_epochs != 1:
-                logger.info(
-                    "Training progress bar is not "
-                    "displayed (evaluation epoch is not set to 1)"
-                )
 
         if cfg.environment._distributed and hasattr(
             train_dataloader.sampler, "set_epoch"
         ):
             train_dataloader.sampler.set_epoch(epoch)  # type: ignore
 
-        if cfg.training.evaluation_epochs == 1:
-            tqdm_out = TqdmToLogger(logger, level=logging.INFO)
-            progress_bar = tqdm(
-                total=epoch_steps,
-                disable=cfg.environment._local_rank != 0,
-                file=tqdm_out,
-                ascii=True,
-                desc="train loss",
-                mininterval=0,
-            )
+        tqdm_out = TqdmToLogger(logger, level=logging.INFO)
+        progress_bar = tqdm(
+            total=epoch_steps,
+            disable=cfg.environment._local_rank != 0,
+            file=tqdm_out,
+            ascii=True,
+            desc="train loss",
+            mininterval=0,
+        )
         tr_it = iter(train_dataloader)
 
         losses = []
@@ -265,59 +274,135 @@ def run_train(
                 plot = cfg.logging.plots_class.plot_batch(batch=batch, cfg=cfg)
                 log_plot(cfg, plot, "train_data")
 
-            # Forward pass
-            if cfg.environment.mixed_precision:
-                with autocast():
-                    output_dict = model.forward(batch)
-            else:
-                output_dict = model.forward(batch)
+            if cfg.training.use_rlhf:
+                with torch.no_grad():
+                    logger.debug("Rollout: Generating response from active model")
+                    output_dict = {}
+                    output_dict["predicted_answer_ids"] = (
+                        unwrap_model(model)
+                        .generate(batch, unwrap_model(model).cfg)
+                        .detach()
+                    )
+                    output_dict = (
+                        train_dataloader.dataset.postprocess_batch_predictions(
+                            cfg=cfg, output=output_dict
+                        )
+                    )
 
-            loss = output_dict["loss"]
-            if ~np.isfinite(loss.item()) and (num_updates > 20):
-                raise LLMTrainingException(
-                    "NaN caught in loss during training. "
-                    "Please, reduce learning rate, change dtype, "
-                    "or disable mixed precision. "
-                    "Alternatively, gradient clipping may help to stabilize training."
+                    logger.debug("Evaluation: Score from reward model")
+                    # tokenize prompt & output internally
+                    if cfg.training.offload_reward_model:
+                        reward_model.to(cfg.environment._device)
+                    with autocast(enabled=cfg.environment.mixed_precision):
+                        scores = reward_model.get_score(
+                            batch["reward_model_prompt_text"],
+                            output_dict["predicted_text"],
+                        )
+                    if cfg.training.offload_reward_model:
+                        reward_model.to("cpu")
+
+                # score by reward model
+                reward = [torch.tensor(score, dtype=torch.float32) for score in scores]
+
+                # remove padding from query and response
+                batch["input_ids"] = batch["input_ids"].detach().cpu()
+                query_tensor = [
+                    input_ids[torch.where(att_mask == 1)[0].min() :]
+                    if len(torch.where(att_mask == 1)[0]) > 0
+                    else input_ids
+                    for input_ids, att_mask in zip(
+                        batch["input_ids"].detach().cpu(), batch["attention_mask"]
+                    )
+                ]
+                pad_tok_id = (
+                    unwrap_model(model).backbone.config.pad_token_id
+                    or unwrap_model(model).backbone.config.eos_token_id
                 )
-            losses.append(loss.item())
+                output_dict["predicted_answer_ids"] = (
+                    output_dict["predicted_answer_ids"].detach().cpu()
+                )
+                response_tensor = [
+                    predicted_answer_ids[
+                        : torch.where(predicted_answer_ids == pad_tok_id)[0].min()
+                    ]
+                    if len(torch.where(predicted_answer_ids == pad_tok_id)[0]) > 0
+                    else predicted_answer_ids
+                    for predicted_answer_ids in output_dict["predicted_answer_ids"]
+                ]
 
-            # loss is a mean loss per batch/sample
-            # as grad_accumulations sums up the gradients, this loss must be scaled
-            # by the number of grad_accumulations, to have similar behavior for
-            # BS * grad_accumulations = const.
-            if cfg.training.grad_accumulation != 1:
-                loss = loss / cfg.training.grad_accumulation
+                del output_dict
+                del batch
 
-            # Backward pass
-            if cfg.environment.mixed_precision:
-                scaler.scale(loss).backward()
-                if num_updates % cfg.training.grad_accumulation == 0:
-                    if cfg.training.gradient_clip > 0:
-                        scaler.unscale_(optimizer)
-                        torch.nn.utils.clip_grad_norm_(
-                            model.parameters(), cfg.training.gradient_clip
-                        )
-                    scaler.step(optimizer)
-                    scaler.update()
-                    optimizer.zero_grad(set_to_none=True)
+                output_dict = ppo_trainer.step(query_tensor, response_tensor, reward)
+                del query_tensor, response_tensor, reward, scores
+
+                loss = output_dict["ppo/loss/total"]
+                losses.append(loss)
             else:
-                loss.backward()
-                if num_updates % cfg.training.grad_accumulation == 0:
-                    if cfg.training.gradient_clip > 0:
-                        torch.nn.utils.clip_grad_norm_(
-                            model.parameters(), cfg.training.gradient_clip
-                        )
-                    optimizer.step()
-                    optimizer.zero_grad(set_to_none=True)
+                # Forward pass
+                with autocast(enabled=cfg.environment.mixed_precision):
+                    output_dict = model.forward(batch, generate=False)
 
-            if cfg.environment._distributed:
-                torch.cuda.synchronize(device=cfg.environment._local_rank)
+                loss = output_dict["loss"]
+                if ~np.isfinite(loss.item()) and (num_updates > 20):
+                    raise LLMTrainingException(
+                        "NaN caught in loss during training. "
+                        "Please, reduce learning rate, change dtype, "
+                        "or disable mixed precision. Alternatively, "
+                        "gradient clipping may help to stabilize training."
+                    )
+                losses.append(loss.item())
 
-            if scheduler is not None:
-                scheduler.step()
+                # loss is a mean loss per batch/sample
+                # as grad_accumulations sums up the gradients, this loss must be scaled
+                # by the number of grad_accumulations, to have similar behavior for
+                # BS * grad_accumulations = const.
+                if cfg.training.grad_accumulation != 1:
+                    loss = loss / cfg.training.grad_accumulation
+
+                # Backward pass
+                if cfg.environment.mixed_precision:
+                    scaler.scale(loss).backward()  # type: ignore
+                    if num_updates % cfg.training.grad_accumulation == 0:
+                        if cfg.training.gradient_clip > 0:
+                            scaler.unscale_(optimizer)  # type: ignore
+                            torch.nn.utils.clip_grad_norm_(
+                                model.parameters(), cfg.training.gradient_clip
+                            )
+                        scaler.step(optimizer)  # type: ignore
+                        scaler.update()
+                        optimizer.zero_grad(set_to_none=True)
+                else:
+                    loss.backward()
+                    if num_updates % cfg.training.grad_accumulation == 0:
+                        if cfg.training.gradient_clip > 0:
+                            torch.nn.utils.clip_grad_norm_(
+                                model.parameters(), cfg.training.gradient_clip
+                            )
+                        optimizer.step()
+                        optimizer.zero_grad(set_to_none=True)
+
+                if cfg.environment._distributed:
+                    torch.cuda.synchronize(device=cfg.environment._local_rank)
+
+                if scheduler is not None:
+                    scheduler.step()
 
             if cfg.environment._local_rank == 0:
+                if cfg.training.use_rlhf:
+                    # additional RLHF specific logging
+                    for key in output_dict.keys():
+                        if isinstance(output_dict[key], (float, int)) or (
+                            isinstance(output_dict[key], np.ndarray)
+                            and output_dict[key].size == 1
+                        ):
+                            if np.isfinite(output_dict[key]):
+                                cfg.logging._logger.log(
+                                    "train",
+                                    key,
+                                    output_dict[key],
+                                    step=cfg.environment._curr_step,
+                                )
                 cfg.logging._logger.log(
                     "train", "loss", losses[-1], step=cfg.environment._curr_step
                 )
@@ -343,9 +428,7 @@ def run_train(
                 )
 
                 # Show logs each 5% of the epoch (only if doing per epoch evaluation)
-                if cfg.training.evaluation_epochs == 1 and (
-                    (itr + 1) % log_update_steps == 0 or itr == epoch_steps - 1
-                ):
+                if (itr + 1) % log_update_steps == 0 or itr == epoch_steps - 1:
                     progress_bar.set_description(
                         f"train loss: {np.mean(losses[-10:]):.2f}", refresh=False
                     )
@@ -354,12 +437,14 @@ def run_train(
                     else:
                         progress_bar.update(epoch_steps % log_update_steps)
 
+                del output_dict
+
             # Validation loop
             if (itr + 1) % evaluation_step == 0:
                 if cfg.training.evaluation_epochs == 1:
                     progress_bar.close()
 
-                val_data, val_loss, val_metric = run_eval(
+                val_loss, val_metric = run_eval(
                     cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
                 )
                 if cfg.environment._local_rank == 0:
@@ -380,9 +465,8 @@ def run_train(
 
                 model.train()
 
-        if cfg.training.evaluation_epochs == 1:
-            progress_bar.close()
-            del progress_bar
+        progress_bar.close()
+        del progress_bar
 
         if cfg.environment._distributed:
             torch.cuda.synchronize(device=cfg.environment._local_rank)
@@ -396,7 +480,7 @@ def run_train(
     if cfg.environment._distributed:
         torch.distributed.barrier()
 
-    return val_data, val_loss, val_metric, batch
+    return val_loss, val_metric
 
 
 def run(cfg: Any) -> None:
@@ -497,6 +581,7 @@ def run(cfg: Any) -> None:
             evaluation_epochs=cfg.training.evaluation_epochs,
         )
         val_batch_size = get_inference_batch_size(cfg)
+
         # if zero shot, validate once before training
         total_validation_steps = (
             len(val_dataloader)
@@ -509,12 +594,29 @@ def run(cfg: Any) -> None:
     with torch.device(cfg.environment._device):
         model = cfg.architecture.model_class(cfg)
 
+        if cfg.training.use_rlhf:
+            logger.info("Using RLHF - Loading reward model")
+            reward_model = cfg.architecture.reward_model_class(cfg)
+            reward_model.eval()
+        else:
+            reward_model = None
+
         # load model weights
         if cfg.architecture.pretrained_weights != "":
             # Do not load strictly if continue training from the previous experiment
             load_checkpoint(cfg, model, strict=cfg.training.epochs == -1)
 
     model.to(cfg.environment._device)
+    if cfg.training.use_rlhf:
+        if cfg.training.offload_reward_model:
+            reward_model.to("cpu")
+        else:
+            reward_model.to(cfg.environment._device)
+
+    if cfg.architecture.force_embedding_gradients and cfg.training.use_rlhf:
+        raise LLMTrainingException(
+            "RLHF is not supported with force_embedding_gradients."
+        )
 
     if cfg.architecture.force_embedding_gradients:
         for module in model.modules():
@@ -567,9 +669,10 @@ def run(cfg: Any) -> None:
         # re-save config
         save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
-    val_data, val_loss, val_metric, last_batch = run_train(
+    val_loss, val_metric = run_train(
         cfg=cfg,
         model=model,
+        reward_model=reward_model,
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
         val_df=val_df,

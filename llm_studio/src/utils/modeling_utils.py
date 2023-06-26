@@ -2,11 +2,13 @@ import logging
 import os
 import re
 from collections import OrderedDict
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Dict
 
 import coolname
+import numpy as np
 import torch
 from peft import prepare_model_for_kbit_training
+from torch.cuda.amp import autocast
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
     MixedPrecision,
@@ -18,11 +20,7 @@ from transformers import AutoConfig, AutoModel, BitsAndBytesConfig
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
 from llm_studio.src.utils.data_utils import cat_batches, get_inference_batch_size
-from llm_studio.src.utils.exceptions import (
-    LLMDataException,
-    LLMMetricException,
-    LLMModelException,
-)
+from llm_studio.src.utils.exceptions import LLMDataException, LLMModelException
 from llm_studio.src.utils.logging_utils import TqdmToLogger
 from llm_studio.src.utils.utils import save_pickle
 
@@ -269,42 +267,24 @@ def generate_experiment_name() -> str:
     return coolname.generate_slug(2)
 
 
-def compute_metric(
-    metric_func: Callable, cfg: Any, data: Any, df: Any
-) -> Tuple[float, Any]:
-    """Compute metric and return metric score (number) and full metric (number or dict)
+def reduce_metric(output, reduce=None) -> float:
+    """Reduces metric and return metric score (number)
 
     Args:
-        metric_func: metric function
-        cfg: input Config
-        data: data Dict
-        df: data DataFrame
+        output: output of the model
+        reduce: how to reduce the metric over the sample dimension
 
     Returns:
-        val_metric: single number score (using config threshold for threshold metrics)
-        full_val_metric: for threshold metrics return dictionary where keys are
-            different thresholds, values are metric scores, for regular metrics
-            just return the metric score (same as val_metric)
-
+        score: single number score (using config threshold for threshold metrics)
+        or non-reduced array of scores per sample.
     """
-    try:
-        full_val_metric = metric_func(cfg=cfg, results=data, val_df=df)
-    except Exception:
-        raise LLMMetricException()
 
-    if type(full_val_metric) is dict:  # threshold dependent clf metrics
-        if "argmax" in full_val_metric.keys():  # multiclass using argmax
-            val_metric = full_val_metric["argmax"]
-        elif hasattr(cfg.prediction, "probability_threshold"):
-            # retrieve score using selected threhshold
-            threshold = getattr(cfg.prediction, "probability_threshold")
-            val_metric = full_val_metric[threshold]
-        else:
-            raise ValueError("Config prediction misses probability threshold.")
+    if reduce == "mean":
+        score = np.mean(output["metrics"])
     else:
-        val_metric = full_val_metric
+        raise NotImplementedError()
 
-    return val_metric, full_val_metric
+    return score
 
 
 def get_number_of_validation_epochs(training_epochs: int, evaluation_epochs: float):
@@ -341,7 +321,7 @@ def contains_nan(output: Dict):
 def run_inference(
     cfg: Any,
     model: torch.nn.Module,
-    dataloader: torch.utils.data.DataLoader,
+    dataloader,
     mode: str,
 ) -> Dict[str, list]:
     """Runs inference
@@ -349,7 +329,7 @@ def run_inference(
     Args:
         cfg: config
         model: model
-        dataloader: dataloader
+        dataloader: custom dataloader
         mode: mode for inference
 
     Returns:
@@ -386,23 +366,22 @@ def run_inference(
 
         batch = cfg.dataset.dataset_class.batch_to_device(data, cfg.environment._device)
 
-        calculate_loss = True
-        if cfg.environment.mixed_precision:
-            with torch.cuda.amp.autocast():
-                output = model.forward(batch, calculate_loss=calculate_loss)
-            if contains_nan(output):
-                raise LLMModelException(
-                    "NaN caught during mixed precision inference. "
-                    "Please disable mixed precision inference. "
-                    "Alternatively, reducing learning rate or "
-                    "gradient clipping may help to stabilize training."
-                )
-        else:
-            output = model.forward(batch, calculate_loss=calculate_loss)
+        with autocast(enabled=cfg.environment.mixed_precision):
+            output = model.forward(batch, generate=True)
+        if contains_nan(output) and cfg.environment.mixed_precision:
+            raise LLMModelException(
+                "NaN caught during mixed precision inference. "
+                "Please disable mixed precision inference. "
+                "Alternatively, reducing learning rate or "
+                "gradient clipping may help to stabilize training."
+            )
 
-        output = dataloader.dataset.postprocess_batch_predictions(  # type: ignore
-            cfg=cfg, input_batch=batch, output=output
+        output = dataloader.dataset.postprocess_batch_predictions(
+            cfg=cfg, output=output
         )
+
+        if "predicted_answer_ids" in output.keys():
+            del output["predicted_answer_ids"]
 
         for key, val in output.items():
             if isinstance(val, torch.Tensor):
@@ -450,14 +429,29 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
     val_df.to_csv(csv_preds_name, index=False)
 
 
-def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
+def create_nlp_backbone(cfg, model_class=AutoModel, kwargs=None) -> Any:
     """
     Creates a backbone model for NLP tasks.
     This is needed for Gradient Checkpointing in DDP mode.
     """
-    config = AutoConfig.from_pretrained(
-        cfg.llm_backbone, trust_remote_code=cfg.environment.trust_remote_code
-    )
+    if kwargs is None:
+        kwargs = {}
+    try:
+        config = AutoConfig.from_pretrained(
+            cfg.llm_backbone,
+            trust_remote_code=cfg.environment.trust_remote_code,
+            use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
+            revision=cfg.environment.huggingface_branch,
+        )
+        kwargs["use_auth_token"] = os.getenv("HUGGINGFACE_TOKEN")
+    except TypeError:
+        # TypeError: RWForCausalLM.__init__() got
+        # an unexpected keyword argument 'use_auth_token'
+        config = AutoConfig.from_pretrained(
+            cfg.llm_backbone,
+            trust_remote_code=cfg.environment.trust_remote_code,
+            revision=cfg.environment.huggingface_branch,
+        )
     config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
     config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
 
@@ -486,18 +480,18 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
 
     logger.info(f"Using {cfg.architecture.backbone_dtype} for backbone")
 
-    if cfg.architecture.gradient_checkpointing:
-        config.use_cache = False
-
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
+
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
+            revision=cfg.environment.huggingface_branch,
             config=config,
             quantization_config=quantization_config,
             **kwargs,
         )
     else:
+        kwargs.pop("use_auth_token", None)
         backbone = model_class.from_config(config, **kwargs)
 
     if cfg.tokenizer._vocab_length > config.vocab_size:
@@ -523,4 +517,4 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
 
-    return backbone
+    return backbone, config

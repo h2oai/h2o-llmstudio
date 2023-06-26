@@ -58,23 +58,27 @@ def get_user_name(q):
 
 
 def get_data_dir(q):
-    return "data/user"
+    return os.path.join(default_cfg.data_folder, "user")
+
+
+def get_database_dir(q):
+    return os.path.join(default_cfg.data_folder, "dbs")
 
 
 def get_output_dir(q):
-    return "output/user"
+    return os.path.join(default_cfg.output_folder, "user")
 
 
 def get_download_dir(q):
-    return "output/download"
+    return os.path.join(default_cfg.output_folder, "download")
 
 
-def get_db_path(q):
-    return f"{default_cfg.dbs_path}/user.db"
+def get_user_db_path(q):
+    return os.path.join(get_database_dir(q), "user.db")
 
 
-def get_settings_path(q):
-    return f"{default_cfg.dbs_path}/{get_user_id(q)}.settings"
+def get_usersettings_path(q):
+    return os.path.join(get_database_dir(q), f"{get_user_id(q)}.settings")
 
 
 def find_free_port():
@@ -278,12 +282,12 @@ class S3Progress:
             size: size of the file to download
         """
 
-        self._q = q
-        self._size = size
-        self._seen_so_far = 0
-        self._percentage = 0
+        self._q: Q = q
+        self._size: float = size
+        self._seen_so_far: float = 0.0
+        self._percentage: float = 0.0
 
-    def progress(self, bytes_amount):
+    def progress(self, bytes_amount: float):
         """Update progress
 
         Args:
@@ -291,7 +295,7 @@ class S3Progress:
         """
 
         self._seen_so_far += bytes_amount
-        self._percentage = (self._seen_so_far / self._size) * 100
+        self._percentage = (self._seen_so_far / self._size) * 100.0
 
     async def update_ui(self):
         """Update progress in UI"""
@@ -1405,7 +1409,7 @@ def make_config_label(config_file: str) -> str:
     return config_file
 
 
-def get_datasets_info(df: DataFrame, q: Q) -> DefaultDict:
+def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
     """For each dataset in given dataframe, return certain configuration settings
 
     Args:
@@ -1572,6 +1576,10 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
                 ],
             }
         )
+    if q.client["default_huggingface_api_token"]:
+        env_vars.update(
+            {"HUGGINGFACE_TOKEN": q.client["default_huggingface_api_token"]}
+        )
     cfg = copy_config(cfg)
     cfg.output_directory = f"{get_output_dir(q)}/{cfg.experiment_name}/"
     os.makedirs(cfg.output_directory)
@@ -1691,9 +1699,9 @@ def check_valid_upload_content(upload_path: str) -> Tuple[bool, str]:
 
 def load_user_settings(q: Q, force_defaults: bool = False):
     # get settings from settings pickle if it exists or set default values
-    if os.path.isfile(get_settings_path(q)) and not force_defaults:
+    if os.path.isfile(get_usersettings_path(q)) and not force_defaults:
         logger.info("Reading settings")
-        with open(get_settings_path(q), "rb") as f:
+        with open(get_usersettings_path(q), "rb") as f:
             user_settings = pickle.load(f)
             for key in user_settings:
                 q.client[key] = user_settings[key]
@@ -1717,7 +1725,7 @@ def save_user_settings(q: Q):
     q.client["dataset/import/kaggle_access_key"] = q.client["default_kaggle_username"]
     q.client["dataset/import/kaggle_secret_key"] = q.client["default_kaggle_secret_key"]
 
-    with open(get_settings_path(q), "wb") as f:
+    with open(get_usersettings_path(q), "wb") as f:
         # slightly obfuscate to binary pickle file
         pickle.dump(user_settings, f)
 

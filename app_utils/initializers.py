@@ -14,7 +14,10 @@ from .db import Database, Dataset
 from .migration import migrate_app
 from .utils import (
     get_data_dir,
-    get_db_path,
+    get_database_dir,
+    get_download_dir,
+    get_output_dir,
+    get_user_db_path,
     get_user_name,
     load_user_settings,
     prepare_default_dataset,
@@ -79,9 +82,11 @@ async def initialize_client(q: Q) -> None:
         q.client.delete_cards.add("init_app")
 
         os.makedirs(get_data_dir(q), exist_ok=True)
+        os.makedirs(get_database_dir(q), exist_ok=True)
+        os.makedirs(get_output_dir(q), exist_ok=True)
+        os.makedirs(get_download_dir(q), exist_ok=True)
 
-        os.makedirs(default_cfg.dbs_path, exist_ok=True)
-        db_path = get_db_path(q)
+        db_path = get_user_db_path(q)
 
         q.client.app_db = Database(db_path)
 

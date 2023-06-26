@@ -4,7 +4,7 @@ import logging
 import os
 import shutil
 import zipfile
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Set
 
 import accelerate
 import huggingface_hub
@@ -1143,7 +1143,9 @@ async def chat_tab(q: Q, load_model=True):
         rows={q.client.chat_msg_num: [loading_message, BOT]},
     )
     q.page["experiment/display/chat"] = ui.chatbot_card(
-        box="first", data=cyclic_buffer, name="experiment/display/chat/chatbot"
+        box="first",
+        data=cyclic_buffer,  # type: ignore
+        name="experiment/display/chat/chatbot",
     )
     q.client["experiment/display/chat/messages"] = []
     q.client.delete_cards.add("experiment/display/chat")
@@ -1215,6 +1217,7 @@ async def chat_tab(q: Q, load_model=True):
     )
 
 
+@torch.inference_mode(mode=True)
 async def chat_update(q: Q) -> None:
     """
     Update the chatbot with the new message.
@@ -1266,9 +1269,8 @@ async def chat_update(q: Q) -> None:
     )
 
     output = {}
-    with torch.no_grad():
-        with torch.cuda.amp.autocast():
-            output["predicted_answer_ids"] = model.generate(inputs, cfg).detach().cpu()
+    with torch.cuda.amp.autocast():
+        output["predicted_answer_ids"] = model.generate(inputs, cfg).detach().cpu()
 
     predicted_text = [
         tokenizer.decode(ids, skip_special_tokens=True)
@@ -1328,7 +1330,7 @@ async def charts_tab(q, charts_list, legend_labels):
         if all([k1 not in charts for charts in charts_list]):
             continue
 
-        all_second_keys = set()
+        all_second_keys: Set = set()
         for charts in charts_list:
             if k1 in charts:
                 all_second_keys = all_second_keys.union(set(charts[k1].keys()))
@@ -1336,9 +1338,11 @@ async def charts_tab(q, charts_list, legend_labels):
         # Always plot loss in the lower left corner
         if "loss" in all_second_keys:
             all_second_keys.remove("loss")
-            all_second_keys = ["loss"] + list(all_second_keys)
+            list_all_second_keys = ["loss"] + list(all_second_keys)
+        else:
+            list_all_second_keys = list(all_second_keys)
 
-        for k2 in all_second_keys:
+        for k2 in list_all_second_keys:
             logger.info(f"{k1} {k2}")
 
             items = []
@@ -1412,7 +1416,7 @@ async def charts_tab(q, charts_list, legend_labels):
                 else:
                     rows.extend(
                         [
-                            (v2["steps"][i], v2["values"][i])
+                            (v2["steps"][i], v2["values"][i])  # type: ignore
                             for i in range(len(v2["values"]))
                         ]
                     )
@@ -1437,7 +1441,7 @@ async def charts_tab(q, charts_list, legend_labels):
                         )
                     ]
                 ),
-                data=d,
+                data=d,  # type: ignore
                 interactions=["brush"],
                 height="calc((100vh - 275px)*0.41)",
                 width="560px",
@@ -1472,7 +1476,7 @@ async def experiment_artifact_build_error_dialog(q: Q, error: str):
 async def experiment_download_artifact(
     q: Q,
     get_artifact_path_fn: Callable[[str, str], str],
-    save_artifact_fn: Callable[[str, str, str], str],
+    save_artifact_fn: Callable[[str, str], str],
     additional_log: Optional[str] = "",
     min_disk_space: Optional[float] = 0.0,
 ):
@@ -1500,8 +1504,7 @@ async def experiment_download_artifact(
             return
 
         logger.info(f"Creating {zip_path} on demand")
-        dataset = q.client.app_db.get_dataset(int(experiment.dataset))
-        zip_path = save_artifact_fn(experiment.name, experiment_path, dataset.path)
+        zip_path = save_artifact_fn(experiment.name, experiment_path)
 
     if additional_log:
         logger.info(f"{additional_log}: {zip_path}")

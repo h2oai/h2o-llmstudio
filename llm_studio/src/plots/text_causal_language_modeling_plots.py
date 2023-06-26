@@ -30,6 +30,8 @@ class Plots:
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
 
+        texts = [text_to_html(text) for text in texts]
+
         tokenized_texts = [
             color_code_tokenized_text(
                 tokenizer.convert_ids_to_tokens(input_ids), tokenizer
@@ -37,24 +39,26 @@ class Plots:
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
 
-        input_ids_labels = batch["labels"].detach().cpu().numpy()
-        input_ids_labels = [
-            [input_id for input_id in input_ids if input_id != -100]
-            for input_ids in input_ids_labels
-        ]
+        if "labels" in batch.keys():
+            input_ids_labels = batch["labels"].detach().cpu().numpy()
+            input_ids_labels = [
+                [input_id for input_id in input_ids if input_id != -100]
+                for input_ids in input_ids_labels
+            ]
 
-        target_texts = [
-            tokenizer.decode(input_ids, skip_special_tokens=False)
-            for input_ids in input_ids_labels
-        ]
+            target_texts = [
+                tokenizer.decode(input_ids, skip_special_tokens=False)
+                for input_ids in input_ids_labels
+            ]
 
-        tokenized_target_texts = [
-            color_code_tokenized_text(
-                tokenizer.convert_ids_to_tokens(input_ids),
-                tokenizer,
-            )
-            for input_ids in input_ids_labels
-        ]
+            tokenized_target_texts = [
+                color_code_tokenized_text(
+                    tokenizer.convert_ids_to_tokens(input_ids),
+                    tokenizer,
+                )
+                for input_ids in input_ids_labels
+            ]
+
         if cfg.dataset.mask_prompt_labels:
             markup = ""
         else:
@@ -73,13 +77,15 @@ class Plots:
         for i in range(len(tokenized_texts)):
             markup += f"<p><strong>Input Text: </strong>{texts[i]}</p>\n"
             markup += (
-                f"<p><strong>Tokenized Input Text: </strong>{tokenized_texts[i]}</p>\n"
+                "<p><strong>Tokenized Input Text: "
+                f"</strong>{tokenized_texts[i]}</p>\n"
             )
-            markup += f"<p><strong>Target Text: </strong>{target_texts[i]}</p>\n"
-            markup += (
-                f"<p><strong>Tokenized Target Text:"
-                f" </strong>{tokenized_target_texts[i]}</p>\n"
-            )
+            if "labels" in batch.keys():
+                markup += "<p><strong>Target Text: " f"</strong>{target_texts[i]}</p>\n"
+                markup += (
+                    "<p><strong>Tokenized Target Text:"
+                    f" </strong>{tokenized_target_texts[i]}</p>\n"
+                )
             markup += get_line_separator_html()
         return PlotData(markup, encoding="html")
 
@@ -114,13 +120,19 @@ class Plots:
         val_outputs: Dict,
         cfg: Any,
         val_df: pd.DataFrame,
-        true_labels: Any,
-        pred_labels: Any,
         metrics: Any,
         sample_idx: Any,
     ) -> str:
         input_texts = get_texts(val_df, cfg, separator="")
         markup = ""
+
+        true_labels = val_outputs["target_text"]
+        if "predicted_text" in val_outputs.keys():
+            pred_labels = val_outputs["predicted_text"]
+        else:
+            pred_labels = [
+                "No predictions are generated for the selected metric"
+            ] * len(true_labels)
 
         for idx in sample_idx:
             input_text = input_texts[idx]
@@ -168,7 +180,7 @@ class Plots:
     ) -> PlotData:
         assert mode in ["validation"]
 
-        metrics = val_outputs["metrics"].detach().cpu().numpy()
+        metrics = val_outputs["metrics"]
         best_samples, worst_samples = get_best_and_worst_sample_idxs(
             cfg, metrics, n_plots=min(cfg.logging.number_of_texts, len(val_df))
         )
@@ -178,8 +190,6 @@ class Plots:
                 val_outputs=val_outputs,
                 cfg=cfg,
                 val_df=val_df,
-                true_labels=(val_outputs["target_text"]),
-                pred_labels=(val_outputs["predicted_text"]),
                 metrics=metrics,
                 sample_idx=indices,
             )
