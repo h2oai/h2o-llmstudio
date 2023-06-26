@@ -2,8 +2,6 @@ import os
 import socket
 from types import SimpleNamespace
 
-import torch
-
 
 def get_size(x):
     try:
