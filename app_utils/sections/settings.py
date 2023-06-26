@@ -146,7 +146,7 @@ async def settings(q: Q) -> None:
             ui.separator("Default Experiment Settings"),
             ui.inline(
                 items=[
-                    ui.label("Gpu ID used for chat", width=label_width),
+                    ui.label("Gpu used for chat", width=label_width),
                     ui.spinbox(
                         name="gpu_used_for_chat",
                         label=None,
