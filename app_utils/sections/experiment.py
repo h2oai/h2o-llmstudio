@@ -1127,8 +1127,7 @@ async def chat_tab(q: Q, load_model=True):
                     f"""Chatbot is not available when GPU {gpu_id + 1} "
                     is blocked by another experiment.
                     You can change "Gpu Id for Chat" in the settings tab
-                     to use another GPU for the chatbot. 
-"""
+                     to use another GPU for the chatbot. """
                 )
             ],
             title="",
