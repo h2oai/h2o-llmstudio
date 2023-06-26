@@ -7,7 +7,7 @@ from typing import Any, Dict
 import coolname
 import numpy as np
 import torch
-#from peft import prepare_model_for_kbit_training
+from peft import prepare_model_for_kbit_training
 from torch.cuda.amp import autocast
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
