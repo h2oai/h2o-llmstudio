@@ -34,14 +34,22 @@ def get_tokenizer(cfg: Any):
     if "llama" in cfg.llm_backbone:
         logger.info("Llama backbone detected, forcing slow tokenizer.")
         cfg.tokenizer.use_fast = False
-    tokenizer = AutoTokenizer.from_pretrained(
-        cfg.llm_backbone,
+
+    kwargs = dict(
         revision=cfg.environment.huggingface_branch,
         add_prefix_space=cfg.tokenizer.add_prefix_space,
         use_fast=cfg.tokenizer.use_fast,
         trust_remote_code=cfg.environment.trust_remote_code,
         use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
     )
+
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
+    except TypeError:
+        # TypeError: RWForCausalLM.__init__() got
+        # an unexpected keyword argument 'use_auth_token'
+        kwargs.pop("use_auth_token")
+        tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
     tokenizer.padding_side = getattr(
         cfg.tokenizer, "_padding_side", tokenizer.padding_side
     )
