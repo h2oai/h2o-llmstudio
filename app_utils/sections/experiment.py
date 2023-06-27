@@ -13,6 +13,8 @@ import pandas as pd
 import torch
 import transformers
 import yaml
+from accelerate import dispatch_model
+from accelerate.utils import get_balanced_memory, infer_auto_device_map
 from h2o_wave import Q, data, ui
 from jinja2 import Environment, FileSystemLoader
 from sqlitedict import SqliteDict
@@ -1919,9 +1921,6 @@ def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
         model.backbone = model.backbone.merge_and_unload()
 
     if device == "cpu_shard":
-        from accelerate import dispatch_model
-        from accelerate.utils import get_balanced_memory, infer_auto_device_map
-
         max_memory = get_balanced_memory(
             model,
         )
