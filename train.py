@@ -338,7 +338,7 @@ def run_train(
                     output_dict = model.forward(batch)
 
                 loss = output_dict["loss"]
-                if ~np.isfinite(loss.item()) and (itr > 20):
+                if ~np.isfinite(loss.item()) and (epoch > start_epoch or itr > 20):
                     raise LLMTrainingException(
                         "NaN caught in loss during training. "
                         "Please, reduce learning rate, change dtype, "
