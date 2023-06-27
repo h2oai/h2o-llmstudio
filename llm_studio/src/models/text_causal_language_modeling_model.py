@@ -256,8 +256,7 @@ class Model(nn.Module):
         )
         transformers_logging.set_verbosity(verbosity)
 
-        # enable cache and gradient checkpointing again
-        self.backbone.config.use_cache = False
+        # enable checkpointing again
         if self.cfg.architecture.gradient_checkpointing:
             self.backbone.gradient_checkpointing_enable()
 
@@ -272,7 +271,6 @@ class Model(nn.Module):
         generate: bool = False,
         padding: bool = True,
     ) -> Dict:
-
         # disable cache if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:
             self.backbone.config.use_cache = False
@@ -333,7 +331,7 @@ class Model(nn.Module):
                     self.generate(batch, self.cfg).detach().cpu()
                 )
 
-        # enable cache agaion if gradient checkpointing is enabled
+        # enable cache again if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:
             self.backbone.config.use_cache = True
 
