@@ -71,6 +71,9 @@ This will allow you to revert to your existing version if needed.
 
 You can also export the Lora weights. You may add them to the files to be exported [here](https://github.com/h2oai/h2o-llmstudio/blob/main/app_utils/sections/experiment.py#L1552). Before exporting, we merge the Lora weights back into the original LLM backbone weights to make downstream tasks easier. You don't need to have PEFT, or anything else for your deployment.
 
+### How to use H2O LLM Studio in Windows? 
+
+Use WSL 2 on Windows 
 
 
 
