@@ -7,7 +7,6 @@ from typing import Any, Dict
 import coolname
 import numpy as np
 import torch
-from peft import prepare_model_for_kbit_training
 from torch.cuda.amp import autocast
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
@@ -429,17 +428,29 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
     val_df.to_csv(csv_preds_name, index=False)
 
 
-def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
+def create_nlp_backbone(cfg, model_class=AutoModel, kwargs=None) -> Any:
     """
     Creates a backbone model for NLP tasks.
     This is needed for Gradient Checkpointing in DDP mode.
     """
-    config = AutoConfig.from_pretrained(
-        cfg.llm_backbone,
-        trust_remote_code=cfg.environment.trust_remote_code,
-        use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
-        revision=cfg.environment.huggingface_branch,
-    )
+    if kwargs is None:
+        kwargs = {}
+    try:
+        config = AutoConfig.from_pretrained(
+            cfg.llm_backbone,
+            trust_remote_code=cfg.environment.trust_remote_code,
+            use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
+            revision=cfg.environment.huggingface_branch,
+        )
+        kwargs["use_auth_token"] = os.getenv("HUGGINGFACE_TOKEN")
+    except TypeError:
+        # TypeError: RWForCausalLM.__init__() got
+        # an unexpected keyword argument 'use_auth_token'
+        config = AutoConfig.from_pretrained(
+            cfg.llm_backbone,
+            trust_remote_code=cfg.environment.trust_remote_code,
+            revision=cfg.environment.huggingface_branch,
+        )
     config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
     config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
 
@@ -469,7 +480,6 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
     logger.info(f"Using {cfg.architecture.backbone_dtype} for backbone")
 
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
-    kwargs["use_auth_token"] = os.getenv("HUGGINGFACE_TOKEN")
 
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
@@ -480,6 +490,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
             **kwargs,
         )
     else:
+        kwargs.pop("use_auth_token", None)
         backbone = model_class.from_config(config, **kwargs)
 
     if cfg.tokenizer._vocab_length > config.vocab_size:
@@ -488,9 +499,19 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs={}) -> Any:
 
     if cfg.training.lora:
         # if used, gradient checkpointing will be enabled below
-        backbone = prepare_model_for_kbit_training(
-            backbone, use_gradient_checkpointing=False
+        loaded_in_kbit = getattr(backbone, "is_loaded_in_8bit", False) or getattr(
+            backbone, "is_loaded_in_4bit", False
         )
+
+        for name, param in backbone.named_parameters():
+            # freeze base model's layers
+            param.requires_grad = False
+
+        # cast all non INT8 parameters to fp32
+        if loaded_in_kbit:
+            for param in backbone.parameters():
+                if (param.dtype == torch.float16) or (param.dtype == torch.bfloat16):
+                    param.data = param.data.to(torch.float32)
     else:
         if cfg.architecture.backbone_dtype != "float32":
             if cfg.environment.mixed_precision:

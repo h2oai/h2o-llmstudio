@@ -84,6 +84,29 @@ wave-no-reload:
 	H2O_WAVE_PRIVATE_DIR="/download/@$(PWD)/output/download" \
 	$(PIPENV) run wave run --no-reload app
 
+.PHONY: docker-build-nightly
+docker-build-nightly:
+	docker build -t gcr.io/vorvan/h2oai/h2o-llmstudio:nightly .
+
+.PHONY: docker-run-nightly
+docker-run-nightly:
+ifeq (,$(wildcard ./data))
+	mkdir data
+endif
+ifeq (,$(wildcard ./output))
+	mkdir output
+endif
+	docker run \
+		--runtime=nvidia \
+		--shm-size=64g \
+		--init \
+		--rm \
+		-u `id -u`:`id -g` \
+		-p 10101:10101 \
+		-v `pwd`/data:/workspace/data \
+		-v `pwd`/output:/workspace/output \
+		gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+
 .PHONY: shell
 shell:
 	$(PIPENV) shell
