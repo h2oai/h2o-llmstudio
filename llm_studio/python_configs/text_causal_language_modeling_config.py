@@ -293,7 +293,7 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
     pretrained: bool = True
 
     backbone_dtype: str = "float16"
-    gradient_checkpointing: bool = False
+    gradient_checkpointing: bool = True
     force_embedding_gradients: bool = False
     intermediate_dropout: float = 0
     pretrained_weights: str = ""

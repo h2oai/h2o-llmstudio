@@ -289,8 +289,7 @@ class Model(nn.Module):
         )
         transformers_logging.set_verbosity(verbosity)
 
-        # enable gradient checkpointing again
-        self.backbone.config.use_cache = False
+        # enable checkpointing again
         if self.cfg.architecture.gradient_checkpointing:
             self.backbone.gradient_checkpointing_enable()
 
@@ -305,8 +304,11 @@ class Model(nn.Module):
         generate: bool = False,
         padding: bool = True,
     ) -> Dict:
-        outputs: Dict = {}
+        # disable cache if gradient checkpointing is enabled
+        if self.cfg.architecture.gradient_checkpointing:
+            self.backbone.config.use_cache = False
 
+        outputs: Dict = {}
         kwargs = {}
 
         if self.training and self.cfg.training.use_rlhf:
@@ -361,4 +363,9 @@ class Model(nn.Module):
                 outputs["predicted_answer_ids"] = (
                     self.generate(batch, self.cfg).detach().cpu()
                 )
+
+        # enable cache again if gradient checkpointing is enabled
+        if self.cfg.architecture.gradient_checkpointing:
+            self.backbone.config.use_cache = True
+
         return outputs
