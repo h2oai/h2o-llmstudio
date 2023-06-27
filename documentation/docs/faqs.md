@@ -67,8 +67,9 @@ will still be available to you within the updated version of H2O LLM Studio.
 Before updating, we recommend running the command `git rev-parse --short HEAD` and saving the commit hash. 
 This will allow you to revert to your existing version if needed. 
 
+### Once I have the [Lora](guide/experiments/experiment-settings.md#lora), what is the recommended way of utilizing it with the base model?
 
-
+You can also export the Lora weights. You may add them to the files to be exported [here](https://github.com/h2oai/h2o-llmstudio/blob/main/app_utils/sections/experiment.py#L1552). Before exporting, we merge the Lora weights back into the original LLM backbone weights to make downstream tasks easier. You don't need to have PEFT, or anything else for your deployment.
 
 
 
