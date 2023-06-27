@@ -369,7 +369,7 @@ def run_inference(
             output = model.forward(batch)
             if cfg.prediction.metric != "Perplexity":
                 output["predicted_answer_ids"] = (
-                    model.generate(batch, cfg).detach().cpu()
+                    unwrap_model(model).generate(batch, cfg).detach().cpu()
                 )
         if contains_nan(output) and cfg.environment.mixed_precision:
             raise LLMModelException(
