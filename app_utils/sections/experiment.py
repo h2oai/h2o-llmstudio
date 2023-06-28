@@ -1286,18 +1286,17 @@ async def chat_update(q: Q) -> None:
 
     output = {}
 
-    def generate():
+    def generate(inputs, cfg, streamer):
         with torch.cuda.amp.autocast():
             output["predicted_answer_ids"] = (
                 model.generate(inputs=inputs, cfg=cfg, streamer=streamer).detach().cpu()
             )
 
-    threading.Thread(target=generate).start()
+    threading.Thread(
+        target=generate, kwargs=dict(inputs=inputs, cfg=cfg, streamer=streamer)
+    ).start()
 
-    predicted_text = [
-        tokenizer.decode(ids, skip_special_tokens=True)
-        for ids in output["predicted_answer_ids"]
-    ][0]
+    predicted_text = streamer.answer
     predicted_text = text_cleaner(predicted_text)
     logger.info(f"Predicted Answer: {predicted_text}")
 
