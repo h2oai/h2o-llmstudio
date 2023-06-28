@@ -3,13 +3,13 @@ import gc
 import logging
 import os
 import threading
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 import torch
 from accelerate import dispatch_model, infer_auto_device_map
 from accelerate.utils import get_balanced_memory
-from h2o_wave import Q, ui, data
+from h2o_wave import Q, data, ui
 from transformers import AutoTokenizer, TextStreamer
 
 from app_utils.utils import get_experiments, get_ui_elements, parse_ui_elements
@@ -29,7 +29,7 @@ class WaveChatStreamer(TextStreamer):
         self,
         tokenizer: AutoTokenizer,
         q: Q,
-        text_cleaner: Optional[callable] = None,
+        text_cleaner: Optional[Callable] = None,
         **decode_kwargs,
     ):
         """
@@ -37,7 +37,7 @@ class WaveChatStreamer(TextStreamer):
         """
         super().__init__(tokenizer, skip_prompt=True, **decode_kwargs)
         self.text_cleaner = text_cleaner
-        self.words = []
+        self.words: List[str] = []
         self.q = q
         self.loop = asyncio.get_event_loop()
 
@@ -77,7 +77,7 @@ async def chat_tab(q: Q, load_model=True):
 
     q.page["experiment/display/chat"] = ui.chatbot_card(
         box="first",
-        data=data(fields="content from_user", t="list"),
+        data=data(fields="content from_user", t="list"),  # type: ignore
         name="experiment/display/chat/chatbot",
     )
     q.page["experiment/display/chat"].data += [loading_message, BOT]
@@ -265,7 +265,8 @@ async def chat_update(q: Q) -> None:
 
 def stream_generate(model: Model, inputs: Dict, cfg: Any, streamer: TextStreamer):
     """
-    Generation with the intent to retrieve the generated answer from the streamer instance.
+    Generation with the intent to retrieve the generated answer
+    from the streamer instance.
     """
     with torch.cuda.amp.autocast():
         model.generate(batch=inputs, cfg=cfg, streamer=streamer).detach().cpu()
