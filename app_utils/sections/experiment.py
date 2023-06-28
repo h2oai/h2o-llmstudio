@@ -1280,7 +1280,7 @@ async def chat_update(q: Q) -> None:
     def text_cleaner(text: str) -> str:
         return cfg.dataset.dataset_class.clean_output(
             output={"predicted_text": np.array([text])}, prompts=[full_prompt], cfg=cfg
-        )[0]
+        )["predicted_text"][0]
 
     streamer = WaveChatStreamer(tokenizer=tokenizer, text_cleaner=text_cleaner)
     asyncio.create_task(update_chat_stream(q, streamer))
