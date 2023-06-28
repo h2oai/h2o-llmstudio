@@ -138,7 +138,9 @@ class Model(nn.Module):
             logger.warning("Forcing LoRA to be True for RLHF")
             cfg.training.lora = True
 
-        self.backbone, self.backbone_config = create_nlp_backbone(cfg, model_class=AutoModelForCausalLM)
+        self.backbone, self.backbone_config = create_nlp_backbone(
+            cfg, model_class=AutoModelForCausalLM
+        )
 
         if cfg.training.lora:
             self.prepare_lora()

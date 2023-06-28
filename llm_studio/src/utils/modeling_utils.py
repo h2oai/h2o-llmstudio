@@ -437,7 +437,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     Creates a backbone model for NLP tasks.
     This is needed for Gradient Checkpointing in DDP mode.
     """
-    kwargs = {}
+    kwargs = dict()
     try:
         config = AutoConfig.from_pretrained(
             cfg.llm_backbone,
@@ -459,16 +459,16 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
 
     quantization_config = None
     if cfg.architecture.backbone_dtype == "int8":
-        kwargs["device_map"] = {"": cfg.environment._device}
+        kwargs["device_map"] = {"": cfg.environment._device}  # type: ignore
         quantization_config = BitsAndBytesConfig(
             load_in_8bit=True,
             llm_int8_threshold=0.0,
         )
         # need to force pretrained
         cfg.architecture.pretrained = True
-        kwargs["torch_dtype"] = torch.float16
+        kwargs["torch_dtype"] = torch.float16  # type: ignore
     elif cfg.architecture.backbone_dtype == "int4":
-        kwargs["device_map"] = {"": cfg.environment._device}
+        kwargs["device_map"] = {"": cfg.environment._device}  # type: ignore
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.float16,
@@ -476,7 +476,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         )
         # need to force pretrained
         cfg.architecture.pretrained = True
-        kwargs["torch_dtype"] = torch.float16
+        kwargs["torch_dtype"] = torch.float16  # type: ignore
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
 
