@@ -1,13 +1,9 @@
-import asyncio
 import gc
 import glob
 import logging
 import os
 import shutil
-import time
 import zipfile
-from copy import copy
-from functools import partial
 from typing import Callable, List, Optional, Set
 
 import accelerate
@@ -26,7 +22,6 @@ from sqlitedict import SqliteDict
 from app_utils.config import default_cfg
 from app_utils.sections.common import clean_dashboard
 from app_utils.utils import (
-    WaveChatStreamer,
     add_model_type,
     flatten_dict,
     get_cfg_list_items,
@@ -1219,15 +1214,6 @@ async def chat_tab(q: Q, load_model=True):
     )
 
 
-async def update_chat_stream(q: Q, streamer: WaveChatStreamer):
-    answer = copy(streamer.answer)
-    while not streamer.finished:
-        if streamer.answer != answer:
-            answer = copy(streamer.answer)
-            q.page["experiment/display/chat"].data[-1] = [answer, BOT]
-            await q.page.save()
-
-
 @torch.inference_mode(mode=True)
 async def chat_update(q: Q) -> None:
     """
@@ -1277,30 +1263,16 @@ async def chat_update(q: Q) -> None:
         inputs.pop("attention_mask").unsqueeze(0).to("cuda")
     )
 
-    def text_cleaner(text: str) -> str:
-        return cfg.dataset.dataset_class.clean_output(
-            output={"predicted_text": np.array([text])}, prompts=[full_prompt], cfg=cfg
-        )["predicted_text"][0]
-
-    if cfg.prediction.num_beams == 1:
-        streamer = WaveChatStreamer(tokenizer=tokenizer, text_cleaner=None)
-        await q.run(update_chat_stream, q, streamer)
-    else:
-        # ValueError: `streamer` cannot be used with beam search (yet!). Make sure that `num_beams` is set to 1.
-        streamer = None
-        logger.info(f"Not streaming output, as it cannot be used with beam search.")
-
     output = {}
     with torch.cuda.amp.autocast():
-        output["predicted_answer_ids"] = (
-            model.generate(inputs, cfg, streamer=streamer).detach().cpu()
-        )
+        output["predicted_answer_ids"] = model.generate(inputs, cfg).detach().cpu()
 
-    predicted_text = [
+    output["predicted_text"] = [
         tokenizer.decode(ids, skip_special_tokens=True)
         for ids in output["predicted_answer_ids"]
-    ][0]
-    predicted_text = text_cleaner(predicted_text)
+    ]
+    output = cfg.dataset.dataset_class.clean_output(output, [full_prompt], cfg)
+    predicted_text = output["predicted_text"][0]
     logger.info(f"Predicted Answer: {predicted_text}")
 
     message = [predicted_text, BOT]
