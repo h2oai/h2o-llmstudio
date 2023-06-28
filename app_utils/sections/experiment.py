@@ -1231,8 +1231,8 @@ async def chat_update(q: Q) -> None:
 
     message = [prompt, USER]
     q.client["experiment/display/chat/messages"].append(message)
-    q.page["experiment/display/chat"].data += [message]
-    q.page["experiment/display/chat"].data += [["...", BOT]]
+    q.page["experiment/display/chat"].data += message
+    q.page["experiment/display/chat"].data += ["...", BOT]
     await q.page.save()
 
     cfg = q.client["experiment/display/chat/cfg"]
@@ -1272,12 +1272,13 @@ async def chat_update(q: Q) -> None:
         for ids in output["predicted_answer_ids"]
     ]
     output["predicted_text"] = np.array(predicted_text)
-
     output = cfg.dataset.dataset_class.clean_output(output, [full_prompt], cfg)
+    predicted_text = output["predicted_text"][0]
+    logger.info(f"Predicted Answer: {predicted_text}")
 
-    message = [output["predicted_text"][0], BOT]
+    message = [predicted_text, BOT]
     q.client["experiment/display/chat/messages"].append(message)
-    q.page["experiment/display/chat"].data += [message]
+    q.page["experiment/display/chat"].data[-1] = message
 
     del output
     del inputs
