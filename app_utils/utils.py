@@ -1961,8 +1961,10 @@ class WaveChatStreamer(TextStreamer):
         self.q = q
 
     def on_finalized_text(self, text: str, stream_end: bool = False):
-        if text != self.tokenizer.eos_token:
-            self.answer += f" {text} "
+        self.answer += f" {text}"
+        if self.answer.endswith(self.tokenizer.eos_token):
+            # text generation is stopped
+            self.answer = self.answer.replace(self.tokenizer.eos_token, "")
         if self.text_cleaner:
             self.answer = self.text_cleaner(self.answer)
         self.loop.create_task(self.push_to_chat())
