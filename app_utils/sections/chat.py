@@ -40,6 +40,7 @@ class WaveChatStreamer(TextStreamer):
         self.words: List[str] = []
         self.q = q
         self.loop = asyncio.get_event_loop()
+        self.finished = False
 
     def on_finalized_text(self, text: str, stream_end: bool = False):
         self.words += [text]
@@ -62,6 +63,10 @@ class WaveChatStreamer(TextStreamer):
         if self.text_cleaner:
             answer = self.text_cleaner(answer)
         return answer
+
+    def end(self):
+        super().end()
+        self.finished = True
 
 
 async def chat_tab(q: Q, load_model=True):
@@ -250,13 +255,18 @@ async def chat_update(q: Q) -> None:
         target=stream_generate,
         kwargs=dict(model=model, inputs=inputs, cfg=cfg, streamer=streamer),
     )
-    thread.start()
-    predicted_text = streamer.answer
-    logger.info(f"Predicted Answer: {predicted_text}")
-    message = [predicted_text, BOT]
-    q.client["experiment/display/chat/messages"].append(message)
-    q.page["experiment/display/chat"].data[-1] = message
-
+    try:
+        thread.start()
+        predicted_text = streamer.answer
+        logger.info(f"Predicted Answer: {predicted_text}")
+        message = [predicted_text, BOT]
+        q.client["experiment/display/chat/messages"].append(message)
+        q.page["experiment/display/chat"].data[-1] = message
+    finally:
+        while True:
+            if streamer.finished:
+                thread.join()
+            await q.sleep(1)
     del inputs
 
     gc.collect()
