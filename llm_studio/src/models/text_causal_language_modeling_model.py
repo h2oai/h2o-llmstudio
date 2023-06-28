@@ -2,8 +2,9 @@ import logging
 from typing import Any, Dict
 
 import torch
-import torch.nn as nn
 from peft import LoraConfig, get_peft_model
+from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
+from torch import nn
 from transformers import AutoModelForCausalLM, StoppingCriteria, StoppingCriteriaList
 from transformers.generation.utils import GenerationMixin
 from transformers.utils import logging as transformers_logging
@@ -143,20 +144,52 @@ class Model(nn.Module):
         )
 
         if cfg.training.lora:
-            lora_config = LoraConfig(
-                r=cfg.training.lora_r,
-                lora_alpha=cfg.training.lora_alpha,
-                target_modules=cfg.training.lora_target_modules.split(",")
-                if cfg.training.lora_target_modules
-                else None,
-                lora_dropout=cfg.training.lora_dropout,
-                bias="none",
-                task_type="CAUSAL_LM",
-            )
-            if cfg.architecture.gradient_checkpointing:
-                self.backbone.enable_input_require_grads()
-            self.backbone = get_peft_model(self.backbone, lora_config)
-            self.backbone.print_trainable_parameters()
+            self.prepare_lora()
+
+        self.loss_fn = self.cfg.training.loss_class.get(
+            self.cfg.training.loss_function
+        )(self.cfg)
+
+        if self.cfg.prediction.metric == "Perplexity":
+            self.perplexity = Perplexity(self.cfg, reduce=False)
+
+    def prepare_lora(self):
+        target_modules = (
+            [
+                lora_target_module.strip()
+                for lora_target_module in self.cfg.training.lora_target_modules.strip().split(  # noqa: E501
+                    ","
+                )
+            ]
+            if self.cfg.training.lora_target_modules
+            else None
+        )
+        if (
+            not target_modules
+            and self.backbone.config.model_type
+            not in TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
+        ):
+            # extend LORA automatic target module mapping.
+            target_modules = {
+                "RefinedWebModel": [
+                    "query_key_value",
+                    "dense_h_to_4h",
+                    "dense_4h_to_h",
+                    "dense",
+                ],
+            }.get(self.backbone.config.model_type)
+        lora_config = LoraConfig(
+            r=self.cfg.training.lora_r,
+            lora_alpha=self.cfg.training.lora_alpha,
+            target_modules=target_modules,
+            lora_dropout=self.cfg.training.lora_dropout,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        if self.cfg.architecture.gradient_checkpointing:
+            self.backbone.enable_input_require_grads()
+        self.backbone = get_peft_model(self.backbone, lora_config)
+        self.backbone.print_trainable_parameters()
 
         self.loss_fn = self.cfg.training.loss_class.get(
             self.cfg.training.loss_function
