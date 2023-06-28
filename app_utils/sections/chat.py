@@ -251,11 +251,11 @@ async def chat_update(q: Q) -> None:
         )
         try:
             thread.start()
-            predicted_text = streamer.answer
         finally:
             while True:
                 if streamer.finished:
                     thread.join()
+                    predicted_text = streamer.answer
                     break
                 await q.sleep(1)
 
@@ -266,7 +266,9 @@ async def chat_update(q: Q) -> None:
         q.page["experiment/display/chat"].data[-1] = ["...", BOT]
         await q.page.save()
         predicted_answer_ids = generate(model, inputs, cfg)[0]
-        predicted_text = tokenizer.decode(predicted_answer_ids, skip_special_tokens=True)
+        predicted_text = tokenizer.decode(
+            predicted_answer_ids, skip_special_tokens=True
+        )
         predicted_text = text_cleaner(predicted_text)
 
     logger.info(f"Predicted Answer: {predicted_text}")
