@@ -201,7 +201,7 @@ class Model(nn.Module):
             self.value_head = ValueHead(self.backbone_config)
             self.value_head.summary.bias.data.zero_()
 
-    def generate(self, batch: Dict, cfg: Any):
+    def generate(self, batch: Dict, cfg: Any, streamer=None):
         pad_token_id = (
             self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
         )
@@ -272,6 +272,7 @@ class Model(nn.Module):
             renormalize_logits=True,
             return_dict_in_generate=False,
             use_cache=True,
+            streamer=streamer,
         )
         transformers_logging.set_verbosity(verbosity)
 

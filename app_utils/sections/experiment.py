@@ -1,9 +1,12 @@
+import asyncio
 import gc
 import glob
 import logging
 import os
 import shutil
+import threading
 import zipfile
+from copy import copy
 from typing import Callable, List, Optional, Set
 
 import accelerate
@@ -22,6 +25,7 @@ from sqlitedict import SqliteDict
 from app_utils.config import default_cfg
 from app_utils.sections.common import clean_dashboard
 from app_utils.utils import (
+    WaveChatStreamer,
     add_model_type,
     flatten_dict,
     get_cfg_list_items,
@@ -80,11 +84,11 @@ async def experiment_start(q: Q) -> None:
     is_create_experiment = False
     # reset certain configs if new experiment start session
     if (
-        q.args["experiment/start"]
-        or q.args["experiment/start_experiment"]
-        or q.args["dataset/newexperiment"]
-        or q.args["dataset/newexperiment/from_current"]
-        or q.args["experiment/list/new"]
+            q.args["experiment/start"]
+            or q.args["experiment/start_experiment"]
+            or q.args["dataset/newexperiment"]
+            or q.args["dataset/newexperiment/from_current"]
+            or q.args["experiment/list/new"]
     ):
         q.client["experiment/start/cfg_experiment_prev"] = None
         q.client["experiment/start/cfg_file_prev"] = None
@@ -98,8 +102,8 @@ async def experiment_start(q: Q) -> None:
     # Hide inference only datasets
     df_datasets = df_datasets.loc[df_datasets["train_rows"].notna()]
     if (
-        not q.client["experiment/start/dataset"]
-        or q.client["experiment/start/dataset"] not in df_datasets.id.astype(str).values
+            not q.client["experiment/start/dataset"]
+            or q.client["experiment/start/dataset"] not in df_datasets.id.astype(str).values
     ):
         if len(df_datasets) >= 1:
             q.client["experiment/start/dataset"] = str(df_datasets["id"].iloc[-1])
@@ -125,9 +129,9 @@ async def experiment_start(q: Q) -> None:
     ]
 
     if (
-        show_update_warnings
-        and q.client["experiment/start/dataset_prev"]
-        != q.client["experiment/start/dataset"]
+            show_update_warnings
+            and q.client["experiment/start/dataset_prev"]
+            != q.client["experiment/start/dataset"]
     ):
         items += [
             ui.message_bar(type="warning", text=warning_message.format("Dataset"))
@@ -135,9 +139,9 @@ async def experiment_start(q: Q) -> None:
         show_update_warnings = False
 
     if (
-        q.client["experiment/start/cfg_file"] is None
-        or q.client["experiment/start/dataset_prev"]
-        != q.client["experiment/start/dataset"]
+            q.client["experiment/start/cfg_file"] is None
+            or q.client["experiment/start/dataset_prev"]
+            != q.client["experiment/start/dataset"]
     ) and q.client["experiment/start/cfg_category"] != "experiment":
         dataset = q.client.app_db.get_dataset(q.client["experiment/start/dataset"])
         if dataset is not None:
@@ -165,8 +169,8 @@ async def experiment_start(q: Q) -> None:
 
     # set default value of problem type if no match to category
     if (
-        q.client["experiment/start/cfg_category"]
-        not in q.client["experiment/start/cfg_file"]
+            q.client["experiment/start/cfg_category"]
+            not in q.client["experiment/start/cfg_file"]
     ):
         if q.client["experiment/start/cfg_category"] != "experiment":
             q.client["experiment/start/cfg_file"] = get_problem_types(
@@ -193,8 +197,8 @@ async def experiment_start(q: Q) -> None:
             )
         # Default pretrained from the previous experiment to False
         if (
-            q.client["experiment/start/cfg_experiment_pretrained"] is None
-            or is_create_experiment
+                q.client["experiment/start/cfg_experiment_pretrained"] is None
+                or is_create_experiment
         ):
             q.client["experiment/start/cfg_experiment_pretrained"] = False
 
@@ -235,10 +239,10 @@ async def experiment_start(q: Q) -> None:
     )
 
     if (
-        show_update_warnings
-        and q.client["experiment/start/cfg_file_prev"]
-        != q.client["experiment/start/cfg_file"]
-        and q.client["experiment/start/cfg_category"] != "experiment"
+            show_update_warnings
+            and q.client["experiment/start/cfg_file_prev"]
+            != q.client["experiment/start/cfg_file"]
+            and q.client["experiment/start/cfg_category"] != "experiment"
     ):
         items += [
             ui.message_bar(type="warning", text=warning_message.format("Problem Type"))
@@ -261,9 +265,9 @@ async def experiment_start(q: Q) -> None:
         ]
 
         if (
-            show_update_warnings
-            and q.client["experiment/start/cfg_experiment_prev"]
-            != q.client["experiment/start/cfg_experiment"]
+                show_update_warnings
+                and q.client["experiment/start/cfg_experiment_prev"]
+                != q.client["experiment/start/cfg_experiment"]
         ):
             items += [
                 ui.message_bar(
@@ -273,11 +277,11 @@ async def experiment_start(q: Q) -> None:
 
         # Show pretrained weights toggle only for successfully finished experiments
         if (
-            df_experiments.loc[
-                df_experiments.id == int(q.client["experiment/start/cfg_experiment"]),
-                "status",
-            ].values[0]
-            == "finished"
+                df_experiments.loc[
+                    df_experiments.id == int(q.client["experiment/start/cfg_experiment"]),
+                    "status",
+                ].values[0]
+                == "finished"
         ):
             items += [
                 ui.toggle(
@@ -379,8 +383,8 @@ async def experiment_start(q: Q) -> None:
 
         # pick default values from config
         if (
-            q.client["experiment/start/cfg_experiment_prev"]
-            != q.client["experiment/start/cfg_experiment"]
+                q.client["experiment/start/cfg_experiment_prev"]
+                != q.client["experiment/start/cfg_experiment"]
         ):
             q.client["experiment/start/cfg_mode/from_dataset"] = False
             q.client["experiment/start/cfg_mode/from_cfg"] = True
@@ -393,8 +397,8 @@ async def experiment_start(q: Q) -> None:
             items[1].dropdown.value = q.client["experiment/start/dataset"]
         # pick default values from config or dataset
         elif (
-            q.client["experiment/start/dataset_prev"]
-            != q.client["experiment/start/dataset"]
+                q.client["experiment/start/dataset_prev"]
+                != q.client["experiment/start/dataset"]
         ):
             q.client["experiment/start/cfg_mode/from_dataset"] = True
             q.client["experiment/start/cfg_mode/from_cfg"] = True
@@ -418,11 +422,11 @@ async def experiment_start(q: Q) -> None:
 
         # pick default values from dataset or config
         if (
-            q.client["experiment/start/cfg_file_prev"]
-            != q.client["experiment/start/cfg_file"]
+                q.client["experiment/start/cfg_file_prev"]
+                != q.client["experiment/start/cfg_file"]
         ) or (
-            q.client["experiment/start/dataset_prev"]
-            != q.client["experiment/start/dataset"]
+                q.client["experiment/start/dataset_prev"]
+                != q.client["experiment/start/dataset"]
         ):
             q.client["experiment/start/cfg_mode/from_dataset"] = True
             q.client["experiment/start/cfg_mode/from_cfg"] = True
@@ -517,7 +521,7 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> None:
 
 
 def get_experiment_table(
-    q, df_viz, predictions, height="calc(100vh - 245px)", actions=None
+        q, df_viz, predictions, height="calc(100vh - 245px)", actions=None
 ):
     col_remove = [
         "id",
@@ -586,10 +590,10 @@ def get_experiment_table(
 
 
 async def experiment_list(
-    q: Q,
-    reset: bool = True,
-    allowed_statuses: Optional[List[str]] = None,
-    actions: bool = True,
+        q: Q,
+        reset: bool = True,
+        allowed_statuses: Optional[List[str]] = None,
+        actions: bool = True,
 ) -> None:
     """List all experiments."""
 
@@ -905,9 +909,9 @@ async def experiment_display(q: Q) -> None:
         ui.tab(name="experiment/display/summary", label="Summary"),
     ]
     if (
-        "html" in charts
-        and "train_data" in charts["html"]
-        and charts["html"]["train_data"] is not None
+            "html" in charts
+            and "train_data" in charts["html"]
+            and charts["html"]["train_data"] is not None
     ):
         tabs += [
             ui.tab(
@@ -1005,8 +1009,8 @@ async def insights_tab(charts, q):
     if q.client["experiment/display/tab"] == "experiment/display/train_data_insights":
         key = "train_data"
     elif (
-        q.client["experiment/display/tab"]
-        == "experiment/display/validation_prediction_insights"
+            q.client["experiment/display/tab"]
+            == "experiment/display/validation_prediction_insights"
     ):
         key = "validation_predictions"
     for k1 in ["image", "html"]:
@@ -1090,7 +1094,7 @@ async def logs_tab(q):
                     continue
                 # maximum line length
                 n = 250
-                chunks = [line[i : i + n] for i in range(0, len(line), n)]
+                chunks = [line[i: i + n] for i in range(0, len(line), n)]
                 text += "</div><div>".join(chunks)
 
                 # Check for formatted HTML text
@@ -1117,8 +1121,8 @@ async def chat_tab(q: Q, load_model=True):
         [
             str(gpu_id) in gpu_list
             for gpu_list in running_experiments["gpu_list"]
-            .apply(lambda x: x.split(","))
-            .to_list()
+        .apply(lambda x: x.split(","))
+        .to_list()
         ]
     )
     if gpu_blocked:
@@ -1246,8 +1250,8 @@ async def chat_update(q: Q) -> None:
     full_prompt = ""
     if len(q.client["experiment/display/chat/messages"]):
         for prev_message in q.client["experiment/display/chat/messages"][
-            -(cfg.prediction.num_history + 1) :
-        ]:
+                            -(cfg.prediction.num_history + 1):
+                            ]:
             if prev_message[1] is USER:
                 prev_message = cfg.dataset.dataset_class.parse_prompt(
                     cfg, prev_message[0]
@@ -1269,18 +1273,34 @@ async def chat_update(q: Q) -> None:
         inputs.pop("attention_mask").unsqueeze(0).to(cfg.environment._device)
     )
 
-    output = {}
-    with torch.cuda.amp.autocast():
-        output["predicted_answer_ids"] = model.generate(inputs, cfg).detach().cpu()
+    def text_cleaner(text: str) -> str:
+        return cfg.dataset.dataset_class.clean_output(
+            output={"predicted_text": np.array([text])}, prompts=[full_prompt], cfg=cfg
+        )["predicted_text"][0]
 
-    output["predicted_text"] = np.array(
-        [
-            tokenizer.decode(ids, skip_special_tokens=True)
-            for ids in output["predicted_answer_ids"]
-        ]
-    )
-    output = cfg.dataset.dataset_class.clean_output(output, [full_prompt], cfg)
-    predicted_text = output["predicted_text"][0]
+    if cfg.prediction.num_beams == 1:
+        streamer = WaveChatStreamer(tokenizer=tokenizer, q=q, text_cleaner=text_cleaner)
+    else:
+        # ValueError: `streamer` cannot be used with beam search (yet!).
+        # Make sure that `num_beams` is set to 1.
+        streamer = None
+        logger.info("Not streaming output, as it cannot be used with beam search.")
+
+    output = {}
+
+    def generate():
+        with torch.cuda.amp.autocast():
+            output["predicted_answer_ids"] = (
+                model.generate(inputs=inputs, cfg=cfg, streamer=streamer).detach().cpu()
+            )
+
+    threading.Thread(target=generate).start()
+
+    predicted_text = [
+        tokenizer.decode(ids, skip_special_tokens=True)
+        for ids in output["predicted_answer_ids"]
+    ][0]
+    predicted_text = text_cleaner(predicted_text)
     logger.info(f"Predicted Answer: {predicted_text}")
 
     message = [predicted_text, BOT]
@@ -1477,11 +1497,11 @@ async def experiment_artifact_build_error_dialog(q: Q, error: str):
 
 
 async def experiment_download_artifact(
-    q: Q,
-    get_artifact_path_fn: Callable[[str, str], str],
-    save_artifact_fn: Callable[[str, str], str],
-    additional_log: Optional[str] = "",
-    min_disk_space: Optional[float] = 0.0,
+        q: Q,
+        get_artifact_path_fn: Callable[[str, str], str],
+        save_artifact_fn: Callable[[str, str], str],
+        additional_log: Optional[str] = "",
+        min_disk_space: Optional[float] = 0.0,
 ):
     """Download specific artifact, if it does not exist, create it on demand
 
@@ -1610,7 +1630,7 @@ async def experiment_download_model(q: Q, error: str = ""):
             experiments[experiments["status"].isin(["queued", "running"])]
         )
         if num_running_queued > 0 or (
-            cfg.training.lora and cfg.architecture.backbone_dtype in ("int4", "int8")
+                cfg.training.lora and cfg.architecture.backbone_dtype in ("int4", "int8")
         ):
             logger.info("Preparing model on CPU. This might slow down the progress.")
             device = "cpu"
@@ -1900,9 +1920,9 @@ def load_cfg_model_tokenizer(experiment_path, merge=False, device="cuda:0"):
     torch.cuda.empty_cache()
 
     if (
-        merge
-        and cfg.training.lora
-        and cfg.architecture.backbone_dtype in ("int4", "int8")
+            merge
+            and cfg.training.lora
+            and cfg.architecture.backbone_dtype in ("int4", "int8")
     ):
         logger.info("Loading backbone in float16 for merging LORA weights.")
         cfg.architecture.backbone_dtype = "float16"
