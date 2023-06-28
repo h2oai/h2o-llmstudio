@@ -1,6 +1,6 @@
 ---
 name: "\U0001F680 Feature Request"
-about: Submit a proposal/request for a new H2O LLM Studio
+about: Submit a proposal/request for a new H2O LLM Studio feature
 title: "[FEATURE]"
 labels: type/feature
 assignees: ''
