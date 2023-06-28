@@ -3,6 +3,7 @@ import gc
 import logging
 import os
 import threading
+import time
 from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
@@ -267,7 +268,7 @@ async def chat_update(q: Q) -> None:
             if streamer.finished:
                 thread.join()
                 break
-            await q.sleep(1)
+            time.sleep(1)
     del inputs
 
     gc.collect()
