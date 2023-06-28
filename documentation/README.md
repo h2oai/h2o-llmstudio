@@ -14,7 +14,7 @@ https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash` and 
 
  If you have already installed `@h2oai/ui-kit` or any other private `@h2oai`-prefixed npm package you can skip this step.
 
- **Step 1:** Create a "classic" [personal access token](https://github.com/settings/tokens) (PAT) on Github
+ **Step 1:** Create a "classic" [personal access token](https://github.com/settings/tokens) (PAT) on Github. Note that you only need to enable the `read:packages` scope for this token. 
 
  **Step 2:** Add the PAT to your `~/.npmrc` file. Create this file if it doesn't exist yet. 
  ```

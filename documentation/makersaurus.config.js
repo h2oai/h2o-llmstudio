@@ -10,7 +10,7 @@ module.exports = {
   includeCurrentVersion: true,
   versions: {
     current: {
-      label: "current",
+      label: " ",
       path: "/",
     },
   },
