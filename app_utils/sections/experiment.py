@@ -1111,9 +1111,11 @@ async def chat_tab(q: Q, load_model=True):
         running_experiments.status.isin(["running"])
     ]
 
+    # gpu id in UI is offset by 1 to be in sync with experiment UI
+    gpu_id = q.client["gpu_used_for_chat"] - 1
     gpu_blocked = any(
         [
-            "0" in gpu_list
+            str(gpu_id) in gpu_list
             for gpu_list in running_experiments["gpu_list"]
             .apply(lambda x: x.split(","))
             .to_list()
@@ -1124,8 +1126,10 @@ async def chat_tab(q: Q, load_model=True):
             box="first",
             items=[
                 ui.text(
-                    "Chatbot is not available when GPU "
-                    "is blocked by another experiment."
+                    f"""Chatbot is not available when GPU{q.client["gpu_used_for_chat"]}
+                     is blocked by another experiment.
+                     You can change "Gpu used for Chat" in the settings tab
+                     to use another GPU for the chatbot. """
                 )
             ],
             title="",
@@ -1170,7 +1174,7 @@ async def chat_tab(q: Q, load_model=True):
 
     if load_model:
         cfg, model, tokenizer = load_cfg_model_tokenizer(
-            q.client["experiment/display/experiment_path"]
+            q.client["experiment/display/experiment_path"], device=f"cuda:{gpu_id}"
         )
         q.client["experiment/display/chat/cfg"] = cfg
         q.client["experiment/display/chat/model"] = model
@@ -1265,9 +1269,11 @@ async def chat_update(q: Q) -> None:
     inputs = cfg.dataset.dataset_class.encode(
         tokenizer, full_prompt, cfg.tokenizer.max_length_prompt, "left"
     )
-    inputs["prompt_input_ids"] = inputs.pop("input_ids").unsqueeze(0).to("cuda")
+    inputs["prompt_input_ids"] = (
+        inputs.pop("input_ids").unsqueeze(0).to(cfg.environment._device)
+    )
     inputs["prompt_attention_mask"] = (
-        inputs.pop("attention_mask").unsqueeze(0).to("cuda")
+        inputs.pop("attention_mask").unsqueeze(0).to(cfg.environment._device)
     )
 
     output = {}
