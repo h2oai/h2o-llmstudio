@@ -63,4 +63,4 @@ class Losses:
         Returns:
             A class to build the Losses
         """
-        return cls._losses.get(name)
+        return cls._losses.get(name, TokenAveragedCrossEntropyLoss)
