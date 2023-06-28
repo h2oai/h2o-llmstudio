@@ -1232,7 +1232,7 @@ async def chat_update(q: Q) -> None:
     message = [prompt, USER]
     q.client["experiment/display/chat/messages"].append(message)
     q.page["experiment/display/chat"].data += [message]
-    q.page["experiment/display/chat"].data[q.client.chat_msg_num] += [["...", BOT]]
+    q.page["experiment/display/chat"].data += [["...", BOT]]
     await q.page.save()
 
     cfg = q.client["experiment/display/chat/cfg"]
