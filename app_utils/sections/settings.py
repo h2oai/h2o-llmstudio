@@ -143,6 +143,7 @@ async def settings(q: Q) -> None:
                     ),
                 ]
             ),
+            ui.separator("Default Experiment Settings"),
             ui.inline(
                 items=[
                     ui.label("Number of Workers", width=label_width),
