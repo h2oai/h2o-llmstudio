@@ -202,8 +202,6 @@ def run_train(
         best_val_metric = np.inf
         objective_op = np.less
 
-    num_updates = 0
-
     if cfg.training.evaluate_before_training:
         val_loss, val_metric = run_eval(
             cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
@@ -251,14 +249,10 @@ def run_train(
 
         log_update_steps = max(epoch_steps // 20, 1)
         evaluation_step = int(epoch_steps * cfg.training.evaluation_epochs)
-        for itr in range(epoch_steps):
-            num_updates += 1
+        for itr, data in enumerate(tr_it):
             cfg.environment._curr_step += (
                 cfg.training.batch_size * cfg.environment._world_size
             )
-
-            # Get batch
-            data = next(tr_it)
 
             # Batch to device
             batch = cfg.dataset.dataset_class.batch_to_device(
@@ -341,10 +335,10 @@ def run_train(
             else:
                 # Forward pass
                 with autocast(enabled=cfg.environment.mixed_precision):
-                    output_dict = model.forward(batch, generate=False)
+                    output_dict = model.forward(batch)
 
                 loss = output_dict["loss"]
-                if ~np.isfinite(loss.item()) and (num_updates > 20):
+                if ~np.isfinite(loss.item()) and (epoch > start_epoch or itr > 20):
                     raise LLMTrainingException(
                         "NaN caught in loss during training. "
                         "Please, reduce learning rate, change dtype, "
@@ -363,7 +357,7 @@ def run_train(
                 # Backward pass
                 if cfg.environment.mixed_precision:
                     scaler.scale(loss).backward()  # type: ignore
-                    if num_updates % cfg.training.grad_accumulation == 0:
+                    if itr % cfg.training.grad_accumulation == 0:
                         if cfg.training.gradient_clip > 0:
                             scaler.unscale_(optimizer)  # type: ignore
                             torch.nn.utils.clip_grad_norm_(
@@ -374,7 +368,7 @@ def run_train(
                         optimizer.zero_grad(set_to_none=True)
                 else:
                     loss.backward()
-                    if num_updates % cfg.training.grad_accumulation == 0:
+                    if itr % cfg.training.grad_accumulation == 0:
                         if cfg.training.gradient_clip > 0:
                             torch.nn.utils.clip_grad_norm_(
                                 model.parameters(), cfg.training.gradient_clip
