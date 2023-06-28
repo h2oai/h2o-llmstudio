@@ -432,13 +432,12 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
     val_df.to_csv(csv_preds_name, index=False)
 
 
-def create_nlp_backbone(cfg, model_class=AutoModel, kwargs=None) -> Any:
+def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     """
     Creates a backbone model for NLP tasks.
     This is needed for Gradient Checkpointing in DDP mode.
     """
-    if kwargs is None:
-        kwargs = {}
+    kwargs = {}
     try:
         config = AutoConfig.from_pretrained(
             cfg.llm_backbone,
