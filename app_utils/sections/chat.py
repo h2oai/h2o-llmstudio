@@ -266,7 +266,8 @@ async def chat_update(q: Q) -> None:
         q.page["experiment/display/chat"].data[-1] = ["...", BOT]
         await q.page.save()
         output = generate(model, inputs, cfg)
-        predicted_text = text_cleaner(output["predicted_text"][0])
+        predicted_text = None
+        predicted_text = text_cleaner(predicted_text)
 
     logger.info(f"Predicted Answer: {predicted_text}")
     message = [predicted_text, BOT]
