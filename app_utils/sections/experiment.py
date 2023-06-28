@@ -1277,9 +1277,11 @@ async def chat_update(q: Q) -> None:
         inputs.pop("attention_mask").unsqueeze(0).to("cuda")
     )
 
-    text_cleaner = partial(
-        cfg.dataset.dataset_class.clean_output, prompts=[full_prompt], cfg=cfg
-    )
+    def text_cleaner(text: str):
+        return cfg.dataset.dataset_class.clean_output(
+            output={np.array(text)}, prompts=[full_prompt], cfg=cfg
+        )[0]
+
     streamer = WaveChatStreamer(tokenizer=tokenizer, text_cleaner=text_cleaner)
     asyncio.create_task(update_chat_stream(q, streamer))
 
@@ -1292,10 +1294,8 @@ async def chat_update(q: Q) -> None:
     predicted_text = [
         tokenizer.decode(ids, skip_special_tokens=True)
         for ids in output["predicted_answer_ids"]
-    ]
-    output["predicted_text"] = np.array(predicted_text)
-    output = text_cleaner(output)
-    predicted_text = output["predicted_text"][0]
+    ][0]
+    predicted_text = text_cleaner(predicted_text)
     logger.info(f"Predicted Answer: {predicted_text}")
 
     message = [predicted_text, BOT]
