@@ -1282,8 +1282,13 @@ async def chat_update(q: Q) -> None:
             output={"predicted_text": np.array([text])}, prompts=[full_prompt], cfg=cfg
         )["predicted_text"][0]
 
-    streamer = WaveChatStreamer(tokenizer=tokenizer, text_cleaner=text_cleaner)
-    asyncio.create_task(update_chat_stream(q, streamer))
+    if cfg.prediction.num_beams == 1:
+        streamer = WaveChatStreamer(tokenizer=tokenizer, text_cleaner=text_cleaner)
+        asyncio.create_task(update_chat_stream(q, streamer))
+    else:
+        # ValueError: `streamer` cannot be used with beam search (yet!). Make sure that `num_beams` is set to 1.
+        streamer = None
+        logger.info(f"Not streaming output, as it cannot be used with beam search.")
 
     output = {}
     with torch.cuda.amp.autocast():
