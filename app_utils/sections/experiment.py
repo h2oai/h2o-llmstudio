@@ -1218,13 +1218,10 @@ async def chat_tab(q: Q, load_model=True):
 
 
 async def update_chat_stream(q: Q, streamer: WaveChatStreamer):
-    answer = streamer.answer
     while not streamer.finished:
-        if streamer.answer != answer:
-            message = [streamer.answer, BOT]
-            q.page["experiment/display/chat"].data[-1] = message
-            answer = streamer.answer
-            await q.page.save()
+        message = [streamer.answer, BOT]
+        q.page["experiment/display/chat"].data[-1] = message
+        await q.page.save()
         await asyncio.sleep(0.3)
 
 

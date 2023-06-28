@@ -1958,9 +1958,9 @@ class WaveChatStreamer(TextStreamer):
         self.finished = False
 
     def on_finalized_text(self, text: str, stream_end: bool = False):
+        self.answer += f" {text} "
         if self.text_cleaner:
-            text = self.text_cleaner(text)
-        self.answer = text
+            self.answer = self.text_cleaner(self.answer)
         logger.info(f"Streaming: {self.answer}")
 
     def end(self):
