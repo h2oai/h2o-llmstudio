@@ -1225,7 +1225,6 @@ async def update_chat_stream(q: Q, streamer: WaveChatStreamer):
             q.page["experiment/display/chat"].data[-1] = message
             answer = streamer.answer
             await q.page.save()
-            logger.info(f"Streaming: {answer}")
         await asyncio.sleep(0.3)
 
 

@@ -1961,6 +1961,7 @@ class WaveChatStreamer(TextStreamer):
         if self.text_cleaner:
             text = self.text_cleaner(text)
         self.answer = text
+        logger.info(f"Streaming: {self.answer}")
 
     def end(self):
         super().end()
