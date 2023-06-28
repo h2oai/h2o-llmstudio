@@ -250,11 +250,7 @@ async def chat_update(q: Q) -> None:
         target=stream_generate,
         kwargs=dict(model=model, inputs=inputs, cfg=cfg, streamer=streamer),
     )
-    try:
-        thread.start()
-    finally:
-        thread.join()
-
+    thread.start()
     predicted_text = streamer.answer
     logger.info(f"Predicted Answer: {predicted_text}")
     message = [predicted_text, BOT]
