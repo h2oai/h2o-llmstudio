@@ -50,13 +50,13 @@ def check_disk_space(model: torch.nn.Module, path: str):
         else:
             raise ValueError(f"Unsupported data type: {param.data.dtype}")
 
-    if model_size_in_bytes < free * 1.03:  # leave a 3% margin here.
+    if model_size_in_bytes * 1.03 < free:  # leave a 3% margin here.
         logger.info("Enough space available for saving model weights.")
     else:
         raise ValueError(
             f"Not enough space available for saving model weights. "
-            f"Required space: {model_size_in_bytes / (1024 * 1024):.2f}MB, "
-            f"Available space: {free * 1.03 / (1024 * 1024):.2f}MB."
+            f"Required space: {model_size_in_bytes * 1.03 / (1024 * 1024):.2f}MB, "
+            f"Available space: {free / (1024 * 1024):.2f}MB."
         )
 
 
