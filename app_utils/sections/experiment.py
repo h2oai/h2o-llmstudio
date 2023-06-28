@@ -1219,11 +1219,13 @@ async def chat_tab(q: Q, load_model=True):
 
 
 async def update_chat_stream(q: Q, streamer: WaveChatStreamer):
+    answer = streamer.answer
     while not streamer.finished:
-        message = [streamer.answer, BOT]
-        q.page["experiment/display/chat"].data[-1] = message
-        await q.page.save()
-        await q.sleep(0.3)
+        if streamer.answer != answer:
+            answer = streamer.answer
+            q.page["experiment/display/chat"].data[-1] = [answer, BOT]
+            await q.page.save()
+        await q.sleep(1)
 
 
 @torch.inference_mode(mode=True)
