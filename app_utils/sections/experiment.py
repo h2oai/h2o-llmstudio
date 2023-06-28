@@ -1223,7 +1223,7 @@ async def update_chat_stream(q: Q, streamer: WaveChatStreamer):
         message = [streamer.answer, BOT]
         q.page["experiment/display/chat"].data[-1] = message
         await q.page.save()
-        time.sleep(0.3)
+        await q.sleep(0.3)
 
 
 @torch.inference_mode(mode=True)
@@ -1282,7 +1282,7 @@ async def chat_update(q: Q) -> None:
 
     if cfg.prediction.num_beams == 1:
         streamer = WaveChatStreamer(tokenizer=tokenizer, text_cleaner=text_cleaner)
-        await q.run(update_chat_stream, q, streamer)
+        await update_chat_stream(q, streamer)
     else:
         # ValueError: `streamer` cannot be used with beam search (yet!). Make sure that `num_beams` is set to 1.
         streamer = None
