@@ -335,7 +335,8 @@ class ConfigNLPAugmentation(DefaultConfig):
 @dataclass
 class ConfigNLPCausalLMPrediction(DefaultConfig):
     metric_class: Any = text_causal_language_modeling_metrics.Metrics
-    metric: str = "GPT3.5"
+    metric: str = "GPT"
+    metric_gpt_model: str = "gpt-3.5-turbo-0301"
 
     min_length_inference: int = 2
     max_length_inference: int = 256
@@ -355,6 +356,16 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         super().__post_init__()
         self._possible_values["metric"] = self.metric_class.names()
 
+        self._possible_values["metric_gpt_model"] = possible_values.String(
+            values=(
+                "gpt-3.5-turbo-0301",
+                "gpt-3.5-turbo-0613",
+                "gpt-4-0314",
+                "gpt-4-0613",
+            ),
+            allow_custom=True,
+        )
+
         self._possible_values["batch_size_inference"] = (0, 512, 1)
         self._possible_values["min_length_inference"] = (0, 1024, 1)
         self._possible_values["max_length_inference"] = (1, 1024, 1)
@@ -369,6 +380,11 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._visibility["metric_class"] = -1
         # possible values for num_history are only used in chatbot tab
         self._visibility["num_history"] = -1
+
+        self._nesting.add(
+            ["metric_gpt_model"],
+            [Dependency(key="metric", value="GPT", is_set=True)],
+        )
 
 
 @dataclass

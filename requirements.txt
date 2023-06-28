@@ -9,6 +9,7 @@ async-timeout==4.0.2 ; python_version >= '3.6'
 attrs==23.1.0 ; python_version >= '3.7'
 beautifulsoup4==4.11.1
 bitsandbytes==0.39.1
+blessed==1.20.0 ; python_version >= '2.7'
 bokeh==2.4.2
 boto3==1.20.24
 botocore==1.23.54 ; python_version >= '3.6'
@@ -36,8 +37,13 @@ gitdb==4.0.10 ; python_version >= '3.7'
 gitpython==3.1.31 ; python_version >= '3.7'
 gputil==1.4.0
 greenlet==2.0.2 ; python_version >= '3' and platform_machine == 'aarch64' or (platform_machine == 'ppc64le' or (platform_machine == 'x86_64' or (platform_machine == 'amd64' or (platform_machine == 'AMD64' or (platform_machine == 'win32' or platform_machine == 'WIN32')))))
+h11==0.14.0 ; python_version >= '3.7'
+h2o-wave==0.26.0
+httpcore==0.17.2 ; python_version >= '3.7'
+httpx==0.24.1 ; python_version >= '3.7'
 huggingface-hub==0.14.1
 idna==3.4 ; python_version >= '3.5'
+inquirer==3.1.3 ; python_version >= '3.8'
 isoduration==20.11.0
 jinja2==3.1.2
 jmespath==0.10.0 ; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'
@@ -60,7 +66,7 @@ oauthlib==3.2.2 ; python_version >= '3.6'
 openai==0.27.7
 packaging==23.1 ; python_version >= '3.7'
 pandas==1.5.3
-git+https://github.com/huggingface/peft@0b62b4378b4ce9367932c73540349da9a41bdea8#egg=peft
+git+https://github.com/huggingface/peft@86290e9660d24ef0d0cedcf57710da249dd1f2f4#egg=peft
 pillow==9.5.0 ; python_version >= '3.7'
 pipreqs==0.4.13 ; python_version >= '3.7'
 portalocker==2.7.0 ; python_version >= '3.5'
@@ -70,9 +76,11 @@ pyarrow==8.0.0
 pyjwt==2.7.0 ; python_version >= '3.7'
 pyrsistent==0.19.3 ; python_version >= '3.7'
 python-dateutil==2.8.2 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'
+python-editor==1.0.4
 python-slugify==8.0.1 ; python_version >= '3.7'
 pytz==2023.3
 pyyaml==6.0
+readchar==4.0.5 ; python_version >= '3.7'
 regex==2023.6.3 ; python_version >= '3.6'
 requests==2.31.0 ; python_version >= '3.7'
 requests-oauthlib==1.3.1 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'
@@ -83,8 +91,9 @@ s3transfer==0.5.2 ; python_version >= '3.6'
 sacrebleu==2.0.0
 safetensors==0.3.1
 scikit-learn==1.0.2
-scipy==1.10.1 ; python_version < '3.12' and python_version >= '3.8'
+scipy==1.11.0 ; python_version < '3.13' and python_version >= '3.9'
 sentencepiece==0.1.96
+setuptools==68.0.0 ; python_version >= '3.7'
 simplejson==3.19.1 ; python_version >= '2.5' and python_version not in '3.0, 3.1, 3.2, 3.3'
 six==1.16.0 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'
 smmap==5.0.0 ; python_version >= '3.6'
@@ -111,9 +120,10 @@ triton==2.0.0 ; platform_system == 'Linux' and platform_machine == 'x86_64'
 typing-extensions==4.6.3 ; python_version >= '3.7'
 uri-template==1.3.0
 urllib3==1.26.16 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'
+uvicorn==0.22.0 ; python_version >= '3.7'
+wcwidth==0.2.6
 webcolors==1.13
-websocket-client==1.6.0 ; python_version >= '3.7'
+websocket-client==1.6.1 ; python_version >= '3.7'
 xxhash==3.2.0 ; python_version >= '3.6'
 yarg==0.1.9
 yarl==1.9.2 ; python_version >= '3.7'
-https://github.com/h2oai/wave/releases/download/nightly/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl

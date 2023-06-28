@@ -47,6 +47,7 @@ datasets = "==2.11.0"
 neptune = ">=1.2.0, <2.0.0"
 Jinja2 = ">=3.1.2, <4.0.0"
 tenacity = ">=8.2.2, <9.0.0"
+h2o-wave = "0.26"
 
 [dev-packages]
 pytest = "==7.1.3"

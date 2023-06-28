@@ -14,17 +14,14 @@ pipenv:
 .PHONY: setup
 setup: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
-	$(PIPENV_PIP) install https://github.com/h2oai/wave/releases/download/nightly/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl --force-reinstall
 
 .PHONY: setup-dev
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
-	$(PIPENV_PIP) install https://github.com/h2oai/wave/releases/download/nightly/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl --force-reinstall
 
 .PHONY: export-requirements
 export-requirements: pipenv
 	$(PIPENV) requirements > requirements.txt
-	 echo "https://github.com/h2oai/wave/releases/download/nightly/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl" >> requirements.txt
 
 clean-env:
 	$(PIPENV) --rm
@@ -73,14 +70,14 @@ test: reports
 .PHONY: wave
 wave:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
-	H2O_WAVE_NO_LOG=True \
+	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(PWD)/output/download" \
 	$(PIPENV) run wave run app
 
 .PHONY: wave-no-reload
 wave-no-reload:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
-	H2O_WAVE_NO_LOG=True \
+	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(PWD)/output/download" \
 	$(PIPENV) run wave run --no-reload app
 
