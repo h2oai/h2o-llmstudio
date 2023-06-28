@@ -1961,7 +1961,8 @@ class WaveChatStreamer(TextStreamer):
         self.q = q
 
     def on_finalized_text(self, text: str, stream_end: bool = False):
-        self.answer += f" {text} "
+        if text != self.tokenizer.eos_token:
+            self.answer += f" {text} "
         if self.text_cleaner:
             self.answer = self.text_cleaner(self.answer)
         self.loop.create_task(self.push_to_chat())
