@@ -1,9 +1,11 @@
+import asyncio
 import gc
 import glob
 import logging
 import os
 import shutil
 import zipfile
+from functools import partial
 from typing import Callable, List, Optional, Set
 
 import accelerate
@@ -22,6 +24,7 @@ from sqlitedict import SqliteDict
 from app_utils.config import default_cfg
 from app_utils.sections.common import clean_dashboard
 from app_utils.utils import (
+    WaveChatStreamer,
     add_model_type,
     flatten_dict,
     get_cfg_list_items,
@@ -1140,7 +1143,7 @@ async def chat_tab(q: Q, load_model=True):
 
     q.page["experiment/display/chat"] = ui.chatbot_card(
         box="first",
-        data=data(fields='content from_user', t='list'),
+        data=data(fields="content from_user", t="list"),
         name="experiment/display/chat/chatbot",
     )
     q.page["experiment/display/chat"].data += [loading_message, BOT]
@@ -1214,6 +1217,17 @@ async def chat_tab(q: Q, load_model=True):
     )
 
 
+async def update_chat_stream(q: Q, streamer: WaveChatStreamer):
+    answer = streamer.answer
+    while not streamer.finished:
+        if streamer.answer != answer:
+            message = [streamer.answer, BOT]
+            q.page["experiment/display/chat"].data[-1] = message
+            answer = streamer.answer
+            await q.page.save()
+        await asyncio.sleep(0.3)
+
+
 @torch.inference_mode(mode=True)
 async def chat_update(q: Q) -> None:
     """
@@ -1263,16 +1277,24 @@ async def chat_update(q: Q) -> None:
         inputs.pop("attention_mask").unsqueeze(0).to("cuda")
     )
 
+    text_cleaner = partial(
+        cfg.dataset.dataset_class.clean_output, prompts=[full_prompt], cfg=cfg
+    )
+    streamer = WaveChatStreamer(tokenizer=tokenizer, text_cleaner=text_cleaner)
+    asyncio.create_task(update_chat_stream(q, streamer))
+
     output = {}
     with torch.cuda.amp.autocast():
-        output["predicted_answer_ids"] = model.generate(inputs, cfg).detach().cpu()
+        output["predicted_answer_ids"] = (
+            model.generate(inputs, cfg, streamer=streamer).detach().cpu()
+        )
 
     predicted_text = [
         tokenizer.decode(ids, skip_special_tokens=True)
         for ids in output["predicted_answer_ids"]
     ]
     output["predicted_text"] = np.array(predicted_text)
-    output = cfg.dataset.dataset_class.clean_output(output, [full_prompt], cfg)
+    output = text_cleaner(output)
     predicted_text = output["predicted_text"][0]
     logger.info(f"Predicted Answer: {predicted_text}")
 

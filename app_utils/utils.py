@@ -28,6 +28,7 @@ from datasets import load_dataset
 from h2o_wave import Q, ui
 from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
+from transformers import AutoTokenizer, TextStreamer
 
 from app_utils.db import Experiment
 from llm_studio.python_configs.text_causal_language_modeling_config import (
@@ -1947,3 +1948,20 @@ def prepare_default_dataset(path):
     )
 
     return df_assistant[(df_assistant["rank"] == 0.0) & (df_assistant["lang"] == "en")]
+
+
+class WaveChatStreamer(TextStreamer):
+    def __init__(self, tokenizer: AutoTokenizer, text_cleaner=None, **decode_kwargs):
+        super().__init__(tokenizer, skip_prompt=True, **decode_kwargs)
+        self.text_cleaner = text_cleaner
+        self.answer = ""
+        self.finished = False
+
+    def on_finalized_text(self, text: str, stream_end: bool = False):
+        if self.text_cleaner:
+            text = self.text_cleaner(text)
+        self.answer = text
+
+    def end(self):
+        super().end()
+        self.finished = True
