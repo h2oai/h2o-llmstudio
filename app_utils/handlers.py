@@ -5,6 +5,7 @@ from typing import List
 import torch
 from h2o_wave import Q
 
+from app_utils.sections.chat import chat_tab, chat_update
 from app_utils.sections.common import delete_dialog
 from app_utils.sections.dataset import (
     dataset_delete_current_datasets,
@@ -19,8 +20,6 @@ from app_utils.sections.dataset import (
     dataset_newexperiment,
 )
 from app_utils.sections.experiment import (
-    chat_tab,
-    chat_update,
     experiment_delete,
     experiment_display,
     experiment_download_logs,
