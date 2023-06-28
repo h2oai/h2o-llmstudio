@@ -75,6 +75,14 @@ You can also export the LoRA weights. You may add them to the files to be export
 
 Use WSL 2 on Windows 
 
+### How can I easily fine-tune a large language model (LLM) using the command-line interface (CLI) of H2O LLM Studio when I have limited GPU memory?
+
+If you have limited GPU memory but still want to fine-tune a large language model using H2O LLM Studio's CLI, there are alternative methods you can use to get started quickly.
+
+- [Using Kaggle kernels](https://www.kaggle.com/code/philippsinger/h2o-llm-studio-cli/) 
+- [Using Google Colab](https://colab.research.google.com/drive/1-OYccyTvmfa3r7cAquw8sioFFPJcn4R9?usp=sharing)
+
+
 
 
 
