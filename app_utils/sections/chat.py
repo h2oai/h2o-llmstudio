@@ -265,8 +265,8 @@ async def chat_update(q: Q) -> None:
         logger.info("Not streaming output, as it cannot be used with beam search.")
         q.page["experiment/display/chat"].data[-1] = ["...", BOT]
         await q.page.save()
-        output = generate(model, inputs, cfg)
-        predicted_text = None
+        predicted_answer_ids = generate(model, inputs, cfg)[0]
+        predicted_text = tokenizer.decode(predicted_answer_ids, skip_special_tokens=True)
         predicted_text = text_cleaner(predicted_text)
 
     logger.info(f"Predicted Answer: {predicted_text}")
@@ -280,10 +280,6 @@ async def chat_update(q: Q) -> None:
 
 
 def generate(model: Model, inputs: Dict, cfg: Any, streamer: TextStreamer = None):
-    """
-    Generation with the intent to retrieve the generated answer
-    from the streamer instance.
-    """
     with torch.cuda.amp.autocast():
         output = model.generate(batch=inputs, cfg=cfg, streamer=streamer).detach().cpu()
     return output
