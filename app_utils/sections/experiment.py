@@ -6,6 +6,7 @@ import os
 import shutil
 import time
 import zipfile
+from copy import copy
 from functools import partial
 from typing import Callable, List, Optional, Set
 
@@ -1219,10 +1220,10 @@ async def chat_tab(q: Q, load_model=True):
 
 
 async def update_chat_stream(q: Q, streamer: WaveChatStreamer):
-    answer = streamer.answer
+    answer = copy(streamer.answer)
     while not streamer.finished:
         if streamer.answer != answer:
-            answer = streamer.answer
+            answer = copy(streamer.answer)
             q.page["experiment/display/chat"].data[-1] = [answer, BOT]
             await q.page.save()
         await q.sleep(1)
