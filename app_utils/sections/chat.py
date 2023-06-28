@@ -3,7 +3,6 @@ import gc
 import logging
 import os
 import threading
-import time
 from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
@@ -246,42 +245,46 @@ async def chat_update(q: Q) -> None:
 
     if cfg.prediction.num_beams == 1:
         streamer = WaveChatStreamer(tokenizer=tokenizer, q=q, text_cleaner=text_cleaner)
+        thread = threading.Thread(
+            target=generate,
+            kwargs=dict(model=model, inputs=inputs, cfg=cfg, streamer=streamer),
+        )
+        try:
+            thread.start()
+            predicted_text = streamer.answer
+        finally:
+            while True:
+                if streamer.finished:
+                    thread.join()
+                    break
+                await q.sleep(1)
+
     else:
         # ValueError: `streamer` cannot be used with beam search (yet!).
         # Make sure that `num_beams` is set to 1.
-        streamer = None
         logger.info("Not streaming output, as it cannot be used with beam search.")
+        q.page["experiment/display/chat"].data[-1] += ["...", BOT]
+        output = generate(model, inputs, cfg)
+        predicted_text = text_cleaner(output["predicted_text"])
 
-    thread = threading.Thread(
-        target=stream_generate,
-        kwargs=dict(model=model, inputs=inputs, cfg=cfg, streamer=streamer),
-    )
-    try:
-        thread.start()
-        predicted_text = streamer.answer
-        logger.info(f"Predicted Answer: {predicted_text}")
-        message = [predicted_text, BOT]
-        q.client["experiment/display/chat/messages"].append(message)
-        q.page["experiment/display/chat"].data[-1] = message
-    finally:
-        while True:
-            if streamer.finished:
-                thread.join()
-                break
-            await q.sleep(1)
+    logger.info(f"Predicted Answer: {predicted_text}")
+    message = [predicted_text, BOT]
+    q.client["experiment/display/chat/messages"].append(message)
+    q.page["experiment/display/chat"].data[-1] = message
+
     del inputs
-
     gc.collect()
     torch.cuda.empty_cache()
 
 
-def stream_generate(model: Model, inputs: Dict, cfg: Any, streamer: TextStreamer):
+def generate(model: Model, inputs: Dict, cfg: Any, streamer: TextStreamer = None):
     """
     Generation with the intent to retrieve the generated answer
     from the streamer instance.
     """
     with torch.cuda.amp.autocast():
-        model.generate(batch=inputs, cfg=cfg, streamer=streamer).detach().cpu()
+        output = model.generate(batch=inputs, cfg=cfg, streamer=streamer).detach().cpu()
+    return output
 
 
 def load_cfg_model_tokenizer(
