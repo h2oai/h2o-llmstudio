@@ -246,10 +246,14 @@ async def chat_update(q: Q) -> None:
         streamer = None
         logger.info("Not streaming output, as it cannot be used with beam search.")
 
-    threading.Thread(
+    thread = threading.Thread(
         target=stream_generate,
         kwargs=dict(model=model, inputs=inputs, cfg=cfg, streamer=streamer),
-    ).start()
+    )
+    try:
+        thread.start()
+    finally:
+        thread.join()
 
     predicted_text = streamer.answer
     logger.info(f"Predicted Answer: {predicted_text}")
