@@ -1115,9 +1115,11 @@ async def chat_tab(q: Q, load_model=True):
         running_experiments.status.isin(["running"])
     ]
 
+    # gpu id in UI is offset by 1 to be in sync with experiment UI
+    gpu_id = q.client["gpu_used_for_chat"] - 1
     gpu_blocked = any(
         [
-            "0" in gpu_list
+            str(gpu_id) in gpu_list
             for gpu_list in running_experiments["gpu_list"]
             .apply(lambda x: x.split(","))
             .to_list()
@@ -1128,8 +1130,10 @@ async def chat_tab(q: Q, load_model=True):
             box="first",
             items=[
                 ui.text(
-                    "Chatbot is not available when GPU "
-                    "is blocked by another experiment."
+                    f"""Chatbot is not available when GPU{q.client["gpu_used_for_chat"]}
+                     is blocked by another experiment.
+                     You can change "Gpu used for Chat" in the settings tab
+                     to use another GPU for the chatbot. """
                 )
             ],
             title="",
@@ -1142,17 +1146,12 @@ async def chat_tab(q: Q, load_model=True):
     else:
         loading_message = "Chat History cleaned. How can I help you?"
 
-    q.client.chat_msg_num = "0"
-    cyclic_buffer = data(
-        fields="msg fromUser",
-        size=-500,
-        rows={q.client.chat_msg_num: [loading_message, BOT]},
-    )
     q.page["experiment/display/chat"] = ui.chatbot_card(
         box="first",
-        data=cyclic_buffer,  # type: ignore
+        data=data(fields="content from_user", t="list"),
         name="experiment/display/chat/chatbot",
     )
+    q.page["experiment/display/chat"].data += [loading_message, BOT]
     q.client["experiment/display/chat/messages"] = []
     q.client.delete_cards.add("experiment/display/chat")
 
@@ -1174,7 +1173,7 @@ async def chat_tab(q: Q, load_model=True):
 
     if load_model:
         cfg, model, tokenizer = load_cfg_model_tokenizer(
-            q.client["experiment/display/experiment_path"]
+            q.client["experiment/display/experiment_path"], device=f"cuda:{gpu_id}"
         )
         q.client["experiment/display/chat/cfg"] = cfg
         q.client["experiment/display/chat/model"] = model
@@ -1185,7 +1184,7 @@ async def chat_tab(q: Q, load_model=True):
         cfg = q.client["experiment/display/chat/cfg"]
         assert q.client["experiment/display/chat/model"] is not None
         assert q.client["experiment/display/chat/tokenizer"] is not None
-        # Message will be replaced, not noticeable in the UI.
+        # Do not update loading_message.
         initial_message = loading_message
 
     # Hide fields that are should not be visible in the UI
@@ -1195,7 +1194,7 @@ async def chat_tab(q: Q, load_model=True):
     cfg.prediction._visibility["stop_tokens"] = -1
 
     logger.info(torch.cuda.memory_allocated())
-    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = [
+    q.page["experiment/display/chat"].data[0] = [
         initial_message,
         BOT,
     ]
@@ -1240,10 +1239,8 @@ async def chat_update(q: Q) -> None:
 
     message = [prompt, USER]
     q.client["experiment/display/chat/messages"].append(message)
-    q.client.chat_msg_num = q.client.chat_msg_num + "1"
-    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = message
-    q.client.chat_msg_num = q.client.chat_msg_num + "1"
-    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = ["...", BOT]
+    q.page["experiment/display/chat"].data += message
+    q.page["experiment/display/chat"].data += ["...", BOT]
     await q.page.save()
 
     cfg = q.client["experiment/display/chat/cfg"]
@@ -1269,26 +1266,30 @@ async def chat_update(q: Q) -> None:
     inputs = cfg.dataset.dataset_class.encode(
         tokenizer, full_prompt, cfg.tokenizer.max_length_prompt, "left"
     )
-    inputs["prompt_input_ids"] = inputs.pop("input_ids").unsqueeze(0).to("cuda")
+    inputs["prompt_input_ids"] = (
+        inputs.pop("input_ids").unsqueeze(0).to(cfg.environment._device)
+    )
     inputs["prompt_attention_mask"] = (
-        inputs.pop("attention_mask").unsqueeze(0).to("cuda")
+        inputs.pop("attention_mask").unsqueeze(0).to(cfg.environment._device)
     )
 
     output = {}
     with torch.cuda.amp.autocast():
         output["predicted_answer_ids"] = model.generate(inputs, cfg).detach().cpu()
 
-    predicted_text = [
-        tokenizer.decode(ids, skip_special_tokens=True)
-        for ids in output["predicted_answer_ids"]
-    ]
-    output["predicted_text"] = np.array(predicted_text)
-
+    output["predicted_text"] = np.array(
+        [
+            tokenizer.decode(ids, skip_special_tokens=True)
+            for ids in output["predicted_answer_ids"]
+        ]
+    )
     output = cfg.dataset.dataset_class.clean_output(output, [full_prompt], cfg)
+    predicted_text = output["predicted_text"][0]
+    logger.info(f"Predicted Answer: {predicted_text}")
 
-    message = [output["predicted_text"][0], BOT]
+    message = [predicted_text, BOT]
     q.client["experiment/display/chat/messages"].append(message)
-    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = message
+    q.page["experiment/display/chat"].data[-1] = message
 
     del output
     del inputs

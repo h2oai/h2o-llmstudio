@@ -391,7 +391,11 @@ def run_inference(
         batch = cfg.dataset.dataset_class.batch_to_device(data, cfg.environment._device)
 
         with autocast(enabled=cfg.environment.mixed_precision):
-            output = model.forward(batch, generate=True)
+            output = model.forward(batch)
+            if cfg.prediction.metric != "Perplexity":
+                output["predicted_answer_ids"] = (
+                    unwrap_model(model).generate(batch, cfg).detach().cpu()
+                )
         if contains_nan(output) and cfg.environment.mixed_precision:
             raise LLMModelException(
                 "NaN caught during mixed precision inference. "
@@ -453,13 +457,12 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
     val_df.to_csv(csv_preds_name, index=False)
 
 
-def create_nlp_backbone(cfg, model_class=AutoModel, kwargs=None) -> Any:
+def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     """
     Creates a backbone model for NLP tasks.
     This is needed for Gradient Checkpointing in DDP mode.
     """
-    if kwargs is None:
-        kwargs = {}
+    kwargs = dict()
     try:
         config = AutoConfig.from_pretrained(
             cfg.llm_backbone,
@@ -481,16 +484,16 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs=None) -> Any:
 
     quantization_config = None
     if cfg.architecture.backbone_dtype == "int8":
-        kwargs["device_map"] = {"": cfg.environment._device}
+        kwargs["device_map"] = {"": cfg.environment._device}  # type: ignore
         quantization_config = BitsAndBytesConfig(
             load_in_8bit=True,
             llm_int8_threshold=0.0,
         )
         # need to force pretrained
         cfg.architecture.pretrained = True
-        kwargs["torch_dtype"] = torch.float16
+        kwargs["torch_dtype"] = torch.float16  # type: ignore
     elif cfg.architecture.backbone_dtype == "int4":
-        kwargs["device_map"] = {"": cfg.environment._device}
+        kwargs["device_map"] = {"": cfg.environment._device}  # type: ignore
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.float16,
@@ -498,7 +501,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel, kwargs=None) -> Any:
         )
         # need to force pretrained
         cfg.architecture.pretrained = True
-        kwargs["torch_dtype"] = torch.float16
+        kwargs["torch_dtype"] = torch.float16  # type: ignore
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
 
