@@ -86,7 +86,6 @@ def gpt_score(
     cfg: Any,
     results: Dict,
     val_df: pd.DataFrame,
-    model: str = "gpt-3.5-turbo",
     raw_results: bool = False,
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
     prompts = get_texts(val_df, cfg, separator="")
@@ -95,6 +94,8 @@ def gpt_score(
         deployment_id = os.getenv("OPENAI_API_DEPLOYMENT_ID")
     else:
         deployment_id = None
+
+    model = cfg.prediction.metric_gpt_model
 
     ret = Parallel(n_jobs=8, backend="multiprocessing")(
         delayed(rate_reply)(
@@ -111,7 +112,7 @@ def gpt_score(
                 results["target_text"],
             ),
             file=TqdmToLogger(logger, level=logging.INFO),
-            desc="GPT eval",
+            desc=f"GPT eval {model}",
             total=len(prompts),
         )
     )
@@ -166,8 +167,7 @@ class Metrics:
             "max",
             "mean",
         ),
-        "GPT3.5": (partial(gpt_score, model="gpt-3.5-turbo"), "max", "mean"),
-        "GPT4": (partial(gpt_score, model="gpt-4"), "max", "mean"),
+        "GPT": (gpt_score, "max", "mean"),
     }
 
     @classmethod
