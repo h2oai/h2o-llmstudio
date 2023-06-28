@@ -55,7 +55,7 @@ class WaveChatStreamer(TextStreamer):
         Create the answer by joining the generated words.
         By this, self.text_cleaner does not need to be idempotent.
         """
-        answer = " ".join(self.words)
+        answer = "".join(self.words)
         if answer.endswith(self.tokenizer.eos_token):
             # text generation is stopped
             answer = answer.replace(self.tokenizer.eos_token, "")
