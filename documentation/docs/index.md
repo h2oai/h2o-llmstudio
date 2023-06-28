@@ -96,7 +96,7 @@ import H2OHome from '@site/src/components/H2OHome';
           },
           {
             label: "Videos",
-            to: "/videos",
+            to: "/get-started/videos",
           },
         ],
       },
