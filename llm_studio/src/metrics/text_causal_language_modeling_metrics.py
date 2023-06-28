@@ -183,7 +183,7 @@ class Metrics:
         Returns:
             A class to build the Metrics
         """
-        return cls._metrics.get(name)
+        return cls._metrics.get(name, "GPT")
 
     @classmethod
     def suitable_metrics(cls, cfg: Any, results: Dict, val_df: pd.DataFrame) -> Dict:
