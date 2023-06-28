@@ -125,7 +125,7 @@ If you are running H2O LLM Studio with a custom environment other than Pipenv, y
 
 ```bash
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
-H2O_WAVE_NO_LOG=True \
+H2O_WAVE_NO_LOG=true \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
 wave run app
 ```

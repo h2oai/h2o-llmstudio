@@ -1142,17 +1142,12 @@ async def chat_tab(q: Q, load_model=True):
     else:
         loading_message = "Chat History cleaned. How can I help you?"
 
-    q.client.chat_msg_num = "0"
-    cyclic_buffer = data(
-        fields="msg fromUser",
-        size=-500,
-        rows={q.client.chat_msg_num: [loading_message, BOT]},
-    )
     q.page["experiment/display/chat"] = ui.chatbot_card(
         box="first",
-        data=cyclic_buffer,  # type: ignore
+        data=data(fields="content from_user", t="list"),
         name="experiment/display/chat/chatbot",
     )
+    q.page["experiment/display/chat"].data += [loading_message, BOT]
     q.client["experiment/display/chat/messages"] = []
     q.client.delete_cards.add("experiment/display/chat")
 
@@ -1185,7 +1180,7 @@ async def chat_tab(q: Q, load_model=True):
         cfg = q.client["experiment/display/chat/cfg"]
         assert q.client["experiment/display/chat/model"] is not None
         assert q.client["experiment/display/chat/tokenizer"] is not None
-        # Message will be replaced, not noticeable in the UI.
+        # Do not update loading_message.
         initial_message = loading_message
 
     # Hide fields that are should not be visible in the UI
@@ -1195,7 +1190,7 @@ async def chat_tab(q: Q, load_model=True):
     cfg.prediction._visibility["stop_tokens"] = -1
 
     logger.info(torch.cuda.memory_allocated())
-    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = [
+    q.page["experiment/display/chat"].data[0] = [
         initial_message,
         BOT,
     ]
@@ -1240,10 +1235,8 @@ async def chat_update(q: Q) -> None:
 
     message = [prompt, USER]
     q.client["experiment/display/chat/messages"].append(message)
-    q.client.chat_msg_num = q.client.chat_msg_num + "1"
-    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = message
-    q.client.chat_msg_num = q.client.chat_msg_num + "1"
-    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = ["...", BOT]
+    q.page["experiment/display/chat"].data += message
+    q.page["experiment/display/chat"].data += ["...", BOT]
     await q.page.save()
 
     cfg = q.client["experiment/display/chat/cfg"]
@@ -1280,17 +1273,19 @@ async def chat_update(q: Q) -> None:
     with torch.cuda.amp.autocast():
         output["predicted_answer_ids"] = model.generate(inputs, cfg).detach().cpu()
 
-    predicted_text = [
-        tokenizer.decode(ids, skip_special_tokens=True)
-        for ids in output["predicted_answer_ids"]
-    ]
-    output["predicted_text"] = np.array(predicted_text)
-
+    output["predicted_text"] = np.array(
+        [
+            tokenizer.decode(ids, skip_special_tokens=True)
+            for ids in output["predicted_answer_ids"]
+        ]
+    )
     output = cfg.dataset.dataset_class.clean_output(output, [full_prompt], cfg)
+    predicted_text = output["predicted_text"][0]
+    logger.info(f"Predicted Answer: {predicted_text}")
 
-    message = [output["predicted_text"][0], BOT]
+    message = [predicted_text, BOT]
     q.client["experiment/display/chat/messages"].append(message)
-    q.page["experiment/display/chat"].data[q.client.chat_msg_num] = message
+    q.page["experiment/display/chat"].data[-1] = message
 
     del output
     del inputs
