@@ -1267,10 +1267,12 @@ async def chat_update(q: Q) -> None:
     with torch.cuda.amp.autocast():
         output["predicted_answer_ids"] = model.generate(inputs, cfg).detach().cpu()
 
-    output["predicted_text"] = [
-        tokenizer.decode(ids, skip_special_tokens=True)
-        for ids in output["predicted_answer_ids"]
-    ]
+    output["predicted_text"] = np.array(
+        [
+            tokenizer.decode(ids, skip_special_tokens=True)
+            for ids in output["predicted_answer_ids"]
+        ]
+    )
     output = cfg.dataset.dataset_class.clean_output(output, [full_prompt], cfg)
     predicted_text = output["predicted_text"][0]
     logger.info(f"Predicted Answer: {predicted_text}")
