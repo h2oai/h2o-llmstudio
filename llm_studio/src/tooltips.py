@@ -105,7 +105,7 @@ class Tooltips:
             name = filename.split("/")[-1].split(".")[0]
             name = name.replace("-", "_")
             name = name[1:]  # remove leading underscore
-            section = filename.split("/")[1]
+            section = filename.split("/")[3]
             text = read_tooltip_file(filename)
             text = cleanhtml(text)
             text = clean_docusaurus_tags(text)
