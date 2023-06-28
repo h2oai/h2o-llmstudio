@@ -1283,7 +1283,7 @@ async def chat_update(q: Q) -> None:
         )["predicted_text"][0]
 
     if cfg.prediction.num_beams == 1:
-        streamer = WaveChatStreamer(tokenizer=tokenizer, text_cleaner=text_cleaner)
+        streamer = WaveChatStreamer(tokenizer=tokenizer, text_cleaner=None)
         await update_chat_stream(q, streamer)
     else:
         # ValueError: `streamer` cannot be used with beam search (yet!). Make sure that `num_beams` is set to 1.
