@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import shutil
 from collections import OrderedDict
 from typing import Any, Dict
 
@@ -33,6 +34,30 @@ def unwrap_model(model: torch.nn.Module):
         model = model.module
 
     return model
+
+
+def check_disk_space(model: torch.nn.Module, path: str):
+    total, used, free = shutil.disk_usage(path)
+
+    model_size_in_bytes = 0
+    for param in model.parameters():
+        if param.data.dtype == torch.int8:
+            model_size_in_bytes += param.numel() * 1
+        elif param.data.dtype in [torch.float16, torch.bfloat16]:
+            model_size_in_bytes += param.numel() * 2
+        elif param.data.dtype == torch.float32:
+            model_size_in_bytes += param.numel() * 4
+        else:
+            raise ValueError(f"Unsupported data type: {param.data.dtype}")
+
+    if model_size_in_bytes < free * 1.03:  # leave a 3% margin here.
+        logger.info("Enough space available for saving model weights.")
+    else:
+        raise ValueError(
+            f"Not enough space available for saving model weights. "
+            f"Required space: {model_size_in_bytes / (1024 * 1024):.2f}MB, "
+            f"Available space: {free * 1.03 / (1024 * 1024):.2f}MB."
+        )
 
 
 # TODO: currently not saving optimizer

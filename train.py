@@ -49,6 +49,7 @@ from llm_studio.src.utils.logging_utils import (
     write_flag,
 )
 from llm_studio.src.utils.modeling_utils import (
+    check_disk_space,
     get_number_of_validation_epochs,
     get_optimizer,
     get_scheduler,
@@ -593,6 +594,7 @@ def run(cfg: Any) -> None:
     # Prepare model
     with torch.device(cfg.environment._device):
         model = cfg.architecture.model_class(cfg)
+        check_disk_space(model, cfg.output_directory)
 
         if cfg.training.use_rlhf:
             logger.info("Using RLHF - Loading reward model")
