@@ -1704,8 +1704,8 @@ def load_user_settings(q: Q, force_defaults: bool = False):
         logger.info("Reading settings")
         with open(get_usersettings_path(q), "rb") as f:
             user_settings = pickle.load(f)
-            for key in user_settings:
-                q.client[key] = user_settings[key]
+            for key in default_cfg.user_settings:
+                q.client[key] = user_settings.get(key, default_cfg.user_settings[key])
     else:
         logger.info("Using default settings")
         for key in default_cfg.user_settings:
