@@ -1277,7 +1277,7 @@ async def chat_update(q: Q) -> None:
         inputs.pop("attention_mask").unsqueeze(0).to("cuda")
     )
 
-    def text_cleaner(text: str):
+    def text_cleaner(text: str) -> str:
         return cfg.dataset.dataset_class.clean_output(
             output={"predicted_text": np.array([text])}, prompts=[full_prompt], cfg=cfg
         )[0]
