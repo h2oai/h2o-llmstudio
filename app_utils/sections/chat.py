@@ -263,7 +263,7 @@ async def chat_update(q: Q) -> None:
         # ValueError: `streamer` cannot be used with beam search (yet!).
         # Make sure that `num_beams` is set to 1.
         logger.info("Not streaming output, as it cannot be used with beam search.")
-        q.page["experiment/display/chat"].data[-1] += ["...", BOT]
+        q.page["experiment/display/chat"].data[-1] = ["...", BOT]
         output = generate(model, inputs, cfg)
         predicted_text = text_cleaner(output["predicted_text"])
 
