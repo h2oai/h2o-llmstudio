@@ -266,6 +266,7 @@ async def chat_update(q: Q) -> None:
         while True:
             if streamer.finished:
                 thread.join()
+                break
             await q.sleep(1)
     del inputs
 
