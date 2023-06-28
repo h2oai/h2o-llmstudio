@@ -159,7 +159,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     ppo_clip_value: float = 0.2
     scaling_factor_value_loss: float = 0.1
     ppo_epochs: int = 4
-    ppo_batch_size: int = 2
+    ppo_batch_size: int = 1
     ppo_generate_temperature: float = 1.0
     offload_reward_model: bool = False
 
