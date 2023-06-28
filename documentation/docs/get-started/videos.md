@@ -27,7 +27,7 @@ import ReactPlayer from 'react-player'
 
 ## LLM Fine-Tuning, Falcon 40b, and the State of Open-Source
 
-<iframe width="930" height="515" src="https://www.youtube.com/watch?v=Ur-1PI9SMfw" title="Pascal Pfeiffer - Kaggle, Fine-Tuning, h2o.ai, GPT4, Falcon 40b, Open Source" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+<iframe width="930" height="515" src="https://www.youtube.com/embed/Ur-1PI9SMfw" title="Pascal Pfeiffer - Kaggle, Fine-Tuning, H2O.ai, GPT4, Falcon 40b, Open Source" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 
 :::info Note 
