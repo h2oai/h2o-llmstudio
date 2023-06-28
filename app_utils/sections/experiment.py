@@ -43,6 +43,7 @@ from app_utils.utils import (
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
 from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.models.text_causal_language_modeling_model import Model
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
     convert_cfg_to_nested_dictionary,
@@ -1242,7 +1243,7 @@ async def chat_update(q: Q) -> None:
     await q.page.save()
 
     cfg = q.client["experiment/display/chat/cfg"]
-    model = q.client["experiment/display/chat/model"]
+    model: Model = q.client["experiment/display/chat/model"]
     tokenizer = q.client["experiment/display/chat/tokenizer"]
 
     full_prompt = ""
@@ -1289,7 +1290,7 @@ async def chat_update(q: Q) -> None:
     def generate(inputs, cfg, streamer):
         with torch.cuda.amp.autocast():
             output["predicted_answer_ids"] = (
-                model.generate(inputs=inputs, cfg=cfg, streamer=streamer).detach().cpu()
+                model.generate(batch=inputs, cfg=cfg, streamer=streamer).detach().cpu()
             )
 
     threading.Thread(
