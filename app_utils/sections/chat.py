@@ -158,9 +158,7 @@ async def chat_tab(q: Q, load_model=True):
 
 def gpu_is_blocked(q, gpu_id):
     experiments = get_experiments(q=q)
-    running_experiments = experiments[
-        experiments.status.isin(["running"])
-    ]
+    running_experiments = experiments[experiments.status.isin(["running"])]
     gpu_blocked = any(
         [
             str(gpu_id) in gpu_list
@@ -346,11 +344,11 @@ def load_cfg_model_tokenizer(
 
 
 async def show_chat_is_running_dialog(q):
-    q.page['meta'].dialog = ui.dialog(
-        title='Text Generation is streaming.',
-        name='chatbot_running_dialog',
+    q.page["meta"].dialog = ui.dialog(
+        title="Text Generation is streaming.",
+        name="chatbot_running_dialog",
         items=[
-            ui.text('Please wait till the text generation has stopped.'),
+            ui.text("Please wait till the text generation has stopped."),
         ],
         closable=True,
     )
