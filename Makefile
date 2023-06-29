@@ -14,17 +14,14 @@ pipenv:
 .PHONY: setup
 setup: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
-	$(PIPENV_PIP) install https://github.com/h2oai/wave/releases/download/nightly/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl --force-reinstall
 
 .PHONY: setup-dev
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
-	$(PIPENV_PIP) install https://github.com/h2oai/wave/releases/download/nightly/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl --force-reinstall
 
 .PHONY: export-requirements
 export-requirements: pipenv
 	$(PIPENV) requirements > requirements.txt
-	 echo "https://github.com/h2oai/wave/releases/download/nightly/h2o_wave-nightly-py3-none-manylinux1_x86_64.whl" >> requirements.txt
 
 clean-env:
 	$(PIPENV) --rm
@@ -73,14 +70,14 @@ test: reports
 .PHONY: wave
 wave:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
-	H2O_WAVE_NO_LOG=True \
+	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(PWD)/output/download" \
 	$(PIPENV) run wave run app
 
 .PHONY: wave-no-reload
 wave-no-reload:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
-	H2O_WAVE_NO_LOG=True \
+	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(PWD)/output/download" \
 	$(PIPENV) run wave run --no-reload app
 
@@ -110,3 +107,19 @@ endif
 .PHONY: shell
 shell:
 	$(PIPENV) shell
+
+setup-doc:  # Install documentation dependencies
+	cd documentation && npm install 
+
+run-doc:  # Run the doc locally
+	cd documentation && npm start
+
+update-documentation-infrastructure:
+	cd documentation && npm update @h2oai/makersaurus
+	cd documentation && npm ls
+
+build-doc-locally:  # Bundles your website into static files for production 
+	cd documentation && npm run build
+
+serve-doc-locally:  # Serves the built website locally 
+	cd documentation && npm run serve

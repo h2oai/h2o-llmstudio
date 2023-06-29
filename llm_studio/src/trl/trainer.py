@@ -569,7 +569,6 @@ class PPOTrainer(PyTorchModelHubMixin):
                 outputs = model(
                     model_inputs_batch,
                     padding=False,
-                    generate=False,
                 )
 
             logits = outputs["logits"]

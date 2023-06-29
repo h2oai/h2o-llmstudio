@@ -89,6 +89,7 @@ default_cfg = {
         "set_max_epochs": 50,
         "set_max_batch_size": 256,
         "set_max_gradient_clip": 10,
+        "gpu_used_for_chat": 1,
         "default_number_of_workers": 8,
         "default_logger": "None",
         "default_neptune_project": os.getenv("NEPTUNE_PROJECT", ""),

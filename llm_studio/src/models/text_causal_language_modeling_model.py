@@ -133,14 +133,13 @@ class Model(nn.Module):
         super(Model, self).__init__()
 
         self.cfg = cfg
-        kwargs: Dict[str, Any] = {}
 
         if cfg.training.use_rlhf and not cfg.training.lora:
             logger.warning("Forcing LoRA to be True for RLHF")
             cfg.training.lora = True
 
         self.backbone, self.backbone_config = create_nlp_backbone(
-            cfg, model_class=AutoModelForCausalLM, kwargs=kwargs
+            cfg, model_class=AutoModelForCausalLM
         )
 
         if cfg.training.lora:
@@ -207,20 +206,11 @@ class Model(nn.Module):
             self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
         )
 
-        if "prompt_attention_mask" in batch:
-            mask_key = "prompt_attention_mask"
-            pad_keys = [
-                "input_ids",
-                "attention_mask",
-                "prompt_input_ids",
-                "prompt_attention_mask",
-            ]
-        else:
-            mask_key = "attention_mask"
-            pad_keys = [
-                "input_ids",
-                "attention_mask",
-            ]
+        mask_key = "prompt_attention_mask"
+        pad_keys = [
+            "prompt_input_ids",
+            "prompt_attention_mask",
+        ]
 
         batch = batch_padding(
             self.cfg,
@@ -230,12 +220,8 @@ class Model(nn.Module):
             pad_keys=pad_keys,
         )
 
-        if "prompt_attention_mask" in batch:
-            input_ids = batch["prompt_input_ids"]
-            attention_mask = batch["prompt_attention_mask"]
-        else:
-            input_ids = batch["input_ids"]
-            attention_mask = batch["attention_mask"]
+        input_ids = batch["prompt_input_ids"]
+        attention_mask = batch["prompt_attention_mask"]
 
         # Adding GenerationMixin type annotation for faster lookup
         generation_function: GenerationMixin.generate = self.backbone.generate
@@ -301,7 +287,6 @@ class Model(nn.Module):
     def forward(
         self,
         batch: Dict,
-        generate: bool = False,
         padding: bool = True,
     ) -> Dict:
         # disable cache if gradient checkpointing is enabled
@@ -353,16 +338,6 @@ class Model(nn.Module):
 
             outputs["logits"] = output.logits
             outputs["value"] = self.value_head(last_hidden_state).squeeze(-1)
-
-        if self.cfg.prediction.metric == "Perplexity":
-            # do not generate new text in forward if perplexity is the metric
-            generate = False
-
-        if generate:
-            with torch.no_grad():
-                outputs["predicted_answer_ids"] = (
-                    self.generate(batch, self.cfg).detach().cpu()
-                )
 
         # enable cache again if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:

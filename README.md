@@ -30,6 +30,7 @@
 - [Example: Run on OASST data via CLI](#example-run-on-oasst-data-via-cli)
 - [Model checkpoints](#model-checkpoints)
 - [FAQ](#faq)
+- [Documentation](#documentation)
 - [License](#license)
 
 ## With H2O LLM Studio, you can
@@ -56,10 +57,9 @@ Using CLI for fine-tuning LLMs:
 
 ## What's New
 
-- [PR 12](https://github.com/h2oai/h2o-llmstudio/pull/12). Experiment configurations are now stored in yaml format,
-allowing for more flexibility in the configuration while making it much easier to be backward compatible. Old experiment configurations that are stored in pickle format will be converted to yaml format automatically.
-- [PR 40](https://github.com/h2oai/h2o-llmstudio/pull/40) Added functionality for supporting nested conversations in data. A new `parent_id_column` can be selected for datasets to support tree-like structures in your conversational data. Additional `augmentation` settings have been added for this feature.
+- [PR 152](https://github.com/h2oai/h2o-llmstudio/pull/152) Add RLHF functionality for fine-tuning LLMs.
 - [PR 132](https://github.com/h2oai/h2o-llmstudio/pull/131) Add 4bit training that allows training of larger LLM backbones with less GPU memory. See [here](https://huggingface.co/blog/4bit-transformers-bitsandbytes) for a comprehensive summary of this method.
+- [PR 40](https://github.com/h2oai/h2o-llmstudio/pull/40) Added functionality for supporting nested conversations in data. A new `parent_id_column` can be selected for datasets to support tree-like structures in your conversational data. Additional `augmentation` settings have been added for this feature.
 
 Please note that due to current rapid development we cannot guarantee full backwards compatibility of new functionality. We thus recommend to pin the version of the framework to the one you used for your experiments. For resetting, please delete/backup your `data` and `output` folders.
 
@@ -125,7 +125,7 @@ If you are running H2O LLM Studio with a custom environment other than Pipenv, y
 
 ```bash
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
-H2O_WAVE_NO_LOG=True \
+H2O_WAVE_NO_LOG=true \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
 wave run app
 ```
@@ -222,7 +222,7 @@ The default settings are chosen with care and should give a good baseline. The m
 - **LLM Backbone**: This parameter determines the LLM architecture to use.
 - **Mask Prompt Labels**: This option controls whether to mask the prompt labels during training and only train on the loss of the answer.
 - **Hyperparameters** such as learning rate, batch size, and number of epochs determine the training process.
-Please consult the tooltips of each hyperparameter to learn more about them. The tooltips are shown next to each hyperparameter in the GUI and can be found as plain text `.mdx` files in the [tooltips/](tooltips/) folder.
+Please consult the tooltips of each hyperparameter to learn more about them. The tooltips are shown next to each hyperparameter in the GUI and can be found as plain text `.mdx` files in the [tooltips/](documentation/docs/tooltips/) folder.
 - **Evaluate Before Training** This option lets you evaluate the model before training, which can help you judge the quality of the LLM backbone before fine-tuning.
 
 We provide several metric options for evaluating the performance of your model. In addition to the BLEU score, we offer the GPT3.5 and GPT4 metrics that utilize the OpenAI API to determine whether the predicted answer is more favorable than the ground truth answer. To use these metrics, you can either export your OpenAI API key as an environment variable before starting LLM Studio, or you can specify it in the Settings Menu within the UI.
@@ -359,6 +359,10 @@ will still be available to you within the updated version of H2O LLM Studio.
 Before updating, we recommend running the command `git rev-parse --short HEAD` and saving the commit hash. 
 This will allow you to revert to your existing version if needed. 
 
+## Documentation
+
+Detailed documentation for H2O LLM Studio can be found at <https://docs.h2o.ai/h2o-llm-studio/>. 
+If you wish to contribute to the docs, navigate to the `/documentation` folder of this repo and refer to the [README.md](documentation/README.md) for more information. 
 
 ## License
 
