@@ -169,8 +169,6 @@ def decode_bytes(chunks: List[bytes]):
     try:
         decoded_tokens.append(buffer.decode("utf-8"))
     except UnicodeDecodeError:
-        # Here you can decide what to do with the remaining bytes that cannot be decoded.
-        # In this example, they are ignored.
         pass
 
     return decoded_tokens
