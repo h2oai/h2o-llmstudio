@@ -152,7 +152,7 @@ def decode_bytes(chunks: List[bytes]):
     """
     decoded_tokens = []
     buffer = b""
-    
+
     for chunk in chunks:
         combined = buffer + chunk
         try:
@@ -164,7 +164,7 @@ def decode_bytes(chunks: List[bytes]):
             # If decoding failed, keep the current chunk in the buffer
             # and attempt to combine it with the next chunk
             buffer = chunk
-            
+
     # Attempt to decode any remaining bytes in the buffer
     try:
         decoded_tokens.append(buffer.decode("utf-8"))
@@ -172,7 +172,7 @@ def decode_bytes(chunks: List[bytes]):
         # Here you can decide what to do with the remaining bytes that cannot be decoded.
         # In this example, they are ignored.
         pass
-        
+
     return decoded_tokens
 
 
