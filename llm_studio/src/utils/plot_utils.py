@@ -1,6 +1,6 @@
 import html
 from dataclasses import dataclass
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Union
 
 import numpy as np
 from bokeh.embed import file_html
@@ -141,7 +141,45 @@ def format_to_html(color, word, opacity):
     )
 
 
-def color_code_tokenized_text(tokenized_text_list: List[str], tokenizer):
+def decode_bytes(chunks: List[bytes]):
+    """Decodes bytes to string
+
+    Args:
+        chunks: byte chunks
+
+    Returns:
+        list of decoded strings
+    """
+    decoded_tokens = []
+    buffer = b""
+    
+    for chunk in chunks:
+        combined = buffer + chunk
+        try:
+            # Try to decode the combined bytes
+            decoded_tokens.append(combined.decode("utf-8"))
+            # If successful, clear the buffer
+            buffer = b""
+        except UnicodeDecodeError:
+            # If decoding failed, keep the current chunk in the buffer
+            # and attempt to combine it with the next chunk
+            buffer = chunk
+        else:
+            # Clear the buffer if the decoding was successful
+            buffer = b""
+            
+    # Attempt to decode any remaining bytes in the buffer
+    try:
+        decoded_tokens.append(buffer.decode("utf-8"))
+    except UnicodeDecodeError:
+        # Here you can decide what to do with the remaining bytes that cannot be decoded.
+        # In this example, they are ignored.
+        pass
+        
+    return decoded_tokens
+
+
+def color_code_tokenized_text(tokenized_text_list: List[Union[str, bytes]], tokenizer):
     """Color code tokenized text.
 
     Args:
@@ -151,6 +189,9 @@ def color_code_tokenized_text(tokenized_text_list: List[str], tokenizer):
     Returns:
         HTML string with color coded tokens
     """
+
+    if isinstance(tokenized_text_list[0], bytes):
+        tokenized_text_list = decode_bytes(tokenized_text_list)
 
     html_text = ""
     for token in tokenized_text_list:
