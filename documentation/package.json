@@ -1,0 +1,14 @@
+{
+    "name": "h2o-llmstudio-docs",
+    "version": "0.0.0",
+    "scripts": {
+      "start": "makersaurus start",
+      "build": "makersaurus build",
+      "serve": "makersaurus serve",
+      "deploy": "makersaurus deploy"
+    },
+    "dependencies": {
+      "@h2oai/makersaurus": "^0.4.0",
+      "docusaurus-plugin-includes": "^1.1.4"
+    }
+  }
