@@ -23,6 +23,12 @@ def on_startup():
 async def serve(q: Q):
     """Serving function."""
 
+    # Chat is still being streamed but user clicks on another button.
+    # Wait until streaming has been completed,
+    # as currently there is no stop streaming functionality implemented.
+    if q.client["experiment/display/chat/finished"] is False:
+        return
+
     if not q.app.initialized:
         await initialize_app(q)
 

@@ -192,6 +192,8 @@ async def chat_update(q: Q) -> None:
     """
     Update the chatbot with the new message.
     """
+    q.client["experiment/display/chat/finished"] = False
+
     cfg_prediction = parse_ui_elements(
         cfg=q.client["experiment/display/chat/cfg"].prediction,
         q=q,
@@ -280,6 +282,8 @@ async def chat_update(q: Q) -> None:
     del inputs
     gc.collect()
     torch.cuda.empty_cache()
+
+    q.client["experiment/display/chat/finished"] = True
 
 
 def generate(model: Model, inputs: Dict, cfg: Any, streamer: TextStreamer = None):
