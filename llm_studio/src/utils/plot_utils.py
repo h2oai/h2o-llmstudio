@@ -164,9 +164,6 @@ def decode_bytes(chunks: List[bytes]):
             # If decoding failed, keep the current chunk in the buffer
             # and attempt to combine it with the next chunk
             buffer = chunk
-        else:
-            # Clear the buffer if the decoding was successful
-            buffer = b""
             
     # Attempt to decode any remaining bytes in the buffer
     try:
