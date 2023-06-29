@@ -346,9 +346,6 @@ def load_cfg_model_tokenizer(
 
 
 async def show_chat_is_running_dialog(q):
-    if q.events.chatbot_running_dialog:
-        if q.events.my_dialog.dismissed:
-            q.page['meta'].dialog = None
     q.page['meta'].dialog = ui.dialog(
         title='Text Generation is streaming.',
         name='chatbot_running_dialog',
@@ -356,7 +353,5 @@ async def show_chat_is_running_dialog(q):
             ui.text('Please wait till the text generation has stopped.'),
         ],
         closable=True,
-        # Get notified when the dialog is dismissed.
-        events=['dismissed'],
     )
     await q.page.save()
