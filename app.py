@@ -1,6 +1,7 @@
 import logging
 import os
 
+from app_utils.sections.chat import show_chat_is_running_dialog
 from llm_studio.src.utils.logging_utils import initialize_logging
 
 os.environ["MKL_THREADING_LAYER"] = "GNU"
@@ -27,6 +28,7 @@ async def serve(q: Q):
     # Wait until streaming has been completed,
     # as currently there is no stop streaming functionality implemented.
     if q.client["experiment/display/chat/finished"] is False:
+        await show_chat_is_running_dialog(q)
         return
 
     if not q.app.initialized:

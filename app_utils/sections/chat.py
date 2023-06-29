@@ -157,9 +157,9 @@ async def chat_tab(q: Q, load_model=True):
 
 
 def gpu_is_blocked(q, gpu_id):
-    running_experiments = get_experiments(q=q)
-    running_experiments = running_experiments[
-        running_experiments.status.isin(["running"])
+    experiments = get_experiments(q=q)
+    running_experiments = experiments[
+        experiments.status.isin(["running"])
     ]
     gpu_blocked = any(
         [
@@ -343,3 +343,20 @@ def load_cfg_model_tokenizer(
     model.backbone.use_cache = True
 
     return cfg, model, tokenizer
+
+
+async def show_chat_is_running_dialog(q):
+    if q.events.chatbot_running_dialog:
+        if q.events.my_dialog.dismissed:
+            q.page['meta'].dialog = None
+    q.page['meta'].dialog = ui.dialog(
+        title='Text Generation is streaming.',
+        name='chatbot_running_dialog',
+        items=[
+            ui.text('Please wait till the text generation has stopped.'),
+        ],
+        closable=True,
+        # Get notified when the dialog is dismissed.
+        events=['dismissed'],
+    )
+    await q.page.save()
