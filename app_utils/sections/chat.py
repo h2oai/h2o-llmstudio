@@ -37,13 +37,13 @@ class WaveChatStreamer(TextStreamer):
         """
         super().__init__(tokenizer, skip_prompt=True, **decode_kwargs)
         self.text_cleaner = text_cleaner
-        self.words: List[str] = []
+        self.words_predicted_answer: List[str] = []
         self.q = q
         self.loop = asyncio.get_event_loop()
         self.finished = False
 
     def on_finalized_text(self, text: str, stream_end: bool = False):
-        self.words += [text]
+        self.words_predicted_answer += [text]
         self.loop.create_task(self.push_to_chat())
 
     async def push_to_chat(self):
@@ -56,7 +56,7 @@ class WaveChatStreamer(TextStreamer):
         Create the answer by joining the generated words.
         By this, self.text_cleaner does not need to be idempotent.
         """
-        answer = "".join(self.words)
+        answer = "".join(self.words_predicted_answer)
         if answer.endswith(self.tokenizer.eos_token):
             # text generation is stopped
             answer = answer.replace(self.tokenizer.eos_token, "")
@@ -245,6 +245,7 @@ async def chat_update(q: Q) -> None:
 
     if cfg.prediction.num_beams == 1:
         streamer = WaveChatStreamer(tokenizer=tokenizer, q=q, text_cleaner=text_cleaner)
+        # Need to start generation in a separate thread, otherwise streaming is blocked
         thread = threading.Thread(
             target=generate,
             kwargs=dict(model=model, inputs=inputs, cfg=cfg, streamer=streamer),
