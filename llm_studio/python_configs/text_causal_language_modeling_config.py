@@ -215,13 +215,13 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["scaling_factor_value_loss"] = (0.01, 1, 0.01)
         self._possible_values["ppo_epochs"] = (1, 16, 1)
         self._possible_values["ppo_generate_temperature"] = (0.1, 1.0, 0.1)
-        self._possible_values["ppo_batch_size"] = (1, 1024, 1)
+        self._possible_values["ppo_batch_size"] = (1, 256, 1)
 
         self._visibility["loss_class"] = -1
         self._visibility["drop_last_batch"] = -1
         self._visibility["differential_learning_rate_layers"] = 1
         self._visibility["differential_learning_rate"] = 1
-        self._visibility["ppo_batch_size"] = -1
+        self._visibility["ppo_batch_size"] = 1
 
         self._nesting.add(
             ["differential_learning_rate"],
@@ -277,9 +277,9 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self._possible_values["max_length_prompt"] = (32, 2048, 16)
-        self._possible_values["max_length_answer"] = (32, 2048, 16)
-        self._possible_values["max_length"] = (32, 2048, 16)
+        self._possible_values["max_length_prompt"] = (32, 8192, 32)
+        self._possible_values["max_length_answer"] = (32, 8192, 32)
+        self._possible_values["max_length"] = (32, 8192, 32)
         self._possible_values["padding_quantile"] = (0, 1, 0.01)
         self._padding_side = "left"
 
@@ -484,24 +484,22 @@ class ConfigProblemBase(DefaultConfig):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
-                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-7b-v2",
+                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-7b-v3",
                 "h2oai/h2ogpt-gm-oasst1-en-2048-open-llama-7b",
-                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-40b-v1",
-                "h2oai/h2ogpt-oig-oasst1-512-6.9b",
-                "h2oai/h2ogpt-oasst1-512-20b",
-                "EleutherAI/gpt-neo-1.3B",
+                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-40b-v2",
+                "tiiuae/falcon-7b",
+                "tiiuae/falcon-40b",
+                "openlm-research/open_llama_3b",
+                "openlm-research/open_llama_7b",
+                "openlm-research/open_llama_13b",
                 "EleutherAI/gpt-j-6B",
                 "EleutherAI/gpt-neox-20b",
                 "facebook/opt-125m",
                 "facebook/opt-2.7b",
-                "facebook/opt-6.7b",
-                "facebook/opt-13b",
                 "EleutherAI/pythia-1b-deduped",
                 "EleutherAI/pythia-2.8b-deduped",
                 "EleutherAI/pythia-6.9b-deduped",
                 "EleutherAI/pythia-12b-deduped",
-                "cerebras/Cerebras-GPT-13B",
-                "stabilityai/stablelm-base-alpha-7b",
                 "togethercomputer/GPT-NeoXT-Chat-Base-20B",
             ),
             allow_custom=True,
