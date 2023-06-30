@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Dict
 
 CLEANR = re.compile("<[^<]+?>")
-tooltip_files = glob.glob("tooltips/**/*.mdx", recursive=True)
+tooltip_files = glob.glob("documentation/docs/tooltips/**/*.mdx", recursive=True)
 
 
 def read_tooltip_file(path: str) -> str:
@@ -105,7 +105,7 @@ class Tooltips:
             name = filename.split("/")[-1].split(".")[0]
             name = name.replace("-", "_")
             name = name[1:]  # remove leading underscore
-            section = filename.split("/")[1]
+            section = filename.split("/")[3]
             text = read_tooltip_file(filename)
             text = cleanhtml(text)
             text = clean_docusaurus_tags(text)
