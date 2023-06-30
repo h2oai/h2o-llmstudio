@@ -388,11 +388,14 @@ class PPOTrainer(PyTorchModelHubMixin):
         num_updates = 0
 
         if (
-            self.cfg.training.ppo_epochs * self.cfg.training.ppo_batch_size
-        ) % self.cfg.training.grad_accumulation != 0:
+            self.cfg.training.ppo_epochs * self.cfg.training.grad_accumulation
+        ) % self.cfg.training.ppo_batch_size != 0:
             raise ValueError(
-                "ppo_epochs*ppo_batch_size must be multiply of grad_accumulation"
+                "ppo_epochs * grad_accumulation must be multiply of ppo_batch_size"
             )
+
+        if self.cfg.training.ppo_batch_size > self.training.batch_size:
+            raise ValueError("ppo_batch_size must not be larger than the batch_size")
 
         for _ in range(self.cfg.training.ppo_epochs):
             for batch in mini_batch_dataloader:
