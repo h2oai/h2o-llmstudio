@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "523dde3cf862e0310b13b878e9b5a0d08670c1c584c549811a50a36a3e9c06fd"
+            "sha256": "ae6e9a721edca70db5dd4abba4c5ea7e124bdbf2d9d0e4840468299cb17a36ca"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -14,8 +14,13 @@
                 "verify_ssl": true
             },
             {
-                "name": "pytorch",
+                "name": "pytorch-cuda",
                 "url": "https://download.pytorch.org/whl/cu117",
+                "verify_ssl": false
+            },
+            {
+                "name": "pytorch-mps",
+                "url": "https://download.pytorch.org/whl/nightly/cpu",
                 "verify_ssl": false
             }
         ]
@@ -2115,7 +2120,7 @@
                 "sha256:f0b525686f25c30e1de87d0fbdcd0b373f4c70a0f72bd854389e601a52fdc5e5",
                 "sha256:f6e26492d214edab5b407e903ed3c7b190ac5709330bd72060d1be01b354c198"
             ],
-            "index": "pytorch",
+            "index": "pytorch-cuda",
             "version": "==2.0.0+cu117"
         },
         "torchaudio": {
@@ -2129,7 +2134,7 @@
                 "sha256:e37a556d036f48a4f4f33fe698f844024037ece66123bf21715de73e506cdec3",
                 "sha256:f8fc84a567e307c8d05742ca713240c43cd67842632f6b231adf3fcffd812f37"
             ],
-            "index": "pytorch",
+            "index": "pytorch-cuda",
             "version": "==2.0.1+cu117"
         },
         "torchvision": {
@@ -2143,7 +2148,7 @@
                 "sha256:6d82ede144cabe85f21814c723b3a666d427de9566056701863663ea0f2ad7d9",
                 "sha256:a9bff1003aae1019f672996ebee62438f83843498926733d6f2f378314ad8326"
             ],
-            "index": "pytorch",
+            "index": "pytorch-cuda",
             "version": "==0.15.1+cu117"
         },
         "tornado": {

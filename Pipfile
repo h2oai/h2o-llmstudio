@@ -4,17 +4,25 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [[source]]
-name = "pytorch"
+name = "pytorch-cuda"
 url = "https://download.pytorch.org/whl/cu117"
+verify_ssl = false
+
+[[source]]
+name = "pytorch-mps"
+url = "https://download.pytorch.org/whl/nightly/cpu"
 verify_ssl = false
 
 [requires]
 python_version = "3.10"
 
 [packages]
-torch = {index = "pytorch", version = "==2.0.0+cu117"}
-torchvision = {index = "pytorch", version = "==0.15.1+cu117"}
-torchaudio = {index = "pytorch", version = "==2.0.1+cu117"}
+torch = {index = "pytorch-cuda", version = "==2.0.0+cu117"}
+torchvision = {index = "pytorch-cuda", version = "==0.15.1+cu117"}
+torchaudio = {index = "pytorch-cuda", version = "==2.0.1+cu117"}
+#torch = {index = "pytorch-mps", version = "==2.1.0.dev20230630", sys_platform = "== 'darwin'"}
+#torchvision = {index = "pytorch-mps", version = "==0.16.0.dev20230630", sys_platform = "== 'darwin'"}
+#torchaudio = {index = "pytorch-mps", version = "==2.1.0.dev20230630", sys_platform = "== 'darwin'"}
 tqdm = ">=4.65.0, <5.0.0"
 transformers = "==4.30.1"
 numpy = ">=1.23.2, <2.0.0"

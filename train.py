@@ -65,6 +65,20 @@ from llm_studio.src.utils.utils import kill_ddp_processes, set_environment, set_
 
 logger = logging.getLogger(__name__)
 
+if torch.backends.mps.is_available():
+    # workaround macOS specific issue where multiprocessing encounters a pickle error
+    # https://bugs.python.org/issue46871
+    import multiprocessing
+    multiprocessing.set_start_method("fork")
+
+    # workaround missing autocast support in pytorch
+    # https://github.com/pytorch/pytorch/issues/104478
+    from types import SimpleNamespace
+    torch.mps.amp = SimpleNamespace()
+    torch.mps.amp.autocast = autocast
+    torch.mps._initialized = False
+    torch.mps.get_autocast_dtype = lambda: torch.float32
+    torch.mps.is_autocast_enabled = lambda: False
 
 def run_eval(
     cfg,
@@ -531,7 +545,10 @@ def run(cfg: Any) -> None:
         )
     else:
         cfg.environment._local_rank = 0
-        cfg.environment._device = "cuda:0"
+        if torch.backends.mps.is_available():
+            cfg.environment._device = "mps"
+        else:
+            cfg.environment._device = "cuda:0"
 
     set_seed(cfg.environment._seed)
     if cfg.environment._local_rank == 0:
