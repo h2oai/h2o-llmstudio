@@ -65,13 +65,10 @@ def get_tokenizer(cfg: Any):
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-        tokenizer.pad_token_id = tokenizer.eos_token_id
     if tokenizer.cls_token is None:
         tokenizer.cls_token = tokenizer.eos_token
-        tokenizer.cls_token_id = tokenizer.eos_token_id
     if tokenizer.sep_token is None:
         tokenizer.sep_token = tokenizer.eos_token
-        tokenizer.sep_token_id = tokenizer.eos_token_id
 
     cfg._tokenizer_sep_token = tokenizer.sep_token
 
@@ -79,7 +76,7 @@ def get_tokenizer(cfg: Any):
         cfg._tokenizer_mask_token_id = tokenizer.unk_token_id
     elif tokenizer.mask_token_id is not None:
         cfg._tokenizer_mask_token_id = tokenizer.mask_token_id
-    elif tokenizer.mask_token_id is not None:
+    elif tokenizer.pad_token_id is not None:
         cfg._tokenizer_mask_token_id = tokenizer.pad_token_id
     else:
         # setting the mask token id to the last token in the vocabulary
