@@ -48,7 +48,7 @@ H2O LLM Studio stores its data in two folders located in the root directory. The
 - `output/user`: All experiments conducted in H2O LLM Studio are stored in this folder. For each experiment, a separate folder is created within the `output/user` directory, which contains all the relevant data associated with that particular experiment.
 - `output/download`: Utility folder that is used to store data the user downloads within the app. 
 
-It is possible to change the default folders `data` and `output` in [app_utils/config.py](app_utils/config.py) 
+It is possible to change the default folders `data` and `output` in [app_utils/config.py](https://github.com/h2oai/h2o-llmstudio/blob/main/app_utils/config.py) 
 (change `data_folder` and `output_folder`).
 
 ----
