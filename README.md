@@ -361,7 +361,7 @@ This will allow you to revert to your existing version if needed.
 
 ## Documentation
 
-Detailed documentation for H2O LLM Studio can be found at <https://docs.h2o.ai/h2o-llm-studio/>. 
+Detailed documentation for H2O LLM Studio can be found at <https://docs.h2o.ai/h2o-llmstudio/>. 
 If you wish to contribute to the docs, navigate to the `/documentation` folder of this repo and refer to the [README.md](documentation/README.md) for more information. 
 
 ## License
