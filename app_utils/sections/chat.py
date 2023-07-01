@@ -17,6 +17,7 @@ from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.models.text_causal_language_modeling_model import Model
 from llm_studio.src.utils.config_utils import load_config_yaml
 from llm_studio.src.utils.modeling_utils import load_checkpoint
+from llm_studio.src.utils.utils import DisableLogger
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,8 @@ class WaveChatStreamer(TextStreamer):
 
     async def push_to_chat(self):
         self.q.page["experiment/display/chat"].data[-1] = [self.answer, BOT]
-        await self.q.page.save()
+        with DisableLogger():
+            await self.q.page.save()
 
     @property
     def answer(self):
