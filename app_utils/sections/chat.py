@@ -2,7 +2,6 @@ import asyncio
 import gc
 import logging
 import os
-import re
 import threading
 from typing import Any, Callable, Dict, List, Optional
 
