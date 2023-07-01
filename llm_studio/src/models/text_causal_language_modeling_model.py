@@ -259,6 +259,7 @@ class Model(nn.Module):
         output = generation_function(
             inputs=input_ids,
             attention_mask=attention_mask,
+            generation_config=self.backbone.generation_config,
             pad_token_id=pad_token_id,
             min_new_tokens=cfg.prediction.min_length_inference,
             max_new_tokens=cfg.prediction.max_length_inference,

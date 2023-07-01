@@ -1,0 +1,32 @@
+name: Deploy documentation to GitHub pages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          always-auth: true
+          registry-url: https://npm.pkg.github.com/
+          node-version: 18
+          cache: npm
+          cache-dependency-path: documentation/package-lock.json
+
+      - name: Install dependencies
+        run: cd documentation && npm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build docs
+        run: cd documentation && npm run build
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./documentation/tmp/build
+          user_name: sherenem ##swap username out with the username of someone with admin access to the repo 
+          user_email: sherene.mahanama@h2o.ai ##swap email out with the email of someone with admin access to the repo 
