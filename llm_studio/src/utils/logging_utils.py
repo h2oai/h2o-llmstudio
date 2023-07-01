@@ -28,10 +28,10 @@ def initialize_logging(cfg: Optional[Any] = None, actual_logger=None):
         actual_logger.handlers.clear()
 
     actual_logger.setLevel(logging.INFO)
-    actual_logger.addFilter(IgnorePatchRequestsFilter())
     console_handler = logging.StreamHandler()
     formatter = logging.Formatter(format)
     console_handler.setFormatter(formatter)
+    console_handler.addFilter(IgnorePatchRequestsFilter())
     actual_logger.addHandler(console_handler)
 
     if cfg is not None:
