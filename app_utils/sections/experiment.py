@@ -60,7 +60,6 @@ from llm_studio.src.utils.export_utils import (
 from llm_studio.src.utils.logging_utils import write_flag
 from llm_studio.src.utils.modeling_utils import (
     check_disk_space,
-    load_checkpoint,
     unwrap_model,
 )
 from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
