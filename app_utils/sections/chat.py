@@ -9,7 +9,7 @@ import numpy as np
 import torch
 from accelerate import dispatch_model, infer_auto_device_map
 from accelerate.utils import get_balanced_memory
-from h2o_wave import Q, data, ui
+from h2o_wave import Q, ui
 from transformers import AutoTokenizer, TextStreamer
 
 from app_utils.utils import get_experiments, get_ui_elements, parse_ui_elements
@@ -17,7 +17,6 @@ from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.models.text_causal_language_modeling_model import Model
 from llm_studio.src.utils.config_utils import load_config_yaml
 from llm_studio.src.utils.modeling_utils import load_checkpoint
-from llm_studio.src.utils.utils import DisableLogger
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +48,7 @@ class WaveChatStreamer(TextStreamer):
 
     async def push_to_chat(self):
         self.q.page["experiment/display/chat"].data[-1] = [self.answer, BOT]
-        with DisableLogger():
-            await self.q.page.save()
+        await self.q.page.save()
 
     @property
     def answer(self):
@@ -246,6 +244,8 @@ async def chat_update(q: Q) -> None:
         )["predicted_text"][0]
 
     if cfg.prediction.num_beams == 1:
+        log_level_asyncio = logging.getLogger('asyncio').getEffectiveLevel()
+        logging.getLogger('asyncio').setLevel(logging.WARNING)
         streamer = WaveChatStreamer(tokenizer=tokenizer, q=q, text_cleaner=text_cleaner)
         # Need to start generation in a separate thread, otherwise streaming is blocked
         thread = threading.Thread(
@@ -261,6 +261,7 @@ async def chat_update(q: Q) -> None:
                     predicted_text = streamer.answer
                     break
                 await q.sleep(1)
+        logging.getLogger('asyncio').setLevel(log_level_asyncio)
 
     else:
         # ValueError: `streamer` cannot be used with beam search (yet!).
