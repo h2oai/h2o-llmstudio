@@ -9,7 +9,9 @@ import numpy as np
 import torch
 from accelerate import dispatch_model, infer_auto_device_map
 from accelerate.utils import get_balanced_memory
-from h2o_wave import Q, ui
+from h2o_wave import Q
+from h2o_wave import data as chat_data
+from h2o_wave import ui
 from transformers import AutoTokenizer, TextStreamer
 
 from app_utils.utils import get_experiments, get_ui_elements, parse_ui_elements
@@ -82,7 +84,7 @@ async def chat_tab(q: Q, load_model=True):
 
     q.page["experiment/display/chat"] = ui.chatbot_card(
         box="first",
-        data=data(fields="content from_user", t="list"),  # type: ignore
+        data=chat_data(fields="content from_user", t="list"),  # type: ignore
         name="experiment/display/chat/chatbot",
     )
     q.page["experiment/display/chat"].data += [loading_message, BOT]
@@ -244,8 +246,8 @@ async def chat_update(q: Q) -> None:
         )["predicted_text"][0]
 
     if cfg.prediction.num_beams == 1:
-        log_level_asyncio = logging.getLogger('asyncio').getEffectiveLevel()
-        logging.getLogger('asyncio').setLevel(logging.WARNING)
+        log_level_asyncio = logging.getLogger("asyncio").getEffectiveLevel()
+        logging.getLogger("asyncio").setLevel(logging.WARNING)
         streamer = WaveChatStreamer(tokenizer=tokenizer, q=q, text_cleaner=text_cleaner)
         # Need to start generation in a separate thread, otherwise streaming is blocked
         thread = threading.Thread(
@@ -261,7 +263,7 @@ async def chat_update(q: Q) -> None:
                     predicted_text = streamer.answer
                     break
                 await q.sleep(1)
-        logging.getLogger('asyncio').setLevel(log_level_asyncio)
+        logging.getLogger("asyncio").setLevel(log_level_asyncio)
 
     else:
         # ValueError: `streamer` cannot be used with beam search (yet!).
