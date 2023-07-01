@@ -2,6 +2,7 @@ import asyncio
 import gc
 import logging
 import os
+import re
 import threading
 from typing import Any, Callable, Dict, List, Optional
 
@@ -20,7 +21,22 @@ from llm_studio.src.models.text_causal_language_modeling_model import Model
 from llm_studio.src.utils.config_utils import load_config_yaml
 from llm_studio.src.utils.modeling_utils import load_checkpoint
 
+
+class IgnorePatchRequestsFilter(logging.Filter):
+    """
+    Filters out logs that come from streaming updates
+    """
+
+    def filter(self, record):
+        log_message = record.getMessage()
+        if re.search(r"HTTP Request: PATCH", log_message):
+            return False  # Ignore the log entry
+        return True  # Include the log entry
+
+
 logger = logging.getLogger(__name__)
+ignore_patch_filter = IgnorePatchRequestsFilter()
+logger.addFilter(ignore_patch_filter)
 
 USER = True
 BOT = False
@@ -246,8 +262,6 @@ async def chat_update(q: Q) -> None:
         )["predicted_text"][0]
 
     if cfg.prediction.num_beams == 1:
-        log_level_asyncio = logging.getLogger("asyncio").getEffectiveLevel()
-        logging.getLogger("asyncio").setLevel(logging.WARNING)
         streamer = WaveChatStreamer(tokenizer=tokenizer, q=q, text_cleaner=text_cleaner)
         # Need to start generation in a separate thread, otherwise streaming is blocked
         thread = threading.Thread(
@@ -263,8 +277,6 @@ async def chat_update(q: Q) -> None:
                     predicted_text = streamer.answer
                     break
                 await q.sleep(1)
-        logging.getLogger("asyncio").setLevel(log_level_asyncio)
-
     else:
         # ValueError: `streamer` cannot be used with beam search (yet!).
         # Make sure that `num_beams` is set to 1.
