@@ -21,22 +21,7 @@ from llm_studio.src.models.text_causal_language_modeling_model import Model
 from llm_studio.src.utils.config_utils import load_config_yaml
 from llm_studio.src.utils.modeling_utils import load_checkpoint
 
-
-class IgnorePatchRequestsFilter(logging.Filter):
-    """
-    Filters out logs that come from streaming updates
-    """
-
-    def filter(self, record):
-        log_message = record.getMessage()
-        if re.search(r"HTTP Request: PATCH", log_message):
-            return False  # Ignore the log entry
-        return True  # Include the log entry
-
-
-logger = logging.getLogger()
-ignore_patch_filter = IgnorePatchRequestsFilter()
-logger.addFilter(ignore_patch_filter)
+logger = logging.getLogger(__name__)
 
 USER = True
 BOT = False
