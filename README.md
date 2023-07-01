@@ -138,6 +138,7 @@ H2O LLM Studio images are stored in the h2oai GCR vorvan container repository.
 ```bash
 mkdir -p `pwd`/data
 mkdir -p `pwd`/output
+mkdir -p `pwd`/cache
 docker run \
     --runtime=nvidia \
     --shm-size=64g \
@@ -147,6 +148,7 @@ docker run \
     -p 10101:10101 \
     -v `pwd`/data:/workspace/data \
     -v `pwd`/output:/workspace/output \
+    -v `pwd`/cache:/home/llmstudio/.cache \
     gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
 ```
 
@@ -167,6 +169,7 @@ docker run \
     -p 10101:10101 \
     -v `pwd`/data:/workspace/data \
     -v `pwd`/output:/workspace/output \
+    -v `pwd`/cache:/home/llmstudio/.cache \
     h2o-llmstudio
 ```
 
