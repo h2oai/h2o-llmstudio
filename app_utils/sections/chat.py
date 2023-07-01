@@ -34,7 +34,7 @@ class IgnorePatchRequestsFilter(logging.Filter):
         return True  # Include the log entry
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 ignore_patch_filter = IgnorePatchRequestsFilter()
 logger.addFilter(ignore_patch_filter)
 
