@@ -346,7 +346,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     top_k: int = 0
     top_p: float = 1.0
 
-    num_history: int = 2
+    num_history: int = 4
 
     def __post_init__(self):
         super().__post_init__()
