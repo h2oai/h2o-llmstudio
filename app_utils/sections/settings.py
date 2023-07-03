@@ -367,6 +367,40 @@ async def settings(q: Q) -> None:
                     ),
                 ]
             ),
+            ui.inline(
+                items=[
+                    ui.label("LoRA R", width=label_width),
+                    ui.spinbox(
+                        name="set_max_lora_r",
+                        label=None,
+                        min=1,
+                        max=16384,
+                        step=1,
+                        value=q.client["set_max_lora_r"],
+                        width=textbox_width,
+                        trigger=False,
+                        tooltip="Set the maximum value for the LoRA R \
+                            slider in the experiment setup.",
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
+                    ui.label("LoRA alpha", width=label_width),
+                    ui.spinbox(
+                        name="set_max_lora_alpha",
+                        label=None,
+                        min=1,
+                        max=16384,
+                        step=1,
+                        value=q.client["set_max_lora_alpha"],
+                        width=textbox_width,
+                        trigger=False,
+                        tooltip="Set the maximum value for the LoRA Alpha \
+                            slider in the experiment setup.",
+                    ),
+                ]
+            ),
             ui.separator("Default Chat Settings"),
             ui.inline(
                 items=[
