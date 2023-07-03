@@ -112,6 +112,7 @@ def load_model_weights(
 
     model_weights = {re.sub(r"^module\.", "", k): v for k, v in model_weights.items()}
     model_weights = {k.replace("_orig_mod.", ""): v for k, v in model_weights.items()}
+
     try:
         model.load_state_dict(OrderedDict(model_weights), strict=True)
     except Exception as e:
@@ -149,7 +150,7 @@ def load_checkpoint(
     if weights_path is None:
         weights_path = cfg.architecture.pretrained_weights
 
-    d = torch.load(weights_path, map_location="cpu")
+    d = torch.load(weights_path, map_location=cfg.environment._device)
 
     model_weights = d["model"]
     model = load_model_weights(model, model_weights, strict, cfg)
