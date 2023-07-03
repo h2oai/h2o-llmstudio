@@ -146,7 +146,7 @@ class Perplexity(nn.Module):
 
 
 def perplexity(cfg: Any, results: Dict, val_df: pd.DataFrame):
-    return results["perplexity"].detach().cpu().numpy()
+    return results["perplexity"].detach().float().cpu().numpy()
 
 
 class Metrics:
