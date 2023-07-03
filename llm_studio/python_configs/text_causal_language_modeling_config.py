@@ -292,7 +292,7 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
     reward_model_class: Any = text_reward_model.RewardModel
     pretrained: bool = True
 
-    backbone_dtype: str = "float16"
+    backbone_dtype: str = "int4"
     gradient_checkpointing: bool = True
     force_embedding_gradients: bool = False
     intermediate_dropout: float = 0
