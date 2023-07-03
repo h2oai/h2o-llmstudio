@@ -78,16 +78,11 @@ async def chat_tab(q: Q, load_model=True):
         return
 
     if load_model:
-        loading_message = "Loading the model..."
-    else:
-        loading_message = "Chat History cleaned. How can I help you?"
+        q.page["experiment/display/chat"] = ui.form_card(
+            box="first",
+            items=[ui.progress(label="Loading the model...")],
+        )
 
-    q.page["experiment/display/chat"] = ui.chatbot_card(
-        box="first",
-        data=chat_data(fields="content from_user", t="list"),  # type: ignore
-        name="experiment/display/chat/chatbot",
-    )
-    q.page["experiment/display/chat"].data += [loading_message, BOT]
     q.client["experiment/display/chat/messages"] = []
     q.client.delete_cards.add("experiment/display/chat")
 
@@ -97,7 +92,7 @@ async def chat_tab(q: Q, load_model=True):
             ui.expander(
                 name="chat_settings",
                 label="Chat Settings",
-                items=[ui.progress(label="Loading the model...")],
+                items=[ui.progress(label="Loading model configuration...")],
                 expanded=True,
             )
         ],
@@ -120,8 +115,7 @@ async def chat_tab(q: Q, load_model=True):
         cfg = q.client["experiment/display/chat/cfg"]
         assert q.client["experiment/display/chat/model"] is not None
         assert q.client["experiment/display/chat/tokenizer"] is not None
-        # Do not update loading_message.
-        initial_message = loading_message
+        initial_message = "Chat History cleaned. How can I help you?"
 
     # Hide fields that are should not be visible in the UI
     cfg.prediction._visibility["metric"] = -1
@@ -130,10 +124,12 @@ async def chat_tab(q: Q, load_model=True):
     cfg.prediction._visibility["stop_tokens"] = -1
 
     logger.info(torch.cuda.memory_allocated())
-    q.page["experiment/display/chat"].data[0] = [
-        initial_message,
-        BOT,
-    ]
+    q.page["experiment/display/chat"] = ui.chatbot_card(
+        box="first",
+        data=chat_data(fields="content from_user", t="list"),  # type: ignore
+        name="experiment/display/chat/chatbot",
+    )
+    q.page["experiment/display/chat"].data += [initial_message, BOT]
 
     option_items = get_ui_elements(
         cfg=q.client["experiment/display/chat/cfg"].prediction,
