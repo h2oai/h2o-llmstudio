@@ -79,7 +79,7 @@ async def chat_tab(q: Q, load_model=True):
 
     if load_model:
         q.page["experiment/display/chat"] = ui.form_card(
-            box="second",
+            box="first",
             items=[ui.progress(label="Loading the model...")],
         )
 
@@ -92,7 +92,7 @@ async def chat_tab(q: Q, load_model=True):
             ui.expander(
                 name="chat_settings",
                 label="Chat Settings",
-                items=[ui.progress(label="Please be patient...")],
+                items=[ui.progress(label="Loading model configuration...")],
                 expanded=True,
             )
         ],
