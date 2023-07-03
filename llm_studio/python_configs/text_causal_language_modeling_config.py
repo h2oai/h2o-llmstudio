@@ -126,7 +126,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     differential_learning_rate_layers: Tuple[str, ...] = ()
     differential_learning_rate: float = 0.00001
 
-    batch_size: int = 3
+    batch_size: int = 2
     drop_last_batch: bool = True
     epochs: int = 1
     schedule: str = "Cosine"
@@ -292,7 +292,7 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
     reward_model_class: Any = text_reward_model.RewardModel
     pretrained: bool = True
 
-    backbone_dtype: str = "int4"
+    backbone_dtype: str = "float16"
     gradient_checkpointing: bool = True
     force_embedding_gradients: bool = False
     intermediate_dropout: float = 0
