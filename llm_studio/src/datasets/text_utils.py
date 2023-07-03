@@ -102,7 +102,7 @@ def get_tokenizer(cfg: Any):
     cfg.tokenizer._stop_words = [
         stop_word for stop_word in cfg.tokenizer._stop_words if stop_word != ""
     ]
-    cfg.tokenizer._vocab_length = tokenizer.vocab_size
+    cfg.tokenizer._vocab_length = len(tokenizer)
 
     cfg.tokenizer._stop_words_ids = []
     for stop_word in set(cfg.tokenizer._stop_words):
