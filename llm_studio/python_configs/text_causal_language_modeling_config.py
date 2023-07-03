@@ -76,7 +76,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
             add_none=True, prefer_with=lambda path: "val" in path
         )
         self._possible_values["validation_size"] = (0.01, 0.95, 0.01)
-        self._possible_values["data_sample"] = (0.05, 1, 0.05)
+        self._possible_values["data_sample"] = (0.01, 1, 0.01)
         self._possible_values["data_sample_choice"] = ["Train", "Validation"]
         self._possible_values["prompt_column"] = possible_values.Columns(
             prefer_with=lambda column: column in ("instruction", "prompt")
@@ -203,7 +203,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["lora_alpha"] = (1, 256, 1)
         self._possible_values["lora_dropout"] = (0.0, 0.5, 0.01)
 
-        self._possible_values["evaluation_epochs"] = (0.1, 1, 0.05)
+        self._possible_values["evaluation_epochs"] = (0.01, 1, 0.01)
 
         self._possible_values["initial_kl_coefficient"] = (0.01, 0.5, 0.01)
         self._possible_values["kl_target"] = (0.1, 16, 0.1)
@@ -234,10 +234,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._nesting.add(
             ["lora_r", "lora_alpha", "lora_dropout", "lora_target_modules"],
             [Dependency(key="lora", value=False, is_set=False)],
-        )
-        self._nesting.add(
-            ["evaluation_epochs"],
-            [Dependency(key="save_best_checkpoint", value=False, is_set=True)],
         )
         self._nesting.add(
             ["train_validation_data"],
@@ -350,7 +346,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     top_k: int = 0
     top_p: float = 1.0
 
-    num_history: int = 2
+    num_history: int = 4
 
     def __post_init__(self):
         super().__post_init__()
