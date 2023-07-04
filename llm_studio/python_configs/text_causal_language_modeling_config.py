@@ -126,7 +126,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     differential_learning_rate_layers: Tuple[str, ...] = ()
     differential_learning_rate: float = 0.00001
 
-    batch_size: int = 3
+    batch_size: int = 2
     drop_last_batch: bool = True
     epochs: int = 1
     schedule: str = "Cosine"
