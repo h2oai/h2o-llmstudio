@@ -20,7 +20,7 @@ def get_size(x):
         return 2**31
 
 
-version = "0.0.4-dev"
+version = "0.0.4"
 
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -89,6 +89,8 @@ default_cfg = {
         "set_max_epochs": 50,
         "set_max_batch_size": 256,
         "set_max_gradient_clip": 10,
+        "set_max_lora_r": 256,
+        "set_max_lora_alpha": 256,
         "gpu_used_for_chat": 1,
         "default_number_of_workers": 8,
         "default_logger": "None",
