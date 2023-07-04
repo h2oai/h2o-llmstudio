@@ -1,3 +1,4 @@
+import gc
 import logging
 import os
 import re
@@ -113,6 +114,13 @@ def load_model_weights(
     model_weights = {re.sub(r"^module\.", "", k): v for k, v in model_weights.items()}
     model_weights = {k.replace("_orig_mod.", ""): v for k, v in model_weights.items()}
 
+    # manual fix for int8 weights
+    if cfg.architecture.backbone_dtype == "int8":
+        model_weights = {
+            k: v.to(cfg.environment._device) if "weight_format" not in k else v
+            for k, v in model_weights.items()
+        }
+
     try:
         model.load_state_dict(OrderedDict(model_weights), strict=True)
     except Exception as e:
@@ -150,12 +158,12 @@ def load_checkpoint(
     if weights_path is None:
         weights_path = cfg.architecture.pretrained_weights
 
-    d = torch.load(weights_path, map_location=cfg.environment._device)
+    model_weights = torch.load(weights_path, map_location="cpu")["model"]
 
-    model_weights = d["model"]
     model = load_model_weights(model, model_weights, strict, cfg)
 
     del model_weights
+    gc.collect()
 
     if cfg.environment._local_rank == 0:
         logger.info(f"Weights loaded from: {weights_path}")
