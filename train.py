@@ -443,20 +443,24 @@ def run_train(
                     cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
                 )
                 if cfg.environment._local_rank == 0:
-                    if (
-                        objective_op(val_metric, best_val_metric)
-                        and cfg.training.save_best_checkpoint
-                    ):
-                        if cfg.environment._local_rank == 0:
+                    if cfg.training.save_best_checkpoint:
+                        if objective_op(val_metric, best_val_metric):
                             checkpoint_path = cfg.output_directory
                             logger.info(
                                 f"Saving best model checkpoint: "
                                 f"val_{cfg.prediction.metric} {best_val_metric:.5} -> "
                                 f"{val_metric:.5} to {checkpoint_path}"
                             )
-
                             save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
-                        best_val_metric = val_metric
+                            best_val_metric = val_metric
+                    else:
+                        checkpoint_path = cfg.output_directory
+                        logger.info(
+                            f"Saving last model checkpoint: "
+                            f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
+                            f"{val_metric:.5} to {checkpoint_path}"
+                        )
+                        save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
                 model.train()
 
@@ -632,7 +636,6 @@ def run(cfg: Any) -> None:
 
     # Force settings when saving best checkpoint
     if cfg.training.save_best_checkpoint:
-        cfg.training.evaluation_epochs = 1
         cfg.training.train_validation_data = False
 
     # reset steps
@@ -681,23 +684,19 @@ def run(cfg: Any) -> None:
     experiment_path = f"{cfg.output_directory}"
 
     if cfg.environment._local_rank == 0:
-        if not cfg.training.save_best_checkpoint:
+        if cfg.training.epochs == 0:
             checkpoint_path = cfg.output_directory
-
             logger.info(
                 f"Saving last model checkpoint: "
                 f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
                 f"{val_metric:.5} to {checkpoint_path}"
             )
-
             save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
         save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
-    if cfg.environment._local_rank == 0:
         save_prediction_outputs(cfg.experiment_name, experiment_path)
 
-    if cfg.environment._local_rank == 0:
         flag_path = os.path.join(cfg.output_directory, "flags.json")
         write_flag(flag_path, "status", "finished")
         time_took = time.time() - global_start_time
