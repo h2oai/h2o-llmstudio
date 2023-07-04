@@ -1,3 +1,4 @@
+import gc
 import logging
 import os
 import re
@@ -95,13 +96,15 @@ def load_model_weights(
     model_weights = {
         k: v
         if not (
-            v.dtype is torch.int8
-            or v.dtype is torch.uint8  # used for 4bit
-            and cfg.architecture.backbone_dtype not in ("int4", "int8")
+            cfg.architecture.backbone_dtype not in ("int4", "int8")
+            and (v.dtype is torch.int8 or v.dtype is torch.uint8)
         )
         else model_state_dict[k]
         for k, v in model_weights.items()
-        if not ("SCB" in k and cfg.architecture.backbone_dtype not in ("int4", "int8"))
+        if not (
+            ("SCB" in k or "weight_format" in k)
+            and cfg.architecture.backbone_dtype not in ("int4", "int8")
+        )
     }
 
     # Need to ignore int4/int8 weights so undo strict loading requirement
@@ -110,6 +113,14 @@ def load_model_weights(
 
     model_weights = {re.sub(r"^module\.", "", k): v for k, v in model_weights.items()}
     model_weights = {k.replace("_orig_mod.", ""): v for k, v in model_weights.items()}
+
+    # manual fix for int8 weights
+    if cfg.architecture.backbone_dtype == "int8":
+        model_weights = {
+            k: v.to(cfg.environment._device) if "weight_format" not in k else v
+            for k, v in model_weights.items()
+        }
+
     try:
         model.load_state_dict(OrderedDict(model_weights), strict=True)
     except Exception as e:
@@ -147,12 +158,12 @@ def load_checkpoint(
     if weights_path is None:
         weights_path = cfg.architecture.pretrained_weights
 
-    d = torch.load(weights_path, map_location="cpu")
+    model_weights = torch.load(weights_path, map_location="cpu")["model"]
 
-    model_weights = d["model"]
     model = load_model_weights(model, model_weights, strict, cfg)
 
     del model_weights
+    gc.collect()
 
     if cfg.environment._local_rank == 0:
         logger.info(f"Weights loaded from: {weights_path}")
