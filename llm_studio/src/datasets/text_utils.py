@@ -84,6 +84,8 @@ def get_tokenizer(cfg: Any):
         cfg._tokenizer_mask_token_id = len(tokenizer) - 1
 
     cfg._tokenizer_eos_token = tokenizer.eos_token
+    cfg._tokenizer_eos_token_id = tokenizer.eos_token_id
+    cfg._tokenizer_pad_token_id = tokenizer.pad_token_id
 
     cfg.tokenizer._stop_words = list(
         filter(None, cfg.prediction.stop_tokens.split(","))
