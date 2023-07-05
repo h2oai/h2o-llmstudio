@@ -567,4 +567,29 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
 
+    if config.pad_token_id is None:
+        config.pad_token_id = config.eos_token_id
+    if config.bos_token_id is None:
+        config.bos_token_id = config.eos_token_id
+
+    # set config for generation
+    if backbone.generation_config.pad_token_id != config.pad_token_id:
+        logger.warning(
+            "Pad token id not matching between generation config and model config. "
+            "Overwriting with model config."
+        )
+        backbone.generation_config.pad_token_id = config.pad_token_id
+    if backbone.generation_config.bos_token_id != config.bos_token_id:
+        logger.warning(
+            "BOS token id not matching between generation config and model config. "
+            "Overwriting with model config."
+        )
+        backbone.generation_config.bos_token_id = config.bos_token_id
+    if backbone.generation_config.eos_token_id != config.eos_token_id:
+        logger.warning(
+            "EOS token id not matching between generation config and model config. "
+            "Overwriting with model config."
+        )
+        backbone.generation_config.eos_token_id = config.eos_token_id
+
     return backbone, config
