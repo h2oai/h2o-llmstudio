@@ -1734,6 +1734,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
                 required=True,
                 tooltip="HF API key, needs write access.",
             ),
+
             ui.buttons(
                 [
                     ui.button(
@@ -1774,15 +1775,14 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         repo_id = f"{user_id}/{exp_name}"
 
         # push tokenizer to hub
-        tokenizer.push_to_hub(repo_id=repo_id, private=True, safe_serialization=True)
+        tokenizer.push_to_hub(repo_id=repo_id, private=True)
 
         # push model card to hub
         card = get_model_card(cfg, model, repo_id)
         card.push_to_hub(
             repo_id=repo_id,
             repo_type="model",
-            commit_message="Upload model card",
-            safe_serialization=True,
+            commit_message="Upload model card"
         )
 
         # push config to hub
