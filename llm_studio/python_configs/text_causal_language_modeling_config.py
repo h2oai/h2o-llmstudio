@@ -185,7 +185,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values[
             "differential_learning_rate_layers"
         ] = possible_values.String(
-            values=("backbone", "value_head"),
+            values=("backbone", "embed", "value_head"),
             allow_custom=False,
             placeholder="Select optional layers...",
         )
