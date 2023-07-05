@@ -58,13 +58,11 @@ def get_tokenizer(cfg: Any):
     if tokenizer.eos_token == "":
         tokenizer.add_special_tokens({"eos_token": "</s>"})
         tokenizer.eos_token = "</s>"
-    # if the bos token is an empty string, we assign it to a token
-    if tokenizer.bos_token == "":
-        tokenizer.add_special_tokens({"bos_token": "<s>"})
-        tokenizer.bos_token = "<s>"
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+    if tokenizer.bos_token is None:
+        tokenizer.bos_token = tokenizer.eos_token
     if tokenizer.cls_token is None:
         tokenizer.cls_token = tokenizer.eos_token
     if tokenizer.sep_token is None:
@@ -84,6 +82,7 @@ def get_tokenizer(cfg: Any):
         cfg._tokenizer_mask_token_id = len(tokenizer) - 1
 
     cfg._tokenizer_eos_token = tokenizer.eos_token
+    cfg._tokenizer_bos_token_id = tokenizer.bos_token_id
     cfg._tokenizer_eos_token_id = tokenizer.eos_token_id
     cfg._tokenizer_pad_token_id = tokenizer.pad_token_id
 

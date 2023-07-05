@@ -256,6 +256,7 @@ class Model(nn.Module):
 
         generation_config = self.backbone.generation_config
         generation_config.pad_token_id = cfg._tokenizer_pad_token_id
+        generation_config.bos_token_id = cfg._tokenizer_bos_token_id
         generation_config.eos_token_id = cfg._tokenizer_eos_token_id
 
         transformers_logging.set_verbosity_error()
