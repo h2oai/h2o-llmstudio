@@ -202,7 +202,6 @@ class Model(nn.Module):
             self.value_head.summary.bias.data.zero_()
 
     def generate(self, batch: Dict, cfg: Any, streamer=None):
-
         mask_key = "prompt_attention_mask"
         pad_keys = [
             "prompt_input_ids",
@@ -251,8 +250,6 @@ class Model(nn.Module):
         self.backbone.config.use_cache = True
         if self.cfg.architecture.gradient_checkpointing:
             self.backbone.gradient_checkpointing_disable()
-
-        
 
         generation_config = self.backbone.generation_config
         generation_config.pad_token_id = cfg._tokenizer_pad_token_id
