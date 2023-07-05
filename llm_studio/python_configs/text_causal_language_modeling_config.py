@@ -38,14 +38,17 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     data_sample: float = 1.0
     data_sample_choice: Tuple[str, ...] = ("Train", "Validation")
 
+    system_column: str = "None"
     prompt_column: Tuple[str, ...] = ("instruction", "input")
     answer_column: str = "output"
     parent_id_column: str = "None"
 
+    text_system_start: str = "<|system|>"
     text_prompt_start: str = "<|prompt|>"
     text_answer_separator: str = "<|answer|>"
 
     limit_chained_samples: bool = False
+    add_eos_token_to_system: bool = True
     add_eos_token_to_prompt: bool = True
     add_eos_token_to_answer: bool = True
     mask_prompt_labels: bool = True
@@ -78,6 +81,9 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
         self._possible_values["validation_size"] = (0.01, 0.95, 0.01)
         self._possible_values["data_sample"] = (0.01, 1, 0.01)
         self._possible_values["data_sample_choice"] = ["Train", "Validation"]
+        self._possible_values["system_column"] = possible_values.Columns(
+            prefer_with=lambda column: column in ("system",), add_none=True
+        )
         self._possible_values["prompt_column"] = possible_values.Columns(
             prefer_with=lambda column: column in ("instruction", "prompt")
         )
@@ -111,6 +117,11 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
         self._nesting.add(
             ["limit_chained_samples"],
             [Dependency(key="parent_id_column", value="None", is_set=False)],
+        )
+
+        self._nesting.add(
+            ["text_system_start", "add_eos_token_to_system"],
+            [Dependency(key="system_column", value="None", is_set=False)],
         )
 
         self._visibility["dataset_class"] = -1
