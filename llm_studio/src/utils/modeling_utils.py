@@ -575,7 +575,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     # set config for generation
     if backbone.generation_config.pad_token_id != config.pad_token_id:
         logger.warning(
-            "Pad token id not matching between generation config and model config. "
+            "PAD token id not matching between generation config and model config. "
             "Overwriting with model config."
         )
         backbone.generation_config.pad_token_id = config.pad_token_id
