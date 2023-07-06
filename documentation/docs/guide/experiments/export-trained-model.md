@@ -21,3 +21,38 @@ To publish a trained model to Hugging Face Hub:
 6. Click **Export**.
 
     ![export model to hugging face](export-model-to-huggingface.png)
+
+## Download a model
+
+1. Click **Download model** on the **View experiments** page to download the model locally.
+
+Use the following code snippet to utilize the converted model in Jupyter Notebook or Google Colab. 
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "path_to_downloaded_model"  # either local folder or huggingface model name
+
+# Important: The prompt needs to be in the same format the model was trained with.
+# You can find an example prompt in the experiment logs.
+prompt = "<|prompt|>How are you?<|endoftext|><|answer|>"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+model.cuda().eval()
+
+inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
+# generate configuration can be modified to your needs
+tokens = model.generate(
+    **inputs, # Input any question for the model. Ex: "What is the capital of USA?"
+    max_new_tokens=256,
+    temperature=0.3,
+    repetition_penalty=1.2,
+    num_beams=1
+)[0]
+tokens = tokens[inputs["input_ids"].shape[1]:]
+answer = tokenizer.decode(tokens, skip_special_tokens=True)
+print(answer)
+```
+
+You can enter any question for the model and change the parameters to get different outputs. 
