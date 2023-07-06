@@ -303,6 +303,8 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
+        idx = self.df_id_to_idx[idx]
+
         sample = dict()
         prompt_encoding, answer_encoding = self._get_prompt_and_answer_encoding(idx)
         rlhf_is_in_training_mode = self.cfg.training.use_rlhf and self.mode == "train"
