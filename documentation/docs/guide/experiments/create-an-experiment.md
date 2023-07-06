@@ -30,7 +30,7 @@ Follow the relevant steps below to create an experiment in H2O LLM Studio.
 
 The steps below provide an example of how to to run an experiment on [OASST](https://huggingface.co/OpenAssistant) data via the command line interface (CLI).
 
-1. Get the training dataset (`train_full.csv`), [OpenAssistant Conversations Dataset OASST1](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=126228752) and place it into the `examples/data_oasst1` folder; or download it directly via [Kaggle API](https://www.kaggle.com/docs/api) command:
+1. Get the training dataset (`train_full.csv`), [OpenAssistant Conversations Dataset OASST1](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=126228752) and place it into the `examples/data_oasst1` folder; or download it directly using the [Kaggle API](https://www.kaggle.com/docs/api) command given below.
 
  ```bash
  kaggle kernels output philippsinger/openassistant-conversations-dataset-oasst1 -p examples/data_oasst1/
