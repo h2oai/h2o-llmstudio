@@ -50,6 +50,7 @@ H2O LLM Studio stores its data in two folders located in the root directory. The
 
 It is possible to change the default folders `data` and `output` in [app_utils/config.py](https://github.com/h2oai/h2o-llmstudio/blob/main/app_utils/config.py) 
 (change `data_folder` and `output_folder`).
+Or set `LLM_STUDIO_DATA_FOLDER` and `LLM_STUDIO_OUTPUT_FOLDER` environment variables.
 
 ----
 
