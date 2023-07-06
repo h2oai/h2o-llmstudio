@@ -36,7 +36,7 @@ Follow the relevant steps below to run an experiment on the OASST data via CLI.
  kaggle kernels output philippsinger/openassistant-conversations-dataset-oasst1 -p examples/data_oasst1/
  ```
 
-2. Go into the interactive shell. Install the dependencies first, if you have not installed them earlier:
+2. Go into the interactive shell or open a new terminal window. Install the dependencies first, if you have not installed them already. 
 
  ```bash
  make setup  # installs all dependencies
