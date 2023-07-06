@@ -43,7 +43,7 @@ Follow the relevant steps below to run an experiment on the OASST data via CLI.
  make shell
  ```
 
-3. Run the experiment via:
+3. Run the following command to run the experiment. 
 
  ```bash
  python train.py -C examples/cfg_example_oasst1.py
