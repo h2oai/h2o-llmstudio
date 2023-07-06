@@ -13,7 +13,7 @@ Follow the relevant steps below to create an experiment in H2O LLM Studio.
 5. Define the parameters. The most important parameters are:
     - **LLM Backbone**: This parameter determines the LLM architecture to use. It is the foundation model that you continue training. H2O LLM Studio has a predefined list of recommended types of foundation models, but you can also use [Hugging Face models](https://huggingface.co/models).
     - **Mask Prompt Labels**: This option controls whether to mask the prompt labels during training and only train on the loss of the answer.
-    - Hyperparameters such as **Learning rate**, **Batch size**, and number of epochs determine the training process. Please consult the tooltips that are shown next to each hyperparameter in the GUI to learn more about them.
+    - Hyperparameters such as **Learning rate**, **Batch size**, and number of epochs determine the training process. You can refer to the tooltips that are shown next to each hyperparameter in the GUI to learn more about them.
     - **Evaluate Before Training**: This option lets you evaluate the model before training, which can help you judge the quality of the LLM backbone before fine-tuning. 
 
     H2O LLM Studio provides several metric options for evaluating the performance of your model. In addition to the BLEU score, H2O LLM Studio also offers the GPT3.5 and GPT4 metrics that utilize the OpenAI API to determine whether the predicted answer is more favorable than the ground truth answer. To use these metrics, you can either export your OpenAI API key as an environment variable before starting LLM Studio, or you can specify it in the **Settings** menu within the UI.
