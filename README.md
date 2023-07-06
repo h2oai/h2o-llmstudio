@@ -201,7 +201,7 @@ The interactive chat will also work with model that were finetuned using the UI.
 
 H2O LLM studio expects a csv file with at least two columns, one being the instruct column, the other being the answer that the model should generate. You can also provide an extra validation dataframe using the same format or use an automatic train/validation split to evaluate the model performance.
 
-During an experiment you can adapt the data representation with the following settings 
+During an experiment you can adapt the data representation with the following settings
 
 - **Prompt Column:** The column in the dataset containing the user prompt.
 - **Answer Column:** The column in the dataset containing the expected output.
@@ -339,13 +339,13 @@ LORA should be enabled. Besides that there are the usual parameters such as batc
 > ❓ Where does H2O LLM Studio store its data?
 
 H2O LLM Studio stores its data in two folders located in the root directory. The folders are named `data` and `output`. Here is the breakdown of the data storage structure:
+
 - `data/dbs`: This folder contains the user database used within the app.
 - `data/user`: This folder is where uploaded datasets from the user are stored.
 - `output/user`: All experiments conducted in H2O LLM Studio are stored in this folder. For each experiment, a separate folder is created within the `output/user` directory, which contains all the relevant data associated with that particular experiment.
-- `output/download`: Utility folder that is used to store data the user downloads within the app. 
+- `output/download`: Utility folder that is used to store data the user downloads within the app.
 
-It is possible to change the default folders `data` and `output` in [app_utils/config.py](app_utils/config.py) 
-(change `data_folder` and `output_folder`).
+It is possible to change the default folders `data` and `output` in [app_utils/config.py](app_utils/config.py) (change `data_folder` and `output_folder`). Or set `LLM_STUDIO_DATA_FOLDER` and `LLM_STUDIO_OUTPUT_FOLDER` environment variables.
 
 > ❓ How can I update H2O LLM Studio?
 
@@ -354,17 +354,13 @@ To update H2O LLM Studio, you have two options:
 1. Using the latest main branch: Execute the commands `git checkout main` and `git pull` to obtain the latest updates from the main branch.
 2. Using the latest release tag: Execute the commands `git pull` and `git checkout v0.0.3` (replace 'v0.0.3' with the desired version number) to switch to the latest release branch.
 
-The update process does not remove or erase any existing data folders or experiment records.
-This means that all your old data, including the user database, uploaded datasets, and experiment results, 
-will still be available to you within the updated version of H2O LLM Studio.
+The update process does not remove or erase any existing data folders or experiment records. This means that all your old data, including the user database, uploaded datasets, and experiment results, will still be available to you within the updated version of H2O LLM Studio.
 
-Before updating, we recommend running the command `git rev-parse --short HEAD` and saving the commit hash. 
-This will allow you to revert to your existing version if needed. 
+Before updating, we recommend running the command `git rev-parse --short HEAD` and saving the commit hash. This will allow you to revert to your existing version if needed.
 
 ## Documentation
 
-Detailed documentation for H2O LLM Studio can be found at <https://docs.h2o.ai/h2o-llmstudio/>. 
-If you wish to contribute to the docs, navigate to the `/documentation` folder of this repo and refer to the [README.md](documentation/README.md) for more information. 
+Detailed documentation for H2O LLM Studio can be found at <https://docs.h2o.ai/h2o-llmstudio/>. If you wish to contribute to the docs, navigate to the `/documentation` folder of this repo and refer to the [README.md](documentation/README.md) for more information.
 
 ## License
 
