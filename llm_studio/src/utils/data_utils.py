@@ -188,7 +188,6 @@ def sample_data(cfg: Any, df: pd.DataFrame) -> pd.DataFrame:
         root_ids = df["root_id"].unique()
         n_sampled_root_ids = int(len(root_ids) * cfg.dataset.data_sample)
 
-        # Sample root_ids without replacement
         np.random.seed(7331)
         sampled_root_ids = np.random.choice(
             root_ids, size=n_sampled_root_ids, replace=False
@@ -196,6 +195,7 @@ def sample_data(cfg: Any, df: pd.DataFrame) -> pd.DataFrame:
 
         # Filter the dataframe to only include rows with sampled root_ids
         df = df[df["root_id"].isin(sampled_root_ids)].reset_index(drop=True)
+        del df["root_id"]
     else:
         df = df.sample(frac=cfg.dataset.data_sample, random_state=7331, replace=False)
 
