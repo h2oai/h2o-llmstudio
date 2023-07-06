@@ -82,8 +82,9 @@ class CustomDataset(Dataset):
 
                 # limit chained samples to the longest chain
                 if self.cfg.dataset.limit_chained_samples:
+                    unique_parent_ids = set(self.parent_ids)
                     self.indices = self.indices[
-                        [id not in self.parent_ids for id in self.df["id"].values]
+                        [id not in unique_parent_ids for id in self.df["id"].values]
                     ]
 
         self.systems = None
