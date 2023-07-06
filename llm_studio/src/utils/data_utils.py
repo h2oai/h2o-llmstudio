@@ -168,6 +168,34 @@ def is_valid_data_frame(path: str, csv_rows: int = 100) -> bool:
     return True
 
 
+def sample_data(cfg: Any, df: pd.DataFrame) -> pd.DataFrame:
+    """Sample data from the dataframe"""
+
+    if self.cfg.dataset.parent_id_column != "None" and "id" in df.columns:
+        parent_mapping = df.set_index('id')['parent_id'].to_dict()
+
+        # A recursive function to get the root id for each node
+        def get_root(node):
+            parent = parent_mapping.get(node)
+            if parent is None or pd.isna(parent):
+                return node
+            return get_root(parent)
+
+        # Apply the function to assign each row the root id
+        df['root_id'] = df['id'].apply(get_root)
+
+        # Sample the root ids
+        root_ids = df['root_id'].unique()
+        root_ids = np.random.choice(root_ids, size=int(len(root_ids) * cfg.dataset.data_sample), replace=False)
+        df = df[df['root_id'].isin(root_ids)].reset_index(drop=True)
+    else:
+        df = df.sample(
+            frac=cfg.dataset.data_sample, random_state=7331, replace=False
+        )
+
+    return df
+
+
 def get_data(cfg: Any) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Prepares train and validation DataFrames.
 
