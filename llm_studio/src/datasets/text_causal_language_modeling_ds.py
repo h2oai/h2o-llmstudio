@@ -303,7 +303,7 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
-        idx = self.df_id_to_idx[idx]
+        idx = self.indices[idx]
 
         sample = dict()
         prompt_encoding, answer_encoding = self._get_prompt_and_answer_encoding(idx)
