@@ -50,7 +50,7 @@ Follow the relevant steps below to run an experiment on the OASST data via CLI.
  ```
 
 After the experiment is completed, you can find all output artifacts in the `examples/output_oasst1` folder.
-You can then use the `prompt.py` script to chat with your model:
+You can then use the `prompt.py` script to chat with your model.
 
 ```bash
 python prompt.py -e examples/output_oasst1
