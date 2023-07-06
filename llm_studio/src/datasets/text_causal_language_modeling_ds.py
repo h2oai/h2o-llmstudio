@@ -81,7 +81,7 @@ class CustomDataset(Dataset):
                 self.df_id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
 
                 # limit chained samples to the longest chain
-                if self.cfg.dataset.limit_chained_samples:
+                if self.cfg.dataset.limit_chained_samples and self.mode == "train":
                     unique_parent_ids = set(self.parent_ids)
                     self.indices = self.indices[
                         [id not in unique_parent_ids for id in self.df["id"].values]
