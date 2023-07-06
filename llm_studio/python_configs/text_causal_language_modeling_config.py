@@ -53,7 +53,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     add_eos_token_to_answer: bool = True
     mask_prompt_labels: bool = True
 
-    _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq")
+    _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq", "parquet")
 
     def __post_init__(self):
         self.prompt_column = (
