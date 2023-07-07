@@ -38,19 +38,22 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     data_sample: float = 1.0
     data_sample_choice: Tuple[str, ...] = ("Train", "Validation")
 
+    system_column: str = "None"
     prompt_column: Tuple[str, ...] = ("instruction", "input")
     answer_column: str = "output"
     parent_id_column: str = "None"
 
+    text_system_start: str = "<|system|>"
     text_prompt_start: str = "<|prompt|>"
     text_answer_separator: str = "<|answer|>"
 
     limit_chained_samples: bool = False
+    add_eos_token_to_system: bool = True
     add_eos_token_to_prompt: bool = True
     add_eos_token_to_answer: bool = True
     mask_prompt_labels: bool = True
 
-    _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq")
+    _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq", "parquet")
 
     def __post_init__(self):
         self.prompt_column = (
@@ -76,8 +79,11 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
             add_none=True, prefer_with=lambda path: "val" in path
         )
         self._possible_values["validation_size"] = (0.01, 0.95, 0.01)
-        self._possible_values["data_sample"] = (0.05, 1, 0.05)
+        self._possible_values["data_sample"] = (0.01, 1, 0.01)
         self._possible_values["data_sample_choice"] = ["Train", "Validation"]
+        self._possible_values["system_column"] = possible_values.Columns(
+            prefer_with=lambda column: column in ("system",), add_none=True
+        )
         self._possible_values["prompt_column"] = possible_values.Columns(
             prefer_with=lambda column: column in ("instruction", "prompt")
         )
@@ -113,6 +119,11 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
             [Dependency(key="parent_id_column", value="None", is_set=False)],
         )
 
+        self._nesting.add(
+            ["text_system_start", "add_eos_token_to_system"],
+            [Dependency(key="system_column", value="None", is_set=False)],
+        )
+
         self._visibility["dataset_class"] = -1
 
 
@@ -126,7 +137,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     differential_learning_rate_layers: Tuple[str, ...] = ()
     differential_learning_rate: float = 0.00001
 
-    batch_size: int = 3
+    batch_size: int = 2
     drop_last_batch: bool = True
     epochs: int = 1
     schedule: str = "Cosine"
@@ -174,7 +185,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values[
             "differential_learning_rate_layers"
         ] = possible_values.String(
-            values=("backbone", "value_head"),
+            values=("backbone", "embed", "value_head"),
             allow_custom=False,
             placeholder="Select optional layers...",
         )
@@ -203,7 +214,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["lora_alpha"] = (1, 256, 1)
         self._possible_values["lora_dropout"] = (0.0, 0.5, 0.01)
 
-        self._possible_values["evaluation_epochs"] = (0.1, 1, 0.05)
+        self._possible_values["evaluation_epochs"] = (0.01, 1, 0.01)
 
         self._possible_values["initial_kl_coefficient"] = (0.01, 0.5, 0.01)
         self._possible_values["kl_target"] = (0.1, 16, 0.1)
@@ -234,10 +245,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._nesting.add(
             ["lora_r", "lora_alpha", "lora_dropout", "lora_target_modules"],
             [Dependency(key="lora", value=False, is_set=False)],
-        )
-        self._nesting.add(
-            ["evaluation_epochs"],
-            [Dependency(key="save_best_checkpoint", value=False, is_set=True)],
         )
         self._nesting.add(
             ["train_validation_data"],
@@ -350,7 +357,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     top_k: int = 0
     top_p: float = 1.0
 
-    num_history: int = 2
+    num_history: int = 4
 
     def __post_init__(self):
         super().__post_init__()

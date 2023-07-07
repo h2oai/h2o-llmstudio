@@ -201,11 +201,7 @@ class Model(nn.Module):
             self.value_head = ValueHead(self.backbone_config)
             self.value_head.summary.bias.data.zero_()
 
-    def generate(self, batch: Dict, cfg: Any):
-        pad_token_id = (
-            self.backbone.config.pad_token_id or self.backbone.config.eos_token_id
-        )
-
+    def generate(self, batch: Dict, cfg: Any, streamer=None):
         mask_key = "prompt_attention_mask"
         pad_keys = [
             "prompt_input_ids",
@@ -260,7 +256,6 @@ class Model(nn.Module):
             inputs=input_ids,
             attention_mask=attention_mask,
             generation_config=self.backbone.generation_config,
-            pad_token_id=pad_token_id,
             min_new_tokens=cfg.prediction.min_length_inference,
             max_new_tokens=cfg.prediction.max_length_inference,
             do_sample=do_sample,
@@ -273,6 +268,7 @@ class Model(nn.Module):
             renormalize_logits=True,
             return_dict_in_generate=False,
             use_cache=True,
+            streamer=streamer,
         )
         transformers_logging.set_verbosity(verbosity)
 

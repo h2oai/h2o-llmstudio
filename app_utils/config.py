@@ -20,7 +20,7 @@ def get_size(x):
         return 2**31
 
 
-version = "0.0.4-dev"
+version = "0.0.5-dev"
 
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -43,10 +43,10 @@ default_cfg = {
         os.getenv("MIN_DISK_SPACE_FOR_EXPERIMENTS", "2GB")
     ),
     "allowed_file_extensions": os.getenv(
-        "ALLOWED_FILE_EXTENSIONS", ".zip,.csv,.pq"
+        "ALLOWED_FILE_EXTENSIONS", ".zip,.csv,.pq,.parquet"
     ).split(","),
-    "data_folder": "data/",
-    "output_folder": "output/",
+    "data_folder": f"{os.getenv('LLM_STUDIO_DATA_FOLDER', os.getcwd())}/data/",
+    "output_folder": f"{os.getenv('LLM_STUDIO_OUTPUT_FOLDER', os.getcwd())}/output/",
     "s3_bucket": f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
     "s3_filename": os.path.join(
         f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
@@ -89,6 +89,8 @@ default_cfg = {
         "set_max_epochs": 50,
         "set_max_batch_size": 256,
         "set_max_gradient_clip": 10,
+        "set_max_lora_r": 256,
+        "set_max_lora_alpha": 256,
         "gpu_used_for_chat": 1,
         "default_number_of_workers": 8,
         "default_logger": "None",

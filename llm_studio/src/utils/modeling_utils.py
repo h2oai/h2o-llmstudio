@@ -1,3 +1,4 @@
+import gc
 import logging
 import os
 import re
@@ -41,14 +42,16 @@ def check_disk_space(model: torch.nn.Module, path: str):
 
     model_size_in_bytes = 0
     for param in model.parameters():
-        if param.data.dtype == torch.int8:
+        if param.data.dtype in [torch.int8, torch.uint8]:
             model_size_in_bytes += param.numel() * 1
         elif param.data.dtype in [torch.float16, torch.bfloat16]:
             model_size_in_bytes += param.numel() * 2
         elif param.data.dtype == torch.float32:
             model_size_in_bytes += param.numel() * 4
         else:
-            raise ValueError(f"Unsupported data type: {param.data.dtype}")
+            # If the data type is not supported, calculate it as float32.
+            model_size_in_bytes += param.numel() * 4
+            logger.warning(f"Unsupported data type: {param.data.dtype}")
 
     if model_size_in_bytes * 1.03 < free:  # leave a 3% margin here.
         logger.info("Enough space available for saving model weights.")
@@ -93,13 +96,15 @@ def load_model_weights(
     model_weights = {
         k: v
         if not (
-            v.dtype is torch.int8
-            or v.dtype is torch.uint8  # used for 4bit
-            and cfg.architecture.backbone_dtype not in ("int4", "int8")
+            cfg.architecture.backbone_dtype not in ("int4", "int8")
+            and (v.dtype is torch.int8 or v.dtype is torch.uint8)
         )
         else model_state_dict[k]
         for k, v in model_weights.items()
-        if not ("SCB" in k and cfg.architecture.backbone_dtype not in ("int4", "int8"))
+        if not (
+            ("SCB" in k or "weight_format" in k)
+            and cfg.architecture.backbone_dtype not in ("int4", "int8")
+        )
     }
 
     # Need to ignore int4/int8 weights so undo strict loading requirement
@@ -108,6 +113,14 @@ def load_model_weights(
 
     model_weights = {re.sub(r"^module\.", "", k): v for k, v in model_weights.items()}
     model_weights = {k.replace("_orig_mod.", ""): v for k, v in model_weights.items()}
+
+    # manual fix for int8 weights
+    if cfg.architecture.backbone_dtype == "int8":
+        model_weights = {
+            k: v.to(cfg.environment._device) if "weight_format" not in k else v
+            for k, v in model_weights.items()
+        }
+
     try:
         model.load_state_dict(OrderedDict(model_weights), strict=True)
     except Exception as e:
@@ -145,12 +158,12 @@ def load_checkpoint(
     if weights_path is None:
         weights_path = cfg.architecture.pretrained_weights
 
-    d = torch.load(weights_path, map_location="cpu")
+    model_weights = torch.load(weights_path, map_location="cpu")["model"]
 
-    model_weights = d["model"]
     model = load_model_weights(model, model_weights, strict, cfg)
 
     del model_weights
+    gc.collect()
 
     if cfg.environment._local_rank == 0:
         logger.info(f"Weights loaded from: {weights_path}")
@@ -553,5 +566,30 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
 
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
+
+    if config.pad_token_id is None:
+        config.pad_token_id = config.eos_token_id
+    if config.bos_token_id is None:
+        config.bos_token_id = config.eos_token_id
+
+    # set config for generation
+    if backbone.generation_config.pad_token_id != config.pad_token_id:
+        logger.warning(
+            "PAD token id not matching between generation config and model config. "
+            "Overwriting with model config."
+        )
+        backbone.generation_config.pad_token_id = config.pad_token_id
+    if backbone.generation_config.bos_token_id != config.bos_token_id:
+        logger.warning(
+            "BOS token id not matching between generation config and model config. "
+            "Overwriting with model config."
+        )
+        backbone.generation_config.bos_token_id = config.bos_token_id
+    if backbone.generation_config.eos_token_id != config.eos_token_id:
+        logger.warning(
+            "EOS token id not matching between generation config and model config. "
+            "Overwriting with model config."
+        )
+        backbone.generation_config.eos_token_id = config.eos_token_id
 
     return backbone, config

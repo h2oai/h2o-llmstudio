@@ -58,13 +58,11 @@ def get_tokenizer(cfg: Any):
     if tokenizer.eos_token == "":
         tokenizer.add_special_tokens({"eos_token": "</s>"})
         tokenizer.eos_token = "</s>"
-    # if the bos token is an empty string, we assign it to a token
-    if tokenizer.bos_token == "":
-        tokenizer.add_special_tokens({"bos_token": "<s>"})
-        tokenizer.bos_token = "<s>"
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+    if tokenizer.bos_token is None:
+        tokenizer.bos_token = tokenizer.eos_token
     if tokenizer.cls_token is None:
         tokenizer.cls_token = tokenizer.eos_token
     if tokenizer.sep_token is None:
@@ -89,7 +87,11 @@ def get_tokenizer(cfg: Any):
         filter(None, cfg.prediction.stop_tokens.split(","))
     )
 
-    for stop_word in [cfg.dataset.text_prompt_start, cfg.dataset.text_answer_separator]:
+    for stop_word in [
+        cfg.dataset.text_system_start,
+        cfg.dataset.text_prompt_start,
+        cfg.dataset.text_answer_separator,
+    ]:
         stop_word = codecs.decode(stop_word, "unicode_escape").strip()
         if (
             stop_word != ""
@@ -102,7 +104,7 @@ def get_tokenizer(cfg: Any):
     cfg.tokenizer._stop_words = [
         stop_word for stop_word in cfg.tokenizer._stop_words if stop_word != ""
     ]
-    cfg.tokenizer._vocab_length = tokenizer.vocab_size
+    cfg.tokenizer._vocab_length = len(tokenizer)
 
     cfg.tokenizer._stop_words_ids = []
     for stop_word in set(cfg.tokenizer._stop_words):

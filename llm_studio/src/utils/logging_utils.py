@@ -2,11 +2,20 @@ import io
 import json
 import logging
 import os
+import re
 from typing import Any, Optional
 
 from llm_studio.src.utils.plot_utils import PlotData
 
 logger = logging.getLogger(__name__)
+
+
+class IgnorePatchRequestsFilter(logging.Filter):
+    def filter(self, record):
+        log_message = record.getMessage()
+        if re.search(r"HTTP Request: PATCH", log_message):
+            return False  # Ignore the log entry
+        return True  # Include the log entry
 
 
 def initialize_logging(cfg: Optional[Any] = None, actual_logger=None):
@@ -19,10 +28,10 @@ def initialize_logging(cfg: Optional[Any] = None, actual_logger=None):
         actual_logger.handlers.clear()
 
     actual_logger.setLevel(logging.INFO)
-
     console_handler = logging.StreamHandler()
     formatter = logging.Formatter(format)
     console_handler.setFormatter(formatter)
+    console_handler.addFilter(IgnorePatchRequestsFilter())
     actual_logger.addHandler(console_handler)
 
     if cfg is not None:

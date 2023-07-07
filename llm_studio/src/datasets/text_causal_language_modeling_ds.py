@@ -81,10 +81,29 @@ class CustomDataset(Dataset):
                 self.df_id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
 
                 # limit chained samples to the longest chain
-                if self.cfg.dataset.limit_chained_samples:
+                if self.cfg.dataset.limit_chained_samples and self.mode == "train":
+                    unique_parent_ids = set(self.parent_ids)
                     self.indices = self.indices[
-                        [id not in self.parent_ids for id in self.df["id"].values]
+                        [id not in unique_parent_ids for id in self.df["id"].values]
                     ]
+
+        self.systems = None
+        if self.cfg.dataset.system_column != "None":
+            if self.cfg.training.use_rlhf:
+                logger.warning(
+                    f"RLHF is not compatible with system column. "
+                    f"Disabling functionality for mode {self.mode}."
+                )
+            elif self.cfg.dataset.system_column not in self.df.columns:
+                logger.warning(
+                    f"System column {self.cfg.dataset.system_column} not found."
+                    f"Disabling functionality for mode {self.mode}."
+                )
+            else:
+                systems = (
+                    self.df[self.cfg.dataset.system_column].astype(str).values.tolist()
+                )
+                self.systems = [self.parse_system(cfg, system) for system in systems]
 
         if self.cfg.environment._local_rank == 0:
             logger.info(f"Sample prompt: {self.prompts[0]}")
@@ -101,6 +120,18 @@ class CustomDataset(Dataset):
             f"{codecs.decode(cfg.dataset.text_answer_separator, 'unicode_escape')}"
         )
         return prompt
+
+    @staticmethod
+    def parse_system(cfg: Any, system: str):
+        # no system tokens if empty
+        if system == "":
+            return system
+        system = (
+            f"{codecs.decode(cfg.dataset.text_system_start, 'unicode_escape')}{system}"
+        )
+        if cfg.dataset.add_eos_token_to_system:
+            system += cfg._tokenizer_eos_token
+        return system
 
     def __len__(self) -> int:
         return len(self.indices)
@@ -303,24 +334,36 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
+        idx = self.indices[idx]
+
         sample = dict()
-        prompt_encoding, answer_encoding = self._get_prompt_and_answer_encoding(idx)
+        system_encoding, prompt_encoding, answer_encoding = self._get_sample_encoding(
+            idx
+        )
         rlhf_is_in_training_mode = self.cfg.training.use_rlhf and self.mode == "train"
 
         if rlhf_is_in_training_mode:
             # ground truth answer not used in RLHF training
-            encodings = [[prompt_encoding, torch.empty(0)]]
+            encodings = [[system_encoding, prompt_encoding, torch.empty(0)]]
         else:
-            encodings = [[prompt_encoding, answer_encoding]]
+            encodings = [[system_encoding, prompt_encoding, answer_encoding]]
 
         parent_encodings, reward_model_parent_prompt_text = self.get_parent_encodings(
             idx
         )
         encodings = parent_encodings + encodings
 
-        sample["reward_model_prompt_text"] = (
-            reward_model_parent_prompt_text + self.raw_prompts[idx]
-        )
+        # in case of chained samples, we only want to keep the first system encoding
+        system_encoding = encodings[0][0]
+        # remove system encodings from list of encodings to only keep prompt and answer
+        encodings = [encoding[1:] for encoding in encodings]
+        # concatenate system encoding with root prompt encoding
+        encodings[0][0] = torch.cat([system_encoding, encodings[0][0]])
+
+        if self.cfg.training.use_rlhf:
+            sample["reward_model_prompt_text"] = (
+                reward_model_parent_prompt_text + self.raw_prompts[idx]
+            )
 
         input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
         if not rlhf_is_in_training_mode:  # no labels required for RLHF during training
@@ -372,9 +415,26 @@ class CustomDataset(Dataset):
                 prefix="prompt_",
             )
         )
+
+        # make sure system encoding is always prepended if max_length exceeded
+        if sample["input_ids"][0] != self.tokenizer.pad_token_id:
+            sample["input_ids"][: len(system_encoding)] = system_encoding
+            if self.cfg.dataset.mask_prompt_labels:
+                sample["labels"][: len(system_encoding)] = -100
+
+        if sample["prompt_input_ids"][0] != self.tokenizer.pad_token_id:
+            sample["prompt_input_ids"][: len(system_encoding)] = system_encoding
+
         return sample
 
-    def _get_prompt_and_answer_encoding(self, idx) -> List:
+    def _get_sample_encoding(self, idx) -> List:
+        if self.systems is not None:
+            system = self.systems[idx]
+            system_encoding = self.encode(
+                self.tokenizer, system, self.cfg.tokenizer.max_length_prompt, "right"
+            )["input_ids"]
+        else:
+            system_encoding = torch.empty(0)
         prompt = self.prompts[idx]
         answer = self.answers[idx]
 
@@ -397,7 +457,7 @@ class CustomDataset(Dataset):
                 dim=0,
             )
 
-        return [prompt_encoding, answer_encoding]
+        return [system_encoding, prompt_encoding, answer_encoding]
 
     def get_parent_encodings(self, idx):
         parent_encodings: List = []
@@ -413,32 +473,35 @@ class CustomDataset(Dataset):
                     < self.cfg.augmentation.skip_parent_probability
                 ):
                     break
-                parent_encodings.insert(
-                    0, self._get_prompt_and_answer_encoding(int(parent_idx))
-                )
+                parent_encodings.insert(0, self._get_sample_encoding(int(parent_idx)))
 
                 # <|endoftext|> is replaced later in the pipeline
                 # and <prompt> + <answer> is prepended
-                reward_model_parent_prompt_text = (
-                    self.raw_prompts[int(parent_idx)]
-                    + "<|endoftext|>"
-                    + self.answers[int(parent_idx)]
-                    + "<|endoftext|>"
-                    + reward_model_parent_prompt_text
-                )
+                if self.cfg.training.use_rlhf:
+                    reward_model_parent_prompt_text = (
+                        self.raw_prompts[int(parent_idx)]
+                        + "<|endoftext|>"
+                        + self.answers[int(parent_idx)]
+                        + "<|endoftext|>"
+                        + reward_model_parent_prompt_text
+                    )
         if (
             self.mode == "train"
             and np.random.random() < self.cfg.augmentation.random_parent_probability
         ):
             rnd_idx = np.random.randint(len(self))
-            parent_encodings.insert(
-                0, self._get_prompt_and_answer_encoding(int(rnd_idx))
-            )
+            parent_encodings.insert(0, self._get_sample_encoding(int(rnd_idx)))
 
         return parent_encodings, reward_model_parent_prompt_text
 
     def pad_tokens(
-        self, input_ids, attention_mask, max_length, pad_token_id, prefix=""
+        self,
+        input_ids,
+        attention_mask,
+        max_length,
+        pad_token_id,
+        prefix="",
+        system_ids=None,
     ):
         sample = {}
 
