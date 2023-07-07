@@ -1,3 +1,4 @@
+import torch
 from dataclasses import dataclass
 
 from llm_studio.python_configs.text_causal_language_modeling_config import (
@@ -49,7 +50,7 @@ class Config(ConfigProblemBase):
         token_mask_probability=0.0
     )
     architecture: ConfigNLPCausalLMArchitecture = ConfigNLPCausalLMArchitecture(
-        backbone_dtype="float16",
+        backbone_dtype="float32" if torch.backends.mps.is_available() else "float16",
     )
     training: ConfigNLPCausalLMTraining = ConfigNLPCausalLMTraining(
         optimizer="AdamW",
@@ -75,6 +76,7 @@ class Config(ConfigProblemBase):
         stop_tokens="",
     )
     environment: ConfigNLPCausalLMEnvironment = ConfigNLPCausalLMEnvironment(
-        mixed_precision=True, number_of_workers=8, seed=1
+        mixed_precision=False if torch.backends.mps.is_available() else True,
+        number_of_workers=8, seed=1
     )
     logging: ConfigNLPCausalLMLogging = ConfigNLPCausalLMLogging()
