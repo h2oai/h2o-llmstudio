@@ -334,6 +334,8 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
+        idx = self.indices[idx]
+
         sample = dict()
         system_encoding, prompt_encoding, answer_encoding = self._get_sample_encoding(
             idx
