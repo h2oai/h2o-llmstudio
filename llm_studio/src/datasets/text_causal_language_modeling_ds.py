@@ -353,10 +353,11 @@ class CustomDataset(Dataset):
         )
         encodings = parent_encodings + encodings
 
-        # get first system encoding
+        # in case of chained samples, we only want to keep the first system encoding
         system_encoding = encodings[0][0]
-        # remove system encodings from list of encodings
+        # remove system encodings from list of encodings to only keep prompt and answer
         encodings = [encoding[1:] for encoding in encodings]
+        # concatenate system encoding with root prompt encoding
         encodings[0][0] = torch.cat([system_encoding, encodings[0][0]])
 
         if self.cfg.training.use_rlhf:
@@ -415,7 +416,7 @@ class CustomDataset(Dataset):
             )
         )
 
-        # make sure system encoding is prepended if max_length exceeded
+        # make sure system encoding is always prepended if max_length exceeded
         if sample["input_ids"][0] != self.tokenizer.pad_token_id:
             sample["input_ids"][: len(system_encoding)] = system_encoding
             if self.cfg.dataset.mask_prompt_labels:
