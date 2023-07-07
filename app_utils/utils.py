@@ -1819,7 +1819,7 @@ def remove_temp_files(q: Q):
     datasets_df = q.client.app_db.get_datasets_df()
     all_files = glob.glob(os.path.join(get_data_dir(q), "*"))
     for file in all_files:
-        if file not in datasets_df["path"].values:
+        if not any([path in file for path in datasets_df["path"].values]):
             if os.path.isdir(file):
                 shutil.rmtree(file)
             else:
