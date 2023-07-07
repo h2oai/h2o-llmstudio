@@ -105,6 +105,7 @@ default_cfg = {
         ),
         "default_openai_api_version": os.getenv("OPENAI_API_VERSION", "2023-05-15"),
         "default_gpt_eval_max": os.getenv("GPT_EVAL_MAX", 100),
+        "default_safe_serialization": True,
         "delete_dialogs": True,
         "chart_plot_max_points": 1000,
     },

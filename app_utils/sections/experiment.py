@@ -1734,7 +1734,12 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
                 required=True,
                 tooltip="HF API key, needs write access.",
             ),
-
+            ui.toggle(
+                name="default_safe_serialization",
+                label="Use Huggingface safetensors for safe serialization",
+                value=q.client["default_safe_serialization"],
+                trigger=True,
+            ),
             ui.buttons(
                 [
                     ui.button(
@@ -1780,9 +1785,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         # push model card to hub
         card = get_model_card(cfg, model, repo_id)
         card.push_to_hub(
-            repo_id=repo_id,
-            repo_type="model",
-            commit_message="Upload model card"
+            repo_id=repo_id, repo_type="model", commit_message="Upload model card"
         )
 
         # push config to hub
@@ -1806,7 +1809,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             repo_id=repo_id,
             private=True,
             commit_message="Upload model",
-            safe_serialization=True,
+            safe_serialization=q.client["default_safe_serialization"],
         )
 
         # push pipeline to hub
