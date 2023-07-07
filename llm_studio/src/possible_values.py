@@ -25,7 +25,7 @@ def _scan_dirs(dirname) -> List[str]:
 
 
 def _scan_files(
-    dirname, extensions: Tuple[str, str, str] = (".csv", ".pq", ".json")
+    dirname, extensions: Tuple[str, ...] = (".csv", ".pq", ".parquet", ".json")
 ) -> List[str]:
     """Scans a directory for files with given extension
 
