@@ -80,8 +80,8 @@ wave:
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
 	$(PIPENV) run wave run app
 
-.PHONY: wave-no-reload
-wave-no-reload:
+.PHONY: llmstudio
+llmstudio:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \

@@ -37,7 +37,7 @@ After=network.target
 Type=simple
 User=ubuntu
 WorkingDirectory=/home/ubuntu/h2o-llmstudio
-ExecStart=/usr/bin/make wave
+ExecStart=/usr/bin/make llmstudio
 Restart=always
 [Install]
 WantedBy=multi-user.target
