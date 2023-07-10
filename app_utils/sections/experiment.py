@@ -1539,7 +1539,6 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
                 name="default_safe_serialization",
                 label="Use Hugging Face safetensors for safe serialization",
                 value=q.client["default_safe_serialization"],
-                trigger=True,
             ),
             ui.buttons(
                 [
