@@ -18,6 +18,7 @@ from torch.nn.parallel import DistributedDataParallel
 from tqdm import tqdm
 from transformers import AutoConfig, AutoModel, BitsAndBytesConfig
 
+from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
 from llm_studio.src.utils.data_utils import cat_batches, get_inference_batch_size
@@ -495,6 +496,24 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
     config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
 
+    tokenizer = get_tokenizer(cfg)
+
+    if config.eos_token_id != tokenizer.eos_token_id:
+        logger.warning(
+            "EOS token id not matching between config and tokenizer. "
+            "Overwriting with tokenizer id."
+        )
+        config.eos_token_id = tokenizer.eos_token_id
+    if config.pad_token_id != tokenizer.pad_token_id:
+        logger.warning(
+            "PAD token id not matching between config and tokenizer. "
+            "Overwriting with tokenizer id."
+        )
+        config.pad_token_id = tokenizer.pad_token_id
+    # no warning needed as not used
+    if config.bos_token_id != tokenizer.bos_token_id:
+        config.bos_token_id = tokenizer.bos_token_id
+
     quantization_config = None
     if cfg.architecture.backbone_dtype == "int8":
         kwargs["device_map"] = {"": cfg.environment._device}  # type: ignore
@@ -567,29 +586,20 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
 
-    if config.pad_token_id is None:
-        config.pad_token_id = config.eos_token_id
-    if config.bos_token_id is None:
-        config.bos_token_id = config.eos_token_id
-
-    # set config for generation
-    if backbone.generation_config.pad_token_id != config.pad_token_id:
+    if backbone.generation_config.eos_token_id != tokenizer.eos_token_id:
         logger.warning(
-            "PAD token id not matching between generation config and model config. "
-            "Overwriting with model config."
+            "EOS token id not matching between generation config and tokenizer. "
+            "Overwriting with tokenizer id."
         )
-        backbone.generation_config.pad_token_id = config.pad_token_id
-    if backbone.generation_config.bos_token_id != config.bos_token_id:
+        backbone.generation_config.eos_token_id = tokenizer.eos_token_id
+    if backbone.generation_config.pad_token_id != tokenizer.pad_token_id:
         logger.warning(
-            "BOS token id not matching between generation config and model config. "
-            "Overwriting with model config."
+            "PAD token id not matching between generation config and tokenizer. "
+            "Overwriting with tokenizer id."
         )
-        backbone.generation_config.bos_token_id = config.bos_token_id
-    if backbone.generation_config.eos_token_id != config.eos_token_id:
-        logger.warning(
-            "EOS token id not matching between generation config and model config. "
-            "Overwriting with model config."
-        )
-        backbone.generation_config.eos_token_id = config.eos_token_id
+        backbone.generation_config.pad_token_id = tokenizer.pad_token_id
+    # no warning needed as not used
+    if backbone.generation_config.bos_token_id != tokenizer.bos_token_id:
+        backbone.generation_config.bos_token_id = tokenizer.bos_token_id
 
     return backbone, config
