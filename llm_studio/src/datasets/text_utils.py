@@ -87,7 +87,11 @@ def get_tokenizer(cfg: Any):
         filter(None, cfg.prediction.stop_tokens.split(","))
     )
 
-    for stop_word in [cfg.dataset.text_prompt_start, cfg.dataset.text_answer_separator]:
+    for stop_word in [
+        cfg.dataset.text_system_start,
+        cfg.dataset.text_prompt_start,
+        cfg.dataset.text_answer_separator,
+    ]:
         stop_word = codecs.decode(stop_word, "unicode_escape").strip()
         if (
             stop_word != ""

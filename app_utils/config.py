@@ -43,7 +43,7 @@ default_cfg = {
         os.getenv("MIN_DISK_SPACE_FOR_EXPERIMENTS", "2GB")
     ),
     "allowed_file_extensions": os.getenv(
-        "ALLOWED_FILE_EXTENSIONS", ".zip,.csv,.pq"
+        "ALLOWED_FILE_EXTENSIONS", ".zip,.csv,.pq,.parquet"
     ).split(","),
     "data_folder": f"{os.getenv('LLM_STUDIO_DATA_FOLDER', os.getcwd())}/data/",
     "output_folder": f"{os.getenv('LLM_STUDIO_OUTPUT_FOLDER', os.getcwd())}/output/",
