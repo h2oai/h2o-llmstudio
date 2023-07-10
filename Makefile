@@ -6,6 +6,12 @@ PIPENV_PYTHON = $(PIPENV) run python
 PIPENV_PIP = $(PIPENV_PYTHON) -m pip
 PWD = $(shell pwd)
 
+ifeq ($(origin H2O_LLM_STUDIO_WORKDIR), environment)
+    WORKDIR := $(H2O_LLM_STUDIO_WORKDIR)
+else
+    WORKDIR := $(shell pwd)
+endif
+
 PHONY: pipenv
 pipenv:
 	$(PIP) install pip --upgrade
@@ -71,14 +77,14 @@ test: reports
 wave:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
-	H2O_WAVE_PRIVATE_DIR="/download/@$(PWD)/output/download" \
+	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
 	$(PIPENV) run wave run app
 
 .PHONY: wave-no-reload
 wave-no-reload:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
-	H2O_WAVE_PRIVATE_DIR="/download/@$(PWD)/output/download" \
+	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
 	$(PIPENV) run wave run --no-reload app
 
 .PHONY: docker-build-nightly
