@@ -345,7 +345,7 @@ By default, H2O LLM Studio stores its data in two folders located in the root di
 - `output/user`: All experiments conducted in H2O LLM Studio are stored in this folder. For each experiment, a separate folder is created within the `output/user` directory, which contains all the relevant data associated with that particular experiment.
 - `output/download`: Utility folder that is used to store data the user downloads within the app.
 
-It is possible to change the default working directory of H2O LLM Studio by setting the `LLM_STUDIO_WORKDIR` environment variable. By default, the working directory is set to the root directory of the app.
+It is possible to change the default working directory of H2O LLM Studio by setting the `H2O_LLM_STUDIO_WORKDIR` environment variable. By default, the working directory is set to the root directory of the app.
 
 > ❓ How can I update H2O LLM Studio?
 

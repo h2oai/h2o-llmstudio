@@ -45,7 +45,7 @@ default_cfg = {
     "allowed_file_extensions": os.getenv(
         "ALLOWED_FILE_EXTENSIONS", ".zip,.csv,.pq,.parquet"
     ).split(","),
-    "llm_studio_workdir": f"{os.getenv('LLM_STUDIO_WORKDIR', os.getcwd())}",
+    "llm_studio_workdir": f"{os.getenv('H2O_LLM_STUDIO_WORKDIR', os.getcwd())}",
     "data_folder": "data/",
     "output_folder": "output/",
     "s3_bucket": f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
