@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "cc1f17995255bc8db86d77f73a61e97b1c3cf580a514168bc5eb58aed8dca30f"
+            "sha256": "868d75a3527521a49c9b2323a94336f52a3e86271f482c1ec594a6d25ad05c09"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -161,14 +161,6 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==23.1.0"
-        },
-        "backoff": {
-            "hashes": [
-                "sha256:03f829f5bb1923180821643f8753b0502c3b682293992485b0eef2807afa5cba",
-                "sha256:63579f9a0628e06278f7e47b7d7d5b6ce20dc65c5e96a6f3ca99a6adca0396e8"
-            ],
-            "markers": "python_version >= '3.7' and python_version < '4.0'",
-            "version": "==2.2.1"
         },
         "beautifulsoup4": {
             "hashes": [
@@ -458,6 +450,12 @@
             "index": "pypi",
             "version": "==0.3.4"
         },
+        "docopt": {
+            "hashes": [
+                "sha256:49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"
+            ],
+            "version": "==0.6.2"
+        },
         "einops": {
             "hashes": [
                 "sha256:99149e46cc808956b174932fe563d920db4d6e5dadb8c6ecdaa7483b7ef7cfc3",
@@ -635,11 +633,11 @@
         },
         "gitpython": {
             "hashes": [
-                "sha256:8ce3bcf69adfdf7c7d503e78fd3b1c492af782d58893b650adb2ac8912ddd573",
-                "sha256:f04893614f6aa713a60cbbe1e6a97403ef633103cdd0ef5eb6efe0deb98dbe8d"
+                "sha256:8d9b8cb1e80b9735e8717c9362079d3ce4c6e5ddeebedd0361b228c3a67a62f6",
+                "sha256:e3d59b1c2c6ebb9dfa7a184daf3b6dd4914237e7488a1730a6d8f6f5d0b4187f"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==3.1.31"
+            "version": "==3.1.32"
         },
         "gputil": {
             "hashes": [
@@ -1087,11 +1085,11 @@
         },
         "neptune": {
             "hashes": [
-                "sha256:8e2d08a9282696fc6d1c52f3309d79daae366a8f9dc71c0f9d10177376d30d78",
-                "sha256:f4ea30fa6312659c86718e5116f71b9611372b741092a50c74422ba4db161550"
+                "sha256:be5ea84ea10309d7a44b5a0b899f08319a1ac1ee727460efb9c549ee36e4584d",
+                "sha256:d78cf6a74e23b679207e2ea64de72a720a5b12a007059c7277c6be6d5cc283b7"
             ],
             "index": "pypi",
-            "version": "==1.3.2"
+            "version": "==1.3.1"
         },
         "networkx": {
             "hashes": [
@@ -1191,7 +1189,7 @@
         },
         "peft": {
             "git": "https://github.com/huggingface/peft",
-            "ref": "06fd06a4d2e8ed8c3a253c67d9c3cb23e0f497ad"
+            "ref": "4f542e319f5a164116946e999b197cc95f138567"
         },
         "pillow": {
             "hashes": [
@@ -1254,6 +1252,14 @@
             ],
             "markers": "python_version >= '3.8'",
             "version": "==10.0.0"
+        },
+        "pipreqs": {
+            "hashes": [
+                "sha256:a17f167880b6921be37533ce4c81ddc6e22b465c107aad557db43b1add56a99b",
+                "sha256:e522b9ed54aa3e8b7978ff251ab7a9af2f75d2cd8de4c102e881b666a79a308e"
+            ],
+            "markers": "python_version >= '3.7'",
+            "version": "==0.4.13"
         },
         "portalocker": {
             "hashes": [
@@ -2444,6 +2450,13 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==3.2.0"
+        },
+        "yarg": {
+            "hashes": [
+                "sha256:4f9cebdc00fac946c9bf2783d634e538a71c7d280a4d806d45fd4dc0ef441492",
+                "sha256:55695bf4d1e3e7f756496c36a69ba32c40d18f821e38f61d028f6049e5e15911"
+            ],
+            "version": "==0.1.9"
         },
         "yarl": {
             "hashes": [
