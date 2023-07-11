@@ -115,7 +115,7 @@ pip install -r requirements.txt
 You can start H2O LLM Studio using the following command:
 
 ```bash
-make wave
+make llmstudio
 ```
 
 This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
@@ -338,14 +338,14 @@ LORA should be enabled. Besides that there are the usual parameters such as batc
 
 > ❓ Where does H2O LLM Studio store its data?
 
-H2O LLM Studio stores its data in two folders located in the root directory. The folders are named `data` and `output`. Here is the breakdown of the data storage structure:
+By default, H2O LLM Studio stores its data in two folders located in the root directory. The folders are named `data` and `output`. Here is the breakdown of the data storage structure:
 
 - `data/dbs`: This folder contains the user database used within the app.
 - `data/user`: This folder is where uploaded datasets from the user are stored.
 - `output/user`: All experiments conducted in H2O LLM Studio are stored in this folder. For each experiment, a separate folder is created within the `output/user` directory, which contains all the relevant data associated with that particular experiment.
 - `output/download`: Utility folder that is used to store data the user downloads within the app.
 
-It is possible to change the default folders `data` and `output` in [app_utils/config.py](app_utils/config.py) (change `data_folder` and `output_folder`). Or set `LLM_STUDIO_DATA_FOLDER` and `LLM_STUDIO_OUTPUT_FOLDER` environment variables.
+It is possible to change the default working directory of H2O LLM Studio by setting the `H2O_LLM_STUDIO_WORKDIR` environment variable. By default, the working directory is set to the root directory of the app.
 
 > ❓ How can I update H2O LLM Studio?
 
