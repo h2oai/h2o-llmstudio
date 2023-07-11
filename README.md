@@ -115,7 +115,7 @@ pip install -r requirements.txt
 You can start H2O LLM Studio using the following command:
 
 ```bash
-make wave
+make llmstudio
 ```
 
 This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
