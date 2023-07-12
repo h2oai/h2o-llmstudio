@@ -202,7 +202,7 @@ With H2O LLM Studio, training your large language model is easy and intuitive. F
 
 ## Example: Run on OASST data via CLI
 
-As an example, you can run an experiment on the OASST data via CLI. For instructions, see [https://docs.h2o.ai/h2o-llmstudio/guide/experiments/create-an-experiment#run-an-experiment-on-the-oasst-data-via-cli]
+As an example, you can run an experiment on the OASST data via CLI. For instructions, see [Run an experiment on the OASST data]([https://docs.h2o.ai/h2o-llmstudio/guide/experiments/create-an-experiment#run-an-experiment-on-the-oasst-data-via-cli]) guide in the H2O LLM Studio documentation. 
 
 ## Model checkpoints
 
