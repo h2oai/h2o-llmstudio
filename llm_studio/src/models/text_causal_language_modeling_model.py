@@ -152,6 +152,10 @@ class Model(nn.Module):
         if self.cfg.prediction.metric == "Perplexity":
             self.perplexity = Perplexity(self.cfg, reduce=False)
 
+        if self.cfg.training.use_rlhf:
+            self.value_head = ValueHead(self.backbone_config)
+            self.value_head.summary.bias.data.zero_()
+
     def prepare_lora(self):
         target_modules = (
             [
@@ -189,17 +193,6 @@ class Model(nn.Module):
             self.backbone.enable_input_require_grads()
         self.backbone = get_peft_model(self.backbone, lora_config)
         self.backbone.print_trainable_parameters()
-
-        self.loss_fn = self.cfg.training.loss_class.get(
-            self.cfg.training.loss_function
-        )(self.cfg)
-
-        if self.cfg.prediction.metric == "Perplexity":
-            self.perplexity = Perplexity(self.cfg, reduce=False)
-
-        if self.cfg.training.use_rlhf:
-            self.value_head = ValueHead(self.backbone_config)
-            self.value_head.summary.bias.data.zero_()
 
     def generate(self, batch: Dict, cfg: Any, streamer=None):
         mask_key = "prompt_attention_mask"

@@ -2,6 +2,7 @@ import psutil
 import torch
 from h2o_wave import Q, data, ui
 
+from app_utils.config import default_cfg
 from app_utils.sections.common import clean_dashboard
 from app_utils.utils import (
     get_datasets,
@@ -18,7 +19,7 @@ async def home(q: Q) -> None:
     q.client["nav/active"] = "home"
 
     experiments = get_experiments(q)
-    hdd = psutil.disk_usage("./data/")
+    hdd = psutil.disk_usage(default_cfg.llm_studio_workdir)
 
     q.page["home/disk_usage"] = ui.tall_gauge_stat_card(
         box=ui.box("content", order=2, width="20%" if len(experiments) > 0 else "30%"),
