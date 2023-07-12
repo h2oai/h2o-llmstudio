@@ -1,3 +1,5 @@
+import Icon from "@material-ui/core/Icon";
+
 # FAQs
 
 The sections below provide answers to frequently asked questions. If you have additional questions, please send them to <cloud-feedback@h2o.ai>.
@@ -12,7 +14,7 @@ There is no clear answer. As a rule of thumb, 1000 to 50000 samples of conversat
 
 ### Are there any recommendations for which backbone to use? Are some backbones better for certain types of tasks?
 
-The majority of the LLM backbones are trained on a very similar corpus of data. The main difference is the size of the model and the number of parameters. Usually, the larger the model, the better they are. The larger models also take longer to train. We recommend starting with the smallest model and then increasing the size if the performance is not satisfactory. If you are looking to train for tasks that are not directly question answering in English, it is also a good idea to look for specialized LLM backbones.
+The majority of the LLM backbones are trained on a very similar corpus of data. The main difference is the size of the model and the number of parameters. Usually, the larger the model, the better they are. The larger models also take longer to train. It is recommended to start with the smallest model and then increase the size if the performance is not satisfactory. If you are looking to train for tasks that are not directly question answering in English, it is also a good idea to look for specialized LLM backbones.
 
 ---
 
@@ -59,20 +61,24 @@ To update H2O LLM Studio, you have two options:
 1. Using the latest main branch: Execute the commands `git checkout main` and `git pull` to obtain the latest updates from the main branch.
 2. Using the latest release tag: Execute the commands `git pull` and `git checkout v0.0.3` (replace 'v0.0.3' with the desired version number) to switch to the latest release branch.
 
-The update process does not remove or erase any existing data folders or experiment records.
-This means that all your old data, including the user database, uploaded datasets, and experiment results, 
-will still be available to you within the updated version of H2O LLM Studio.
+The update process does not remove or erase any existing data folders or experiment records. This means that all your old data, including the user database, uploaded datasets, and experiment results, will still be available to you within the updated version of H2O LLM Studio.
 
-Before updating, we recommend running the command `git rev-parse --short HEAD` and saving the commit hash. 
+Before updating, it is recommended to run the `git rev-parse --short HEAD` command and save the commit hash. 
 This will allow you to revert to your existing version if needed. 
+
+---
 
 ### Once I have the [LoRA](guide/experiments/experiment-settings.md#lora), what is the recommended way of utilizing it with the base model?
 
-You can also export the LoRA weights. You may add them to the files to be exported [here](https://github.com/h2oai/h2o-llmstudio/blob/main/app_utils/sections/experiment.py#L1552). Before exporting, we merge the LoRA weights back into the original LLM backbone weights to make downstream tasks easier. You don't need to have PEFT, or anything else for your deployment.
+You can also export the LoRA weights. You may add them to the files to be exported [here](https://github.com/h2oai/h2o-llmstudio/blob/main/app_utils/sections/experiment.py#L1552). Before exporting, the LoRA weights are merged back into the original LLM backbone weights to make downstream tasks easier. You do not need to have PEFT, or anything else for your deployment.
+
+---
 
 ### How to use H2O LLM Studio in Windows? 
 
 Use WSL 2 on Windows 
+
+---
 
 ### How can I easily fine-tune a large language model (LLM) using the command-line interface (CLI) of H2O LLM Studio when I have limited GPU memory?
 
@@ -80,6 +86,19 @@ If you have limited GPU memory but still want to fine-tune a large language mode
 
 - [Using Kaggle kernels](https://www.kaggle.com/code/philippsinger/h2o-llm-studio-cli/) 
 - [Using Google Colab](https://colab.research.google.com/drive/1-OYccyTvmfa3r7cAquw8sioFFPJcn4R9?usp=sharing)
+
+---
+
+### Can I run a validation metric on a model post-training, optionally on a different validation dataset?
+
+Yes.
+
+1. After you have finished creating an experiment, click on the <Icon>more_vert</Icon> Kebab menu of the relevant experiment and select **New Experiment**. 
+
+2. Enable the **Use previous experiments weight** setting found at the top of the screen. 
+   This will now load the previous weights, and you can now change eval dataset, metric, and anything else as you see fit. To only do evaluation without any retraining, set the **Epochs** to 0.
+
+----
 
 
 

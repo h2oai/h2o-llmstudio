@@ -1,3 +1,5 @@
+import Icon from "@material-ui/core/Icon";
+
 # View and manage experiments
 
 You can view, rename, stop, or delete your experiments once you launch them. You can also create a new experiment based on an experiment you have already launched.
@@ -62,7 +64,7 @@ You can stop a running experiment if you no longer need it to be complted.
 3. Select the experiment(s) that you want to stop. 
 4. Click **Stop experiments**.
 
-You can also click **Stop experiment** in the kebab menu of the relevant experiment row to stop an experiment from running. 
+You can also click **Stop experiment** on the <Icon>more_vert</Icon> Kebab menu of the relevant experiment row to stop an experiment from running. 
 
   ![stop experiment](stop-experiment.png)
 

@@ -96,6 +96,7 @@ docker run \
     -p 10101:10101 \
     -v `pwd`/data:/workspace/data \
     -v `pwd`/output:/workspace/output \
+    -v ~/.cache:/home/llmstudio/.cache \
     gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
 ```
 
@@ -117,6 +118,7 @@ docker run \
     -p 10101:10101 \
     -v `pwd`/data:/workspace/data \
     -v `pwd`/output:/workspace/output \
+    -v ~/.cache:/home/llmstudio/.cache \
     h2o-llmstudio
 ```
 
