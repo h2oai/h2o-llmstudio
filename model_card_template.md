@@ -23,6 +23,7 @@ To use the model with the `transformers` library on a machine with GPUs, first m
 
 ```bash
 pip install transformers=={{transformers_version}}
+pip install einops=={{einops_version}}
 pip install accelerate=={{accelerate_version}}
 pip install torch=={{torch_version}}
 ```
