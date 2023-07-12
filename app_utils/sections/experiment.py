@@ -6,6 +6,7 @@ import zipfile
 from typing import Callable, List, Optional, Set
 
 import accelerate
+import einops
 import huggingface_hub
 import numpy as np
 import pandas as pd
