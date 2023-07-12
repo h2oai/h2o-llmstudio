@@ -3,12 +3,13 @@
 accelerate==0.20.3
 aiohttp==3.8.4 ; python_version >= '3.6'
 aiosignal==1.3.1 ; python_version >= '3.7'
-anyio==3.7.0 ; python_version >= '3.7'
+anyio==3.7.1 ; python_version >= '3.7'
 arrow==1.2.3 ; python_version >= '3.6'
 async-timeout==4.0.2 ; python_version >= '3.6'
 attrs==23.1.0 ; python_version >= '3.7'
 beautifulsoup4==4.11.1
 bitsandbytes==0.39.1
+bleach==6.0.0 ; python_version >= '3.7'
 blessed==1.20.0 ; python_version >= '2.7'
 bokeh==2.4.2
 boto3==1.20.24
@@ -16,8 +17,8 @@ botocore==1.23.54 ; python_version >= '3.6'
 bravado==11.0.3 ; python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_full_version != '3.5.0'
 bravado-core==5.17.1 ; python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_full_version != '3.5.0'
 certifi==2023.5.7 ; python_version >= '3.6'
-charset-normalizer==3.1.0 ; python_full_version >= '3.7.0'
-click==8.1.3 ; python_version >= '3.7'
+charset-normalizer==3.2.0 ; python_full_version >= '3.7.0'
+click==8.1.4 ; python_version >= '3.7'
 cmake==3.26.4
 colorama==0.4.6 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6'
 coolname==1.1.0
@@ -26,7 +27,7 @@ datasets==2.11.0
 dill==0.3.4
 docopt==0.6.2
 einops==0.6.1
-exceptiongroup==1.1.1 ; python_version < '3.11'
+exceptiongroup==1.1.2 ; python_version < '3.11'
 fastparquet==0.8.1
 filelock==3.12.2 ; python_version >= '3.7'
 fqdn==1.5.1
@@ -34,12 +35,12 @@ frozenlist==1.3.3 ; python_version >= '3.7'
 fsspec[http]==2023.6.0 ; python_version >= '3.8'
 future==0.18.3 ; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'
 gitdb==4.0.10 ; python_version >= '3.7'
-gitpython==3.1.31 ; python_version >= '3.7'
+gitpython==3.1.32 ; python_version >= '3.7'
 gputil==1.4.0
 greenlet==2.0.2 ; python_version >= '3' and platform_machine == 'aarch64' or (platform_machine == 'ppc64le' or (platform_machine == 'x86_64' or (platform_machine == 'amd64' or (platform_machine == 'AMD64' or (platform_machine == 'win32' or platform_machine == 'WIN32')))))
 h11==0.14.0 ; python_version >= '3.7'
-h2o-wave==0.26.0
-httpcore==0.17.2 ; python_version >= '3.7'
+h2o-wave==0.26.1
+httpcore==0.17.3 ; python_version >= '3.7'
 httpx==0.24.1 ; python_version >= '3.7'
 huggingface-hub==0.14.1
 idna==3.4 ; python_version >= '3.5'
@@ -47,11 +48,12 @@ inquirer==3.1.3 ; python_version >= '3.8'
 isoduration==20.11.0
 jinja2==3.1.2
 jmespath==0.10.0 ; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'
-joblib==1.3.0 ; python_version >= '3.7'
+joblib==1.3.1 ; python_version >= '3.7'
 jsonpointer==2.4
 jsonref==1.1.0 ; python_version >= '3.7'
-jsonschema==4.17.3 ; python_version >= '3.7'
-kaggle==1.5.13
+jsonschema==4.18.0 ; python_version >= '3.8'
+jsonschema-specifications==2023.6.1 ; python_version >= '3.8'
+kaggle==1.5.15
 lit==16.0.6
 markupsafe==2.1.3 ; python_version >= '3.7'
 monotonic==1.6
@@ -61,32 +63,33 @@ multidict==6.0.4 ; python_version >= '3.7'
 multiprocess==0.70.12.2
 neptune==1.3.1
 networkx==3.1 ; python_version >= '3.8'
-numpy==1.25.0
+numpy==1.25.1
 oauthlib==3.2.2 ; python_version >= '3.6'
 openai==0.27.7
 packaging==23.1 ; python_version >= '3.7'
 pandas==1.5.3
-git+https://github.com/huggingface/peft@86290e9660d24ef0d0cedcf57710da249dd1f2f4#egg=peft
-pillow==9.5.0 ; python_version >= '3.7'
+git+https://github.com/huggingface/peft@4f542e319f5a164116946e999b197cc95f138567#egg=peft
+pillow==10.0.0 ; python_version >= '3.8'
 pipreqs==0.4.13 ; python_version >= '3.7'
 portalocker==2.7.0 ; python_version >= '3.5'
 protobuf==3.20.3
 psutil==5.9.5 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'
 pyarrow==8.0.0
 pyjwt==2.7.0 ; python_version >= '3.7'
-pyrsistent==0.19.3 ; python_version >= '3.7'
 python-dateutil==2.8.2 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'
 python-editor==1.0.4
 python-slugify==8.0.1 ; python_version >= '3.7'
 pytz==2023.3
 pyyaml==6.0
 readchar==4.0.5 ; python_version >= '3.7'
+referencing==0.29.1 ; python_version >= '3.8'
 regex==2023.6.3 ; python_version >= '3.6'
 requests==2.31.0 ; python_version >= '3.7'
 requests-oauthlib==1.3.1 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'
 responses==0.18.0 ; python_version >= '3.7'
 rfc3339-validator==0.1.4
 rfc3987==1.3.8
+rpds-py==0.8.10 ; python_version >= '3.8'
 s3transfer==0.5.2 ; python_version >= '3.6'
 sacrebleu==2.0.0
 safetensors==0.3.1
@@ -116,14 +119,15 @@ torchaudio==2.0.1+cu117
 torchvision==0.15.1+cu117
 tornado==6.3.2 ; python_version >= '3.8'
 tqdm==4.65.0
-transformers==4.30.1
+transformers==4.30.2
 triton==2.0.0 ; platform_system == 'Linux' and platform_machine == 'x86_64'
-typing-extensions==4.7.0 ; python_version >= '3.7'
+typing-extensions==4.7.1 ; python_version >= '3.7'
 uri-template==1.3.0
 urllib3==1.26.16 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'
 uvicorn==0.22.0 ; python_version >= '3.7'
 wcwidth==0.2.6
 webcolors==1.13
+webencodings==0.5.1
 websocket-client==1.6.1 ; python_version >= '3.7'
 xxhash==3.2.0 ; python_version >= '3.6'
 yarg==0.1.9
