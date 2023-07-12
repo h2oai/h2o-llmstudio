@@ -6,6 +6,7 @@ import zipfile
 from typing import Callable, List, Optional, Set
 
 import accelerate
+import einops
 import huggingface_hub
 import numpy as np
 import pandas as pd
@@ -1685,6 +1686,7 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
         text_answer_separator=cfg.dataset.text_answer_separator,
         trust_remote_code=cfg.environment.trust_remote_code,
         transformers_version=transformers.__version__,
+        einops_version=einops.__version__,
         accelerate_version=accelerate.__version__,
         torch_version=torch.__version__.split("+")[0],
         end_of_sentence=cfg._tokenizer_eos_token
