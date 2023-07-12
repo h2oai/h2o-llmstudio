@@ -117,7 +117,7 @@ def run_eval(
             assert isinstance(val_data["loss"], torch.Tensor)
             val_losses = val_data["loss"].float().cpu().numpy()
             val_loss = np.mean(val_losses)
-            logger.info(f"Mean {mode} loss: {np.mean(val_losses):.5f}")
+            logger.info(f"Mean {mode} loss: {val_loss:.5f}")
             cfg.logging._logger.log(
                 mode, "loss", val_loss, step=cfg.environment._curr_step
             )
