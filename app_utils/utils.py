@@ -58,19 +58,23 @@ def get_user_name(q):
 
 
 def get_data_dir(q):
-    return os.path.join(default_cfg.data_folder, "user")
+    return os.path.join(default_cfg.llm_studio_workdir, default_cfg.data_folder, "user")
 
 
 def get_database_dir(q):
-    return os.path.join(default_cfg.data_folder, "dbs")
+    return os.path.join(default_cfg.llm_studio_workdir, default_cfg.data_folder, "dbs")
 
 
 def get_output_dir(q):
-    return os.path.join(default_cfg.output_folder, "user")
+    return os.path.join(
+        default_cfg.llm_studio_workdir, default_cfg.output_folder, "user"
+    )
 
 
 def get_download_dir(q):
-    return os.path.join(default_cfg.output_folder, "download")
+    return os.path.join(
+        default_cfg.llm_studio_workdir, default_cfg.output_folder, "download"
+    )
 
 
 def get_user_db_path(q):
@@ -1664,13 +1668,9 @@ def dir_file_table(current_path: str) -> pd.DataFrame:
 
 
 def get_download_link(q, artifact_path):
-    url = default_cfg.url
-    if not url.endswith("/"):
-        url = url + "/"
-
     new_path = os.path.relpath(artifact_path, get_output_dir(q))
     new_path = os.path.join(get_download_dir(q), new_path)
-    url_path = os.path.relpath(new_path, new_path.split("/")[0])
+    url_path = os.path.relpath(new_path, get_output_dir(q))
 
     if not os.path.exists(new_path):
         os.makedirs(os.path.dirname(new_path), exist_ok=True)
