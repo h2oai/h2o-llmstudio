@@ -21,15 +21,10 @@
 - [Run H2O LLM Studio GUI using Docker from a nightly build](#run-h2o-llm-studio-gui-using-docker-from-a-nightly-build)
 - [Run H2O LLM Studio GUI by building your own Docker image](#run-h2o-llm-studio-gui-by-building-your-own-docker-image)
 - [Run H2O LLM Studio with command line interface (CLI)](#run-h2o-llm-studio-with-command-line-interface-cli)
-- [Data Format](#data-format)
+- [Data format and example data](#data-format-and-example-data)
 - [Training your model](#training-your-model)
-  - [Starting an experiment](#starting-an-experiment)
-  - [Monitoring the experiment](#monitoring-the-experiment)
-  - [Push to Hugging Face 🤗](#push-to-hugging-face-🤗)
-  - [Compare experiments](#compare-experiments)
 - [Example: Run on OASST data via CLI](#example-run-on-oasst-data-via-cli)
 - [Model checkpoints](#model-checkpoints)
-- [FAQ](#faq)
 - [Documentation](#documentation)
 - [License](#license)
 
@@ -197,170 +192,25 @@ python prompt.py -e {experiment_name}
 where `experiment_name` is the output folder of the experiment you want to chat with (see configuration).
 The interactive chat will also work with model that were finetuned using the UI.
 
-## Data Format
+## Data format and example data
 
-H2O LLM studio expects a csv file with at least two columns, one being the instruct column, the other being the answer that the model should generate. You can also provide an extra validation dataframe using the same format or use an automatic train/validation split to evaluate the model performance.
-
-During an experiment you can adapt the data representation with the following settings
-
-- **Prompt Column:** The column in the dataset containing the user prompt.
-- **Answer Column:** The column in the dataset containing the expected output.
-- **Parent Id Column:** An optional column specifying the parent id to be used for chained conversations. The value of this column needs to match an additional column with the name `id`. If provided, the prompt will be concatenated after preceeding parent rows.
-
-### Example data
-
-We provide an example dataset (converted dataset from [OpenAssistant/oasst1](https://huggingface.co/datasets/OpenAssistant/oasst1))
-that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=127047926). It is recommended to use `train_full.csv` for training. This dataset is also downloaded and prepared by default when first starting the GUI. Multiple dataframes can be uploaded into a single dataset by uploading a `.zip` archive.
+For details on the data format required when importing your data or example data that you can use to try out H2O LLM Studio, see [Data format](https://docs.h2o.ai/h2o-llmstudio/guide/datasets/data-connectors-format#data-format) in the H2O LLM Studio documentation. 
 
 ## Training your model
 
-With H2O LLM Studio, training your large language model is easy and intuitive. First, upload your dataset and then start training your model.
-
-### Starting an experiment
-
-H2O LLM Studio allows to tune a variety of parameters and enables fast iterations to be able to explore different hyperparameters easily.
-The default settings are chosen with care and should give a good baseline. The most important parameters are:
-
-- **LLM Backbone**: This parameter determines the LLM architecture to use.
-- **Mask Prompt Labels**: This option controls whether to mask the prompt labels during training and only train on the loss of the answer.
-- **Hyperparameters** such as learning rate, batch size, and number of epochs determine the training process.
-Please consult the tooltips of each hyperparameter to learn more about them. The tooltips are shown next to each hyperparameter in the GUI and can be found as plain text `.mdx` files in the [tooltips/](documentation/docs/tooltips/) folder.
-- **Evaluate Before Training** This option lets you evaluate the model before training, which can help you judge the quality of the LLM backbone before fine-tuning.
-
-We provide several metric options for evaluating the performance of your model. In addition to the BLEU score, we offer the GPT3.5 and GPT4 metrics that utilize the OpenAI API to determine whether the predicted answer is more favorable than the ground truth answer. To use these metrics, you can either export your OpenAI API key as an environment variable before starting LLM Studio, or you can specify it in the Settings Menu within the UI.
-
-### Monitoring the experiment
-
-During the experiment, you can monitor the training progress and model performance in several ways:
-
-- The **Charts** tab displays train/validation loss, metrics, and learning rate.
-- The **Train Data Insights** tab shows you the first batch of the model to verify that the input data representation is correct.
-- The **Validation Prediction Insights** tab displays model predictions for random/best/worst validation samples. This tab is available after the first validation run.
-- **Logs** and **Config** show the logs and the configuration of the experiment.
-- **Chat** tab lets you chat with your model and get instant feedback on its performance. This tab becomes available after the training is completed.
-
-### Push to Hugging Face 🤗
-
-If you want to publish your model, you can export it with a single click to the [Hugging Face Hub](https://huggingface.co/)
-and share it with the community. To be able to push your model to the Hub, you need to have an API token with write access.
-You can also click the **Download model** button to download the model locally.
-To use a converted model, you can use the following code snippet:
-
-```python
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
-model_name = "path_to_downloaded_model"  # either local folder or huggingface model name
-
-# Important: The prompt needs to be in the same format the model was trained with.
-# You can find an example prompt in the experiment logs.
-prompt = "<|prompt|>How are you?<|endoftext|><|answer|>"
-
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name)
-model.cuda().eval()
-
-inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
-# generate configuration can be modified to your needs
-tokens = model.generate(
-    **inputs,
-    max_new_tokens=256,
-    temperature=0.3,
-    repetition_penalty=1.2,
-    num_beams=1
-)[0]
-tokens = tokens[inputs["input_ids"].shape[1]:]
-answer = tokenizer.decode(tokens, skip_special_tokens=True)
-print(answer)
-```
-
-### Compare experiments
-
-In the **View Experiments** view, you can compare your experiments and see how different model parameters affect the model performance.
-In addition, you can track your experiments with [Neptune](https://neptune.ai/) by enabling neptune logging when starting an experiment.
+With H2O LLM Studio, training your large language model is easy and intuitive. First, upload your dataset and then start training your model. Start by [creating an experiment](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/create-an-experiment). You can then [monitor and manage your experiment](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/view-an-experiment), [compare experiments](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/compare-experiments), or [push the model to Hugging Face](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/export-trained-model) to share it with the community. 
 
 ## Example: Run on OASST data via CLI
 
-As an example, you can run an experiment on the OASST data via CLI.
-
-First, get the training dataset (`train_full.csv`) [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=126228752) and place it into the `examples/data_oasst1` folder; or download it directly via [Kaggle API](https://www.kaggle.com/docs/api) command:
-
-```bash
-kaggle kernels output philippsinger/openassistant-conversations-dataset-oasst1 -p examples/data_oasst1/
-```
-
-Then, go into the interactive shell. If not already done earlier, install the dependencies first:
-
-```bash
-make setup  # installs all dependencies
-make shell
-```
-
-You can now run the experiment via:
-
-```bash
-python train.py -C examples/cfg_example_oasst1.py
-```
-
-After the experiment finishes, you can find all output artifacts in the `examples/output_oasst1` folder.
-You can then use the `prompt.py` script to chat with your model:
-
-```bash
-python prompt.py -e examples/output_oasst1
-```
+As an example, you can run an experiment on the OASST data via CLI. For instructions, see [Run an experiment on the OASST data]([https://docs.h2o.ai/h2o-llmstudio/guide/experiments/create-an-experiment#run-an-experiment-on-the-oasst-data-via-cli]) guide in the H2O LLM Studio documentation. 
 
 ## Model checkpoints
 
 All open-source datasets and models are posted on [H2O.ai's Hugging Face page](https://huggingface.co/h2oai/) and our [H2OGPT](https://github.com/h2oai/h2ogpt) repository.
 
-## FAQ
-
-> ❓ How much data is generally required to fine-tune a model?
-
-There is no clear answer. As a rule of thumb, 1000 to 50000 samples of conversational data should be enough. Quality and diversity is very important. Make sure to try training on a subsample of data using the "sample" parameter to see how big the impact of the dataset size is. Recent [studies](https://arxiv.org/abs/2305.11206) suggest that less data is needed for larger foundation models.
-
-> ❓ Is there any recommendations for which backbone to use? For example, are some better for certain types of tasks?
-
-The majority of the LLM backbones are trained on a very similar corpus of data. The main difference is the size of the model and the number of parameters. Usually, the larger the model, the better they are. The larger models also take longer to train. We recommend starting with the smallest model and then increasing the size if the performance is not satisfactory. If you are looking to train for tasks that are not directly english question answering, it is also a good idea to look for specialized LLM backbones.
-
-> ❓ What if my data is not in question and answer form, I just have documents? How can I fine-tune the LLM model?
-
-To train a chatbot style model, you need to convert your data into a question and answer format.
-
-If you really want to continue pretraining on your own data without teaching a question answering style, prepare a dataset with all your data in a single column Dataframe. Make sure that the length of the text in each row is not too long. In the experiment setup, remove all additional tokens (e.g. `<|prompt|>`, `<|answer|>`, for `Text Prompt Start` and `Text Answer Start` respectively) and disable `Add Eos Token To Prompt` and `Add Eos Token To Answer`. Deselect everything in the `Prompt Column`.
-
-Your setup should look like [this](https://github.com/h2oai/h2o-llmstudio/assets/1069138/316c380d-76e4-4264-a64e-8ae9be893e76).
-
-> ❓ I encounter GPU out-of-memory issues. What can I change to be able to train large models?
-
-There are various parameters that can be tuned while keeping a specific LLM backbone fixed.
-It is advised to choose 4bit/8bit precision as a backbone dtype to be able to train models >=7B on a consumer type GPU.
-LORA should be enabled. Besides that there are the usual parameters such as batch size and maximum sequence length that can be decreased to save GPU memory (please ensure that your prompt+answer text is not truncated too much by checking the train data insights).
-
-> ❓ Where does H2O LLM Studio store its data?
-
-By default, H2O LLM Studio stores its data in two folders located in the root directory. The folders are named `data` and `output`. Here is the breakdown of the data storage structure:
-
-- `data/dbs`: This folder contains the user database used within the app.
-- `data/user`: This folder is where uploaded datasets from the user are stored.
-- `output/user`: All experiments conducted in H2O LLM Studio are stored in this folder. For each experiment, a separate folder is created within the `output/user` directory, which contains all the relevant data associated with that particular experiment.
-- `output/download`: Utility folder that is used to store data the user downloads within the app.
-
-It is possible to change the default working directory of H2O LLM Studio by setting the `H2O_LLM_STUDIO_WORKDIR` environment variable. By default, the working directory is set to the root directory of the app.
-
-> ❓ How can I update H2O LLM Studio?
-
-To update H2O LLM Studio, you have two options:
-
-1. Using the latest main branch: Execute the commands `git checkout main` and `git pull` to obtain the latest updates from the main branch.
-2. Using the latest release tag: Execute the commands `git pull` and `git checkout v0.0.3` (replace 'v0.0.3' with the desired version number) to switch to the latest release branch.
-
-The update process does not remove or erase any existing data folders or experiment records. This means that all your old data, including the user database, uploaded datasets, and experiment results, will still be available to you within the updated version of H2O LLM Studio.
-
-Before updating, we recommend running the command `git rev-parse --short HEAD` and saving the commit hash. This will allow you to revert to your existing version if needed.
-
 ## Documentation
 
-Detailed documentation for H2O LLM Studio can be found at <https://docs.h2o.ai/h2o-llmstudio/>. If you wish to contribute to the docs, navigate to the `/documentation` folder of this repo and refer to the [README.md](documentation/README.md) for more information.
+Detailed documentation and frequently asked questions (FAQs) for H2O LLM Studio can be found at <https://docs.h2o.ai/h2o-llmstudio/>. If you wish to contribute to the docs, navigate to the `/documentation` folder of this repo and refer to the [README.md](documentation/README.md) for more information.
 
 ## License
 
