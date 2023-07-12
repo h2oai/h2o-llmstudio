@@ -65,7 +65,7 @@ There are several ways to run H2O LLM Studio depending on your requirements.
 Run the following command to start the H2O LLM Studio. 
 
 ```
-make wave
+make llmstudio
 ```
 
 This will start the H2O Wave server and the H2O LLM Studio app. Navigate to [http://localhost:10101/](http://localhost:10101/) (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models. 

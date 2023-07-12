@@ -41,4 +41,4 @@ ENV H2O_WAVE_MAX_REQUEST_SIZE=25MB
 ENV H2O_WAVE_NO_LOG=true
 ENV H2O_WAVE_PRIVATE_DIR="/download/@/workspace/output/download"
 EXPOSE 10101
-ENTRYPOINT [ "python3.10", "-m", "pipenv", "run", "wave", "run", "app" ]
+ENTRYPOINT [ "python3.10", "-m", "pipenv", "run", "wave", "run", "--no-reload", "app" ]
