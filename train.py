@@ -701,8 +701,11 @@ def run(cfg: Any) -> None:
         write_flag(flag_path, "status", "finished")
         time_took = time.time() - global_start_time
         if time_took > 86400:
+            # if more than one day, show days
+            # need to subtract 1 day from time_took since strftime shows day of year
+            # which starts counting at 1
             time_took_formatted = time.strftime(
-                "%-jd %H:%M:%S", time.gmtime(float(time_took))
+                "%-jd %H:%M:%S", time.gmtime(float(time_took - 86400))
             )
         else:
             time_took_formatted = time.strftime(

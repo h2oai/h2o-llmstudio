@@ -1348,9 +1348,12 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
                     if eta == 0:
                         eta = ""
                     else:
+                        # if more than one day, show days
+                        # need to subtract 1 day from time_took since strftime shows
+                        # day of year which starts counting at 1
                         if eta > 86400:
                             eta = time.strftime(
-                                "%-jd %H:%M:%S", time.gmtime(float(eta))
+                                "%-jd %H:%M:%S", time.gmtime(float(eta - 86400))
                             )
                         else:
                             eta = time.strftime("%H:%M:%S", time.gmtime(float(eta)))
