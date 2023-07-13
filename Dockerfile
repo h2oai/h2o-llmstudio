@@ -33,6 +33,7 @@ COPY Pipfile .
 COPY Pipfile.lock .
 RUN \
     make setup && \
+    mkdir -p /home/llmstudio/mount && \
     chmod -R a+w /home/llmstudio
 COPY . .
 
