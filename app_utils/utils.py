@@ -1587,7 +1587,7 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
         env_vars.update(
             {"HUGGINGFACE_TOKEN": q.client["default_huggingface_api_token"]}
         )
-    cfg = copy_config(cfg)
+    cfg = copy_config(cfg, q)
     cfg.output_directory = f"{get_output_dir(q)}/{cfg.experiment_name}/"
     os.makedirs(cfg.output_directory)
     save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
@@ -1865,7 +1865,7 @@ def get_single_gpu_usage(sig_figs=1, highlight=None):
     return items
 
 
-def copy_config(cfg: Any) -> Any:
+def copy_config(cfg: Any, q: Q) -> Any:
     """Makes a copy of the config
 
     Args:
@@ -1874,8 +1874,8 @@ def copy_config(cfg: Any) -> Any:
         copy of the config
     """
     # make unique yaml file using uuid
-    os.makedirs("output", exist_ok=True)
-    tmp_file = os.path.join("output/", str(uuid.uuid4()) + ".yaml")
+    os.makedirs(get_output_dir(q), exist_ok=True)
+    tmp_file = os.path.join(f"{get_output_dir(q)}/", str(uuid.uuid4()) + ".yaml")
     save_config_yaml(tmp_file, cfg)
     cfg = load_config_yaml(tmp_file)
     os.remove(tmp_file)
