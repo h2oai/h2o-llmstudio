@@ -29,7 +29,6 @@ if __name__ == "__main__":
         help="Hugging Face API Key",
         default=argparse.SUPPRESS,
     )
-
     parser.add_argument(
         "-u",
         "--user_id",
