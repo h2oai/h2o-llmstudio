@@ -197,6 +197,13 @@ python prompt.py -e {experiment_name}
 where `experiment_name` is the output folder of the experiment you want to chat with (see configuration).
 The interactive chat will also work with model that were finetuned using the UI.
 
+To publish the model to Hugging Face, use the following command:
+
+```bash
+python publish_to_hugging_face.py -e {experiment_dir} -d {device} -a {api_key} -r {repository_id}
+```
+
+
 ## Data format and example data
 
 For details on the data format required when importing your data or example data that you can use to try out H2O LLM Studio, see [Data format](https://docs.h2o.ai/h2o-llmstudio/guide/datasets/data-connectors-format#data-format) in the H2O LLM Studio documentation. 
