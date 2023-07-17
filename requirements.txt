@@ -7,6 +7,7 @@ anyio==3.7.1 ; python_version >= '3.7'
 arrow==1.2.3 ; python_version >= '3.6'
 async-timeout==4.0.2 ; python_version >= '3.6'
 attrs==23.1.0 ; python_version >= '3.7'
+auto-gptq==0.3.0
 beautifulsoup4==4.11.1
 bitsandbytes==0.39.1
 bleach==6.0.0 ; python_version >= '3.7'

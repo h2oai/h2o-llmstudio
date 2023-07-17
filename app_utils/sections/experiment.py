@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import zipfile
+import time
 from typing import Callable, List, Optional, Set
 
 import accelerate
@@ -16,6 +17,10 @@ import yaml
 from h2o_wave import Q, data, ui
 from jinja2 import Environment, FileSystemLoader
 from sqlitedict import SqliteDict
+from auto_gptq import AutoGPTQForCausalLM, BaseQuantizeConfig
+
+# FIXME: remove?
+from datasets import load_dataset, Dataset
 
 from app_utils.config import default_cfg
 from app_utils.sections.chat import chat_tab, load_cfg_model_tokenizer
@@ -957,6 +962,11 @@ async def experiment_display(q: Q) -> None:
             name="experiment/display/download_logs",
             label="Download logs/config",
             primary=False,
+        ),
+        ui.button(
+            name="experiment/display/quantize_model",
+            label="Quantize model",
+            primary=False,
         )
     ]
 
@@ -1468,6 +1478,121 @@ async def experiment_download_model(q: Q, error: str = ""):
     q.page["meta"].script = ui.inline_script(
         f'window.open("{download_url}", "_blank");'
     )
+    await q.page.save()
+
+
+async def experiment_quantize_model(q: Q, error: str = ""):
+    experiment = q.client["experiment/display/experiment"]
+    experiment_path = q.client["experiment/display/experiment_path"]
+    logger.info(f"Quantizing model!")
+    zip_path = get_model_path(experiment.name, experiment_path)
+
+    if not os.path.exists(zip_path):
+        logger.info(f"Creating {zip_path} on demand")
+        cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
+
+        device = "cuda"
+
+        experiments = get_experiments(q)
+        num_running_queued = len(
+            experiments[experiments["status"].isin(["queued", "running"])]
+        )
+        if num_running_queued > 0:
+            logger.info("Waiting for queue to finish first.")
+            await q.page.save()
+            return
+
+        cfg, model, tokenizer = load_cfg_model_tokenizer(
+            experiment_path, merge=True, device=device
+        )
+
+        # Save model
+        model = unwrap_model(model)
+        checkpoint_path = cfg.output_directory
+        model.backbone.save_pretrained(checkpoint_path)
+        tokenizer.save_pretrained(checkpoint_path)
+
+        quantize_config = BaseQuantizeConfig(
+            bits=4,  # quantize model to 4-bit
+            group_size=128,  # it is recommended to set the value to 128
+            desc_act=False,  # set to False can significantly speed up inference but the perplexity may slightly bad 
+        )
+        pretrained_model_dir = checkpoint_path
+        qmodel = AutoGPTQForCausalLM.from_pretrained(pretrained_model_dir, quantize_config)
+
+        def tokenize(examples):
+            instructions = examples["instruction"]
+            outputs = examples["output"]
+
+            input_ids = []
+            attention_mask = []
+
+            for raw_prompt, answer in zip(instructions, outputs):
+
+                full_prompt = cfg.dataset.dataset_class.parse_prompt(cfg, raw_prompt)
+                full_prompt_with_answer = f"{full_prompt}{answer}"
+                logger.info(f"Full prompt: {full_prompt}")
+                logger.info(f"Full prompt with answer: {full_prompt_with_answer}")
+
+                tokenized_data = tokenizer(full_prompt_with_answer)
+
+                input_ids.append(tokenized_data["input_ids"][: tokenizer.model_max_length])
+                attention_mask.append(tokenized_data["attention_mask"][: tokenizer.model_max_length])
+
+            return {
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+            }
+
+        # FIXME: Extract from real dataset
+        raw_data = Dataset.from_dict({"instruction": [
+            "This is a test"
+        ], "input": [
+            "This is the answer"
+        ]})
+
+        n_samples = 128
+        # Sample from the dataset if n_samples is provided and less than the dataset size
+        if n_samples is not None and n_samples < len(raw_data):
+            raw_data = raw_data.shuffle(seed=42).select(range(n_samples))
+
+        examples = raw_data.map(
+            tokenize,
+            batched=True,
+            batch_size=len(raw_data),
+            num_proc=1,
+            keep_in_memory=True,
+            load_from_cache_file=False,
+            remove_columns=["instruction", "input"]
+        )
+
+        # Convert to PyTorch tensors
+        examples.set_format(type='torch', columns=['input_ids', 'attention_mask'])
+
+        examples_for_quant = [
+            {"input_ids": example["input_ids"], "attention_mask": example["attention_mask"]}
+            for example in examples
+        ]
+
+        logger.info("Quantize...")
+        start = time.time()
+        # quantize model, the examples should be list of dict whose keys can only be "input_ids" and "attention_mask"
+        qmodel.quantize(
+            examples_for_quant,
+            batch_size=1,
+            # batch_size=args.quant_batch_size,
+            # use_triton=args.use_triton,
+            # autotune_warmup_after_quantized=args.use_triton
+        )
+        end = time.time()
+        logger.info(f"quantization took: {end - start: .4f}s")
+
+        # save quantized model
+        logger.info("Saving quantized model...")
+        quantized_model_dir = checkpoint_path + "_quantized"
+        qmodel.save_quantized(quantized_model_dir, use_safetensors=True)
+        logger.info("Saved.")
+
     await q.page.save()
 
 
