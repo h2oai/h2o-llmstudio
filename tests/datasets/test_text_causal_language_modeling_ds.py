@@ -153,6 +153,33 @@ def test_get_parent_ids(mock_auto_tokenizer):
     assert dataset.get_parent_ids(2) == [0, 1]
 
 
+def test_loop_fails(mock_auto_tokenizer):
+    df = pd.DataFrame(
+        {
+            "prompt": ["prompt 1", "prompt 2", "prompt 3"],
+            "answer": ["answer 1", "answer 2", "answer 3"],
+            "parent_id": [0, 1, 2],
+            "id": [1, 2, 0],
+        }
+    )
+
+    cfg = mock.MagicMock()
+    cfg.dataset.prompt_column = "prompt"
+    cfg.dataset.answer_column = "answer"
+    cfg.dataset.parent_id_column = "parent_id"
+    cfg.dataset.text_system_start = "System:"
+    cfg.dataset.text_prompt_start = "Prompt:"
+    cfg.dataset.text_answer_separator = "Answer:"
+
+    dataset = CustomDataset(df, cfg)
+    with pytest.raises(
+        ValueError,
+        match="Parent chain of sample with idx 2 exceeds max loop count. "
+        "Please ensure that parent chain is not circular.",
+    ):
+        dataset.get_parent_ids(2)
+
+
 def test_getitem():
     df = pd.DataFrame(
         {

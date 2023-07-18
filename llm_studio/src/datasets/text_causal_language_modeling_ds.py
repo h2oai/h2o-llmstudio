@@ -467,21 +467,20 @@ class CustomDataset(Dataset):
         return [system_encoding, prompt_encoding, answer_encoding]
 
     def get_parent_ids(self, idx):
-        max_loop = 1000
+        max_loop = 1_000
         parent_idxs = []
         if self.parent_ids is not None:
             parent_idx = idx
             while (
                 (parent_idx := self.df_id_to_idx.get(self.parent_ids[parent_idx], None))
-                and max_loop > 0
             ) is not None:
                 parent_idxs.append(parent_idx)
                 max_loop -= 1
-
-        if max_loop == 0:
-            raise ValueError(
-                f"Parent chain of sample with idx {idx} exceeds max loop count."
-            )
+                if max_loop == 0:
+                    raise ValueError(
+                        f"Parent chain of sample with idx {idx} exceeds max loop count. "
+                        f"Please ensure that parent chain is not circular."
+                    )
         return parent_idxs[::-1]
 
     def get_parent_encodings(self, idx):
