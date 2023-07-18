@@ -336,9 +336,6 @@ class CustomDataset(Dataset):
             and "id" in df.columns
         ):
             assert (
-                df[cfg.dataset.parent_id_column].dropna().isin(df["id"]).all()
-            ), "Parent id column contains ids that are not in the dataset"
-            assert (
                 df[cfg.dataset.parent_id_column] != df["id"]
             ).all(), "Parent id column is the same as id column for some rows"
             assert (df[cfg.dataset.parent_id_column].fillna("") == "").sum() > 0, (

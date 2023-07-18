@@ -68,19 +68,6 @@ def test_sanity_check_raises_error():
     invalid_df_1 = pd.DataFrame(
         {
             "id": [1, 2, 3, 4],
-            "parent_id": [5, 6, 7, 8],
-            "other_data": ["a", "b", "c", "d"],
-        }
-    )
-    with pytest.raises(
-        AssertionError,
-        match="Parent id column contains ids that are not in the dataset",
-    ):
-        CustomDataset.sanity_check(invalid_df_1, mock_config)
-
-    invalid_df_2 = pd.DataFrame(
-        {
-            "id": [1, 2, 3, 4],
             "parent_id": [1, 2, 3, 4],
             "other_data": ["a", "b", "c", "d"],
         }
@@ -88,9 +75,9 @@ def test_sanity_check_raises_error():
     with pytest.raises(
         AssertionError, match="Parent id column is the same as id column for some rows"
     ):
-        CustomDataset.sanity_check(invalid_df_2, mock_config)
+        CustomDataset.sanity_check(invalid_df_1, mock_config)
 
-    invalid_df_3 = pd.DataFrame(
+    invalid_df_2 = pd.DataFrame(
         {
             "id": [1, 2, 3, 4],
             "parent_id": [2, 3, 4, 1],
@@ -102,7 +89,7 @@ def test_sanity_check_raises_error():
         match="Did not find any conversation start. "
         "Please ensure that some parent ids are empty.",
     ):
-        CustomDataset.sanity_check(invalid_df_3, mock_config)
+        CustomDataset.sanity_check(invalid_df_2, mock_config)
 
 
 @pytest.fixture
