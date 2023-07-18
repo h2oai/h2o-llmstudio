@@ -7,6 +7,7 @@ from collections import OrderedDict
 from typing import Any, Dict
 
 import coolname
+import deepspeed
 import numpy as np
 import torch
 from torch.cuda.amp import autocast
@@ -169,6 +170,62 @@ def load_checkpoint(
         logger.info(f"Weights loaded from: {weights_path}")
 
 
+def deepspeed_initialize(
+    model: torch.nn.Module,
+    optimizer: torch.optim.Optimizer,
+    lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
+    training_data: torch.utils.data.Dataset,
+    validating_data: torch.utils.data.Dataset,
+    cfg: Any,
+):
+    mconfig = AutoConfig.from_pretrained(cfg.llm_backbone)
+    if hasattr(mconfig, "hidden_size"):
+        model_hidden_size = mconfig.hidden_size
+    elif hasattr(mconfig, "d_model"):
+        model_hidden_size = mconfig.d_model
+    else:
+        raise Exception(f"deepspeed do not support {cfg.llm_backbone}")
+    ds_config = {
+        "fp16": {
+            "enabled": True if cfg.architecture.backbone_dtype == "float16" else False
+        },
+        "bf16": {
+            "enabled": True if cfg.architecture.backbone_dtype == "bfloat16" else False
+        },
+        # https://www.deepspeed.ai/docs/config-json/#zero-optimizations-for-fp16-training
+        "zero_optimization": {
+            "stage": 3,
+            "offload_param": {"device": "cpu", "pin_memory": True},
+            "overlap_comm": True,
+            "contiguous_gradients": True,
+            "reduce_bucket_size": model_hidden_size * model_hidden_size,
+            "stage3_prefetch_bucket_size": 0.9 * model_hidden_size * model_hidden_size,
+            "stage3_param_persistence_threshold": 10 * model_hidden_size,
+        },
+        "steps_per_print": 2000,
+        "train_batch_size": cfg.training.batch_size * cfg.environment._world_size,
+        "train_micro_batch_size_per_gpu": 1,
+        "wall_clock_breakdown": False,
+    }
+
+    # from transformers.deepspeed import HfDeepSpeedConfig
+    #     dschf = HfDeepSpeedConfig(ds_config)  # keep this object alive
+
+    model, optimizer, train_dataloader, scheduler = deepspeed.initialize(
+        model=model,
+        optimizer=optimizer,
+        lr_scheduler=lr_scheduler,
+        training_data=training_data,
+        config_params=ds_config,
+    )
+    _, _, val_dataloader, _ = deepspeed.initialize(
+        model=torch.nn.Linear(1, 1),
+        training_data=validating_data,
+        config_params=ds_config,
+    )
+    return model, optimizer, train_dataloader, val_dataloader, scheduler
+
+
 def wrap_model_distributed(model: torch.nn.Module, cfg: Any, fsdp: bool):
     if fsdp:
         auto_wrap_policy = None
@@ -214,59 +271,66 @@ def get_optimizer(model: torch.nn.Module, cfg: Any) -> torch.optim.Optimizer:
     Returns:
         Optimizer
     """
-
-    no_decay = ["bias", "LayerNorm.weight"]
-    differential_layers = cfg.training.differential_learning_rate_layers
-    optimizer = Optimizers.get(cfg.training.optimizer)(
-        [
-            {
-                "params": [
-                    param
-                    for name, param in model.named_parameters()
-                    if (not any(layer in name for layer in differential_layers))
-                    and (not any(nd in name for nd in no_decay))
-                    # and param.requires_grad
-                ],
-                "lr": cfg.training.learning_rate,
-                "weight_decay": cfg.training.weight_decay,
-            },
-            {
-                "params": [
-                    param
-                    for name, param in model.named_parameters()
-                    if (not any(layer in name for layer in differential_layers))
-                    and (any(nd in name for nd in no_decay))
-                    # and param.requires_grad
-                ],
-                "lr": cfg.training.learning_rate,
-                "weight_decay": 0,
-            },
-            {
-                "params": [
-                    param
-                    for name, param in model.named_parameters()
-                    if (any(layer in name for layer in differential_layers))
-                    and (not any(nd in name for nd in no_decay))
-                    # and param.requires_grad
-                ],
-                "lr": cfg.training.differential_learning_rate,
-                "weight_decay": cfg.training.weight_decay,
-            },
-            {
-                "params": [
-                    param
-                    for name, param in model.named_parameters()
-                    if (any(layer in name for layer in differential_layers))
-                    and (any(nd in name for nd in no_decay))
-                    # and param.requires_grad
-                ],
-                "lr": cfg.training.differential_learning_rate,
-                "weight_decay": 0,
-            },
-        ],
-        lr=cfg.training.learning_rate,
-        weight_decay=cfg.training.weight_decay,
-    )
+    if cfg.environment.use_deepspeed and cfg.training.lora:
+        logger.info(
+            "Deepspeed /w Lora training do not support differential learning rate."
+        )
+        optimizer = Optimizers.get(cfg.training.optimizer)(
+            model.parameters(), lr=cfg.training.learning_rate
+        )
+    else:
+        no_decay = ["bias", "LayerNorm.weight"]
+        differential_layers = cfg.training.differential_learning_rate_layers
+        optimizer = Optimizers.get(cfg.training.optimizer)(
+            [
+                {
+                    "params": [
+                        param
+                        for name, param in model.named_parameters()
+                        if (not any(layer in name for layer in differential_layers))
+                        and (not any(nd in name for nd in no_decay))
+                        # and param.requires_grad
+                    ],
+                    "lr": cfg.training.learning_rate,
+                    "weight_decay": cfg.training.weight_decay,
+                },
+                {
+                    "params": [
+                        param
+                        for name, param in model.named_parameters()
+                        if (not any(layer in name for layer in differential_layers))
+                        and (any(nd in name for nd in no_decay))
+                        # and param.requires_grad
+                    ],
+                    "lr": cfg.training.learning_rate,
+                    "weight_decay": 0,
+                },
+                {
+                    "params": [
+                        param
+                        for name, param in model.named_parameters()
+                        if (any(layer in name for layer in differential_layers))
+                        and (not any(nd in name for nd in no_decay))
+                        # and param.requires_grad
+                    ],
+                    "lr": cfg.training.differential_learning_rate,
+                    "weight_decay": cfg.training.weight_decay,
+                },
+                {
+                    "params": [
+                        param
+                        for name, param in model.named_parameters()
+                        if (any(layer in name for layer in differential_layers))
+                        and (any(nd in name for nd in no_decay))
+                        # and param.requires_grad
+                    ],
+                    "lr": cfg.training.differential_learning_rate,
+                    "weight_decay": 0,
+                },
+            ],
+            lr=cfg.training.learning_rate,
+            weight_decay=cfg.training.weight_decay,
+        )
 
     return optimizer
 

@@ -136,21 +136,41 @@ def start_process(
     #     )
     else:
         free_port = find_free_port()
-        p = subprocess.Popen(
-            [
-                "env",
-                f"CUDA_VISIBLE_DEVICES={','.join(gpu_list)}",
-                "torchrun",
-                f"--nproc_per_node={str(num_gpus)}",
-                f"--master_port={str(free_port)}",
-                "train_wave.py",
-                "-Y",
-                config_name,
-                "-Q",
-                ",".join([str(x) for x in process_queue]),
-            ],
-            env=env,
-        )
+        if cfg.environment.use_deepspeed:
+            logger.info("Starting deepspeed...")
+            p = subprocess.Popen(
+                [
+                    "env",
+                    "deepspeed",
+                    "--include",
+                    f"localhost:{','.join(gpu_list)}",
+                    "--master_port",
+                    f"{str(free_port)}",
+                    "train_wave.py",
+                    "-Y",
+                    config_name,
+                    "-Q",
+                    ",".join([str(x) for x in process_queue]),
+                ],
+                env=env,
+            )
+        else:
+            logger.info("Starting torchrun...")
+            p = subprocess.Popen(
+                [
+                    "env",
+                    f"CUDA_VISIBLE_DEVICES={','.join(gpu_list)}",
+                    "torchrun",
+                    f"--nproc_per_node={str(num_gpus)}",
+                    f"--master_port={str(free_port)}",
+                    "train_wave.py",
+                    "-Y",
+                    config_name,
+                    "-Q",
+                    ",".join([str(x) for x in process_queue]),
+                ],
+                env=env,
+            )
     logger.info(f"Percentage of RAM memory used: {psutil.virtual_memory().percent}")
 
     return p

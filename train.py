@@ -15,6 +15,7 @@ import time
 from distutils import util
 from typing import Any, Callable, Dict, Tuple
 
+import deepspeed
 import numpy as np
 import pandas as pd
 import torch
@@ -50,6 +51,7 @@ from llm_studio.src.utils.logging_utils import (
 )
 from llm_studio.src.utils.modeling_utils import (
     check_disk_space,
+    deepspeed_initialize,
     get_number_of_validation_epochs,
     get_optimizer,
     get_scheduler,
@@ -178,6 +180,22 @@ def run_train(
     optimizer = get_optimizer(model=model, cfg=cfg)
     scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
 
+    if cfg.environment.use_deepspeed:
+        (
+            model,
+            optimizer,
+            train_dataloader,
+            val_dataloader,
+            scheduler,
+        ) = deepspeed_initialize(
+            model=model,
+            optimizer=optimizer,
+            lr_scheduler=scheduler,
+            training_data=train_dataloader.dataset,
+            validating_data=val_dataloader.dataset,
+            cfg=cfg,
+        )
+
     scaler: GradScaler | ShardedGradScaler | None = None
     if cfg.environment.mixed_precision:
         if cfg.environment.use_fsdp:
@@ -229,8 +247,10 @@ def run_train(
         if cfg.environment._local_rank == 0:
             logger.info(f"Training Epoch: {epoch + 1} / {cfg.training.epochs}")
 
-        if cfg.environment._distributed and hasattr(
-            train_dataloader.sampler, "set_epoch"
+        if (
+            cfg.environment._distributed
+            and not cfg.environment.use_deepspeed
+            and hasattr(train_dataloader.sampler, "set_epoch")
         ):
             train_dataloader.sampler.set_epoch(epoch)  # type: ignore
 
@@ -356,7 +376,10 @@ def run_train(
                     loss = loss / cfg.training.grad_accumulation
 
                 # Backward pass
-                if cfg.environment.mixed_precision:
+                if (
+                    cfg.environment.mixed_precision
+                    and not cfg.environment.use_deepspeed
+                ):
                     scaler.scale(loss).backward()  # type: ignore
                     if itr % cfg.training.grad_accumulation == 0:
                         if cfg.training.gradient_clip > 0:
@@ -368,7 +391,10 @@ def run_train(
                         scaler.update()
                         optimizer.zero_grad(set_to_none=True)
                 else:
-                    loss.backward()
+                    if cfg.environment.use_deepspeed:
+                        model.backward(loss)
+                    else:
+                        loss.backward()
                     if itr % cfg.training.grad_accumulation == 0:
                         if cfg.training.gradient_clip > 0:
                             torch.nn.utils.clip_grad_norm_(
@@ -489,6 +515,10 @@ def run(cfg: Any) -> None:
         cfg: config object with all the hyperparameters
     """
 
+    if cfg.environment.use_deepspeed:
+        # To avoid warnings about parallelism in tokenizers
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
     os.makedirs(cfg.output_directory, exist_ok=True)
 
     # Force evaluation if user trains 0 epochs
@@ -512,7 +542,10 @@ def run(cfg: Any) -> None:
     if cfg.environment._distributed:
         cfg.environment._local_rank = int(os.environ["LOCAL_RANK"])
         cfg.environment._device = "cuda:%d" % cfg.environment._local_rank
-        torch.distributed.init_process_group(backend="nccl", init_method="env://")
+        if cfg.environment.use_deepspeed:
+            deepspeed.init_distributed()
+        else:
+            torch.distributed.init_process_group(backend="nccl", init_method="env://")
         cfg.environment._cpu_comm = torch.distributed.new_group(backend="gloo")
 
         cfg.environment._world_size = torch.distributed.get_world_size()
@@ -625,10 +658,11 @@ def run(cfg: Any) -> None:
                     param.requires_grad = True
                     param.data = param.data.float()
 
-    if cfg.environment._distributed:
+    if cfg.environment._distributed and not cfg.environment.use_deepspeed:
         model = wrap_model_distributed(model, cfg, cfg.environment.use_fsdp)
 
-    if cfg.environment.compile_model:
+    # deepspeed do not support torch.compile
+    if cfg.environment.compile_model and not cfg.environment.use_deepspeed:
         if cfg.environment._distributed:
             model.module.backbone = torch.compile(model.module.backbone)
         else:
