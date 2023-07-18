@@ -40,8 +40,8 @@ class CustomDataset(Dataset):
         has_missing_values = False
         if has_all_columns:
             has_missing_values = (
-                self.df.shape[0]
-                != self.df[[cfg.dataset.answer_column]].dropna().shape[0]
+                    self.df.shape[0]
+                    != self.df[[cfg.dataset.answer_column]].dropna().shape[0]
             )
 
         if not has_all_columns or has_missing_values:
@@ -150,7 +150,7 @@ class CustomDataset(Dataset):
 
     @staticmethod
     def batch_to_device(
-        batch: Union[Dict, List, torch.Tensor], device: str
+            batch: Union[Dict, List, torch.Tensor], device: str
     ) -> Union[Dict, List, torch.Tensor, str]:
         """Function to send the batch to the device specified
 
@@ -163,7 +163,7 @@ class CustomDataset(Dataset):
         if isinstance(batch, torch.Tensor):
             return batch.to(device)
         elif isinstance(batch, (list, tuple)) and all(
-            isinstance(item, str) for item in batch
+                isinstance(item, str) for item in batch
         ):
             # Do not move list of strings to device
             return batch
@@ -260,9 +260,9 @@ class CustomDataset(Dataset):
 
     @staticmethod
     def clean_output(
-        output: Dict,
-        prompts: List[str],
-        cfg: Any,
+            output: Dict,
+            prompts: List[str],
+            cfg: Any,
     ):
         output["predicted_text"] = output["predicted_text"].tolist()
         for j in range(len(output["predicted_text"])):
@@ -301,7 +301,7 @@ class CustomDataset(Dataset):
         return output
 
     def format_output(
-        self, cfg, df: pd.DataFrame, output: Dict
+            self, cfg, df: pd.DataFrame, output: Dict
     ) -> Tuple[Dict, pd.DataFrame]:
         output = {
             key: value
@@ -331,17 +331,17 @@ class CustomDataset(Dataset):
         Quick check whether Dataframe and configurations are correctly set.
         """
         if (
-            cfg.dataset.parent_id_column is not None
-            and cfg.dataset.parent_id_column in df.columns
-            and "id" in df.columns
+                cfg.dataset.parent_id_column is not None
+                and cfg.dataset.parent_id_column in df.columns
+                and "id" in df.columns
         ):
             assert (
                 df[cfg.dataset.parent_id_column].dropna().isin(df["id"]).all()
             ), "Parent id column contains ids that are not in the dataset"
             assert (
-                df[cfg.dataset.parent_id_column] != df["id"]
+                    df[cfg.dataset.parent_id_column] != df["id"]
             ).all(), "Parent id column is the same as id column for some rows"
-            assert (df[cfg.dataset.parent_id_column].fillna("") == "").sum() > 0,\
+            assert (df[cfg.dataset.parent_id_column].fillna("") == "").sum() > 0, \
                 "Did not find any conversation start. Please ensure that some parent ids are empty."
 
     def __getitem__(self, idx: int) -> Dict:
@@ -391,10 +391,10 @@ class CustomDataset(Dataset):
                 labels[-1] = self.tokenizer.eos_token_id
 
             if self.cfg.tokenizer.max_length < len(input_ids):
-                labels = labels[-self.cfg.tokenizer.max_length :]
+                labels = labels[-self.cfg.tokenizer.max_length:]
 
             sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), -100)
-            sample["labels"][-len(labels) :] = labels
+            sample["labels"][-len(labels):] = labels
 
         sample.update(
             self.pad_tokens(
@@ -475,8 +475,8 @@ class CustomDataset(Dataset):
         if self.parent_ids is not None:
             parent_idx = idx
             while (
-                parent_idx := self.df_id_to_idx.get(self.parent_ids[parent_idx], None)
-                and max_loop > 0
+                    (parent_idx := self.df_id_to_idx.get(self.parent_ids[parent_idx], None))
+                    and max_loop > 0
             ) is not None:
                 parent_idxs.append(parent_idx)
                 max_loop -= 1
@@ -497,7 +497,7 @@ class CustomDataset(Dataset):
                 parent_encoding
                 for parent_encoding in parent_encodings
                 if not np.random.random()
-                < self.cfg.augmentation.skip_parent_probability
+                       < self.cfg.augmentation.skip_parent_probability
             ]
             if np.random.random() < self.cfg.augmentation.random_parent_probability:
                 rnd_idx = np.random.randint(len(self))
@@ -516,13 +516,13 @@ class CustomDataset(Dataset):
         )
 
     def pad_tokens(
-        self,
-        input_ids,
-        attention_mask,
-        max_length,
-        pad_token_id,
-        prefix="",
-        system_ids=None,
+            self,
+            input_ids,
+            attention_mask,
+            max_length,
+            pad_token_id,
+            prefix="",
+            system_ids=None,
     ):
         sample = {}
 
@@ -532,9 +532,9 @@ class CustomDataset(Dataset):
 
         if len(input_ids) > 0:
             sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
-            sample[f"{prefix}input_ids"][-len(input_ids) :] = input_ids
+            sample[f"{prefix}input_ids"][-len(input_ids):] = input_ids
             sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
-            sample[f"{prefix}attention_mask"][-len(input_ids) :] = attention_mask
+            sample[f"{prefix}attention_mask"][-len(input_ids):] = attention_mask
         else:
             # Pad everything if empty (continued pretraining)
             sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
