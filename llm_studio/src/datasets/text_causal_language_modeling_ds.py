@@ -336,11 +336,13 @@ class CustomDataset(Dataset):
             and "id" in df.columns
         ):
             assert (
-                df.isin(df["id"]).all()
+                df[cfg.dataset.parent_id_column].dropna().isin(df["id"]).all()
             ), "Parent id column contains ids that are not in the dataset"
             assert (
-                    df != df["id"]
+                df[cfg.dataset.parent_id_column] != df["id"]
             ).all(), "Parent id column is the same as id column for some rows"
+            assert (df[cfg.dataset.parent_id_column].fillna("") == "").sum() > 0,\
+                "Did not find any conversation start. Please ensure that some parent ids are empty."
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""

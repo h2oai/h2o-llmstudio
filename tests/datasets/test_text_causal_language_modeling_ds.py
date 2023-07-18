@@ -39,37 +39,38 @@ def test_clean_output():
     ]
 
 
-def test_sanity_check():
-    data = {"id": [1, 2, 3, 4],
-            "parent_id": [2, 3, 4, 1],
-            "other_data": ['a', 'b', 'c', 'd']}
-
-    df = pd.DataFrame(data)
-
+def test_sanity_check_raises_error():
     mock_config = MagicMock()
     mock_config.dataset.parent_id_column = 'parent_id'
 
-    # When / Then
-    CustomDataset.sanity_check(df, mock_config)
+    df_1 = pd.DataFrame({"id": [1, 2, 3, 4],
+                         "parent_id": [2, None, 4, 1],
+                         "other_data": ['a', 'b', 'c', 'd']})
+    CustomDataset.sanity_check(df_1, mock_config)
 
-    # Check with invalid dataframe
-    invalid_data = {"id": [1, 2, 3, 4],
-                    "parent_id": [5, 6, 7, 8],
-                    "other_data": ['a', 'b', 'c', 'd']}
+    df_2 = pd.DataFrame({"id": [1, 2, 3, 4],
+                         "parent_id": [None, None, None, None],
+                         "other_data": ['a', 'b', 'c', 'd']})
+    CustomDataset.sanity_check(df_2, mock_config)
 
-    invalid_df = pd.DataFrame(invalid_data)
-
+    invalid_df_1 = pd.DataFrame({"id": [1, 2, 3, 4],
+                                 "parent_id": [5, 6, 7, 8],
+                                 "other_data": ['a', 'b', 'c', 'd']})
     with pytest.raises(AssertionError, match="Parent id column contains ids that are not in the dataset"):
-        CustomDataset.sanity_check(invalid_df, mock_config)
+        CustomDataset.sanity_check(invalid_df_1, mock_config)
 
-    # Check with invalid dataframe
-    invalid_data_2 = {"id": [1, 2, 3, 4],
-                      "parent_id": [1, 2, 3, 4],
-                      "other_data": ['a', 'b', 'c', 'd']}
-
-    invalid_df_2 = pd.DataFrame(invalid_data_2)
+    invalid_df_2 = pd.DataFrame({"id": [1, 2, 3, 4],
+                                 "parent_id": [1, 2, 3, 4],
+                                 "other_data": ['a', 'b', 'c', 'd']})
     with pytest.raises(AssertionError, match="Parent id column is the same as id column for some rows"):
         CustomDataset.sanity_check(invalid_df_2, mock_config)
+
+    invalid_df_3 = pd.DataFrame({"id": [1, 2, 3, 4],
+                                 "parent_id": [2, 3, 4, 1],
+                                 "other_data": ['a', 'b', 'c', 'd']})
+    with pytest.raises(AssertionError,
+                       match="Did not find any conversation start. Please ensure that some parent ids are empty."):
+        CustomDataset.sanity_check(invalid_df_3, mock_config)
 
 
 @pytest.fixture
@@ -100,30 +101,25 @@ def test_init(mock_auto_tokenizer):
     assert dataset.df.equals(df)
     assert dataset.mode == 'train'
     assert all(dataset.indices == np.array([0, 1, 2]))
-
-
-def test_len(mock_auto_tokenizer):
-    df = pd.DataFrame({'col_A': [1, 2, 3]})
-    cfg = mock.MagicMock()
-    cfg.dataset.answer_column = 'col_A'
-    cfg.dataset.parent_id_column = 'None'
-    cfg.dataset.system_column = 'None'
-    cfg.dataset.text_system_start = ""
-    cfg.dataset.text_prompt_start = ""
-    cfg.dataset.text_answer_separator = ""
-    dataset = CustomDataset(df, cfg)
-    assert len(dataset) == 3
+    assert all(dataset.raw_prompts == ["1", "2", "3"])
+    assert dataset.answers == ["4", "5", "6"]
 
 
 def test_getitem(mock_auto_tokenizer):
-    df = pd.DataFrame({'col_A': ['text 1', 'text 2', 'text 3'], 'col_B': ['text 4', 'text 5', 'text 6']})
+    df = pd.DataFrame({'prompt': ['prompt 1', 'prompt 2', 'prompt 3'],
+                       'answer': ['answer 1', 'answer 2', 'answer 3'],
+                       'parent_id': [0, 1, 2],
+                       'system': ['system 1', 'system 2', 'system 3'],
+                       'id': [1, 2, 0]})
+
     cfg = mock.MagicMock()
-    cfg.dataset.answer_column = 'col_A'
-    cfg.dataset.parent_id_column = 'None'
-    cfg.dataset.system_column = 'None'
-    cfg.dataset.text_system_start = ""
-    cfg.dataset.text_prompt_start = ""
-    cfg.dataset.text_answer_separator = ""
+    cfg.dataset.prompt_column = 'prompt'
+    cfg.dataset.answer_column = 'answer'
+    cfg.dataset.parent_id_column = 'parent_id'
+    cfg.dataset.system_column = 'system'
+    cfg.dataset.text_system_start = "System:"
+    cfg.dataset.text_prompt_start = "Prompt:"
+    cfg.dataset.text_answer_separator = "Answer:"
 
     dataset = CustomDataset(df, cfg)
 
@@ -135,7 +131,7 @@ def test_getitem(mock_auto_tokenizer):
         dataset.get_reward_model_parent_prompt_text = mock.MagicMock(return_value="")
         dataset.pad_tokens = mock.MagicMock(return_value={'key': 'value'})
 
-        result = dataset.__getitem__(0)
+        result = dataset[0]
 
         # Check if __getitem__ calls the appropriate methods and returns the correct result
         dataset._get_sample_encoding.assert_called_once_with(0)
