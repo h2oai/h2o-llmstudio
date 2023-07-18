@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pandas as pd
 import pytest
-import torch
 
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMDataset,
@@ -100,7 +99,8 @@ def test_sanity_check_raises_error():
     )
     with pytest.raises(
         AssertionError,
-        match="Did not find any conversation start. Please ensure that some parent ids are empty.",
+        match="Did not find any conversation start. "
+        "Please ensure that some parent ids are empty.",
     ):
         CustomDataset.sanity_check(invalid_df_3, mock_config)
 
@@ -166,7 +166,7 @@ def test_get_parent_ids(mock_auto_tokenizer):
     assert dataset.get_parent_ids(2) == [0, 1]
 
 
-def test_getitem(mock_auto_tokenizer):
+def test_getitem():
     df = pd.DataFrame(
         {
             "prompt": ["prompt 1", "prompt 2", "prompt 3"],
@@ -187,42 +187,67 @@ def test_getitem(mock_auto_tokenizer):
             text_prompt_start="Prompt:",
             text_answer_separator="Answer:",
             add_eos_token_to_answer=True,
-        )
+            limit_chained_samples=True,
+        ),
+        tokenizer=ConfigNLPCausalLMTokenizer(max_length=513),
     )
 
     dataset = CustomDataset(df, cfg)
-
-    def tokenize(text, **kwargs):
-        offset = 0
-        if "1" in text:
-            offset = 1
-        elif "2" in text:
-            offset = 2
-        elif "3" in text:
-            offset = 3
-
-        if "prompt" in text:
-            sample = {
-                "input_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10][offset:],
-                "attention_mask": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1][offset:],
-            }
-        elif "answer" in text:
-            sample = {
-                "input_ids": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20][offset:],
-                "attention_mask": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1][offset:],
-            }
-        elif "system" in text:
-            sample = {
-                "input_ids": [21, 22, 23, 24, 25, 26, 27, 28, 29, 30][offset:],
-                "attention_mask": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1][offset:],
-            }
-        else:
-            sample = {"input_ids": [31], "attention_mask": [1]}
-        return {k: torch.tensor(v)[None] for k, v in sample.items()}
-
-    dataset.tokenizer = mock.MagicMock(side_effect=tokenize)
-    dataset.tokenizer.eos_token_id = 999
-    dataset.tokenizer.pad_token_id = 1000
+    assert len(dataset) == 1
 
     result = dataset[0]
     assert isinstance(result, dict)
+    assert set(result.keys()) == set(
+        [
+            "labels",
+            "input_ids",
+            "attention_mask",
+            "prompt_input_ids",
+            "prompt_attention_mask",
+        ]
+    )
+
+    dataset.tokenizer.convert_ids_to_tokens(result["input_ids"])
+
+    assert (
+        dataset.tokenizer.decode(result["input_ids"], skip_special_tokens=True)
+        == "System:system 1"
+        "Prompt:prompt 1"
+        "Answer:answer 1"
+        "Prompt:prompt 2"
+        "Answer:answer 2"
+        "Prompt:prompt 3"
+        "Answer:answer 3"
+    )
+
+    assert (
+        dataset.tokenizer.decode(result["prompt_input_ids"], skip_special_tokens=True)
+        == "System:system 1"
+        "Prompt:prompt 1"
+        "Answer:answer 1"
+        "Prompt:prompt 2"
+        "Answer:answer 2"
+        "Prompt:prompt 3"
+        "Answer:"
+    )
+
+    assert (
+        dataset.tokenizer.decode(result["input_ids"], skip_special_tokens=False)
+        == "<|endoftext|>" * 475 + "System:system 1"
+        "<|endoftext|>"
+        "Prompt:prompt 1"
+        "<|endoftext|>"
+        "Answer:answer 1"
+        "<|endoftext|>"
+        "Prompt:prompt 2"
+        "<|endoftext|>"
+        "Answer:answer 2"
+        "<|endoftext|>"
+        "Prompt:prompt 3"
+        "<|endoftext|>"
+        "Answer:answer 3"
+        "<|endoftext|>"
+    )
+
+    assert result["input_ids"].shape == (513,)
+    assert result["prompt_input_ids"].shape == (513,)

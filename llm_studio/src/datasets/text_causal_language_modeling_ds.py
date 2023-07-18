@@ -341,9 +341,10 @@ class CustomDataset(Dataset):
             assert (
                 df[cfg.dataset.parent_id_column] != df["id"]
             ).all(), "Parent id column is the same as id column for some rows"
-            assert (
-                df[cfg.dataset.parent_id_column].fillna("") == ""
-            ).sum() > 0, "Did not find any conversation start. Please ensure that some parent ids are empty."
+            assert (df[cfg.dataset.parent_id_column].fillna("") == "").sum() > 0, (
+                "Did not find any conversation start. "
+                "Please ensure that some parent ids are empty."
+            )
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
@@ -415,7 +416,7 @@ class CustomDataset(Dataset):
             self.pad_tokens(
                 prompt_input_ids,
                 attention_mask=prompt_attention_mask,
-                max_length=self.cfg.tokenizer.max_length_prompt,
+                max_length=self.cfg.tokenizer.max_length,
                 pad_token_id=self.tokenizer.pad_token_id,
                 prefix="prompt_",
             )
