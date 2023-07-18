@@ -105,12 +105,33 @@ def test_init(mock_auto_tokenizer):
     assert dataset.answers == ["4", "5", "6"]
 
 
+def test_get_parent_ids(mock_auto_tokenizer):
+    df = pd.DataFrame({'prompt': ['prompt 1', 'prompt 2', 'prompt 3'],
+                       'answer': ['answer 1', 'answer 2', 'answer 3'],
+                       'parent_id': [None, 0, 1],
+                       'id': [0, 1, 2]})
+
+    cfg = mock.MagicMock()
+    cfg.dataset.prompt_column = 'prompt'
+    cfg.dataset.answer_column = 'answer'
+    cfg.dataset.parent_id_column = 'parent_id'
+    cfg.dataset.text_system_start = "System:"
+    cfg.dataset.text_prompt_start = "Prompt:"
+    cfg.dataset.text_answer_separator = "Answer:"
+
+    dataset = CustomDataset(df, cfg)
+
+    assert dataset.get_parent_ids(0) == []
+    assert dataset.get_parent_ids(1) == [0]
+    assert dataset.get_parent_ids(2) == [0, 1]
+
+
 def test_getitem(mock_auto_tokenizer):
     df = pd.DataFrame({'prompt': ['prompt 1', 'prompt 2', 'prompt 3'],
                        'answer': ['answer 1', 'answer 2', 'answer 3'],
-                       'parent_id': [0, 1, 2],
+                       'parent_id': [None, 0, 1],
                        'system': ['system 1', 'system 2', 'system 3'],
-                       'id': [1, 2, 0]})
+                       'id': [0, 1, 2]})
 
     cfg = mock.MagicMock()
     cfg.dataset.prompt_column = 'prompt'
@@ -121,20 +142,26 @@ def test_getitem(mock_auto_tokenizer):
     cfg.dataset.text_prompt_start = "Prompt:"
     cfg.dataset.text_answer_separator = "Answer:"
 
+    cfg.tokenizer.max_length = 256
+    cfg.tokenizer.max_length_answer = 256
+    cfg.tokenizer.max_length_prompt = 256
+    cfg.dataset.add_eos_token_to_answer = True
+
     dataset = CustomDataset(df, cfg)
 
-    with mock.patch("torch.Tensor") as mock_tensor:
-        mock_tensor.configure_mock(**{"__eq__.return_value": True})
+    def tokenize(text, **kwargs):
+        words = text.split()
+        return {'input_ids': torch.Tensor([1, 2, 3, 4, 5, 6, 7, 8, 9, 10][:len(words)])[None],
+                'attention_mask': torch.ones(len(words))[None]
+                }
 
-        dataset._get_sample_encoding = mock.MagicMock(return_value=[torch.Tensor(), torch.Tensor(), torch.Tensor()])
-        dataset.get_parent_encodings = mock.MagicMock(return_value=[])
-        dataset.get_reward_model_parent_prompt_text = mock.MagicMock(return_value="")
-        dataset.pad_tokens = mock.MagicMock(return_value={'key': 'value'})
+    dataset.tokenizer = mock.MagicMock(side_effect=tokenize)
+    dataset.tokenizer.eos_token_id = 999
 
-        result = dataset[0]
+    # dataset._get_sample_encoding = mock.MagicMock(return_value=[torch.Tensor(), torch.Tensor(), torch.Tensor()])
+    # dataset.get_parent_encodings = mock.MagicMock(return_value=[])
+    # dataset.get_reward_model_parent_prompt_text = mock.MagicMock(return_value="")
+    # dataset.pad_tokens = mock.MagicMock(return_value={'key': 'value'})
 
-        # Check if __getitem__ calls the appropriate methods and returns the correct result
-        dataset._get_sample_encoding.assert_called_once_with(0)
-        dataset.get_parent_encodings.assert_called_once_with(0)
-        dataset.pad_tokens.assert_called()
-        assert isinstance(result, dict)
+    result = dataset[0]
+    assert isinstance(result, dict)
