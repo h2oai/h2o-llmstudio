@@ -41,7 +41,6 @@ from app_utils.utils import (
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
-    convert_cfg_to_nested_dictionary,
     get_parent_element,
     load_config_py,
     load_config_yaml,
@@ -1340,15 +1339,8 @@ async def experiment_download_logs(q: Q):
 
     if not os.path.exists(zip_path):
         logs = q.client["experiment/display/charts"]
-        experiment_cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
-        experiment_cfg_dict = convert_cfg_to_nested_dictionary(experiment_cfg)
         logger.info(f"Creating {zip_path} on demand")
-        zip_path = save_logs(
-            experiment.name,
-            experiment_path,
-            experiment_cfg_dict,
-            logs,
-        )
+        zip_path = save_logs(experiment.name, experiment_path, logs)
 
     download_url = get_download_link(q, zip_path)
     logger.info(f"Logs URL: {download_url}")
