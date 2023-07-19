@@ -471,6 +471,34 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
     val_df.to_csv(csv_preds_name, index=False)
 
 
+def update_backbone_config(config: Any, cfg: Any):
+    config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
+    config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
+
+    tokenizer = get_tokenizer(cfg)
+
+    if config.eos_token_id != tokenizer.eos_token_id:
+        logger.warning(
+            "EOS token id not matching between config and tokenizer. "
+            "Overwriting with tokenizer id."
+        )
+        config.eos_token_id = tokenizer.eos_token_id
+    if config.pad_token_id != tokenizer.pad_token_id:
+        logger.warning(
+            "PAD token id not matching between config and tokenizer. "
+            "Overwriting with tokenizer id."
+        )
+        config.pad_token_id = tokenizer.pad_token_id
+    # no warning needed as not used
+    if config.bos_token_id != tokenizer.bos_token_id:
+        config.bos_token_id = tokenizer.bos_token_id
+
+    if "mpt-" in cfg.llm_backbone:
+        config.init_device = cfg.environment._device
+
+    return config
+
+
 def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     """
     Creates a backbone model for NLP tasks.
@@ -493,26 +521,8 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             trust_remote_code=cfg.environment.trust_remote_code,
             revision=cfg.environment.huggingface_branch,
         )
-    config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
-    config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
 
-    tokenizer = get_tokenizer(cfg)
-
-    if config.eos_token_id != tokenizer.eos_token_id:
-        logger.warning(
-            "EOS token id not matching between config and tokenizer. "
-            "Overwriting with tokenizer id."
-        )
-        config.eos_token_id = tokenizer.eos_token_id
-    if config.pad_token_id != tokenizer.pad_token_id:
-        logger.warning(
-            "PAD token id not matching between config and tokenizer. "
-            "Overwriting with tokenizer id."
-        )
-        config.pad_token_id = tokenizer.pad_token_id
-    # no warning needed as not used
-    if config.bos_token_id != tokenizer.bos_token_id:
-        config.bos_token_id = tokenizer.bos_token_id
+    config = update_backbone_config(config, cfg)
 
     quantization_config = None
     if cfg.architecture.backbone_dtype == "int8":
@@ -557,6 +567,8 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         logger.info(f"Resizing token embeddings to {cfg.tokenizer._vocab_length}")
         backbone.resize_token_embeddings(cfg.tokenizer._vocab_length)
 
+    backbone.model_parallel = False
+
     if cfg.training.lora:
         # if used, gradient checkpointing will be enabled below
         loaded_in_kbit = getattr(backbone, "is_loaded_in_8bit", False) or getattr(
@@ -586,20 +598,20 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
 
-    if backbone.generation_config.eos_token_id != tokenizer.eos_token_id:
+    if backbone.generation_config.eos_token_id != config.eos_token_id:
         logger.warning(
             "EOS token id not matching between generation config and tokenizer. "
             "Overwriting with tokenizer id."
         )
-        backbone.generation_config.eos_token_id = tokenizer.eos_token_id
-    if backbone.generation_config.pad_token_id != tokenizer.pad_token_id:
+        backbone.generation_config.eos_token_id = config.eos_token_id
+    if backbone.generation_config.pad_token_id != config.pad_token_id:
         logger.warning(
             "PAD token id not matching between generation config and tokenizer. "
             "Overwriting with tokenizer id."
         )
-        backbone.generation_config.pad_token_id = tokenizer.pad_token_id
+        backbone.generation_config.pad_token_id = config.pad_token_id
     # no warning needed as not used
-    if backbone.generation_config.bos_token_id != tokenizer.bos_token_id:
-        backbone.generation_config.bos_token_id = tokenizer.bos_token_id
+    if backbone.generation_config.bos_token_id != config.bos_token_id:
+        backbone.generation_config.bos_token_id = config.bos_token_id
 
     return backbone, config
