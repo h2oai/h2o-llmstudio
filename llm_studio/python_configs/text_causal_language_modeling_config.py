@@ -513,7 +513,7 @@ class ConfigProblemBase(DefaultConfig):
         )
 
     @classmethod
-    def from_config_dict(cls, cfg_dict):
+    def from_dict(cls, cfg_dict: dict):
         return cls(
             output_directory=cfg_dict.get(
                 "output_directory", ConfigProblemBase.output_directory
