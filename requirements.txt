@@ -69,7 +69,7 @@ oauthlib==3.2.2 ; python_version >= '3.6'
 openai==0.27.7
 packaging==23.1 ; python_version >= '3.7'
 pandas==1.5.3
-git+https://github.com/huggingface/peft@3040782e041affdb44e2ab428e32094e274ebefe#egg=peft
+peft==0.4.0
 pillow==10.0.0 ; python_version >= '3.8'
 pipreqs==0.4.13 ; python_version >= '3.7'
 portalocker==2.7.0 ; python_version >= '3.5'
