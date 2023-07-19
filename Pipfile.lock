@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "03f0beb3df0d7788dbb66d8af36d1ea75b6ae7caf5281de8fbe3669466ff3863"
+            "sha256": "b2dd48e3f50c06fc0e0c66223935611f9837b8df3ca6042ce223923d2f8011d7"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1200,8 +1200,12 @@
             "version": "==1.5.3"
         },
         "peft": {
-            "git": "https://github.com/huggingface/peft",
-            "ref": "3040782e041affdb44e2ab428e32094e274ebefe"
+            "hashes": [
+                "sha256:2cf992772a6d703814477e0bdcdadd68cb8ea388111ce2d793dd2ff0e438f357",
+                "sha256:e768fa22d6e9f32aa7e891f0d06f355960278ca4dc0cdd96bff71f6f06269207"
+            ],
+            "index": "pypi",
+            "version": "==0.4.0"
         },
         "pillow": {
             "hashes": [
