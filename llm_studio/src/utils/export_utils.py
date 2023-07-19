@@ -104,7 +104,7 @@ def save_logs(experiment_name: str, experiment_path: str, logs: dict):
     zip_path = get_logs_path(experiment_name, experiment_path)
     zf = zipfile.ZipFile(zip_path, "w")
     zf.write(charts_path, os.path.basename(charts_path))
-    zf.write(cfg_path, os.path.basename(cfg_path))
+    zf.write(cfg_path, f"cfg_{experiment_name}.yaml")
 
     try:
         zf.write(
