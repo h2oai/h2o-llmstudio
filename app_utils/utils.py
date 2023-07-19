@@ -1,5 +1,6 @@
 import asyncio
 import collections
+import contextlib
 import dataclasses
 import glob
 import json
@@ -1948,3 +1949,28 @@ def prepare_default_dataset(path):
     )
 
     return df_assistant[(df_assistant["rank"] == 0.0) & (df_assistant["lang"] == "en")]
+
+
+# https://stackoverflow.com/questions/2059482/temporarily-modify-the-current-processs-environment
+@contextlib.contextmanager
+def set_env(**environ):
+    """
+    Temporarily set the process environment variables.
+
+    >>> with set_env(PLUGINS_DIR='test/plugins'):
+    ...   "PLUGINS_DIR" in os.environ
+    True
+
+    >>> "PLUGINS_DIR" in os.environ
+    False
+
+    :type environ: dict[str, unicode]
+    :param environ: Environment variables to set
+    """
+    old_environ = dict(os.environ)
+    os.environ.update(environ)
+    try:
+        yield
+    finally:
+        os.environ.clear()
+        os.environ.update(old_environ)
