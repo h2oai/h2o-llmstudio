@@ -36,6 +36,7 @@ from app_utils.utils import (
     make_label,
     parse_ui_elements,
     remove_model_type,
+    set_env,
     start_experiment,
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
@@ -1420,10 +1421,10 @@ async def experiment_download_model(q: Q, error: str = ""):
         ):
             logger.info("Preparing model on CPU. This might slow down the progress.")
             device = "cpu"
-
-        cfg, model, tokenizer = load_cfg_model_tokenizer(
-            experiment_path, merge=True, device=device
-        )
+        with set_env(HUGGINGFACE_TOKEN=q.client["default_huggingface_api_token"]):
+            cfg, model, tokenizer = load_cfg_model_tokenizer(
+                experiment_path, merge=True, device=device
+            )
 
         model = unwrap_model(model)
         checkpoint_path = cfg.output_directory
@@ -1560,11 +1561,12 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         )
 
         experiment_path = q.client["experiment/display/experiment_path"]
-        cfg, model, tokenizer = load_cfg_model_tokenizer(
-            experiment_path,
-            merge=True,
-            device=q.client["experiment/display/push_to_huggingface/device"],
-        )
+        with set_env(HUGGINGFACE_TOKEN=q.client["default_huggingface_api_token"]):
+            cfg, model, tokenizer = load_cfg_model_tokenizer(
+                experiment_path,
+                merge=True,
+                device=q.client["experiment/display/push_to_huggingface/device"],
+            )
 
         check_disk_space(model.backbone, "./")
 
