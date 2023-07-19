@@ -478,7 +478,8 @@ class CustomDataset(Dataset):
                 max_loop -= 1
                 if max_loop == 0:
                     raise ValueError(
-                        f"Parent chain of sample with idx {idx} exceeds max loop count. "
+                        f"Parent chain of sample with idx {idx} "
+                        f"exceeds max loop count. "
                         f"Please ensure that parent chain is not circular."
                     )
         return parent_idxs[::-1]
