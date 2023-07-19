@@ -511,3 +511,31 @@ class ConfigProblemBase(DefaultConfig):
             ),
             allow_custom=True,
         )
+
+    @classmethod
+    def from_config_dict(cls, cfg_dict):
+        return cls(
+            output_directory=cfg_dict.get(
+                "output_directory", ConfigProblemBase.output_directory
+            ),
+            experiment_name=cfg_dict.get("experiment_name", generate_experiment_name()),
+            llm_backbone=cfg_dict.get("llm_backbone", ConfigProblemBase.llm_backbone),
+            dataset=ConfigNLPCausalLMDataset.from_dict(cfg_dict.get("dataset", {})),
+            tokenizer=ConfigNLPCausalLMTokenizer.from_dict(
+                cfg_dict.get("tokenizer", {})
+            ),
+            augmentation=ConfigNLPAugmentation.from_dict(
+                cfg_dict.get("augmentation", {})
+            ),
+            architecture=ConfigNLPCausalLMArchitecture.from_dict(
+                cfg_dict.get("architecture", {})
+            ),
+            training=ConfigNLPCausalLMTraining.from_dict(cfg_dict.get("training", {})),
+            prediction=ConfigNLPCausalLMPrediction.from_dict(
+                cfg_dict.get("prediction", {})
+            ),
+            environment=ConfigNLPCausalLMEnvironment.from_dict(
+                cfg_dict.get("environment", {})
+            ),
+            logging=ConfigNLPCausalLMLogging.from_dict(cfg_dict.get("logging", {})),
+        )
