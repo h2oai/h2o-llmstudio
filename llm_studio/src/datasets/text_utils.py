@@ -31,7 +31,6 @@ def get_texts(df, cfg, separator=None):
 
 
 def get_tokenizer(cfg: Any):
-
     kwargs = dict(
         revision=cfg.environment.huggingface_branch,
         add_prefix_space=cfg.tokenizer.add_prefix_space,
