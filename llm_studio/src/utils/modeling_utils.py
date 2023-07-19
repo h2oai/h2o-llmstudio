@@ -521,7 +521,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             trust_remote_code=cfg.environment.trust_remote_code,
             revision=cfg.environment.huggingface_branch,
         )
-    
+
     config = update_backbone_config(config, cfg)
 
     quantization_config = None
