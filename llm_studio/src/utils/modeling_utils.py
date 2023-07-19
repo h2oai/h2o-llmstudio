@@ -193,9 +193,12 @@ def deepspeed_initialize(
             "enabled": True if cfg.architecture.backbone_dtype == "bfloat16" else False
         },
         # https://www.deepspeed.ai/docs/config-json/#zero-optimizations-for-fp16-training
+        "zero_force_ds_cpu_optimizer": False,
         "zero_optimization": {
             "stage": 3,
-            "offload_param": {"device": "cpu", "pin_memory": True},
+            "mics_shard_size": cfg.environment._world_size,
+#             "offload_optimizer": {"device": "cpu"},
+#             "offload_param": {"device": "cpu", "pin_memory": True},
             "overlap_comm": True,
             "contiguous_gradients": True,
             "reduce_bucket_size": model_hidden_size * model_hidden_size,
