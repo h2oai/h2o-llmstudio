@@ -31,9 +31,6 @@ def get_texts(df, cfg, separator=None):
 
 
 def get_tokenizer(cfg: Any):
-    if "llama" in cfg.llm_backbone:
-        logger.info("Llama backbone detected, forcing slow tokenizer.")
-        cfg.tokenizer.use_fast = False
 
     kwargs = dict(
         revision=cfg.environment.huggingface_branch,
