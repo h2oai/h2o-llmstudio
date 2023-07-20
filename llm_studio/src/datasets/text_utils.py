@@ -56,7 +56,10 @@ def get_tokenizer(cfg: Any):
         tokenizer.eos_token = "</s>"
 
     if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
+        if tokenizer.unk_token is not None:
+            tokenizer.pad_token = tokenizer.unk_token
+        else:
+            tokenizer.pad_token = tokenizer.eos_token
     if tokenizer.bos_token is None:
         tokenizer.bos_token = tokenizer.eos_token
     if tokenizer.cls_token is None:
