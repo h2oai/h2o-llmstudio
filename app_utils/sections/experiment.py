@@ -1039,6 +1039,7 @@ async def insights_tab(charts, q):
                             sortables=["metrics"],
                             height="calc(100vh - 245px)",
                             downloadable=True,
+                            resettable=True,
                             cell_overflow="wrap",
                         )
                     ],
