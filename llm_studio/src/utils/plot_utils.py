@@ -117,6 +117,9 @@ def text_to_html(text: str) -> str:
     return html.escape(text).replace("\n", "<br>")
 
 
+PLOT_ENCODINGS = ["image", "html", "df"]
+
+
 @dataclass
 class PlotData:
     """
@@ -126,11 +129,15 @@ class PlotData:
         data: the data to plot:
             - a base64 encoded PNG if `encoding` is `png`.
             - a string in HTML if `encoding` is `html`.
-        encoding: the encoding of the data, one of `png` or `html`.
+            - a path to a parquet file if `encoding` is `df`.
+        encoding: the encoding of the data, one of PLOT_ENCODINGS.
     """
 
     data: str
     encoding: str
+
+    def __post_init__(self):
+        assert self.encoding in PLOT_ENCODINGS, f"Unknown plot encoding {self.encoding}"
 
 
 def format_to_html(color, word, opacity):
@@ -186,7 +193,7 @@ def color_code_tokenized_text(tokenized_text_list: List[Union[str, bytes]], toke
     """
 
     if isinstance(tokenized_text_list[0], bytes):
-        tokenized_text_list = decode_bytes(tokenized_text_list)
+        tokenized_text_list = decode_bytes(tokenized_text_list)  # type: ignore
 
     html_text = ""
     for token in tokenized_text_list:

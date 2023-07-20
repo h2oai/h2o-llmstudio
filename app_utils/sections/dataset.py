@@ -45,6 +45,7 @@ from llm_studio.src.utils.data_utils import (
     read_dataframe_drop_missing_labels,
     sanity_check,
 )
+
 from .common import clean_dashboard
 
 logger = logging.getLogger(__name__)
@@ -494,7 +495,7 @@ async def dataset_import(
                 "Data Validity Check. Click <strong>Continue</strong> if the input "
                 "data and labels appear correctly."
             )
-            if plot.encoding == "png":
+            if plot.encoding == "image":
                 plot_item = ui.image(title="", type="png", image=plot.data)
             elif plot.encoding == "html":
                 plot_item = ui.markup(content=plot.data)
@@ -1037,7 +1038,7 @@ async def dataset_display(q: Q) -> None:
             )
 
         card: ImageCard | MarkupCard
-        if plot.encoding == "png":
+        if plot.encoding == "image":
             card = ui.image_card(box="first", title="", type="png", image=plot.data)
         elif plot.encoding == "html":
             card = ui.markup_card(box="first", title="", content=plot.data)
