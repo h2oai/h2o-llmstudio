@@ -88,6 +88,7 @@ def ui_table_from_df(
     # the server side as well does not make a visible difference but we avoid
     # sending excessive amounts of data.
     max_char_length: int = 500,
+    cell_overflow="tooltip",
 ) -> Component:
     """
     Convert a Pandas dataframe into Wave ui.table format.
@@ -142,7 +143,7 @@ def ui_table_from_df(
             min_width=min_widths[x] if x in min_widths.keys() else None,
             max_width=max_widths[x] if x in max_widths.keys() else None,
             link=True if x == link_col else False,
-            cell_overflow="tooltip",
+            cell_overflow=cell_overflow,
         )
         for x in df.columns.values
     ]

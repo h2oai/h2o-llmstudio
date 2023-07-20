@@ -1,7 +1,7 @@
+import os
 from typing import Any, Dict
 
 import pandas as pd
-from bokeh.models import Div, Panel, Tabs
 
 from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
 from llm_studio.src.utils.data_utils import (
@@ -11,10 +11,8 @@ from llm_studio.src.utils.data_utils import (
 from llm_studio.src.utils.plot_utils import (
     PlotData,
     color_code_tokenized_text,
-    get_best_and_worst_sample_idxs,
     get_line_separator_html,
     text_to_html,
-    to_html,
 )
 
 
@@ -115,98 +113,33 @@ class Plots:
         return PlotData(markup, encoding="html")
 
     @classmethod
-    def selection_validation_predictions(
-        cls,
-        val_outputs: Dict,
-        cfg: Any,
-        val_df: pd.DataFrame,
-        metrics: Any,
-        sample_idx: Any,
-    ) -> str:
-        input_texts = get_texts(val_df, cfg, separator="")
-        markup = ""
-
-        true_labels = val_outputs["target_text"]
-        if "predicted_text" in val_outputs.keys():
-            pred_labels = val_outputs["predicted_text"]
-        else:
-            pred_labels = [
-                "No predictions are generated for the selected metric"
-            ] * len(true_labels)
-
-        for idx in sample_idx:
-            input_text = input_texts[idx]
-            markup += (
-                f"<p><strong>Input Text: </strong>{text_to_html(input_text)}</p>\n"
-            )
-
-            if true_labels is not None:
-                target_text = true_labels[idx]
-                markup += "<br/>"
-                markup += (
-                    f"<p><strong>Target Text: "
-                    f"</strong>{text_to_html(target_text)}</p>\n"
-                )
-
-            predicted_text = pred_labels[idx]
-            markup += "<br/>"
-            markup += (
-                f"<p><strong>Predicted Text: </strong>"
-                f"{text_to_html(predicted_text)}</p>\n"
-            )
-
-            if metrics is not None:
-                markup += "<br/>"
-                markup += (
-                    f"<p><strong>{cfg.prediction.metric} Score: </strong>"
-                    f"{metrics[idx]:.3f}"
-                )
-
-            if "explanations" in val_outputs:
-                markup += "<br/>"
-                markup += (
-                    f"<p><strong>Explanation: </strong>"
-                    f"{val_outputs['explanations'][idx]}"
-                )
-
-            if idx != sample_idx[-1]:
-                markup += get_line_separator_html()
-
-        return markup
-
-    @classmethod
     def plot_validation_predictions(
         cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
     ) -> PlotData:
         assert mode in ["validation"]
 
-        metrics = val_outputs["metrics"]
-        best_samples, worst_samples = get_best_and_worst_sample_idxs(
-            cfg, metrics, n_plots=min(cfg.logging.number_of_texts, len(val_df))
-        )
-        random_samples = sample_indices(len(val_df), len(best_samples))
-        selection_plots = {
-            title: cls.selection_validation_predictions(
-                val_outputs=val_outputs,
-                cfg=cfg,
-                val_df=val_df,
-                metrics=metrics,
-                sample_idx=indices,
-            )
-            for (indices, title) in [
-                (random_samples, f"Random {mode} samples"),
-                (best_samples, f"Best {mode} samples"),
-                (worst_samples, f"Worst {mode} samples"),
-            ]
-        }
+        input_texts = get_texts(val_df, cfg, separator="")
+        target_text = val_outputs["target_text"]
+        if "predicted_text" in val_outputs.keys():
+            predicted_text = val_outputs["predicted_text"]
+        else:
+            predicted_text = [
+                "No predictions are generated for the selected metric"
+            ] * len(target_text)
 
-        tabs = [
-            Panel(
-                child=Div(
-                    text=markup, sizing_mode="scale_width", style={"font-size": "105%"}
-                ),
-                title=title,
-            )
-            for title, markup in selection_plots.items()
-        ]
-        return PlotData(to_html(Tabs(tabs=tabs)), encoding="html")
+        df = pd.DataFrame(
+            {
+                "input_text": input_texts,
+                "target_text": target_text,
+                "predicted_text": predicted_text,
+            }
+        )
+        if val_outputs.get("metrics") is not None:
+            df["metrics"] = val_outputs["metrics"]
+            df["metrics"] = df["metrics"].round(decimals=3)
+        if val_outputs.get("explanations") is not None:
+            df["explanations"] = val_outputs["explanations"]
+
+        path = os.path.join(cfg.output_directory, f"{mode}_viz.parquet")
+        df.to_parquet(path)
+        return PlotData(data=path, encoding="df")

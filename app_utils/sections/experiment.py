@@ -1005,7 +1005,7 @@ async def insights_tab(charts, q):
         == "experiment/display/validation_prediction_insights"
     ):
         key = "validation_predictions"
-    for k1 in ["image", "html"]:
+    for k1 in ["image", "html", "df"]:
         if k1 not in charts:
             continue
         for k2, v2 in charts[k1].items():
@@ -1019,9 +1019,29 @@ async def insights_tab(charts, q):
 
                 continue
 
-            if k1 == "image":
+            elif k1 == "image":
                 q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.image_card(
                     box="first", title="", type="png", image=v2
+                )
+                q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
+                continue
+
+            elif k1 == "df":
+                df = pd.read_parquet(v2)
+                q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.form_card(
+                    box="first",
+                    items=[
+                        ui_table_from_df(
+                            q=q,
+                            df=df,
+                            name=f"experiment/display/charts/{k1}_{k2}",
+                            searchables=list(df.columns),
+                            sortables=["metrics"],
+                            height="calc(100vh - 245px)",
+                            downloadable=True,
+                            cell_overflow="wrap",
+                        )
+                    ],
                 )
                 q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
                 continue

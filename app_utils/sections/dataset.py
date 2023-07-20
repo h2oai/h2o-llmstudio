@@ -45,7 +45,6 @@ from llm_studio.src.utils.data_utils import (
     read_dataframe_drop_missing_labels,
     sanity_check,
 )
-
 from .common import clean_dashboard
 
 logger = logging.getLogger(__name__)
@@ -1022,6 +1021,7 @@ async def dataset_display(q: Q) -> None:
                     name="dataset/display/data/table",
                     sortables=list(df.columns),
                     height="calc(100vh - 265px)",
+                    cell_overflow="wrap",
                 )
             ],
         )

@@ -106,5 +106,7 @@ def log_plot(cfg: Any, plot: PlotData, type: str) -> None:
         cfg.logging._logger.log("image", type, plot.data)
     elif plot.encoding == "html":
         cfg.logging._logger.log("html", type, plot.data)
+    elif plot.encoding == "df":
+        cfg.logging._logger.log("df", type, plot.data)
     else:
         raise ValueError(f"Unknown {type} plot encoding `{plot.encoding}`")

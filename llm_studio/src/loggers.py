@@ -89,7 +89,7 @@ class LocalLogger:
             logs.commit()
 
     def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
-        if subset in ("image", "html"):
+        if subset in ("image", "html", "df"):
             with SqliteDict(self.logs) as logs:
                 if subset not in logs:
                     subset_dict = dict()
