@@ -61,6 +61,7 @@ from llm_studio.src.utils.export_utils import (
 )
 from llm_studio.src.utils.logging_utils import write_flag
 from llm_studio.src.utils.modeling_utils import check_disk_space, unwrap_model
+from llm_studio.src.utils.plot_utils import PLOT_ENCODINGS
 from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
 
 logger = logging.getLogger(__name__)
@@ -1005,7 +1006,7 @@ async def insights_tab(charts, q):
         == "experiment/display/validation_prediction_insights"
     ):
         key = "validation_predictions"
-    for k1 in ["image", "html", "df"]:
+    for k1 in PLOT_ENCODINGS:
         if k1 not in charts:
             continue
         for k2, v2 in charts[k1].items():
