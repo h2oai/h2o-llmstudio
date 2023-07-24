@@ -85,11 +85,12 @@ def get_dataset_elements(cfg: Any, q: Q) -> List:
 
                 t = _get_ui_element(
                     k,
-                    v,
-                    poss_values,
-                    type_annotation,
+                    v=q.client["dataset/import/cfg/" + k]
+                    if q.client["dataset/import/cfg/" + k] is not None
+                    else v,
+                    poss_values=poss_values,
+                    type_annotation=type_annotation,
                     tooltip=tooltip,
-                    password=False,
                     trigger=trigger,
                     q=q,
                     pre="dataset/import/cfg/",
@@ -133,11 +134,6 @@ def get_ui_elements(
     cfg_dict = {key: cfg_dict[key] for key in cfg._get_order()}
 
     for k, v in cfg_dict.items():
-        if "api" in k:
-            password = True
-        else:
-            password = False
-
         if k.startswith("_") or cfg._get_visibility(k) < 0:
             if q.client[f"{pre}/cfg_mode/from_cfg"]:
                 q.client[f"{pre}/cfg/{k}"] = v
@@ -191,11 +187,12 @@ def get_ui_elements(
 
             t = _get_ui_element(
                 k=k,
-                v=v,
+                v=q.client["dataset/import/cfg/" + k]
+                if q.client["dataset/import/cfg/" + k] is not None
+                else v,
                 poss_values=poss_values,
                 type_annotation=type_annotation,
                 tooltip=tooltip,
-                password=password,
                 trigger=trigger,
                 q=q,
                 pre=f"{pre}/cfg/",
@@ -303,7 +300,6 @@ def _get_ui_element(
     poss_values: Any,
     type_annotation: Type,
     tooltip: str,
-    password: bool,
     trigger: bool,
     q: Q,
     pre: str = "",
@@ -316,7 +312,6 @@ def _get_ui_element(
         poss_values: possible values
         type_annotation: type annotation
         tooltip: tooltip
-        password: flag for whether it is a password
         trigger: flag for triggering the element
         q: Q
         pre: optional prefix for ui key
@@ -336,7 +331,6 @@ def _get_ui_element(
             ):
                 q.client[pre + k] = q.client["experiment/yaml_data"][k]
 
-    val = q.client[pre + k] if q.client[pre + k] is not None else v
     if type_annotation in (int, float):
         if not isinstance(poss_values, possible_values.Number):
             raise ValueError(
@@ -356,8 +350,8 @@ def _get_ui_element(
 
         if isinstance(poss_values.step, (float, int)):
             step_val = type_annotation(poss_values.step)
-        elif poss_values.step == "decad" and val < 1:
-            step_val = 10 ** -len(str(int(1 / val)))
+        elif poss_values.step == "decad" and v < 1:
+            step_val = 10 ** -len(str(int(1 / v)))
         else:
             step_val = 1
 
@@ -367,7 +361,7 @@ def _get_ui_element(
                 ui.spinbox(
                     name=pre + k,
                     label=make_label(k),
-                    value=val,
+                    value=v,
                     # TODO: open issue in wave to make spinbox optionally unbounded
                     max=max_val if max_val is not None else 1e12,
                     min=min_val if min_val is not None else -1e12,
@@ -380,7 +374,7 @@ def _get_ui_element(
                 ui.slider(
                     name=pre + k,
                     label=make_label(k),
-                    value=val,
+                    value=v,
                     min=min_val,
                     max=max_val,
                     step=step_val,
@@ -393,7 +387,7 @@ def _get_ui_element(
             ui.toggle(
                 name=pre + k,
                 label=make_label(k),
-                value=val,
+                value=v,
                 tooltip=tooltip,
                 trigger=trigger,
             )
@@ -406,9 +400,9 @@ def _get_ui_element(
                 ui.textbox(
                     name=pre + k,
                     label=title_label,
-                    value=val,
+                    value=v,
                     required=False,
-                    password=password,
+                    password=("api" in k),
                     tooltip=tooltip,
                     trigger=trigger,
                     multiline=False,
@@ -432,7 +426,6 @@ def _get_ui_element(
                     " `allow_custom=True` is not supported at the same time."
                 )
 
-            v = val
             if isinstance(v, str):
                 v = [v]
 
