@@ -553,9 +553,9 @@ class CustomDataset(Dataset):
                 sample[f"{prefix}attention_mask"][-len(input_ids) :] = attention_mask
             else:
                 sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
-                sample[f"{prefix}input_ids"][:len(input_ids)] = input_ids
+                sample[f"{prefix}input_ids"][: len(input_ids)] = input_ids
                 sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
-                sample[f"{prefix}attention_mask"][:len(input_ids)] = attention_mask
+                sample[f"{prefix}attention_mask"][: len(input_ids)] = attention_mask
         else:
             # Pad everything if empty (continued pretraining)
             sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)

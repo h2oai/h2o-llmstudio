@@ -5,15 +5,22 @@ import torch
 from peft import LoraConfig, get_peft_model
 from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
 from torch import nn
-from transformers import AutoModelForCausalLM, T5ForConditionalGeneration,AutoModelForSeq2SeqLM, StoppingCriteria, StoppingCriteriaList
+from transformers import (
+    AutoModelForCausalLM,
+    AutoModelForSeq2SeqLM,
+    StoppingCriteria,
+    StoppingCriteriaList,
+    T5ForConditionalGeneration,
+)
 from transformers.generation.utils import GenerationMixin
 from transformers.utils import logging as transformers_logging
 
 from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
+from llm_studio.src.models.text_causal_language_modeling_model import (
+    TokenStoppingCriteria,
+)
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import create_nlp_backbone
-
-from llm_studio.src.models.text_causal_language_modeling_model import TokenStoppingCriteria
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +53,6 @@ class Model(nn.Module):
 
         if self.cfg.prediction.metric == "Perplexity":
             self.perplexity = Perplexity(self.cfg, reduce=False)
-
 
     def prepare_lora(self):
         target_modules = (
@@ -185,7 +191,7 @@ class Model(nn.Module):
             )
 
         labels = batch["answer_input_ids"]
-        labels[batch["answer_attention_mask"]==0] = -100
+        labels[batch["answer_attention_mask"] == 0] = -100
 
         output = self.backbone(
             input_ids=batch["prompt_input_ids"],

@@ -7,32 +7,34 @@ import torch
 
 import llm_studio.src.datasets.text_causal_language_modeling_ds
 from llm_studio.python_configs.base import DefaultConfig
+from llm_studio.python_configs.text_causal_language_modeling_config import (
+    ConfigNLPAugmentation,
+    ConfigNLPCausalLMArchitecture,
+    ConfigNLPCausalLMDataset,
+    ConfigNLPCausalLMEnvironment,
+    ConfigNLPCausalLMLogging,
+    ConfigNLPCausalLMPrediction,
+    ConfigNLPCausalLMTokenizer,
+    ConfigNLPCausalLMTraining,
+)
 from llm_studio.src import possible_values
 from llm_studio.src.augmentations.nlp_aug import BaseNLPAug
 from llm_studio.src.loggers import Loggers
 from llm_studio.src.losses import text_causal_language_modeling_losses
 from llm_studio.src.metrics import text_causal_language_modeling_metrics
-from llm_studio.src.models import text_sequence_to_sequence_modeling_model, text_reward_model
+from llm_studio.src.models import (
+    text_reward_model,
+    text_sequence_to_sequence_modeling_model,
+)
 from llm_studio.src.nesting import Dependency
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.plots import text_causal_language_modeling_plots
 from llm_studio.src.schedulers import Schedulers
 from llm_studio.src.utils.modeling_utils import generate_experiment_name
 
-from llm_studio.python_configs.text_causal_language_modeling_config import (
-    ConfigNLPCausalLMDataset,
-    ConfigNLPCausalLMTraining,
-    ConfigNLPCausalLMArchitecture,
-    ConfigNLPCausalLMTokenizer,
-    ConfigNLPCausalLMPrediction,
-    ConfigNLPCausalLMEnvironment,
-    ConfigNLPCausalLMLogging,
-    ConfigNLPAugmentation,
-)
 
 @dataclass
 class ConfigNLPSeq2SeqDataset(ConfigNLPCausalLMDataset):
-
     text_system_start: str = ""
     text_prompt_start: str = ""
     text_answer_separator: str = ""
@@ -65,7 +67,7 @@ class ConfigNLPSeq2SeqTraining(ConfigNLPCausalLMTraining):
 
     def __post_init__(self):
         super().__post_init__()
-        
+
         self._visibility["use_rlhf"] = -1
 
 
@@ -91,9 +93,7 @@ class ConfigProblemBase(DefaultConfig):
     architecture: ConfigNLPSeq2SeqArchitecture = field(
         default_factory=ConfigNLPSeq2SeqArchitecture
     )
-    training: ConfigNLPSeq2SeqTraining = field(
-        default_factory=ConfigNLPSeq2SeqTraining
-    )
+    training: ConfigNLPSeq2SeqTraining = field(default_factory=ConfigNLPSeq2SeqTraining)
     augmentation: ConfigNLPAugmentation = field(default_factory=ConfigNLPAugmentation)
     prediction: ConfigNLPCausalLMPrediction = field(
         default_factory=ConfigNLPCausalLMPrediction
