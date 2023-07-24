@@ -795,7 +795,6 @@ async def dataset_list_table(
 
 async def dataset_list(q: Q, reset: bool = True) -> None:
     """Display all datasets."""
-
     q.client["nav/active"] = "dataset/list"
 
     if reset:
