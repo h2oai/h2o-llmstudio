@@ -204,6 +204,10 @@ def load_config_yaml(path: str):
         from llm_studio.python_configs.text_causal_language_modeling_config import (
             ConfigProblemBase,
         )
+    elif cfg_dict["problem_type"] == "text_sequence_to_sequence_modeling":
+        from llm_studio.python_configs.text_sequence_to_sequence_modeling_config import (
+            ConfigProblemBase,
+        )
     else:
         problem_type = cfg_dict["problem_type"]
         raise NotImplementedError(f"Problem Type {problem_type} not implemented")
