@@ -19,6 +19,7 @@ from sqlitedict import SqliteDict
 
 import app_utils.config_parsing_utils
 import app_utils.utils
+from app_utils.config_parsing_utils import get_ui_elements, parse_ui_elements
 from app_utils.default_config import default_cfg
 from app_utils.sections.chat import chat_tab, load_cfg_model_tokenizer
 from app_utils.sections.common import clean_dashboard
@@ -34,12 +35,11 @@ from app_utils.utils import (
     get_problem_categories,
     get_problem_types,
     get_unique_name,
+    make_label,
     remove_model_type,
     set_env,
     start_experiment,
-    make_label,
 )
-from app_utils.config_parsing_utils import get_ui_elements, parse_ui_elements
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
@@ -135,7 +135,7 @@ async def experiment_start(q: Q) -> None:
         or q.client["experiment/start/dataset_prev"]
         != q.client["experiment/start/dataset"]
     ) and q.client["experiment/start/cfg_category"] != "experiment":
-        dataset = q.app.db.get_dataset(q.client["experiment/start/dataset"])
+        dataset = q.client.app_db.get_dataset(q.client["experiment/start/dataset"])
         if dataset is not None:
             problem_type = dataset.config_file.replace(dataset.path + "/", "").replace(
                 ".yaml", ""
@@ -448,11 +448,12 @@ async def experiment_start(q: Q) -> None:
     logger.info(f"From cfg {q.client['experiment/start/cfg_mode/from_cfg']}")
     logger.info(f"From default {q.client['experiment/start/cfg_mode/from_default']}")
     logger.info(f"Config file: {q.client['experiment/start/cfg_file']}")
-    q.client["experiment/start/cfg"] = parse_ui_elements(
-        cfg=q.client["experiment/start/cfg"],
-        q=q,
-        pre="experiment/start/cfg/",
-    )
+    if "experiment/start" in q.client.delete_cards:
+        q.client["experiment/start/cfg"] = parse_ui_elements(
+            cfg=q.client["experiment/start/cfg"],
+            q=q,
+            pre="experiment/start/cfg/",
+        )
     option_items = get_ui_elements(cfg=q.client["experiment/start/cfg"], q=q)
     items.extend(option_items)
 

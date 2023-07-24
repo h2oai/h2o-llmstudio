@@ -11,8 +11,8 @@ import app_utils.utils
 from app_utils.sections.common import interface
 from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
 
-from .default_config import default_cfg
 from .db import Database, Dataset
+from .default_config import default_cfg
 from .migration import migrate_app
 from .utils import (
     get_data_dir,
@@ -32,7 +32,7 @@ def import_data(q: Q):
     """Imports default data"""
 
     try:
-        if q.app.db.get_dataset(1) is None:
+        if q.client.app_db.get_dataset(1) is None:
             logger.info("Downloading default dataset...")
 
             path = f"{get_data_dir(q)}/oasst"

@@ -1,11 +1,11 @@
 import dataclasses
 from functools import partial
-from typing import Any, Optional, List, Tuple, Type, Union
+from typing import Any, List, Optional, Tuple, Type, Union
 
 from h2o_wave import Q, ui
 
 from app_utils.default_config import default_cfg
-from app_utils.utils import make_label, get_dataset
+from app_utils.utils import get_dataset, make_label
 from llm_studio.src import possible_values
 from llm_studio.src.utils.data_utils import read_dataframe
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
