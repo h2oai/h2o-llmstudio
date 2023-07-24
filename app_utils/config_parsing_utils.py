@@ -336,13 +336,12 @@ def _get_ui_element(
             ):
                 q.client[pre + k] = q.client["experiment/yaml_data"][k]
 
+    val = q.client[pre + k] if q.client[pre + k] is not None else v
     if type_annotation in (int, float):
         if not isinstance(poss_values, possible_values.Number):
             raise ValueError(
                 "Type annotations `int` and `float` need a `possible_values.Number`!"
             )
-
-        val = q.client[pre + k] if q.client[pre + k] is not None else v
 
         min_val = (
             type_annotation(poss_values.min) if poss_values.min is not None else None
@@ -390,8 +389,6 @@ def _get_ui_element(
                 )
             ]
     elif type_annotation == bool:
-        val = q.client[pre + k] if q.client[pre + k] is not None else v
-
         t = [
             ui.toggle(
                 name=pre + k,
@@ -403,8 +400,6 @@ def _get_ui_element(
         ]
     elif type_annotation in (str, Tuple[str, ...]):
         if poss_values is None:
-            val = q.client[pre + k] if q.client[pre + k] is not None else v
-
             title_label = make_label(k)
 
             t = [
@@ -437,7 +432,7 @@ def _get_ui_element(
                     " `allow_custom=True` is not supported at the same time."
                 )
 
-            v = q.client[pre + k] if q.client[pre + k] is not None else v
+            v = val
             if isinstance(v, str):
                 v = [v]
 
@@ -480,7 +475,6 @@ def _get_ui_element(
                         trigger=trigger,
                     )
                 ]
-
     return t
 
 
