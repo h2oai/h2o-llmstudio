@@ -62,7 +62,6 @@ class ConfigNLPSeq2SeqDataset(ConfigNLPCausalLMDataset):
 
 @dataclass
 class ConfigNLPSeq2SeqTraining(ConfigNLPCausalLMTraining):
-    llm_backbone: str = "t5-small"
     use_rlhf: bool = False
 
     def __post_init__(self):
