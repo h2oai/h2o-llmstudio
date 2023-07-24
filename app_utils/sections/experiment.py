@@ -135,7 +135,7 @@ async def experiment_start(q: Q) -> None:
         or q.client["experiment/start/dataset_prev"]
         != q.client["experiment/start/dataset"]
     ) and q.client["experiment/start/cfg_category"] != "experiment":
-        dataset = app_utils.utils.get_dataset(q.client["experiment/start/dataset"])
+        dataset = q.app.db.get_dataset(q.client["experiment/start/dataset"])
         if dataset is not None:
             problem_type = dataset.config_file.replace(dataset.path + "/", "").replace(
                 ".yaml", ""

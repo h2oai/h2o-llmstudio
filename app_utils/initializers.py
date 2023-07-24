@@ -32,7 +32,7 @@ def import_data(q: Q):
     """Imports default data"""
 
     try:
-        if app_utils.utils.get_dataset(1) is None:
+        if q.app.db.get_dataset(1) is None:
             logger.info("Downloading default dataset...")
 
             path = f"{get_data_dir(q)}/oasst"

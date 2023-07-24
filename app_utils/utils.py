@@ -835,7 +835,7 @@ def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
 
     info = defaultdict(list)
     for idx, row in df.iterrows():
-        config_file = get_dataset(row.id).config_file
+        config_file = config_file = q.client.app_db.get_dataset(row.id).config_file
         path = row.path + "/"
 
         try:
