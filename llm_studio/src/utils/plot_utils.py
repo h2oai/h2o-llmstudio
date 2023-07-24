@@ -186,7 +186,7 @@ def color_code_tokenized_text(tokenized_text_list: List[Union[str, bytes]], toke
     """
 
     if isinstance(tokenized_text_list[0], bytes):
-        tokenized_text_list = decode_bytes(tokenized_text_list)
+        tokenized_text_list = decode_bytes(tokenized_text_list)  # type: ignore
 
     html_text = ""
     for token in tokenized_text_list:
