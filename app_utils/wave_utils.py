@@ -8,7 +8,7 @@ from h2o_wave.types import Component
 
 from app_utils.sections.common import clean_dashboard
 
-from .config import default_cfg
+from .default_config import default_cfg
 
 
 class ThemeColors(TypedDict):

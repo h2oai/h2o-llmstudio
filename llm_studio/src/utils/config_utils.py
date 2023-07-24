@@ -1,7 +1,7 @@
 import dataclasses
 import importlib
 from types import ModuleType
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List
 
 import yaml
 
@@ -68,13 +68,6 @@ def load_config_py(config_path: str, config_name: str = "Config"):
     return _load_cls(config_path, config_name)()
 
 
-def _get_type_annotation_error(v: Any, type_annotation: Type) -> ValueError:
-    return ValueError(
-        f"Cannot show {v}: not a dataclass"
-        f" and {type_annotation} is not a known type annotation."
-    )
-
-
 def convert_cfg_to_nested_dictionary(cfg) -> dict:
     """Returns a grouped config settings dict for a given configuration
 
@@ -114,7 +107,7 @@ def convert_cfg_to_nested_dictionary(cfg) -> dict:
             }
             grouped_cfg_dict.update({k: group_items})
         else:
-            raise _get_type_annotation_error(v, type_annotations[k])
+            raise ValueError(f"Unknown type annotation {type_annotation} for {k}")
 
     return grouped_cfg_dict
 

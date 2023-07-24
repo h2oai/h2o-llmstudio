@@ -4,7 +4,7 @@ from typing import List
 from h2o_wave import Q, ui
 
 from app_utils.cards import card_zones
-from app_utils.config import default_cfg
+from app_utils.default_config import default_cfg
 
 logger = logging.getLogger(__name__)
 

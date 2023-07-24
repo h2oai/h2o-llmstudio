@@ -9,7 +9,9 @@ from typing import List, Optional
 from h2o_wave import Q, ui
 from h2o_wave.types import ImageCard, MarkupCard, StatListItem, Tab
 
-from app_utils.config import default_cfg
+import app_utils.config_parsing_utils
+import app_utils.utils
+from app_utils.default_config import default_cfg
 from app_utils.db import Dataset
 from app_utils.sections.experiment import experiment_start
 from app_utils.utils import (
@@ -18,7 +20,6 @@ from app_utils.utils import (
     clean_error,
     dir_file_table,
     get_data_dir,
-    get_dataset_elements,
     get_datasets,
     get_experiments_status,
     get_frame_stats,
@@ -27,12 +28,11 @@ from app_utils.utils import (
     get_unique_dataset_name,
     kaggle_download,
     local_download,
-    make_label,
-    parse_ui_elements,
     remove_temp_files,
     s3_download,
-    s3_file_options,
+    s3_file_options, make_label,
 )
+from ..config_parsing_utils import parse_ui_elements, get_dataset_elements
 from app_utils.wave_utils import busy_dialog, ui_table_from_df
 from llm_studio.src.utils.config_utils import (
     load_config_py,
@@ -828,7 +828,7 @@ async def dataset_list(q: Q, reset: bool = True) -> None:
 async def dataset_newexperiment(q: Q, dataset_id: int):
     """Start a new experiment from given dataset."""
 
-    dataset = q.client.app_db.get_dataset(dataset_id)
+    dataset = app_utils.utils.get_dataset(dataset_id)
 
     q.client["experiment/start/cfg_file"] = dataset.config_file.split("/")[-1].replace(
         ".yaml", ""
@@ -854,7 +854,7 @@ async def dataset_edit(
         allow_merge: whether to allow merging dataset when editing
     """
 
-    dataset = q.client.app_db.get_dataset(dataset_id)
+    dataset = app_utils.utils.get_dataset(dataset_id)
 
     experiments_df = q.client.app_db.get_experiments_df()
     experiments_df = experiments_df[experiments_df["dataset"] == str(dataset_id)]
@@ -924,7 +924,7 @@ async def dataset_delete(q: Q, dataset_ids: List[int]):
     """
 
     for dataset_id in dataset_ids:
-        dataset = q.client.app_db.get_dataset(dataset_id)
+        dataset = app_utils.utils.get_dataset(dataset_id)
         q.client.app_db.delete_dataset(dataset.id)
 
         try:
@@ -934,7 +934,7 @@ async def dataset_delete(q: Q, dataset_ids: List[int]):
 
 
 async def dataset_delete_single(q: Q, dataset_id: int):
-    dataset = q.client.app_db.get_dataset(dataset_id)
+    dataset = app_utils.utils.get_dataset(dataset_id)
 
     experiments_df = q.client.app_db.get_experiments_df()
     num_experiments = sum(experiments_df["dataset"] == str(dataset_id))
@@ -957,7 +957,7 @@ async def dataset_display(q: Q) -> None:
     dataset_id = q.client["dataset/list/df_datasets"]["id"].iloc[
         q.client["dataset/display/id"]
     ]
-    dataset = q.client.app_db.get_dataset(dataset_id)
+    dataset = app_utils.utils.get_dataset(dataset_id)
     cfg = load_config_yaml(dataset.config_file)
 
     has_train_df = cfg.dataset.train_dataframe != "None"
