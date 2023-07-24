@@ -70,6 +70,7 @@ async def experiment_start(q: Q) -> None:
     """Display experiment start cards."""
 
     await clean_dashboard(q, mode="experiment_start", exclude=["experiment/start"])
+    user_was_on_experiment_page_before = q.client["nav/active"] == "experiment/start"
     q.client["nav/active"] = "experiment/start"
 
     show_update_warnings = True
@@ -448,7 +449,7 @@ async def experiment_start(q: Q) -> None:
     logger.info(f"From cfg {q.client['experiment/start/cfg_mode/from_cfg']}")
     logger.info(f"From default {q.client['experiment/start/cfg_mode/from_default']}")
     logger.info(f"Config file: {q.client['experiment/start/cfg_file']}")
-    if "experiment/start" in q.client.delete_cards:
+    if user_was_on_experiment_page_before:
         q.client["experiment/start/cfg"] = parse_ui_elements(
             cfg=q.client["experiment/start/cfg"],
             q=q,
