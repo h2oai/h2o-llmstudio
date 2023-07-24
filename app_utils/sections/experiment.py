@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import zipfile
+from pathlib import Path
 from typing import Callable, List, Optional, Set
 
 import accelerate
@@ -1033,31 +1034,165 @@ async def summary_tab(experiment_id, q):
     cfg = load_config_yaml(
         os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
     )
-    parent_element = get_parent_element(cfg)
-    if parent_element:
-        items.append(parent_element)
-    for col in experiment_df.columns:
-        if col in [
-            "id",
-            "path",
-            "process_id",
-            "status",
-            "eta",
-            "info",
-            "mode",
-            "progress",
-        ]:
-            continue
-        v = experiment_df[col].values[0]
-        if col == "config_file":
-            col = "problem type"
-        t = ui.stat_list_item(label=make_label(col), value=str(v))
+    input_dict = experiment_df.iloc[0].to_dict()
 
-        items.append(t)
-    q.page["experiment/display/summary"] = ui.stat_list_card(
-        box="first", items=items, title=""
+    # experiment card
+    card_name = "experiment/display/summary/experiment"
+    q.page[card_name] = ui.form_card(
+        box=ui.box(zone="first"),
+        items=[
+            ui.separator("Experiment"),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=cfg.experiment_name,
+                        label="Name",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=input_dict["config_file"],
+                        label="Problem Type",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+            ui.stats(
+                [
+                    ui.stat(
+                        value="-"
+                        if cfg._parent_experiment == ""
+                        else cfg._parent_experiment,
+                        label="Parent Experiment Name",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+        ],
     )
-    q.client.delete_cards.add("experiment/display/summary")
+    q.client.delete_cards.add(card_name)
+
+    # datasets card
+    card_name = "experiment/display/summary/datasets"
+    q.page[card_name] = ui.form_card(
+        box=ui.box(zone="first"),
+        items=[
+            ui.separator("Datasets"),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=Path(cfg.dataset.train_dataframe).stem,
+                        label="Training Dataset",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+            ui.stats(
+                [
+                    ui.stat(
+                        value="-"
+                        if cfg.dataset.validation_dataframe in ["", "None", None]
+                        else Path(cfg.dataset.validation_dataframe).stem,
+                        label="Validation Dataset",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+        ],
+    )
+    q.client.delete_cards.add(card_name)
+
+    # scores card
+    card_name = "experiment/display/summary/scores"
+    q.page[card_name] = ui.form_card(
+        box=ui.box(zone="first"),
+        items=[
+            ui.separator("Scores"),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=input_dict["metric"],
+                        label="Metric",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=str(input_dict["val metric"]),
+                        label="Validation Score",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+        ],
+    )
+    q.client.delete_cards.add(card_name)
+
+    # main configs card
+    card_name = "experiment/display/summary/main_configs"
+    q.page[card_name] = ui.form_card(
+        box=ui.box(zone="second"),
+        items=[
+            ui.separator("Main Configurations"),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=cfg.llm_backbone,
+                        label="LLM Backbone",
+                    ),
+                    ui.stat(
+                        value=str(cfg.training.lora),
+                        label="Lora",
+                    ),
+                    ui.stat(
+                        value=str(cfg.training.epochs),
+                        label="Epochs",
+                    ),
+                    ui.stat(
+                        value=str(cfg.training.batch_size),
+                        label="Batch Size",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=str(input_dict["loss"]),
+                        label="Loss Function",
+                    ),
+                    ui.stat(
+                        value=cfg.architecture.backbone_dtype,
+                        label="Backbone Dtype",
+                    ),
+                    ui.stat(
+                        value=str(cfg.architecture.gradient_checkpointing),
+                        label="Gradient Checkpointing",
+                    ),
+                    ui.stat(
+                        value=input_dict["gpu_list"],
+                        label="GPU List",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+        ],
+    )
+    q.client.delete_cards.add(card_name)
 
 
 async def configs_tab(q):
