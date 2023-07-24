@@ -5,7 +5,7 @@ import torch
 from peft import LoraConfig, get_peft_model
 from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
 from torch import nn
-from transformers import AutoModelForCausalLM, T5ForConditionalGeneration, StoppingCriteria, StoppingCriteriaList
+from transformers import AutoModelForCausalLM, T5ForConditionalGeneration,AutoModelForSeq2SeqLM, StoppingCriteria, StoppingCriteriaList
 from transformers.generation.utils import GenerationMixin
 from transformers.utils import logging as transformers_logging
 
@@ -143,7 +143,7 @@ class Model(nn.Module):
         # )
 
         self.backbone, self.backbone_config = create_nlp_backbone(
-            cfg, model_class=T5ForConditionalGeneration
+            cfg, model_class=AutoModelForSeq2SeqLM
         )
 
         if cfg.training.lora:
@@ -311,14 +311,17 @@ class Model(nn.Module):
             )
 
         output = self.backbone(
-            input_ids=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
+            input_ids=batch["prompt_input_ids"],
+            attention_mask=batch["prompt_attention_mask"],
+            labels=batch["answer_input_ids"],
             **kwargs,
         )
 
-        if "labels" in batch:
-            loss = self.loss_fn(output.logits, batch["labels"])
-            outputs["loss"] = loss
+        outputs["loss"] = output.loss
+
+        # if "labels" in batch:
+        #     loss = self.loss_fn(output.logits, batch["labels"])
+        #     outputs["loss"] = loss
 
         if self.cfg.prediction.metric == "Perplexity":
             outputs["perplexity"] = self.perplexity(output.logits, batch["labels"])
