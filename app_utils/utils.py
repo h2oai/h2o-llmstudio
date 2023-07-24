@@ -31,9 +31,6 @@ from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
 
 from app_utils.db import Experiment
-from llm_studio.python_configs.text_causal_language_modeling_config import (
-    ConfigProblemBase,
-)
 from llm_studio.src import possible_values
 from llm_studio.src.utils.config_utils import (
     _get_type_annotation_error,
@@ -94,7 +91,7 @@ def find_free_port():
 
 
 def start_process(
-    cfg: ConfigProblemBase, gpu_list: List, process_queue: List, env_vars: Dict
+    cfg: Any, gpu_list: List, process_queue: List, env_vars: Dict
 ) -> subprocess.Popen:
     """Starts train.py for a given configuration setting
 
@@ -1435,7 +1432,8 @@ def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
 
         try:
             cfg = load_config_yaml(config_file)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Could not load configuration from {config_file}. {e}")
             cfg = None
 
         if cfg is not None:
