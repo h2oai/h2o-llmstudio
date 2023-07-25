@@ -9,10 +9,18 @@ H2O LLM Studio requires the following minimum requirements:
 
 - A machine with Ubuntu 16.04+ with atleast one recent Nvidia GPU 
 - Nvidia drivers v470.57.02 or a later version
+- Access to the following URLs:
+  - developer.download.nvidia.com
+  - pypi.org
+  - huggingface.co
+  - download.pytorch.org
+  - cdn-lfs.huggingface.co 
 
-:::info
-Atleast 24GB of GPU memory is recommended for larger models.
+:::info Notes
+- Atleast 24GB of GPU memory is recommended for larger models.
+- The required URLs are accessible by default when you start a GCP instance, however, if you have network rules or custom firewalls in place, it is recommended to confirm that the URLs are accessible before running `make setup`.
 :::
+
 
 ## Installation
 
