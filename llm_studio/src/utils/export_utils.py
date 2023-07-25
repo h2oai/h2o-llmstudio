@@ -4,8 +4,6 @@ import os
 import zipfile
 from typing import Optional
 
-import yaml
-
 from llm_studio.src.utils.exceptions import LLMResourceException
 from llm_studio.src.utils.utils import add_file_to_zip
 
@@ -84,28 +82,19 @@ def save_prediction_outputs(
     return zip_path
 
 
-def save_logs(
-    experiment_name: str,
-    experiment_path: str,
-    experiment_cfg_dict: dict,
-    logs: dict,
-):
+def save_logs(experiment_name: str, experiment_path: str, logs: dict):
     """Save experiment logs
 
     Args:
         experiment_name: name of the experiment
         experiment_path: path containing experiment related files
-        experiment_cfg_dict: dictionary with experiment configuration
         logs: dictionary with experiment charts
 
     Returns:
         Path to the zip file with experiment logs
     """
 
-    cfg_path = f"{experiment_path}/cfg_{experiment_name}.yaml"
-    with open(cfg_path, "w") as fp:
-        yaml.dump(experiment_cfg_dict, fp, indent=4)
-
+    cfg_path = os.path.join(experiment_path, "cfg.yaml")
     charts_path = f"{experiment_path}/charts_{experiment_name}.json"
     with open(charts_path, "w") as fp:
         json.dump(
@@ -115,7 +104,7 @@ def save_logs(
     zip_path = get_logs_path(experiment_name, experiment_path)
     zf = zipfile.ZipFile(zip_path, "w")
     zf.write(charts_path, os.path.basename(charts_path))
-    zf.write(cfg_path, os.path.basename(cfg_path))
+    zf.write(cfg_path, f"cfg_{experiment_name}.yaml")
 
     try:
         zf.write(
