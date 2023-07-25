@@ -105,6 +105,7 @@ class Model(nn.Module):
             self.training,
             mask_key=mask_key,
             pad_keys=pad_keys,
+            padding_side=cfg.tokenizer._padding_side,
         )
 
         input_ids = batch["prompt_input_ids"]
@@ -173,21 +174,35 @@ class Model(nn.Module):
         outputs: Dict = {}
         kwargs = {}
 
-        mask_key = "attention_mask"
-        pad_keys = [
-            "input_ids",
-            "attention_mask",
-            "special_tokens_mask",
-            "labels",
-        ]
-
         if padding:
+            mask_key = "prompt_attention_mask"
+            pad_keys = [
+                "prompt_input_ids",
+                "prompt_attention_mask",
+            ]
+
             batch = batch_padding(
                 self.cfg,
                 batch,
                 self.training,
                 mask_key=mask_key,
                 pad_keys=pad_keys,
+                padding_side=self.cfg.tokenizer._padding_side,
+            )
+
+            mask_key = "answer_attention_mask"
+            pad_keys = [
+                "answer_input_ids",
+                "answer_attention_mask",
+            ]
+
+            batch = batch_padding(
+                self.cfg,
+                batch,
+                self.training,
+                mask_key=mask_key,
+                pad_keys=pad_keys,
+                padding_side="right",
             )
 
         labels = batch["answer_input_ids"]

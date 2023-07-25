@@ -212,6 +212,7 @@ class Model(nn.Module):
             self.training,
             mask_key=mask_key,
             pad_keys=pad_keys,
+            padding_side=self.cfg.tokenizer._padding_side,
         )
 
         input_ids = batch["prompt_input_ids"]
@@ -309,6 +310,7 @@ class Model(nn.Module):
                 self.training,
                 mask_key=mask_key,
                 pad_keys=pad_keys,
+                padding_side=self.cfg.tokenizer._padding_side,
             )
 
         output = self.backbone(
