@@ -18,7 +18,7 @@ H2O LLM Studio requires the following minimum requirements:
 
 :::info Notes
 - Atleast 24GB of GPU memory is recommended for larger models.
-- The required URLs will be accessible by default when you start a GCP instance, however, if you have network rules or custom firewalls in place, it is recommended to confirm that the URLs are accessible before running `make setup`.
+- The required URLs are accessible by default when you start a GCP instance, however, if you have network rules or custom firewalls in place, it is recommended to confirm that the URLs are accessible before running `make setup`.
 :::
 
 
