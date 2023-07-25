@@ -2,4 +2,6 @@ Defines the maximum length of the input sequence H2O LLM Studio uses during mode
 
 A higher token count leads to higher memory usage that slows down training while increasing the probability of obtaining a higher accuracy value.
 
-This includes both, prompt and answer.
+In case of Causal Language Modeling, this includes both prompt and answer, or all prompts and answers in case of chained samples. 
+
+In Sequence to Sequence Modeling, this refers to the length of the prompt, or the length of a full chained sample.
