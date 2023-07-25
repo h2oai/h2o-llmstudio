@@ -5,12 +5,7 @@ import torch
 from peft import LoraConfig, get_peft_model
 from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
 from torch import nn
-from transformers import (
-    AutoModelForCausalLM,
-    StoppingCriteria,
-    StoppingCriteriaList,
-    T5ForConditionalGeneration,
-)
+from transformers import AutoModelForCausalLM, StoppingCriteria, StoppingCriteriaList
 from transformers.generation.utils import GenerationMixin
 from transformers.utils import logging as transformers_logging
 
