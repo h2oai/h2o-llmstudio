@@ -1,3 +1,4 @@
+import subprocess
 import sys
 import traceback
 from typing import TypedDict
@@ -262,6 +263,7 @@ def wave_utils_error_card(
 
     type_, value_, traceback_ = sys.exc_info()
     stack_trace = traceback.format_exception(type_, value_, traceback_)
+    git_version = subprocess.getoutput("git rev-parse HEAD")
     if not q.app.wave_utils_stack_trace_str:
         q.app.wave_utils_stack_trace_str = "### stacktrace\n" + "\n".join(stack_trace)
 
@@ -305,6 +307,7 @@ def wave_utils_error_card(
             ui.text_xs(content=q_args_str, visible=False),
             ui.text_xs(content=q.app.wave_utils_stack_trace_str, visible=False),
             ui.text_xs(content=f"### Error\n {error}", visible=False),
+            ui.text_xs(content=f"### Git Version\n {git_version}", visible=False),
         ],
     )
 
@@ -358,6 +361,7 @@ async def report_error(q: Q):
     q.page[card_name].items[11].text_xs.visible = True
     q.page[card_name].items[12].text_xs.visible = True
     q.page[card_name].items[13].text_xs.visible = True
+    q.page[card_name].items[14].text_xs.visible = True
 
     await q.page.save()
 
