@@ -1062,18 +1062,6 @@ async def summary_tab(experiment_id, q):
                 justify="between",
                 inset=True,
             ),
-            ui.stats(
-                [
-                    ui.stat(
-                        value="-"
-                        if cfg._parent_experiment == ""
-                        else cfg._parent_experiment,
-                        label="Parent Experiment Name",
-                    ),
-                ],
-                justify="between",
-                inset=True,
-            ),
         ],
     )
     q.client.delete_cards.add(card_name)
@@ -1191,6 +1179,52 @@ async def summary_tab(experiment_id, q):
                 inset=True,
             ),
         ],
+    )
+    q.client.delete_cards.add(card_name)
+
+    # todo: shall we really have this card? If so, we can read it from model card markdown file?
+    # code card
+    device_map = '{"": "cuda:0"}'
+    content = f"""
+To use the model with the transformers library on a machine with GPUs, first make sure you have the transformers, accelerate, torch and einops libraries installed.
+```python\n
+pip install transformers==4.29.2
+pip install accelerate==0.19.0
+pip install torch==2.0.0
+pip install einops==0.6.1
+```
+
+```python\n
+import torch
+from transformers import pipeline
+
+generate_text = pipeline(
+    model="h2oai/h2ogpt-gm-oasst1-en-1024-open-llama-7b-preview-400bt",
+    torch_dtype=torch.{cfg.architecture.backbone_dtype},
+    trust_remote_code=True,
+    use_fast=False,
+    device_map={device_map},
+)
+
+res = generate_text(
+    "Why is drinking water so healthy?",
+    min_new_tokens=2,
+    max_new_tokens=512,
+    do_sample=False,
+    num_beams=1,
+    temperature=float(0.3),
+    repetition_penalty=float(1.2),
+    renormalize_logits=True
+)
+print(res[0]["generated_text"])
+
+```
+"""
+    card_name = "experiment/display/summary/code"
+    q.page[card_name] = ui.markdown_card(
+        box=ui.box(zone="third"),
+        title="",
+        content=content,
     )
     q.client.delete_cards.add(card_name)
 
