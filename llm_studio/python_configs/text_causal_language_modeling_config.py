@@ -421,7 +421,6 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     _cpu_comm: Any = None
     _model_card_template: str = "text_causal_language_modeling_model_card_template.md"
 
-
     def __post_init__(self):
         super().__post_init__()
         self._possible_values["gpus"] = possible_values.String(
