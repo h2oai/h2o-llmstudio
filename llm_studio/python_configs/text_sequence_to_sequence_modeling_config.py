@@ -68,6 +68,8 @@ class ConfigNLPSeq2SeqArchitecture(ConfigNLPCausalLMArchitecture):
 class ConfigNLPSeq2SeqEnvironment(ConfigNLPCausalLMEnvironment):
     mixed_precision: bool = False
 
+    _model_card_template: str = "text_sequence_to_sequence_modeling_model_card_template.md"
+
     def __post_init__(self):
         super().__post_init__()
 

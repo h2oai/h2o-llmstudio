@@ -1664,7 +1664,7 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
     )
     card = huggingface_hub.ModelCard.from_template(
         card_data,
-        template_path="model_card_template.md",
+        template_path=os.path.join("model_cards", cfg.environment._model_card_template),
         base_model=cfg.llm_backbone,  # will be replaced in template if it exists
         repo_id=repo_id,
         model_architecture=model.backbone.__repr__(),
