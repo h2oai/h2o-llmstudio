@@ -34,7 +34,6 @@ from app_utils.utils import (
     get_problem_types,
     get_ui_elements,
     get_unique_name,
-    make_label,
     parse_ui_elements,
     remove_model_type,
     set_env,
@@ -46,7 +45,6 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
 )
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
-    get_parent_element,
     load_config_py,
     load_config_yaml,
     save_config_yaml,
@@ -1033,7 +1031,6 @@ async def insights_tab(charts, q):
 async def summary_tab(experiment_id, q):
     experiment_df = get_experiments(q)
     input_dict = experiment_df[experiment_df.id == experiment_id].iloc[0].to_dict()
-    items = []
     cfg = load_config_yaml(
         os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
     )
