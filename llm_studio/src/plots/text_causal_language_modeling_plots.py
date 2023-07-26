@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Any, Dict
 
 import pandas as pd
@@ -134,6 +135,12 @@ class Plots:
                 "predicted_text": predicted_text,
             }
         )
+        df["input_text"] = df["input_text"].apply(format_for_markdown_visualization)
+        df["target_text"] = df["target_text"].apply(format_for_markdown_visualization)
+        df["predicted_text"] = df["predicted_text"].apply(
+            format_for_markdown_visualization
+        )
+
         if val_outputs.get("metrics") is not None:
             df["metrics"] = val_outputs["metrics"]
             df["metrics"] = df["metrics"].round(decimals=3)
@@ -143,3 +150,27 @@ class Plots:
         path = os.path.join(cfg.output_directory, f"{mode}_viz.parquet")
         df.to_parquet(path)
         return PlotData(data=path, encoding="df")
+
+
+def format_for_markdown_visualization(text: str) -> str:
+    """
+    Convert newlines to <br /> tags, except for those inside code blocks.
+    This is needed because the markdown_table_cell_type() function does not
+    convert newlines to <br /> tags, so we have to do it ourselves.
+
+    This function is rather simple and may fail on text that uses `
+    in some other context than marking code cells or uses ` within the code itself (as this function).
+    """
+    code_block_regex = r"(```.*?```|``.*?``)"
+    parts = re.split(code_block_regex, text, flags=re.DOTALL)
+    for i in range(len(parts)):
+        # Only substitute for text outside matched code blocks
+        if "`" not in parts[i]:
+            parts[i] = parts[i].replace("\n", "<br />").strip()
+    text = "".join(parts)
+
+    # Restore newlines around code blocks, needed for correct rendering
+    for x in ["```", "``", "`"]:
+        text = text.replace(f"<br />{x}", f"\n{x}")
+        text = text.replace(f"{x}<br />", f"{x}\n")
+    return text
