@@ -1,4 +1,4 @@
-### Usage with :joy: transformers
+### Usage with HF transformers
 
 To use the model with the `transformers` library on a machine with GPUs, first make sure you have the `transformers`, `accelerate` and `torch` libraries installed.
 

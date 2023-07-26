@@ -1191,28 +1191,7 @@ async def summary_tab(experiment_id, q):
     card_name = "experiment/display/summary/code"
     q.page[card_name] = ui.markdown_card(
         box=ui.box(zone="third"),
-        title="
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        ",
+        title="",
         content=content,
     )
     q.client.delete_cards.add(card_name)
