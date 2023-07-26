@@ -1,7 +1,6 @@
 import os
 from typing import Any, Dict
 
-import numpy as np
 import pandas as pd
 
 from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
@@ -17,18 +16,26 @@ from llm_studio.src.utils.plot_utils import (
 )
 
 
-def list_to_string(lst, num_chars=300):
-    # create string from list, with newlines
-    # if list is too long, split into multiple lines
+def list_to_string(lst, num_chars=40):
+    """
+    Create a string from a list, with newlines
+    If the list is too long, split into multiple lines
+    Args:
+        lst:
+        num_chars:
+
+    Returns:
+
+    """
     x = []
     sublist = []
     for item in lst:
-        if len(str(item)) + len(sublist) > num_chars:
-            x.append(" ".join(sublist))
+        if len(str(item)) + len(", ".join(sublist)) > num_chars:
+            x.append(", ".join(sublist))
             sublist = []
         sublist.append(str(item))
 
-    return "\n".join(x)
+    return "[" + "\n".join(x) + "]"
 
 
 class Plots:
