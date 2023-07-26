@@ -95,25 +95,15 @@ def ui_table_from_df(
     """
 
     df = df.reset_index(drop=True)
-
-    if not sortables:
-        sortables = []
-    if not filterables:
-        filterables = []
-    if not searchables:
-        searchables = []
-    if not numerics:
-        numerics = []
-    if not times:
-        times = []
-    if not tags:
-        tags = []
-    if not progresses:
-        progresses = []
-    if not min_widths:
-        min_widths = {}
-    if not max_widths:
-        max_widths = {}
+    sortables = sortables or []
+    filterables = filterables or []
+    searchables = searchables or []
+    numerics = numerics or []
+    times = times or []
+    tags = tags or []
+    progresses = progresses or []
+    min_widths = min_widths or {}
+    max_widths = max_widths or {}
 
     cell_types = {}
     for col in tags:
@@ -128,24 +118,28 @@ def ui_table_from_df(
         cell_types[col] = ui.progress_table_cell_type(
             wave_theme.get_primary_color(q),
         )
+    for col in df.columns:
+        if col not in cell_types:
+            # enables rendering of code in wave table
+            cell_types[col] = ui.markdown_table_cell_type()
 
     columns = [
         ui.table_column(
-            name=str(x),
-            label=str(x),
-            sortable=True if x in sortables else False,
-            filterable=True if x in filterables else False,
-            searchable=True if x in searchables else False,
+            name=str(col),
+            label=str(col),
+            sortable=True if col in sortables else False,
+            filterable=True if col in filterables else False,
+            searchable=True if col in searchables else False,
             data_type="number"
-            if x in numerics
-            else ("time" if x in times else "string"),
-            cell_type=cell_types[x] if x in cell_types.keys() else None,
-            min_width=min_widths[x] if x in min_widths.keys() else None,
-            max_width=max_widths[x] if x in max_widths.keys() else None,
-            link=True if x == link_col else False,
+            if col in numerics
+            else ("time" if col in times else "string"),
+            cell_type=cell_types[col],
+            min_width=min_widths[col] if col in min_widths else None,
+            max_width=max_widths[col] if col in max_widths else None,
+            link=True if col == link_col else False,
             cell_overflow=cell_overflow,
         )
-        for x in df.columns.values
+        for col in df.columns.values
     ]
 
     if actions:

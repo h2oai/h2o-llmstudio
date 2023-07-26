@@ -1043,6 +1043,7 @@ async def insights_tab(charts, q):
                             downloadable=True,
                             resettable=True,
                             cell_overflow="wrap",
+                            max_char_length=5000,
                         )
                     ],
                 )
