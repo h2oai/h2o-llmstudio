@@ -34,6 +34,8 @@ class Plots:
         )
         df["texts"] = df["texts"].apply(format_for_markdown_visualization)
 
+        np_threshold = np.get_printoptions()["threshold"]
+        np.set_printoptions(threshold=300)
         df["tokenized_texts"] = [
             # use np array, as str method of arrays will include newlines for better visualization
             # Then, remove the array() part
@@ -66,6 +68,7 @@ class Plots:
                 )
                 for input_ids in input_ids_labels
             ]
+        np.set_printoptions(threshold=np_threshold)
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
         df.to_parquet(path)
         return PlotData(path, encoding="df")
