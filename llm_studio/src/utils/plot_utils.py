@@ -1,7 +1,7 @@
 import html
 import re
 from dataclasses import dataclass
-from typing import List, Union
+from typing import List
 
 PLOT_ENCODINGS = ["image", "html", "df"]
 
@@ -96,3 +96,18 @@ def format_for_markdown_visualization(text: str) -> str:
         text = text.replace(f"<br />{x}", f"\n{x}")
         text = text.replace(f"{x}<br />", f"{x}\n")
     return text
+
+
+def list_to_string_representation(lst, num_chars=35, newline_tag="<br />"):
+    """
+    Create a string from a list, with newlines after num_chars characters.
+    """
+    x = []
+    sublist = []
+    for item in lst:
+        if len(str(item)) + len(", ".join(sublist)) > num_chars:
+            x.append(", ".join(sublist))
+            sublist = []
+        sublist.append(str(item))
+
+    return "[" + newline_tag.join(x) + "]"

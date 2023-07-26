@@ -12,30 +12,9 @@ from llm_studio.src.utils.plot_utils import (
     PlotData,
     format_for_markdown_visualization,
     get_line_separator_html,
+    list_to_string_representation,
     text_to_html,
 )
-
-
-def list_to_string(lst, num_chars=35):
-    """
-    Create a string from a list, with newlines
-    If the list is too long, split into multiple lines
-    Args:
-        lst:
-        num_chars:
-
-    Returns:
-
-    """
-    x = []
-    sublist = []
-    for item in lst:
-        if len(str(item)) + len(", ".join(sublist)) > num_chars:
-            x.append(", ".join(sublist))
-            sublist = []
-        sublist.append(str(item))
-
-    return "[" + "\n".join(x) + "]"
 
 
 class Plots:
@@ -56,7 +35,7 @@ class Plots:
         df["texts"] = df["texts"].apply(format_for_markdown_visualization)
 
         df["tokenized_texts"] = [
-            f"```\n{list_to_string(tokenizer.convert_ids_to_tokens(input_ids))}\n```"
+            list_to_string_representation(tokenizer.convert_ids_to_tokens(input_ids))
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
 
@@ -76,7 +55,9 @@ class Plots:
             )
 
             df["tokenized_target_texts"] = [
-                f"```\n{list_to_string(tokenizer.convert_ids_to_tokens(input_ids))}\n```"
+                list_to_string_representation(
+                    tokenizer.convert_ids_to_tokens(input_ids)
+                )
                 for input_ids in input_ids_labels
             ]
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
