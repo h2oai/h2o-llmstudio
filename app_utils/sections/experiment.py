@@ -900,14 +900,21 @@ async def experiment_display(q: Q) -> None:
         ui.tab(name="experiment/display/charts", label="Charts"),
         ui.tab(name="experiment/display/summary", label="Summary"),
     ]
-    if charts.get("df", dict()).get("train_data") is not None:
+    # html for legacy experiments
+    if (
+        charts.get("df", dict()).get("train_data") is not None
+        or charts.get("html", dict()).get("train_data") is not None
+    ):
         tabs += [
             ui.tab(
                 name="experiment/display/train_data_insights",
                 label="Train Data Insights",
             )
         ]
-    if charts.get("df", dict()).get("validation_predictions") is not None:
+    if (
+        charts.get("df", dict()).get("validation_predictions") is not None
+        or charts.get("html", dict()).get("validation_predictions") is not None
+    ):
         tabs += [
             ui.tab(
                 name="experiment/display/validation_prediction_insights",
@@ -1045,7 +1052,7 @@ async def insights_tab(charts, q):
                             min_widths=min_widths,
                             height="calc(100vh - 245px)",
                             max_char_length=5000,
-                            cell_overflow="tooltip",
+                            cell_overflow="wrap",
                         )
                     ],
                 )
