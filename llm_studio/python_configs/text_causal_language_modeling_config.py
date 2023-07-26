@@ -1,7 +1,7 @@
 import multiprocessing
 import os
 from dataclasses import dataclass, field
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 import torch
 
@@ -459,6 +459,23 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
 
 
 @dataclass
+class ConfigNLPCausalLMHF(DefaultConfig):
+    account_name: str = ""
+    model_name: str = ""
+
+    @property
+    def repo_id(self) -> Optional[str]:
+        if self.account_name != "" and self.model_name != "":
+            return f"{self.account_name}/{self.model_name}"
+        else:
+            return None
+
+    def __post_init__(self):
+        super().__post_init__()
+        self._visibility = {k: -1 for k in self.__dict__}
+
+
+@dataclass
 class ConfigProblemBase(DefaultConfig):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
@@ -483,6 +500,8 @@ class ConfigProblemBase(DefaultConfig):
         default_factory=ConfigNLPCausalLMEnvironment
     )
     logging: ConfigNLPCausalLMLogging = field(default_factory=ConfigNLPCausalLMLogging)
+
+    hf: ConfigNLPCausalLMHF = field(default_factory=ConfigNLPCausalLMHF)
 
     def __post_init__(self):
         super().__post_init__()
@@ -538,4 +557,5 @@ class ConfigProblemBase(DefaultConfig):
                 cfg_dict.get("environment", {})
             ),
             logging=ConfigNLPCausalLMLogging.from_dict(cfg_dict.get("logging", {})),
+            hf=ConfigNLPCausalLMHF.from_dict(cfg_dict.get("hf", {})),
         )

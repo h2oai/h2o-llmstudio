@@ -1032,12 +1032,11 @@ async def insights_tab(charts, q):
 
 async def summary_tab(experiment_id, q):
     experiment_df = get_experiments(q)
-    experiment_df = experiment_df[experiment_df.id == experiment_id]
+    input_dict = experiment_df[experiment_df.id == experiment_id].iloc[0].to_dict()
     items = []
     cfg = load_config_yaml(
         os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
     )
-    input_dict = experiment_df.iloc[0].to_dict()
 
     # experiment card
     card_name = "experiment/display/summary/experiment"
@@ -1101,12 +1100,12 @@ async def summary_tab(experiment_id, q):
     )
     q.client.delete_cards.add(card_name)
 
-    # scores card
-    card_name = "experiment/display/summary/scores"
+    # score card
+    card_name = "experiment/display/summary/score"
     q.page[card_name] = ui.form_card(
         box=ui.box(zone="first"),
         items=[
-            ui.separator("Scores"),
+            ui.separator("Score"),
             ui.stats(
                 [
                     ui.stat(
@@ -1120,7 +1119,9 @@ async def summary_tab(experiment_id, q):
             ui.stats(
                 [
                     ui.stat(
-                        value=str(input_dict["val metric"]),
+                        value="-"
+                        if input_dict["val metric"] in ["", "None", None]
+                        else str(input_dict["val metric"]),
                         label="Validation Score",
                     ),
                 ],
@@ -1185,10 +1186,9 @@ async def summary_tab(experiment_id, q):
     )
     q.client.delete_cards.add(card_name)
 
-    # todo: shall we really have this card? If so, we can read it from model card markdown file?
     # code card
-    content = get_experiment_summary_code_card(cfg=cfg)
     card_name = "experiment/display/summary/code"
+    content = get_experiment_summary_code_card(cfg=cfg)
     q.page[card_name] = ui.markdown_card(
         box=ui.box(zone="third"),
         title="",
@@ -1744,6 +1744,11 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             safe_serialization=q.client["default_safe_serialization"],
         )
 
+        # Updating Config HF attributes & # re-save
+        cfg.hf.account_name = user_id
+        cfg.hf.model_name = exp_name
+        save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
+
         # push pipeline to hub
         template_env = Environment(
             loader=FileSystemLoader(searchpath="llm_studio/src/")
@@ -1830,6 +1835,11 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
 def get_experiment_summary_code_card(cfg: ConfigProblemBase) -> str:
     with open("experiment_summary_code_template.md", "r") as f:
         text = f.read()
+
+    # Model repo
+    text = text.replace(
+        "{{repo_id}}", cfg.hf.repo_id if cfg.hf.repo_id else "account/model"
+    )
 
     # Versions
     text = text.replace("{{transformers_version}}", transformers.__version__)
