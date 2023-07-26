@@ -164,6 +164,8 @@ async def home(q: Q) -> None:
                 q=q,
                 df=df_viz,
                 name="experiment/list/table",
+                sortables=["val metric"],
+                numerics=["val metric"],
                 min_widths={
                     # "id": "50",
                     "name": "115",
@@ -173,8 +175,6 @@ async def home(q: Q) -> None:
                     "val metric": "85",
                 },
                 link_col="name",
-                numerics=["val metric"],
-                sortables=["val metric"],
                 height=table_height,
             ),
         ],

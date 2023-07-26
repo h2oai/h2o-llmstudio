@@ -70,6 +70,7 @@ def ui_table_from_df(
     sortables: list = None,
     filterables: list = None,
     searchables: list = None,
+    markdown_cells=None,
     numerics: list = None,
     times: list = None,
     tags: list = None,
@@ -84,10 +85,6 @@ def ui_table_from_df(
     height: str = None,
     checkbox_visibility: str = None,
     actions: dict = None,
-    # enables truncating the maximum length in characters of each cell on the
-    # server-side. Wave truncates on the client-side anyway, so truncating on
-    # the server side as well does not make a visible difference but we avoid
-    # sending excessive amounts of data.
     max_char_length: int = 500,
     cell_overflow="tooltip",
 ) -> Component:
@@ -103,6 +100,7 @@ def ui_table_from_df(
     times = times or []
     tags = tags or []
     progresses = progresses or []
+    markdown_cells = markdown_cells or []
     min_widths = min_widths or {}
     max_widths = max_widths or {}
 
@@ -119,10 +117,9 @@ def ui_table_from_df(
         cell_types[col] = ui.progress_table_cell_type(
             wave_theme.get_primary_color(q),
         )
-    for col in df.columns:
-        if col not in cell_types:
-            # enables rendering of code in wave table
-            cell_types[col] = ui.markdown_table_cell_type()
+    for col in markdown_cells:
+        # enables rendering of code in wave table
+        cell_types[col] = ui.markdown_table_cell_type()
 
     columns = [
         ui.table_column(
@@ -134,7 +131,7 @@ def ui_table_from_df(
             data_type="number"
             if col in numerics
             else ("time" if col in times else "string"),
-            cell_type=cell_types[col],
+            cell_type=cell_types[col] if col in cell_types else None,
             min_width=min_widths[col] if col in min_widths else None,
             max_width=max_widths[col] if col in max_widths else None,
             link=True if col == link_col else False,

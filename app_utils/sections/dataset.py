@@ -780,8 +780,8 @@ async def dataset_list_table(
                 df=df_viz,
                 name="dataset/list/table",
                 sortables=["train rows", "validation rows"],
-                searchables=[],
                 filterables=["name", "problem type"],
+                searchables=[],
                 min_widths=widths,
                 link_col="name",
                 height="calc(100vh - 245px)",
@@ -1067,8 +1067,8 @@ async def dataset_display(q: Q) -> None:
                     df=stats,
                     name="dataset/display/statistics/table",
                     sortables=list(stats.columns),
-                    height="calc(100vh - 265px)",
                     min_widths=widths,
+                    height="calc(100vh - 265px)",
                 )
             ]
         q.page["dataset/display/statistics"] = ui.form_card(

@@ -569,13 +569,13 @@ def get_experiment_table(
         df=df_viz,
         name="experiment/list/table",
         sortables=["val metric"],
-        searchables=["name", "dataset"],
         filterables=["name", "dataset", "problem type", "metric", "status"],
+        searchables=["name", "dataset"],
+        numerics=["val metric"],
         tags=["status"],
         progresses=["progress"],
         min_widths=min_widths,
         link_col="name",
-        numerics=["val metric"],
         height=height,
         actions=actions_dict,
     )
@@ -1037,13 +1037,16 @@ async def insights_tab(charts, q):
                             q=q,
                             df=df,
                             name=f"experiment/display/charts/{k1}_{k2}",
-                            searchables=list(df.columns),
                             sortables=["metrics"],
-                            height="calc(100vh - 245px)",
+                            markdown_cells=[
+                                col for col in df.columns if col not in ["metrics"]
+                            ],
+                            searchables=list(df.columns),
                             downloadable=True,
                             resettable=True,
-                            cell_overflow="wrap",
+                            height="calc(100vh - 245px)",
                             max_char_length=5000,
+                            cell_overflow="wrap",
                         )
                     ],
                 )
