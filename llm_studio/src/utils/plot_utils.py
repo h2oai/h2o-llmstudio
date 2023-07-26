@@ -98,7 +98,7 @@ def format_for_markdown_visualization(text: str) -> str:
     return text
 
 
-def list_to_markdown_representation(lst, num_chars=35, newline_tag="<br />"):
+def list_to_markdown_representation(lst, num_chars=65, newline_tag="<br />"):
     """
     Create a string from a list, with newlines after num_chars characters.
     """

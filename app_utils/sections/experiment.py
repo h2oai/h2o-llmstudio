@@ -1052,7 +1052,7 @@ async def insights_tab(charts, q):
                             min_widths=min_widths,
                             height="calc(100vh - 245px)",
                             max_char_length=5000,
-                            cell_overflow="wrap",
+                            cell_overflow="tooltip",
                         )
                     ],
                 )
