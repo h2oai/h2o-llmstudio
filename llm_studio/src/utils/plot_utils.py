@@ -37,12 +37,9 @@ def text_to_html(text: str) -> str:
     return html.escape(text).replace("\n", "<br>")
 
 
-def format_to_html(color, word, opacity):
-    return '<mark style="background-color: {color}; opacity:{opacity}; \
-    line-height:1.75"><font color="white"> {word}\
-                            </font></mark>'.format(
-        color=color, word=html.escape(word), opacity=opacity
-    )
+#
+def format_to_markdown(color, word):
+    return f"""<span style="color:{color}">{word}</span>."""
 
 
 def decode_bytes(chunks: List[bytes]):
@@ -86,23 +83,23 @@ def color_code_tokenized_text(tokenized_text_list: List[Union[str, bytes]], toke
         tokenizer: tokenizer
 
     Returns:
-        HTML string with color coded tokens
+        Markdown string with color coded tokens
     """
 
     if isinstance(tokenized_text_list[0], bytes):
         tokenized_text_list = decode_bytes(tokenized_text_list)  # type: ignore
 
-    html_text = ""
+    markdown_text = ""
     for token in tokenized_text_list:
         if token == tokenizer.sep_token:
-            html_text += format_to_html("blue", token, 1.0)
+            markdown_text += format_to_markdown("blue", token)
         elif token == tokenizer.cls_token:
-            html_text += format_to_html("green", token, 1.0)
+            markdown_text += format_to_markdown("green", token)
         elif token == tokenizer.pad_token:
-            html_text += format_to_html("black", token, 0.7)
+            markdown_text += format_to_markdown("black", token)
         else:
-            html_text += format_to_html("black", token, 1.0)
-    return html_text
+            markdown_text += token
+    return markdown_text
 
 
 def format_for_markdown_visualization(text: str) -> str:
