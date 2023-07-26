@@ -98,7 +98,7 @@ def format_for_markdown_visualization(text: str) -> str:
     return text
 
 
-def list_to_string_representation(lst, num_chars=35, newline_tag="<br />"):
+def list_to_markdown_representation(lst, num_chars=35, newline_tag="<br />"):
     """
     Create a string from a list, with newlines after num_chars characters.
     """
@@ -108,6 +108,6 @@ def list_to_string_representation(lst, num_chars=35, newline_tag="<br />"):
         if len(str(item)) + len(", ".join(sublist)) > num_chars:
             x.append(", ".join(sublist))
             sublist = []
-        sublist.append(str(item))
+        sublist.append(html.escape(str(item)))
 
     return "[" + newline_tag.join(x) + "]"

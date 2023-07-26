@@ -12,7 +12,7 @@ from llm_studio.src.utils.plot_utils import (
     PlotData,
     format_for_markdown_visualization,
     get_line_separator_html,
-    list_to_string_representation,
+    list_to_markdown_representation,
     text_to_html,
 )
 
@@ -35,7 +35,7 @@ class Plots:
         df["texts"] = df["texts"].apply(format_for_markdown_visualization)
 
         df["tokenized_texts"] = [
-            list_to_string_representation(tokenizer.convert_ids_to_tokens(input_ids))
+            list_to_markdown_representation(tokenizer.convert_ids_to_tokens(input_ids))
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
 
@@ -55,7 +55,7 @@ class Plots:
             )
 
             df["tokenized_target_texts"] = [
-                list_to_string_representation(
+                list_to_markdown_representation(
                     tokenizer.convert_ids_to_tokens(input_ids)
                 )
                 for input_ids in input_ids_labels
