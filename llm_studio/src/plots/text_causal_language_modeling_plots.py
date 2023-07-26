@@ -10,7 +10,6 @@ from llm_studio.src.utils.data_utils import (
 )
 from llm_studio.src.utils.plot_utils import (
     PlotData,
-    color_code_tokenized_text,
     format_for_markdown_visualization,
     get_line_separator_html,
     text_to_html,
@@ -35,9 +34,7 @@ class Plots:
         df["texts"] = df["texts"].apply(format_for_markdown_visualization)
 
         df["tokenized_texts"] = [
-            color_code_tokenized_text(
-                tokenizer.convert_ids_to_tokens(input_ids), tokenizer
-            )
+            f"```\n{tokenizer.convert_ids_to_tokens(input_ids)}\n```"
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
 
@@ -57,10 +54,7 @@ class Plots:
             )
 
             df["tokenized_target_texts"] = [
-                color_code_tokenized_text(
-                    tokenizer.convert_ids_to_tokens(input_ids),
-                    tokenizer,
-                )
+                f"```\n{tokenizer.convert_ids_to_tokens(input_ids)}\n```"
                 for input_ids in input_ids_labels
             ]
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")

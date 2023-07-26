@@ -900,23 +900,20 @@ async def experiment_display(q: Q) -> None:
         ui.tab(name="experiment/display/charts", label="Charts"),
         ui.tab(name="experiment/display/summary", label="Summary"),
     ]
-    if (
-        "df" in charts
-        and "train_data" in charts["df"]
-        and charts["df"]["train_data"] is not None
-    ):
+    if charts.get("df", dict()).get("train_data") is not None:
         tabs += [
             ui.tab(
                 name="experiment/display/train_data_insights",
                 label="Train Data Insights",
             )
         ]
-    tabs += [
-        ui.tab(
-            name="experiment/display/validation_prediction_insights",
-            label="Validation Prediction Insights",
-        )
-    ]
+    if charts.get("df", dict()).get("validation_predictions") is not None:
+        tabs += [
+            ui.tab(
+                name="experiment/display/validation_prediction_insights",
+                label="Validation Prediction Insights",
+            )
+        ]
 
     tabs += [
         ui.tab(name="experiment/display/logs", label="Logs"),
