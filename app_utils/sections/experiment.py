@@ -1025,8 +1025,9 @@ async def insights_tab(charts, q):
 
             elif k1 == "df":
                 df = pd.read_parquet(v2)
-                # limit to 5000 rows, still renders fast in wave
-                df = df.iloc[:5000]
+                # limit to 2000 rows, still renders fast in wave
+                df = df.iloc[:2000]
+                min_widths = {col: "350" for col in df.columns if "text" in col}
                 q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.form_card(
                     box="first",
                     items=[
@@ -1041,6 +1042,7 @@ async def insights_tab(charts, q):
                             searchables=list(df.columns),
                             downloadable=True,
                             resettable=True,
+                            min_widths=min_widths,
                             height="calc(100vh - 245px)",
                             max_char_length=5000,
                             cell_overflow="wrap",
