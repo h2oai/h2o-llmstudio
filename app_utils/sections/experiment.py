@@ -41,6 +41,9 @@ from app_utils.utils import (
     start_experiment,
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
+from llm_studio.python_configs.text_causal_language_modeling_config import (
+    ConfigProblemBase,
+)
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
     get_parent_element,
@@ -1184,46 +1187,32 @@ async def summary_tab(experiment_id, q):
 
     # todo: shall we really have this card? If so, we can read it from model card markdown file?
     # code card
-    device_map = '{"": "cuda:0"}'
-    content = f"""
-To use the model with the transformers library on a machine with GPUs, first make sure you have the transformers, accelerate, torch and einops libraries installed.
-```python\n
-pip install transformers==4.29.2
-pip install accelerate==0.19.0
-pip install torch==2.0.0
-pip install einops==0.6.1
-```
-
-```python\n
-import torch
-from transformers import pipeline
-
-generate_text = pipeline(
-    model="h2oai/h2ogpt-gm-oasst1-en-1024-open-llama-7b-preview-400bt",
-    torch_dtype=torch.{cfg.architecture.backbone_dtype},
-    trust_remote_code=True,
-    use_fast=False,
-    device_map={device_map},
-)
-
-res = generate_text(
-    "Why is drinking water so healthy?",
-    min_new_tokens=2,
-    max_new_tokens=512,
-    do_sample=False,
-    num_beams=1,
-    temperature=float(0.3),
-    repetition_penalty=float(1.2),
-    renormalize_logits=True
-)
-print(res[0]["generated_text"])
-
-```
-"""
+    content = get_experiment_summary_code_card(cfg=cfg)
     card_name = "experiment/display/summary/code"
     q.page[card_name] = ui.markdown_card(
         box=ui.box(zone="third"),
-        title="",
+        title="
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        ",
         content=content,
     )
     q.client.delete_cards.add(card_name)
@@ -1857,3 +1846,26 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
         else "",
     )
     return card
+
+
+def get_experiment_summary_code_card(cfg: ConfigProblemBase) -> str:
+    with open("experiment_summary_code_template.md", "r") as f:
+        text = f.read()
+
+    # Versions
+    text = text.replace("{{transformers_version}}", transformers.__version__)
+    text = text.replace("{{einops_version}}", einops.__version__)
+    text = text.replace("{{accelerate_version}}", accelerate.__version__)
+    text = text.replace("{{torch_version}}", torch.__version__)
+
+    # Configs
+    text = text.replace("{{min_new_tokens}}", str(cfg.prediction.min_length_inference))
+    text = text.replace("{{max_new_tokens}}", str(cfg.prediction.max_length_inference))
+    text = text.replace("{{do_sample}}", str(cfg.prediction.do_sample))
+    text = text.replace("{{num_beams}}", str(cfg.prediction.num_beams))
+    text = text.replace("{{temperature}}", str(cfg.prediction.temperature))
+    text = text.replace(
+        "{{repetition_penalty}}", str(cfg.prediction.repetition_penalty)
+    )
+
+    return text
