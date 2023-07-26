@@ -11,8 +11,9 @@ from llm_studio.src.utils.data_utils import (
 from llm_studio.src.utils.plot_utils import (
     PlotData,
     color_code_tokenized_text,
+    format_for_markdown_visualization,
     get_line_separator_html,
-    text_to_html, format_for_markdown_visualization,
+    text_to_html,
 )
 
 
