@@ -197,24 +197,23 @@ def deepspeed_initialize(
         "zero_optimization": {
             "stage": 3,
             "mics_shard_size": cfg.environment._world_size,
-#             "offload_optimizer": {"device": "cpu"},
-#             "offload_param": {"device": "cpu", "pin_memory": True},
             "overlap_comm": False,
             "contiguous_gradients": True,
             "reduce_bucket_size": model_hidden_size * model_hidden_size,
             "stage3_prefetch_bucket_size": 0.9 * model_hidden_size * model_hidden_size,
             "stage3_param_persistence_threshold": 10 * model_hidden_size,
-            "stage3_max_live_parameters": 1e9,
-            "stage3_max_reuse_distance": 1e9,
+            "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,
+            "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,
         },
         "steps_per_print": 2000,
         "train_batch_size": cfg.training.batch_size * cfg.environment._world_size,
         "train_micro_batch_size_per_gpu": 1,
         "wall_clock_breakdown": False,
     }
-
-    # from transformers.deepspeed import HfDeepSpeedConfig
-    #     dschf = HfDeepSpeedConfig(ds_config)  # keep this object alive
+    if cfg.environment.deepspeed_offload_optimizer:
+        ds_config["zero_optimization"]["offload_optimizer"] = {"device": "cpu", "pin_memory": True}
+#     if cfg.environment.deepspeed_offload_param:  ### RuntimeError: Tensors must be CUDA and dense
+#         ds_config["zero_optimization"]["offload_param"] = {"device": "cpu", "pin_memory": True}
 
     model, optimizer, train_dataloader, scheduler = deepspeed.initialize(
         model=model,
