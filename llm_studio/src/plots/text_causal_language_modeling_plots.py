@@ -17,6 +17,20 @@ from llm_studio.src.utils.plot_utils import (
 )
 
 
+def list_to_string(lst, num_chars=300):
+    # create string from list, with newlines
+    # if list is too long, split into multiple lines
+    x = []
+    sublist = []
+    for item in lst:
+        if len(str(item)) + len(sublist) > num_chars:
+            x.append(" ".join(sublist))
+            sublist = []
+        sublist.append(str(item))
+
+    return "\n".join(x)
+
+
 class Plots:
     NUM_TEXTS: int = 20
 
@@ -34,14 +48,8 @@ class Plots:
         )
         df["texts"] = df["texts"].apply(format_for_markdown_visualization)
 
-        np_threshold = np.get_printoptions()["threshold"]
-        np.set_printoptions(threshold=300)
         df["tokenized_texts"] = [
-            # use np array, as str method of arrays will include newlines for better visualization
-            # Then, remove the array() part
-            f"```\n{np.array(tokenizer.convert_ids_to_tokens(input_ids))}\n```".replace(
-                "array(", ""
-            ).replace(")", "")
+            f"```\n{list_to_string(tokenizer.convert_ids_to_tokens(input_ids))}\n```"
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
 
@@ -61,14 +69,9 @@ class Plots:
             )
 
             df["tokenized_target_texts"] = [
-                f"```\n{np.array(tokenizer.convert_ids_to_tokens(input_ids))}\n```".replace(
-                    "array(", ""
-                ).replace(
-                    ")", ""
-                )
+                f"```\n{list_to_string(tokenizer.convert_ids_to_tokens(input_ids))}\n```"
                 for input_ids in input_ids_labels
             ]
-        np.set_printoptions(threshold=np_threshold)
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
         df.to_parquet(path)
         return PlotData(path, encoding="df")
