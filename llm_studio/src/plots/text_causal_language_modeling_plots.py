@@ -1,6 +1,7 @@
 import os
 from typing import Any, Dict
 
+import numpy as np
 import pandas as pd
 
 from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
@@ -34,7 +35,7 @@ class Plots:
         df["texts"] = df["texts"].apply(format_for_markdown_visualization)
 
         df["tokenized_texts"] = [
-            f"```\n{tokenizer.convert_ids_to_tokens(input_ids)}\n```"
+            f"```\n{np.array(tokenizer.convert_ids_to_tokens(input_ids))}\n```"
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
 
@@ -54,7 +55,7 @@ class Plots:
             )
 
             df["tokenized_target_texts"] = [
-                f"```\n{tokenizer.convert_ids_to_tokens(input_ids)}\n```"
+                f"```\n{np.array(tokenizer.convert_ids_to_tokens(input_ids))}\n```"
                 for input_ids in input_ids_labels
             ]
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
