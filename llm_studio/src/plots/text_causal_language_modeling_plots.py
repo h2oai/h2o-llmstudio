@@ -35,7 +35,11 @@ class Plots:
         df["texts"] = df["texts"].apply(format_for_markdown_visualization)
 
         df["tokenized_texts"] = [
-            f"```\n{np.array(tokenizer.convert_ids_to_tokens(input_ids))}\n```"
+            # use np array, as str method of arrays will include newlines for better visualization
+            # Then, remove the array() part
+            f"```\n{np.array(tokenizer.convert_ids_to_tokens(input_ids))}\n```".replace(
+                "array(", ""
+            ).replace(")", "")
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
 
@@ -55,7 +59,11 @@ class Plots:
             )
 
             df["tokenized_target_texts"] = [
-                f"```\n{np.array(tokenizer.convert_ids_to_tokens(input_ids))}\n```"
+                f"```\n{np.array(tokenizer.convert_ids_to_tokens(input_ids))}\n```".replace(
+                    "array(", ""
+                ).replace(
+                    ")", ""
+                )
                 for input_ids in input_ids_labels
             ]
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
