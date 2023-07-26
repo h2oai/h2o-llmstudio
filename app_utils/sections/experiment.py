@@ -901,9 +901,9 @@ async def experiment_display(q: Q) -> None:
         ui.tab(name="experiment/display/summary", label="Summary"),
     ]
     if (
-        "html" in charts
-        and "train_data" in charts["html"]
-        and charts["html"]["train_data"] is not None
+        "df" in charts
+        and "train_data" in charts["df"]
+        and charts["df"]["train_data"] is not None
     ):
         tabs += [
             ui.tab(
