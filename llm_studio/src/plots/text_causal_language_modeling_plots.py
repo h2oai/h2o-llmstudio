@@ -24,14 +24,17 @@ class Plots:
     def plot_batch(cls, batch, cfg) -> PlotData:
         tokenizer = get_tokenizer(cfg)
 
-        texts = [
-            tokenizer.decode(input_ids, skip_special_tokens=False)
-            for input_ids in batch["input_ids"].detach().cpu().numpy()
-        ]
+        df = pd.DataFrame(
+            dict(
+                texts=[
+                    tokenizer.decode(input_ids, skip_special_tokens=False)
+                    for input_ids in batch["input_ids"].detach().cpu().numpy()
+                ]
+            )
+        )
+        df["texts"] = df["texts"].apply(format_for_markdown_visualization)
 
-        texts = [text_to_html(text) for text in texts]
-
-        tokenized_texts = [
+        df["tokenized_texts"] = [
             color_code_tokenized_text(
                 tokenizer.convert_ids_to_tokens(input_ids), tokenizer
             )
@@ -45,48 +48,24 @@ class Plots:
                 for input_ids in input_ids_labels
             ]
 
-            target_texts = [
+            df["target_texts"] = [
                 tokenizer.decode(input_ids, skip_special_tokens=False)
                 for input_ids in input_ids_labels
             ]
+            df["target_texts"] = df["target_texts"].apply(
+                format_for_markdown_visualization
+            )
 
-            tokenized_target_texts = [
+            df["tokenized_target_texts"] = [
                 color_code_tokenized_text(
                     tokenizer.convert_ids_to_tokens(input_ids),
                     tokenizer,
                 )
                 for input_ids in input_ids_labels
             ]
-
-        if cfg.dataset.mask_prompt_labels:
-            markup = ""
-        else:
-            markup = (
-                """
-            <div padding: 10px;">
-            <p style="font-size: 20px;">
-            <b>Note:</b> <br> Model is jointly trained on prompt + answer text.
-            If you only want to use the answer text as a target,
-            restart the experiment and enable <i> Mask Prompt Labels </i>
-            </p>
-            </div>
-            """
-                + get_line_separator_html()
-            )
-        for i in range(len(tokenized_texts)):
-            markup += f"<p><strong>Input Text: </strong>{texts[i]}</p>\n"
-            markup += (
-                "<p><strong>Tokenized Input Text: "
-                f"</strong>{tokenized_texts[i]}</p>\n"
-            )
-            if "labels" in batch.keys():
-                markup += "<p><strong>Target Text: " f"</strong>{target_texts[i]}</p>\n"
-                markup += (
-                    "<p><strong>Tokenized Target Text:"
-                    f" </strong>{tokenized_target_texts[i]}</p>\n"
-                )
-            markup += get_line_separator_html()
-        return PlotData(markup, encoding="html")
+        path = os.path.join(cfg.output_directory, "batch_viz.parquet")
+        df.to_parquet(path)
+        return PlotData(path, encoding="df")
 
     @classmethod
     def plot_data(cls, cfg) -> PlotData:
