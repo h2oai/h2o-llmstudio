@@ -16,7 +16,7 @@ from llm_studio.src.utils.plot_utils import (
 )
 
 
-def list_to_string(lst, num_chars=40):
+def list_to_string(lst, num_chars=35):
     """
     Create a string from a list, with newlines
     If the list is too long, split into multiple lines
