@@ -208,7 +208,8 @@ def run_train(
             cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
         )
 
-    if cfg.training.use_rlhf:
+    is_rlhf = getattr(cfg.training, "use_rlhf")
+    if is_rlhf:
         # initialize trainer
         tokenizer = get_tokenizer(cfg)
         ppo_trainer = PPOTrainer(
@@ -269,7 +270,7 @@ def run_train(
                 plot = cfg.logging.plots_class.plot_batch(batch=batch, cfg=cfg)
                 log_plot(cfg, plot, "train_data")
 
-            if cfg.training.use_rlhf:
+            if is_rlhf:
                 with torch.no_grad():
                     logger.debug("Rollout: Generating response from active model")
                     output_dict = {}
@@ -384,7 +385,7 @@ def run_train(
                     scheduler.step()
 
             if cfg.environment._local_rank == 0:
-                if cfg.training.use_rlhf:
+                if is_rlhf:
                     # additional RLHF specific logging
                     for key in output_dict.keys():
                         if isinstance(output_dict[key], (float, int)) or (
@@ -590,11 +591,12 @@ def run(cfg: Any) -> None:
         )
 
     # Prepare model
+    is_rlhf = getattr(cfg.training, "use_rlhf")
     with torch.device(cfg.environment._device):
         model = cfg.architecture.model_class(cfg)
         check_disk_space(model, cfg.output_directory)
 
-        if cfg.training.use_rlhf:
+        if is_rlhf:
             logger.info("Using RLHF - Loading reward model")
             reward_model = cfg.architecture.reward_model_class(cfg)
             reward_model.eval()
@@ -607,18 +609,13 @@ def run(cfg: Any) -> None:
             load_checkpoint(cfg, model, strict=cfg.training.epochs == -1)
 
     model.to(cfg.environment._device)
-    if cfg.training.use_rlhf:
+    if is_rlhf:
         if cfg.training.offload_reward_model:
             reward_model.to("cpu")
         else:
             reward_model.to(cfg.environment._device)
 
-    if cfg.architecture.force_embedding_gradients and cfg.training.use_rlhf:
-        raise LLMTrainingException(
-            "RLHF is not supported with force_embedding_gradients."
-        )
-
-    if cfg.architecture.force_embedding_gradients:
+    if getattr(cfg.architecture, "force_embedding_gradients"):
         for module in model.modules():
             if isinstance(module, torch.nn.Embedding):
                 for param in module.parameters():

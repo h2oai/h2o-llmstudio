@@ -8,7 +8,11 @@ from transformers.utils import logging as transformers_logging
 
 from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
-from llm_studio.src.utils.modeling_utils import create_nlp_backbone, TokenStoppingCriteria, prepare_lora
+from llm_studio.src.utils.modeling_utils import (
+    TokenStoppingCriteria,
+    create_nlp_backbone,
+    prepare_lora,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -72,20 +76,6 @@ class Model(nn.Module):
             ]
         )
 
-        # The KL-div estimation assumes sampling and specific settings
-        if self.training and cfg.training.use_rlhf:
-            do_sample = True
-            temperature = cfg.training.ppo_generate_temperature
-            top_k = 0.0
-            top_p = 1.0
-            repetition_penalty = 1.0
-        else:
-            do_sample = cfg.prediction.do_sample
-            temperature = float(cfg.prediction.temperature)
-            top_k = cfg.prediction.top_k
-            top_p = float(cfg.prediction.top_p)
-            repetition_penalty = float(cfg.prediction.repetition_penalty)
-
         # force to use cache and disable gradient checkpointing if enabled
         self.backbone.config.use_cache = True
         if self.cfg.architecture.gradient_checkpointing:
@@ -98,12 +88,12 @@ class Model(nn.Module):
             generation_config=self.backbone.generation_config,
             min_new_tokens=cfg.prediction.min_length_inference,
             max_new_tokens=cfg.prediction.max_length_inference,
-            do_sample=do_sample,
+            do_sample=(cfg.prediction.do_sample),
             num_beams=cfg.prediction.num_beams,
-            temperature=temperature,
-            repetition_penalty=repetition_penalty,
-            top_k=top_k,
-            top_p=top_p,
+            temperature=(float(cfg.prediction.temperature)),
+            repetition_penalty=(float(cfg.prediction.repetition_penalty)),
+            top_k=(cfg.prediction.top_k),
+            top_p=(float(cfg.prediction.top_p)),
             stopping_criteria=stopping_criteria,
             renormalize_logits=True,
             return_dict_in_generate=False,

@@ -100,11 +100,6 @@ class Model(nn.Module):
             self.backbone.config.use_cache = False
 
         outputs: Dict = {}
-        kwargs = {}
-
-        if self.training and self.cfg.training.use_rlhf:
-            kwargs["output_hidden_states"] = True
-
         mask_key = "attention_mask"
         pad_keys = [
             "input_ids",
@@ -125,7 +120,7 @@ class Model(nn.Module):
         output = self.backbone(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
-            **kwargs,
+            output_hidden_states=True,
         )
 
         if "labels" in batch:

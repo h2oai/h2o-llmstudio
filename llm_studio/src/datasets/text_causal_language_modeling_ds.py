@@ -397,9 +397,9 @@ class CustomDataset(Dataset):
             # eos_token may be equal to pad_token. Add the label back manually.
             labels[-1] = self.tokenizer.eos_token_id
         if self.cfg.tokenizer.max_length < len(input_ids):
-            labels = labels[-self.cfg.tokenizer.max_length:]
+            labels = labels[-self.cfg.tokenizer.max_length :]
         sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), -100)
-        sample["labels"][-len(labels):] = labels
+        sample["labels"][-len(labels) :] = labels
         return sample
 
     def get_encodings(self, idx):

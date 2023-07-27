@@ -158,7 +158,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     evaluate_before_training: bool = False
     train_validation_data: bool = False
 
-    use_rlhf: bool = False
     reward_model: str = "OpenAssistant/reward-model-deberta-v3-large-v2"
     adaptive_kl_control: bool = True
     initial_kl_coefficient: float = 0.2
@@ -250,27 +249,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
             ["train_validation_data"],
             [Dependency(key="save_best_checkpoint", value=False, is_set=True)],
         )
-        self._nesting.add(
-            [
-                "reward_model",
-                "differential_learning_rate",
-                "adaptive_kl_control",
-                "initial_kl_coefficient",
-                "kl_target",
-                "kl_horizon",
-                "advantages_gamma",
-                "advantages_lambda",
-                "ppo_clip_policy",
-                "ppo_clip_value",
-                "ppo_generate_temperature",
-                "scaling_factor_value_loss",
-                "ppo_epochs",
-                "ppo_batch_size",
-                "offload_reward_model",
-            ],
-            [Dependency(key="use_rlhf", value=False, is_set=False)],
-        )
-
 
         ####
         self._visibility["lora"] = -1
@@ -305,7 +283,6 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
 
     backbone_dtype: str = "float16"
     gradient_checkpointing: bool = True
-    force_embedding_gradients: bool = False
     intermediate_dropout: float = 0
     pretrained_weights: str = ""
 
@@ -317,11 +294,6 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
             allow_custom=False,
         )
         self._possible_values["intermediate_dropout"] = (0, 0.5, 0.05)
-
-        self._nesting.add(
-            ["force_embedding_gradients"],
-            [Dependency(key="lora", value=False, is_set=False)],
-        )
 
         self._visibility["model_class"] = -1
         self._visibility["reward_model_class"] = -1
@@ -364,6 +336,15 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     num_history: int = 4
 
     def __post_init__(self):
+        # Need to switch to
+        #############################
+        do_sample = True
+        temperature = cfg.training.ppo_generate_temperature
+        top_k = 0.0
+        top_p = 1.0
+        repetition_penalty = 1.0
+        ########################
+
         super().__post_init__()
         self._possible_values["metric"] = self.metric_class.names()
 
