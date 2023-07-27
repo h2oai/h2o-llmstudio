@@ -40,9 +40,6 @@ from app_utils.utils import (
     start_experiment,
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
-from llm_studio.python_configs.text_causal_language_modeling_config import (
-    ConfigProblemBase,
-)
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
     load_config_py,
@@ -1829,7 +1826,7 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
     return card
 
 
-def get_experiment_summary_code_card(cfg: ConfigProblemBase) -> str:
+def get_experiment_summary_code_card(cfg) -> str:
     with open("experiment_summary_code_template.md", "r") as f:
         text = f.read()
 
