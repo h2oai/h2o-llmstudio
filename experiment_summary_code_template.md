@@ -2,17 +2,20 @@
 
 To use the model with the <b>`transformers`</b> library on a machine with GPUs:
 - First, push the model to a huggingface repo by clicking the <b>Push checkpoint to huggingface</b> button below
-- Make sure you have the <b>`transformers`</b>, <b>`accelerate`</b> and <b>`torch`</b> libraries installed in the machine's environment
+- Make sure you have the <b>`transformers`</b> library installed in the machine's environment
 
 ```bash
 pip install transformers=={{transformers_version}}
-pip install einops=={{einops_version}}
-pip install accelerate=={{accelerate_version}}
-pip install torch=={{torch_version}}
 ```
 - Pass model path from the huggingface repo to the following pipeline
+- Also make sure you are providing your huggingface token to the pipeline if the model is lying in a private repo.
+   - Either leave <b>token=True</b> in the <b>pipeline</b> and login to hugginface_hub by running
+   ```python
+   import huggingface_hub
+   huggingface_hub.login(<ACCES_TOKEN>)
+   ```
+   - Or directly pass your <ACCES_TOKEN> to <b>token</b> in the <b>pipeline</b>
 ```python
-import torch
 from transformers import pipeline
 
 generate_text = pipeline(
@@ -21,6 +24,7 @@ generate_text = pipeline(
     trust_remote_code=True,
     use_fast={{use_fast}},
     device_map={"": "cuda:0"},
+    token=True,
 )
 
 res = generate_text(

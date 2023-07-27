@@ -1844,6 +1844,7 @@ def get_experiment_summary_code_card(cfg) -> str:
     # Configs
     text = text.replace("{{min_new_tokens}}", str(cfg.prediction.min_length_inference))
     text = text.replace("{{max_new_tokens}}", str(cfg.prediction.max_length_inference))
+    text = text.replace("{{use_fast}}", str(cfg.tokenizer.use_fast))
     text = text.replace("{{do_sample}}", str(cfg.prediction.do_sample))
     text = text.replace("{{num_beams}}", str(cfg.prediction.num_beams))
     text = text.replace("{{temperature}}", str(cfg.prediction.temperature))
