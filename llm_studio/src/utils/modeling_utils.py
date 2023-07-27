@@ -21,7 +21,6 @@ from tqdm import tqdm
 from transformers import AutoConfig, AutoModel, BitsAndBytesConfig, StoppingCriteria
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
-from llm_studio.src.models.text_causal_language_modeling_model import logger
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
 from llm_studio.src.utils.data_utils import cat_batches, get_inference_batch_size
