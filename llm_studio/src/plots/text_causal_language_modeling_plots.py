@@ -60,6 +60,10 @@ class Plots:
                 )
                 for input_ids in input_ids_labels
             ]
+
+            df = df[
+                ["texts", "target_texts", "tokenized_texts", "tokenized_target_texts"]
+            ]
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
         df.to_parquet(path)
         return PlotData(path, encoding="df")
