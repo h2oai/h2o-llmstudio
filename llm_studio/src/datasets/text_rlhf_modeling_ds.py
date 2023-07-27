@@ -38,9 +38,9 @@ class CustomDataset(CausalLMCustomDataset):
 
         rlhf_is_in_training_mode = self.cfg.training.use_rlhf and self.mode == "train"
         if not rlhf_is_in_training_mode:  # no labels required for RLHF during training
-            sample.update(self.get_labels(encodings, input_ids))
+            sample.update(self.get_labels(encodings))
 
-        self.more_stuff(encodings, input_ids, sample, system_encoding)
+        self.pad_and_add_prompt_encoding(input_ids, encodings, sample, system_encoding)
         return sample
 
     def get_reward_model_parent_prompt_text(self, idx):

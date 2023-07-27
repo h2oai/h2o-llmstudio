@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Type
 
 import yaml
 
+from llm_studio.python_configs.base import ConfigProblemBaseABC
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 
 
@@ -169,7 +170,7 @@ def parse_cfg_dataclass(cfg) -> List[Dict]:
     return items
 
 
-def save_config_yaml(path: str, cfg) -> None:
+def save_config_yaml(path: str, cfg: ConfigProblemBaseABC) -> None:
     """Saves config as yaml file
 
     Args:
@@ -182,9 +183,7 @@ def save_config_yaml(path: str, cfg) -> None:
     cfg_dict["llm_backbone"] = cfg.llm_backbone
     # Parse problem_type from config filename,
     # for example: text_causal_language_modeling
-    cfg_dict["problem_type"] = (
-        type(cfg).__dict__["__module__"].split(".")[-1].replace("_config", "")
-    )
+    cfg_dict["problem_type"] = cfg.problem_type
     with open(path, "w") as fp:
         yaml.dump(cfg_dict, fp, indent=4)
 
@@ -202,6 +201,10 @@ def load_config_yaml(path: str):
 
     if cfg_dict["problem_type"] == "text_causal_language_modeling":
         from llm_studio.python_configs.text_causal_language_modeling_config import (
+            ConfigProblemBase,
+        )
+    elif cfg_dict["problem_type"] == "text_rlhfl_modeling_config":
+        from llm_studio.python_configs.text_rlhfl_modeling_config import (
             ConfigProblemBase,
         )
     else:

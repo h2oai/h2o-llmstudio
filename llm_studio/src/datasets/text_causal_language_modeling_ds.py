@@ -343,11 +343,13 @@ class CustomDataset(Dataset):
         sample = dict()
         encodings, system_encoding = self.get_encodings(idx)
         input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
-        sample.update(self.get_labels(encodings, input_ids))
-        self.more_stuff(encodings, input_ids, sample, system_encoding)
+        sample.update(self.get_labels(encodings))
+        self.pad_and_add_prompt_encoding(input_ids, encodings, sample, system_encoding)
         return sample
 
-    def more_stuff(self, encodings, input_ids, sample, system_encoding):
+    def pad_and_add_prompt_encoding(
+        self, input_ids, encodings, sample, system_encoding
+    ):
         sample.update(
             self.pad_tokens(
                 input_ids,
@@ -377,9 +379,9 @@ class CustomDataset(Dataset):
         if sample["prompt_input_ids"][0] != self.tokenizer.pad_token_id:
             sample["prompt_input_ids"][: len(system_encoding)] = system_encoding
 
-    def get_labels(self, encodings, input_ids):
-        sample = dict()
-        labels = input_ids.clone()
+    def get_labels(self, encodings):
+        labels = torch.cat([torch.cat(encoding) for encoding in encodings]).clone()
+
         if self.cfg.dataset.mask_prompt_labels:
             prompt_mask = torch.cat(
                 [
@@ -396,9 +398,10 @@ class CustomDataset(Dataset):
         if self.cfg.dataset.add_eos_token_to_answer:
             # eos_token may be equal to pad_token. Add the label back manually.
             labels[-1] = self.tokenizer.eos_token_id
-        if self.cfg.tokenizer.max_length < len(input_ids):
+        if self.cfg.tokenizer.max_length < len(labels):
             labels = labels[-self.cfg.tokenizer.max_length :]
-        sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), -100)
+
+        sample = dict(labels=torch.full((self.cfg.tokenizer.max_length,), -100))
         sample["labels"][-len(labels) :] = labels
         return sample
 

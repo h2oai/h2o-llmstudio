@@ -176,3 +176,21 @@ class DefaultConfig:
                 f"Keys {set(d.keys()) - set(d_filtered.keys())} are not in the config."
             )
         return cls(**d_filtered)  # mypy: ignore
+
+
+@dataclass
+class ConfigProblemBaseABC(DefaultConfig):
+    experiment_name: str = None
+    llm_backbone: str = None
+    output_directory: str = None
+
+    def from_dict(cls, d: dict):
+        raise NotImplementedError
+
+    @property
+    def problem_type(self):
+        """
+        Returns the problem type of the config, that is the name of the python file
+        that defines the problem type.
+        """
+        return type(self).__dict__["__module__"].split(".")[-1].replace("_config", "")

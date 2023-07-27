@@ -1,21 +1,25 @@
-import os
 from dataclasses import dataclass, field
 from typing import Any
 
-import llm_studio.src.models.text_rlhf_language_modeling_model
-from llm_studio.python_configs.base import DefaultConfig
+import llm_studio.src.models.text_rlhf_modeling_model
 from llm_studio.python_configs.text_causal_language_modeling_config import (
-    ConfigNLPCausalLMTraining,
-    ConfigNLPCausalLMArchitecture,
-    ConfigNLPCausalLMPrediction,
-    ConfigNLPCausalLMDataset,
-    ConfigNLPCausalLMTokenizer,
     ConfigNLPAugmentation,
+    ConfigNLPCausalLMArchitecture,
+    ConfigNLPCausalLMDataset,
     ConfigNLPCausalLMEnvironment,
     ConfigNLPCausalLMLogging,
+    ConfigNLPCausalLMPrediction,
+    ConfigNLPCausalLMTokenizer,
+    ConfigNLPCausalLMTraining,
+)
+from llm_studio.python_configs.text_causal_language_modeling_config import (
+    ConfigProblemBase,
+)
+from llm_studio.python_configs.text_causal_language_modeling_config import (
+    ConfigProblemBase as TextCausalLMConfigProblemBase,
 )
 from llm_studio.src import possible_values
-from llm_studio.src.datasets.text_rlhf_language_modeling_ds import CustomDataset
+from llm_studio.src.datasets.text_rlhf_modeling_ds import CustomDataset
 from llm_studio.src.metrics import text_causal_language_modeling_metrics
 from llm_studio.src.models import text_reward_model
 from llm_studio.src.utils.modeling_utils import generate_experiment_name
@@ -109,6 +113,7 @@ class ConfigRLHFPrediction(ConfigNLPCausalLMPrediction):
 
     def __post_init__(self):
         super().__post_init__()
+        # fixed for RLHF
         self._visibility["do_sample"] = -1
         self._visibility["repetition_penalty"] = -1
         self._visibility["top_p"] = -1
@@ -116,12 +121,7 @@ class ConfigRLHFPrediction(ConfigNLPCausalLMPrediction):
 
 
 @dataclass
-class ConfigProblemBase(DefaultConfig):
-    output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
-    experiment_name: str = field(default_factory=generate_experiment_name)
-    _parent_experiment: str = ""
-    llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
-
+class ConfigProblemBase(TextCausalLMConfigProblemBase):
     dataset: ConfigRLHDataset = field(default_factory=ConfigRLHDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
         default_factory=ConfigNLPCausalLMTokenizer
@@ -136,34 +136,6 @@ class ConfigProblemBase(DefaultConfig):
         default_factory=ConfigNLPCausalLMEnvironment
     )
     logging: ConfigNLPCausalLMLogging = field(default_factory=ConfigNLPCausalLMLogging)
-
-    def __post_init__(self):
-        super().__post_init__()
-
-        self._visibility["output_directory"] = -1
-
-        self._possible_values["llm_backbone"] = possible_values.String(
-            values=(
-                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-7b-v3",
-                "h2oai/h2ogpt-gm-oasst1-en-2048-open-llama-7b",
-                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-40b-v2",
-                "tiiuae/falcon-7b",
-                "tiiuae/falcon-40b",
-                "openlm-research/open_llama_3b",
-                "openlm-research/open_llama_7b",
-                "openlm-research/open_llama_13b",
-                "EleutherAI/gpt-j-6B",
-                "EleutherAI/gpt-neox-20b",
-                "facebook/opt-125m",
-                "facebook/opt-2.7b",
-                "EleutherAI/pythia-1b-deduped",
-                "EleutherAI/pythia-2.8b-deduped",
-                "EleutherAI/pythia-6.9b-deduped",
-                "EleutherAI/pythia-12b-deduped",
-                "togethercomputer/GPT-NeoXT-Chat-Base-20B",
-            ),
-            allow_custom=True,
-        )
 
     @classmethod
     def from_dict(cls, cfg_dict: dict):
