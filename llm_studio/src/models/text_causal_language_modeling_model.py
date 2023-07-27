@@ -1,122 +1,16 @@
 import logging
 from typing import Any, Dict
 
-import torch
-from peft import LoraConfig, get_peft_model
-from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
 from torch import nn
-from transformers import AutoModelForCausalLM, StoppingCriteria, StoppingCriteriaList
+from transformers import AutoModelForCausalLM, StoppingCriteriaList
 from transformers.generation.utils import GenerationMixin
 from transformers.utils import logging as transformers_logging
 
 from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
-from llm_studio.src.utils.modeling_utils import create_nlp_backbone
+from llm_studio.src.utils.modeling_utils import create_nlp_backbone, TokenStoppingCriteria, prepare_lora
 
 logger = logging.getLogger(__name__)
-
-
-class ValueHead(nn.Module):
-    """
-    The ValueHead class implements a head for GPT2 that returns a scalar for each
-    output token.
-
-    Based on the implementation of trl library:
-    https://github.com/lvwerra/trl/blob/main/trl/models/modeling_value_head.py
-    """
-
-    def __init__(self, config):
-        super().__init__()
-        if not hasattr(config, "summary_dropout_prob"):
-            summary_dropout_prob = 0.1
-        else:
-            summary_dropout_prob = config.summary_dropout_prob
-
-        self.dropout = (
-            nn.Dropout(summary_dropout_prob) if summary_dropout_prob else nn.Identity()
-        )
-
-        # some models such as OPT have a projection layer before the word embeddings
-        # e.g. OPT-350m
-        if hasattr(config, "word_embed_proj_dim"):
-            hidden_size = config.word_embed_proj_dim
-        else:
-            hidden_size = config.hidden_size
-
-        self.summary = nn.Linear(hidden_size, 1)
-
-    def forward(self, hidden_states):
-        output = self.dropout(hidden_states)
-
-        # For now force upcast in fp32 if needed. Let's keep the
-        # output in fp32 for numerical stability.
-        if output.dtype != self.summary.weight.dtype:
-            output = output.to(self.summary.weight.dtype)
-
-        output = self.summary(output)
-        return output
-
-
-class TokenStoppingCriteria(StoppingCriteria):
-    """
-    Stopping criteria based on tokens.
-    Will stop generation when each generated sample contains at least one of the
-    stop_word_ids.
-    """
-
-    def __init__(self, stop_word_ids, prompt_input_ids_len):
-        super().__init__()
-        self.prompt_input_ids_len = prompt_input_ids_len
-        if stop_word_ids is None:
-            stop_word_ids = []
-        self.stop_word_ids = stop_word_ids
-
-    def should_stop(
-        self,
-        generated_ids: torch.Tensor,
-        stop_word_id: torch.Tensor,
-    ):
-        if len(stop_word_id.shape) == 0:
-            return (
-                torch.mean(((generated_ids == stop_word_id).sum(1) > 0).float()) == 1
-            ).item()
-        else:
-            return (
-                self.get_num_vector_found_in_matrix_rows(stop_word_id, generated_ids)
-                == generated_ids.shape[0]
-            )
-
-    @staticmethod
-    def get_num_vector_found_in_matrix_rows(vector, matrix):
-        """
-        Count the number of times a vector is found in a matrix row.
-        If the vector is found in a row, the search stops and the next row is searched.
-        """
-        assert len(vector.shape) == 1
-        assert len(matrix.shape) == 2
-
-        found = 0
-        for row in matrix:
-            # stride through the vector
-            for i in range(len(row) - len(vector) + 1):
-                # check if the vector contains the tensor
-                if torch.all(row[i : i + len(vector)] == vector):
-                    found += 1
-                    break
-
-        return found
-
-    def __call__(self, input_ids: torch.Tensor, scores: torch.FloatTensor, **kwargs):
-        generated_ids: torch.Tensor = input_ids[:, self.prompt_input_ids_len :]
-        for stop_word_id in self.stop_word_ids:
-            if self.should_stop(generated_ids, stop_word_id.to(generated_ids.device)):
-                if generated_ids.shape[1] == 1:
-                    logger.warning(
-                        f"Stopping criteria triggered for {stop_word_id} at first "
-                        "generated token."
-                    )
-                return True
-        return False
 
 
 class Model(nn.Module):
@@ -133,17 +27,12 @@ class Model(nn.Module):
         super(Model, self).__init__()
 
         self.cfg = cfg
-
-        if cfg.training.use_rlhf and not cfg.training.lora:
-            logger.warning("Forcing LoRA to be True for RLHF")
-            cfg.training.lora = True
-
         self.backbone, self.backbone_config = create_nlp_backbone(
             cfg, model_class=AutoModelForCausalLM
         )
 
         if cfg.training.lora:
-            self.prepare_lora()
+            self.backbone = prepare_lora(cfg, self.backbone)
 
         self.loss_fn = self.cfg.training.loss_class.get(
             self.cfg.training.loss_function
@@ -151,48 +40,6 @@ class Model(nn.Module):
 
         if self.cfg.prediction.metric == "Perplexity":
             self.perplexity = Perplexity(self.cfg, reduce=False)
-
-        if self.cfg.training.use_rlhf:
-            self.value_head = ValueHead(self.backbone_config)
-            self.value_head.summary.bias.data.zero_()
-
-    def prepare_lora(self):
-        target_modules = (
-            [
-                lora_target_module.strip()
-                for lora_target_module in self.cfg.training.lora_target_modules.strip().split(  # noqa: E501
-                    ","
-                )
-            ]
-            if self.cfg.training.lora_target_modules
-            else None
-        )
-        if (
-            not target_modules
-            and self.backbone.config.model_type
-            not in TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
-        ):
-            # extend LORA automatic target module mapping.
-            target_modules = {
-                "RefinedWebModel": [
-                    "query_key_value",
-                    "dense_h_to_4h",
-                    "dense_4h_to_h",
-                    "dense",
-                ],
-            }.get(self.backbone.config.model_type)
-        lora_config = LoraConfig(
-            r=self.cfg.training.lora_r,
-            lora_alpha=self.cfg.training.lora_alpha,
-            target_modules=target_modules,
-            lora_dropout=self.cfg.training.lora_dropout,
-            bias="none",
-            task_type="CAUSAL_LM",
-        )
-        if self.cfg.architecture.gradient_checkpointing:
-            self.backbone.enable_input_require_grads()
-        self.backbone = get_peft_model(self.backbone, lora_config)
-        self.backbone.print_trainable_parameters()
 
     def generate(self, batch: Dict, cfg: Any, streamer=None):
         mask_key = "prompt_attention_mask"
@@ -284,11 +131,6 @@ class Model(nn.Module):
             self.backbone.config.use_cache = False
 
         outputs: Dict = {}
-        kwargs = {}
-
-        if self.training and self.cfg.training.use_rlhf:
-            kwargs["output_hidden_states"] = True
-
         mask_key = "attention_mask"
         pad_keys = [
             "input_ids",
@@ -309,7 +151,6 @@ class Model(nn.Module):
         output = self.backbone(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
-            **kwargs,
         )
 
         if "labels" in batch:
@@ -318,16 +159,6 @@ class Model(nn.Module):
 
         if self.cfg.prediction.metric == "Perplexity":
             outputs["perplexity"] = self.perplexity(output.logits, batch["labels"])
-
-        if self.training and self.cfg.training.use_rlhf:
-            last_hidden_state = output.hidden_states[-1]
-
-            # force upcast in fp32 if logits are in half-precision
-            if output.logits.dtype != torch.float32:
-                output.logits = output.logits.float()
-
-            outputs["logits"] = output.logits
-            outputs["value"] = self.value_head(last_hidden_state).squeeze(-1)
 
         # enable cache again if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:

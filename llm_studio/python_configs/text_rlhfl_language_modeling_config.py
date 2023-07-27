@@ -272,6 +272,10 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         )
 
 
+        ####
+        self._visibility["lora"] = -1
+
+
 @dataclass
 class ConfigNLPCausalLMTokenizer(DefaultConfig):
     max_length_prompt: int = 256
