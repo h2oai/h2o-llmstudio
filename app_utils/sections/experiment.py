@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import zipfile
+from pathlib import Path
 from typing import Callable, List, Optional, Set
 
 import accelerate
@@ -33,7 +34,6 @@ from app_utils.utils import (
     get_problem_types,
     get_ui_elements,
     get_unique_name,
-    make_label,
     parse_ui_elements,
     remove_model_type,
     set_env,
@@ -42,7 +42,6 @@ from app_utils.utils import (
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
-    get_parent_element,
     load_config_py,
     load_config_yaml,
     save_config_yaml,
@@ -1028,36 +1027,168 @@ async def insights_tab(charts, q):
 
 async def summary_tab(experiment_id, q):
     experiment_df = get_experiments(q)
-    experiment_df = experiment_df[experiment_df.id == experiment_id]
-    items = []
+    input_dict = experiment_df[experiment_df.id == experiment_id].iloc[0].to_dict()
     cfg = load_config_yaml(
         os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
     )
-    parent_element = get_parent_element(cfg)
-    if parent_element:
-        items.append(parent_element)
-    for col in experiment_df.columns:
-        if col in [
-            "id",
-            "path",
-            "process_id",
-            "status",
-            "eta",
-            "info",
-            "mode",
-            "progress",
-        ]:
-            continue
-        v = experiment_df[col].values[0]
-        if col == "config_file":
-            col = "problem type"
-        t = ui.stat_list_item(label=make_label(col), value=str(v))
 
-        items.append(t)
-    q.page["experiment/display/summary"] = ui.stat_list_card(
-        box="first", items=items, title=""
+    # experiment card
+    card_name = "experiment/display/summary/experiment"
+    q.page[card_name] = ui.form_card(
+        box=ui.box(zone="first"),
+        items=[
+            ui.separator("Experiment"),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=cfg.experiment_name,
+                        label="Name",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=input_dict["config_file"],
+                        label="Problem Type",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+        ],
     )
-    q.client.delete_cards.add("experiment/display/summary")
+    q.client.delete_cards.add(card_name)
+
+    # datasets card
+    card_name = "experiment/display/summary/datasets"
+    q.page[card_name] = ui.form_card(
+        box=ui.box(zone="first"),
+        items=[
+            ui.separator("Datasets"),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=Path(cfg.dataset.train_dataframe).stem,
+                        label="Training Dataset",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+            ui.stats(
+                [
+                    ui.stat(
+                        value="-"
+                        if cfg.dataset.validation_dataframe in ["", "None", None]
+                        else Path(cfg.dataset.validation_dataframe).stem,
+                        label="Validation Dataset",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+        ],
+    )
+    q.client.delete_cards.add(card_name)
+
+    # score card
+    card_name = "experiment/display/summary/score"
+    q.page[card_name] = ui.form_card(
+        box=ui.box(zone="first"),
+        items=[
+            ui.separator("Score"),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=input_dict["metric"],
+                        label="Metric",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+            ui.stats(
+                [
+                    ui.stat(
+                        value="-"
+                        if input_dict["val metric"] in ["", "None", None]
+                        else str(input_dict["val metric"]),
+                        label="Validation Score",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+        ],
+    )
+    q.client.delete_cards.add(card_name)
+
+    # main configs card
+    card_name = "experiment/display/summary/main_configs"
+    q.page[card_name] = ui.form_card(
+        box=ui.box(zone="second"),
+        items=[
+            ui.separator("Main Configurations"),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=cfg.llm_backbone,
+                        label="LLM Backbone",
+                    ),
+                    ui.stat(
+                        value=str(cfg.training.lora),
+                        label="Lora",
+                    ),
+                    ui.stat(
+                        value=str(cfg.training.epochs),
+                        label="Epochs",
+                    ),
+                    ui.stat(
+                        value=str(cfg.training.batch_size),
+                        label="Batch Size",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+            ui.stats(
+                [
+                    ui.stat(
+                        value=str(input_dict["loss"]),
+                        label="Loss Function",
+                    ),
+                    ui.stat(
+                        value=cfg.architecture.backbone_dtype,
+                        label="Backbone Dtype",
+                    ),
+                    ui.stat(
+                        value=str(cfg.architecture.gradient_checkpointing),
+                        label="Gradient Checkpointing",
+                    ),
+                    ui.stat(
+                        value=input_dict["gpu_list"],
+                        label="GPU List",
+                    ),
+                ],
+                justify="between",
+                inset=True,
+            ),
+        ],
+    )
+    q.client.delete_cards.add(card_name)
+
+    # code card
+    card_name = "experiment/display/summary/code"
+    content = get_experiment_summary_code_card(cfg=cfg)
+    q.page[card_name] = ui.markdown_card(
+        box=ui.box(zone="third"),
+        title="",
+        content=content,
+    )
+    q.client.delete_cards.add(card_name)
 
 
 async def configs_tab(q):
@@ -1607,6 +1738,11 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             safe_serialization=q.client["default_safe_serialization"],
         )
 
+        # Updating Config HF attributes & # re-save
+        cfg.hf.account_name = user_id
+        cfg.hf.model_name = exp_name
+        save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
+
         # push pipeline to hub
         template_env = Environment(
             loader=FileSystemLoader(searchpath="llm_studio/src/")
@@ -1688,3 +1824,32 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
         else "",
     )
     return card
+
+
+def get_experiment_summary_code_card(cfg) -> str:
+    with open("experiment_summary_code_template.md", "r") as f:
+        text = f.read()
+
+    # Model repo
+    text = text.replace(
+        "{{repo_id}}", cfg.hf.repo_id if cfg.hf.repo_id else "account/model"
+    )
+
+    # Versions
+    text = text.replace("{{transformers_version}}", transformers.__version__)
+    text = text.replace("{{einops_version}}", einops.__version__)
+    text = text.replace("{{accelerate_version}}", accelerate.__version__)
+    text = text.replace("{{torch_version}}", torch.__version__)
+
+    # Configs
+    text = text.replace("{{min_new_tokens}}", str(cfg.prediction.min_length_inference))
+    text = text.replace("{{max_new_tokens}}", str(cfg.prediction.max_length_inference))
+    text = text.replace("{{use_fast}}", str(cfg.tokenizer.use_fast))
+    text = text.replace("{{do_sample}}", str(cfg.prediction.do_sample))
+    text = text.replace("{{num_beams}}", str(cfg.prediction.num_beams))
+    text = text.replace("{{temperature}}", str(cfg.prediction.temperature))
+    text = text.replace(
+        "{{repetition_penalty}}", str(cfg.prediction.repetition_penalty)
+    )
+
+    return text
