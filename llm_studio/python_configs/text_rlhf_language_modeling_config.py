@@ -85,6 +85,24 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
         self._possible_values["ppo_generate_temperature"] = (0.1, 1.0, 0.1)
         self._possible_values["ppo_batch_size"] = (1, 256, 1)
 
+        self._order.insert(
+            "adaptive_kl_control",
+            "advantages_gamma",
+            "offload_reward_model",
+            "reward_model",
+            "kl_horizon",
+            "ppo_generate_temperature",
+            "kl_target",
+            "scaling_factor_value_loss",
+            "ppo_clip_value",
+            "ppo_clip_policy",
+            "initial_kl_coefficient",
+            "advantages_lambda",
+            "ppo_batch_size",
+            "ppo_epochs",
+            after="learning_rate",
+        )
+
         self._visibility["lora"] = -1
 
 
