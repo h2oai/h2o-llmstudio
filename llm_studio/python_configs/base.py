@@ -196,6 +196,7 @@ class ConfigProblemBaseABC(DefaultConfig):
     prediction: Any
     environment: Any
     logging: Any
+    hf: Any
 
     def from_dict(cls, d: dict):
         raise NotImplementedError

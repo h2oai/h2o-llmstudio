@@ -11,6 +11,7 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMPrediction,
     ConfigNLPCausalLMTokenizer,
     ConfigNLPCausalLMTraining,
+    ConfigNLPCausalLMHF,
 )
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigProblemBase,
@@ -145,6 +146,7 @@ class ConfigProblemBase(TextCausalLMConfigProblemBase):
         default_factory=ConfigNLPCausalLMEnvironment
     )
     logging: ConfigNLPCausalLMLogging = field(default_factory=ConfigNLPCausalLMLogging)
+    hf: ConfigNLPCausalLMHF = field(default_factory=ConfigNLPCausalLMHF)
 
     @classmethod
     def from_dict(cls, cfg_dict: dict):
