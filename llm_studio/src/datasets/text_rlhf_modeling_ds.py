@@ -33,17 +33,21 @@ class CustomDataset(CausalLMCustomDataset):
             sample.update(self.get_labels(encodings))
 
         self.pad_and_add_prompt_encoding(input_ids, encodings, sample, system_encoding)
+        sample["reward_model_prompt_text"] = self.get_reward_model_prompt_text(idx)
         return sample
 
-    def get_reward_model_parent_prompt_text(self, idx):
-        return "".join(
-            [
-                self.raw_prompts[int(parent_idx)]
-                + "<|endoftext|>"
-                + self.answers[int(parent_idx)]
-                + "<|endoftext|>"
-                for parent_idx in self.get_parent_ids(idx)
-            ]
+    def get_reward_model_prompt_text(self, idx):
+        return (
+            "".join(
+                [
+                    self.raw_prompts[int(parent_idx)]
+                    + "<|endoftext|>"
+                    + self.answers[int(parent_idx)]
+                    + "<|endoftext|>"
+                    for parent_idx in self.get_parent_ids(idx)
+                ]
+            )
+            + self.raw_prompts[idx]
         )
 
     def postprocess_batch_predictions(self, cfg: Any, output: Dict) -> Dict:
