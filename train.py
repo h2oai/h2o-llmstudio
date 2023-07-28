@@ -848,7 +848,7 @@ def run(cfg: Any) -> None:
 
     train_function = (
         run_train_rlhf
-        if cfg.problem_type == "text_rlhfl_modeling_config"
+        if cfg.problem_type == "text_rlhf_language_modeling"
         else run_train
     )
     val_loss, val_metric = train_function(

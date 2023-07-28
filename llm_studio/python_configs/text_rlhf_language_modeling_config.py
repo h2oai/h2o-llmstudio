@@ -29,6 +29,12 @@ from llm_studio.src.utils.modeling_utils import generate_experiment_name
 class ConfigRLHFLMDataset(ConfigNLPCausalLMDataset):
     dataset_class: Any = CustomDataset
 
+    def __post_init__(self):
+        super().__post_init__()
+        # RLHF is not compatible with system column.
+        self.system_column = "None"
+        self._visibility["system_column"] = False
+
 
 @dataclass
 class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
@@ -85,16 +91,13 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
 class ConfigRLHFLMArchitecture(ConfigNLPCausalLMArchitecture):
     model_class: Any = llm_studio.src.models.text_rlhf_language_modeling_model.Model
     reward_model_class: Any = text_reward_model.RewardModel
-    pretrained: bool = True
-
-    backbone_dtype: str = "float16"
-    gradient_checkpointing: bool = True
-    intermediate_dropout: float = 0
-    pretrained_weights: str = ""
 
     def __post_init__(self):
         super().__post_init__()
+        # RLHF is not supported with force_embedding_gradients.
+        self.force_embedding_gradients = False
         self._visibility["reward_model_class"] = -1
+        self._visibility["force_embedding_gradients"] = -1
 
 
 @dataclass

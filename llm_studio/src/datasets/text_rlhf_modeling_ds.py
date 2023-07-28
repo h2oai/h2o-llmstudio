@@ -15,13 +15,6 @@ logger = logging.getLogger(__name__)
 
 class CustomDataset(CausalLMCustomDataset):
     def __init__(self, df: pd.DataFrame, cfg: Any, mode: str = "train"):
-        if self.cfg.dataset.system_column != "None":
-            logger.warning(
-                f"RLHF is not compatible with system column. "
-                f"Disabling functionality for mode {self.mode}."
-            )
-            self.cfg.dataset.system_column = "None"
-
         super().__init__(df, cfg, mode)
         self.raw_prompts = get_texts(df, self.cfg, separator="")
 
@@ -36,8 +29,7 @@ class CustomDataset(CausalLMCustomDataset):
 
         input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
 
-        rlhf_is_in_training_mode = self.cfg.training.use_rlhf and self.mode == "train"
-        if not rlhf_is_in_training_mode:  # no labels required for RLHF during training
+        if self.mode != "train":  # no labels required for RLHF during training
             sample.update(self.get_labels(encodings))
 
         self.pad_and_add_prompt_encoding(input_ids, encodings, sample, system_encoding)

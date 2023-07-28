@@ -11,7 +11,7 @@ from transformers.utils import logging as transformers_logging
 
 from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
-from llm_studio.src.utils.modeling_utils import create_nlp_backbone
+from llm_studio.src.utils.modeling_utils import create_nlp_backbone, prepare_lora
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ class Model(nn.Module):
         )
 
         if cfg.training.lora:
-            self.prepare_lora()
+            self.backbone = prepare_lora(cfg=self.cfg, backbone=self.backbone)
 
         self.loss_fn = self.cfg.training.loss_class.get(
             self.cfg.training.loss_function
