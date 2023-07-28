@@ -1827,7 +1827,7 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
 
 
 def get_experiment_summary_code_card(cfg) -> str:
-    with open("experiment_summary_code_template.md", "r") as f:
+    with open("model_cards/experiment_summary_code_template.md", "r") as f:
         text = f.read()
 
     # Model repo
