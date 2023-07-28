@@ -11,7 +11,11 @@ from transformers.utils import logging as transformers_logging
 
 from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
-from llm_studio.src.utils.modeling_utils import create_nlp_backbone, prepare_lora
+from llm_studio.src.utils.modeling_utils import (
+    create_nlp_backbone,
+    prepare_lora,
+    generate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -145,3 +149,6 @@ class Model(nn.Module):
             self.backbone.config.use_cache = True
 
         return outputs
+
+    def generate(self, batch: Dict, cfg: Any, streamer=None):
+        return generate(self.backbone, batch, cfg, streamer)

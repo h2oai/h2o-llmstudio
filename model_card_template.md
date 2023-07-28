@@ -101,6 +101,7 @@ print(res[0]["generated_text"])
 You may also construct the pipeline from the loaded model and tokenizer yourself and consider the preprocessing steps:
 
 ```python
+import llm_studio.src.utils.modeling_utils
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 model_name = "{{repo_id}}"  # either local folder or huggingface model name
@@ -123,7 +124,7 @@ model.cuda().eval()
 inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
 
 # generate configuration can be modified to your needs
-tokens = model.generate(
+tokens = llm_studio.src.utils.modeling_utils.generate(
     input_ids=inputs["input_ids"],
     attention_mask=inputs["attention_mask"],
     min_new_tokens={{min_new_tokens}},

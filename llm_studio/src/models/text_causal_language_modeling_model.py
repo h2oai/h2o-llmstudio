@@ -2,16 +2,14 @@ import logging
 from typing import Any, Dict
 
 from torch import nn
-from transformers import AutoModelForCausalLM, StoppingCriteriaList
-from transformers.generation.utils import GenerationMixin
-from transformers.utils import logging as transformers_logging
+from transformers import AutoModelForCausalLM
 
 from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import (
-    TokenStoppingCriteria,
     create_nlp_backbone,
     prepare_lora,
+    generate,
 )
 
 logger = logging.getLogger(__name__)
@@ -46,70 +44,7 @@ class Model(nn.Module):
             self.perplexity = Perplexity(self.cfg, reduce=False)
 
     def generate(self, batch: Dict, cfg: Any, streamer=None):
-        mask_key = "prompt_attention_mask"
-        pad_keys = [
-            "prompt_input_ids",
-            "prompt_attention_mask",
-        ]
-
-        batch = batch_padding(
-            self.cfg,
-            batch,
-            self.training,
-            mask_key=mask_key,
-            pad_keys=pad_keys,
-        )
-
-        input_ids = batch["prompt_input_ids"]
-        attention_mask = batch["prompt_attention_mask"]
-
-        # Adding GenerationMixin type annotation for faster lookup
-        generation_function: GenerationMixin.generate = self.backbone.generate
-
-        verbosity = transformers_logging.get_verbosity()
-        stopping_criteria = StoppingCriteriaList(
-            [
-                TokenStoppingCriteria(
-                    stop_word_ids=self.cfg.tokenizer._stop_words_ids,
-                    prompt_input_ids_len=input_ids.shape[1],
-                )
-            ]
-        )
-
-        # force to use cache and disable gradient checkpointing if enabled
-        self.backbone.config.use_cache = True
-        if self.cfg.architecture.gradient_checkpointing:
-            self.backbone.gradient_checkpointing_disable()
-
-        transformers_logging.set_verbosity_error()
-        output = generation_function(
-            inputs=input_ids,
-            attention_mask=attention_mask,
-            generation_config=self.backbone.generation_config,
-            min_new_tokens=cfg.prediction.min_length_inference,
-            max_new_tokens=cfg.prediction.max_length_inference,
-            do_sample=(cfg.prediction.do_sample),
-            num_beams=cfg.prediction.num_beams,
-            temperature=(float(cfg.prediction.temperature)),
-            repetition_penalty=(float(cfg.prediction.repetition_penalty)),
-            top_k=(cfg.prediction.top_k),
-            top_p=(float(cfg.prediction.top_p)),
-            stopping_criteria=stopping_criteria,
-            renormalize_logits=True,
-            return_dict_in_generate=False,
-            use_cache=True,
-            streamer=streamer,
-        )
-        transformers_logging.set_verbosity(verbosity)
-
-        # enable checkpointing again
-        if self.cfg.architecture.gradient_checkpointing:
-            self.backbone.gradient_checkpointing_enable()
-
-        # remove the prompt tokens
-        output = output[:, input_ids.shape[1] :]
-
-        return output
+        return generate(self.backbone, batch, cfg, streamer)
 
     def forward(
         self,

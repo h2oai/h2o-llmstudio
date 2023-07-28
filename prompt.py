@@ -1,5 +1,6 @@
 import os
 
+import llm_studio.src.utils.modeling_utils
 from llm_studio.src.utils.config_utils import load_config_yaml
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"

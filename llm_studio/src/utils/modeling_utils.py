@@ -18,12 +18,14 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
 )
 from torch.nn.parallel import DistributedDataParallel
 from tqdm import tqdm
-from transformers import AutoConfig, AutoModel, BitsAndBytesConfig, StoppingCriteria
+from transformers import AutoConfig, AutoModel, BitsAndBytesConfig, StoppingCriteria, GenerationMixin, \
+    StoppingCriteriaList
+from transformers.utils import logging as transformers_logging
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
-from llm_studio.src.utils.data_utils import cat_batches, get_inference_batch_size
+from llm_studio.src.utils.data_utils import cat_batches, get_inference_batch_size, batch_padding
 from llm_studio.src.utils.exceptions import LLMDataException, LLMModelException
 from llm_studio.src.utils.logging_utils import TqdmToLogger
 from llm_studio.src.utils.utils import save_pickle
@@ -724,3 +726,61 @@ def prepare_lora(cfg, backbone):
     backbone = get_peft_model(backbone, lora_config)
     backbone.print_trainable_parameters()
     return backbone
+
+
+def generate(backbone, batch, cfg, streamer):
+    mask_key = "prompt_attention_mask"
+    pad_keys = [
+        "prompt_input_ids",
+        "prompt_attention_mask",
+    ]
+    batch = batch_padding(
+        cfg,
+        batch,
+        training=False,
+        mask_key=mask_key,
+        pad_keys=pad_keys,
+    )
+    input_ids = batch["prompt_input_ids"]
+    attention_mask = batch["prompt_attention_mask"]
+    # Adding GenerationMixin type annotation for faster lookup
+    generation_function: GenerationMixin.generate = backbone.generate
+    verbosity = transformers_logging.get_verbosity()
+    stopping_criteria = StoppingCriteriaList(
+        [
+            TokenStoppingCriteria(
+                stop_word_ids=cfg.tokenizer._stop_words_ids,
+                prompt_input_ids_len=input_ids.shape[1],
+            )
+        ]
+    )
+    # force to use cache and disable gradient checkpointing if enabled
+    backbone.config.use_cache = True
+    if cfg.architecture.gradient_checkpointing:
+        backbone.gradient_checkpointing_disable()
+    transformers_logging.set_verbosity_error()
+    output = generation_function(
+        inputs=input_ids,
+        attention_mask=attention_mask,
+        generation_config=backbone.generation_config,
+        min_new_tokens=cfg.prediction.min_length_inference,
+        max_new_tokens=cfg.prediction.max_length_inference,
+        do_sample=(cfg.prediction.do_sample),
+        num_beams=cfg.prediction.num_beams,
+        temperature=(float(cfg.prediction.temperature)),
+        repetition_penalty=(float(cfg.prediction.repetition_penalty)),
+        top_k=(cfg.prediction.top_k),
+        top_p=(float(cfg.prediction.top_p)),
+        stopping_criteria=stopping_criteria,
+        renormalize_logits=True,
+        return_dict_in_generate=False,
+        use_cache=True,
+        streamer=streamer,
+    )
+    transformers_logging.set_verbosity(verbosity)
+    # enable checkpointing again
+    if cfg.architecture.gradient_checkpointing:
+        backbone.gradient_checkpointing_enable()
+    # remove the prompt tokens
+    output = output[:, input_ids.shape[1]:]
+    return output
