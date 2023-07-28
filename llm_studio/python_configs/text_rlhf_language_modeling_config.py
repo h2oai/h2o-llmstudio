@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any
 
-import llm_studio.src.models.text_rlhf_modeling_model
+import llm_studio.src.models.text_rlhf_language_modeling_model
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPAugmentation,
     ConfigNLPCausalLMArchitecture,
@@ -26,14 +26,12 @@ from llm_studio.src.utils.modeling_utils import generate_experiment_name
 
 
 @dataclass
-class ConfigRLHDataset(ConfigNLPCausalLMDataset):
+class ConfigRLHFLMDataset(ConfigNLPCausalLMDataset):
     dataset_class: Any = CustomDataset
 
 
 @dataclass
 class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
-    lora: bool = True
-
     reward_model: str = "OpenAssistant/reward-model-deberta-v3-large-v2"
     adaptive_kl_control: bool = True
     initial_kl_coefficient: float = 0.2
@@ -51,6 +49,14 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
 
     def __post_init__(self):
         super().__post_init__()
+        self.lora = True
+        self._possible_values[
+            "differential_learning_rate_layers"
+        ] = possible_values.String(
+            values=("backbone", "embed", "value_head"),
+            allow_custom=False,
+            placeholder="Select optional layers...",
+        )
         self._possible_values["reward_model"] = possible_values.String(
             values=(
                 "OpenAssistant/reward-model-deberta-v3-large-v2",
@@ -92,7 +98,7 @@ class ConfigRLHFLMArchitecture(ConfigNLPCausalLMArchitecture):
 
 
 @dataclass
-class ConfigRLHFPrediction(ConfigNLPCausalLMPrediction):
+class ConfigRLHFLMPrediction(ConfigNLPCausalLMPrediction):
     metric_class: Any = text_causal_language_modeling_metrics.Metrics
     metric: str = "GPT"
     metric_gpt_model: str = "gpt-3.5-turbo-0301"
@@ -122,7 +128,7 @@ class ConfigRLHFPrediction(ConfigNLPCausalLMPrediction):
 
 @dataclass
 class ConfigProblemBase(TextCausalLMConfigProblemBase):
-    dataset: ConfigRLHDataset = field(default_factory=ConfigRLHDataset)
+    dataset: ConfigRLHFLMDataset = field(default_factory=ConfigRLHFLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
         default_factory=ConfigNLPCausalLMTokenizer
     )
@@ -131,7 +137,7 @@ class ConfigProblemBase(TextCausalLMConfigProblemBase):
     )
     training: ConfigRLHFLMTraining = field(default_factory=ConfigRLHFLMTraining)
     augmentation: ConfigNLPAugmentation = field(default_factory=ConfigNLPAugmentation)
-    prediction: ConfigRLHFPrediction = field(default_factory=ConfigRLHFPrediction)
+    prediction: ConfigRLHFLMPrediction = field(default_factory=ConfigRLHFLMPrediction)
     environment: ConfigNLPCausalLMEnvironment = field(
         default_factory=ConfigNLPCausalLMEnvironment
     )
@@ -145,7 +151,7 @@ class ConfigProblemBase(TextCausalLMConfigProblemBase):
             ),
             experiment_name=cfg_dict.get("experiment_name", generate_experiment_name()),
             llm_backbone=cfg_dict.get("llm_backbone", ConfigProblemBase.llm_backbone),
-            dataset=ConfigRLHDataset.from_dict(cfg_dict.get("dataset", {})),
+            dataset=ConfigRLHFLMDataset.from_dict(cfg_dict.get("dataset", {})),
             tokenizer=ConfigNLPCausalLMTokenizer.from_dict(
                 cfg_dict.get("tokenizer", {})
             ),
@@ -156,7 +162,7 @@ class ConfigProblemBase(TextCausalLMConfigProblemBase):
                 cfg_dict.get("architecture", {})
             ),
             training=ConfigRLHFLMTraining.from_dict(cfg_dict.get("training", {})),
-            prediction=ConfigRLHFPrediction.from_dict(cfg_dict.get("prediction", {})),
+            prediction=ConfigRLHFLMPrediction.from_dict(cfg_dict.get("prediction", {})),
             environment=ConfigNLPCausalLMEnvironment.from_dict(
                 cfg_dict.get("environment", {})
             ),

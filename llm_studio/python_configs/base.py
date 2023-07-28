@@ -180,9 +180,22 @@ class DefaultConfig:
 
 @dataclass
 class ConfigProblemBaseABC(DefaultConfig):
-    experiment_name: str = None
-    llm_backbone: str = None
-    output_directory: str = None
+    """
+    Base class for all problem configs.
+    """
+    output_directory: str
+    experiment_name: str
+    _parent_experiment: str
+    llm_backbone: str
+
+    dataset: Any
+    tokenizer: Any
+    architecture: Any
+    training: Any
+    augmentation: Any
+    prediction: Any
+    environment: Any
+    logging: Any
 
     def from_dict(cls, d: dict):
         raise NotImplementedError
