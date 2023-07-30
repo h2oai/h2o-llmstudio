@@ -1,7 +1,7 @@
 -i https://pypi.org/simple
---extra-index-url https://download.pytorch.org/whl/cu117
+--extra-index-url https://download.pytorch.org/whl/cu118
 accelerate==0.20.3
-aiohttp==3.8.4 ; python_version >= '3.6'
+aiohttp==3.8.5 ; python_version >= '3.6'
 aiosignal==1.3.1 ; python_version >= '3.7'
 anyio==3.7.1 ; python_version >= '3.7'
 arrow==1.2.3 ; python_version >= '3.6'
@@ -16,13 +16,13 @@ boto3==1.20.24
 botocore==1.23.54 ; python_version >= '3.6'
 bravado==11.0.3 ; python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_full_version != '3.5.0'
 bravado-core==6.1.0 ; python_version >= '3.7'
-certifi==2023.5.7 ; python_version >= '3.6'
+certifi==2023.7.22 ; python_version >= '3.6'
 charset-normalizer==3.2.0 ; python_full_version >= '3.7.0'
 click==8.1.6 ; python_version >= '3.7'
-cmake==3.26.4
+cmake==3.27.0
 colorama==0.4.6 ; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6'
 coolname==1.1.0
-cramjam==2.6.2 ; python_version >= '3.7'
+cramjam==2.7.0 ; python_version >= '3.7'
 datasets==2.11.0
 dill==0.3.4
 docopt==0.6.2
@@ -115,9 +115,9 @@ threadpoolctl==3.2.0 ; python_version >= '3.8'
 tiktoken==0.4.0
 tokenizers==0.13.3
 toml==0.10.2
-torch==2.0.0+cu117
-torchaudio==2.0.1+cu117
-torchvision==0.15.1+cu117
+torch==2.0.0+cu118
+torchaudio==2.0.1+cu118
+torchvision==0.15.1+cu118
 tornado==6.3.2 ; python_version >= '3.8'
 tqdm==4.65.0
 transformers==4.31.0
@@ -130,6 +130,6 @@ wcwidth==0.2.6
 webcolors==1.13
 webencodings==0.5.1
 websocket-client==1.6.1 ; python_version >= '3.7'
-xxhash==3.2.0 ; python_version >= '3.6'
+xxhash==3.3.0 ; python_version >= '3.7'
 yarg==0.1.9
 yarl==1.9.2 ; python_version >= '3.7'
