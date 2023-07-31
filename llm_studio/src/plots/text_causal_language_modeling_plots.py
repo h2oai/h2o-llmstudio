@@ -25,10 +25,12 @@ class Plots:
         tokenizer = get_tokenizer(cfg)
 
         df = pd.DataFrame(
-            {'Prompt Text': [
-                tokenizer.decode(input_ids, skip_special_tokens=True)
-                for input_ids in batch["prompt_input_ids"].detach().cpu().numpy()
-            ]}
+            {
+                "Prompt Text": [
+                    tokenizer.decode(input_ids, skip_special_tokens=True)
+                    for input_ids in batch["prompt_input_ids"].detach().cpu().numpy()
+                ]
+            }
         )
         df["Prompt Text"] = df["Prompt Text"].apply(format_for_markdown_visualization)
         if "labels" in batch.keys():
