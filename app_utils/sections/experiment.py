@@ -1054,7 +1054,6 @@ async def insights_tab(charts, q):
                             height="calc(100vh - 245px)",
                             max_char_length=50_000,
                             cell_overflow="tooltip",
-                            group_by_row=True
                         )
                     ],
                 )

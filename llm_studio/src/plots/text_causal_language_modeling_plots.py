@@ -12,8 +12,8 @@ from llm_studio.src.utils.plot_utils import (
     PlotData,
     format_for_markdown_visualization,
     get_line_separator_html,
-    text_to_html,
     list_to_markdown_representation,
+    text_to_html,
 )
 
 
@@ -48,25 +48,16 @@ class Plots:
             tokenizer.convert_ids_to_tokens(input_ids)
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
-        is_answer_mask_list = [
+        masks_list = [
             [label != -100 for label in labels]
             for labels in batch.get("labels", batch["input_ids"]).detach().cpu().numpy()
         ]
         df["tokenized_texts"] = [
-            list_to_markdown_representation(tokens, is_answer_masks)
-            for tokens, is_answer_masks in zip(tokens_list, is_answer_mask_list)
+            list_to_markdown_representation(
+                tokens, masks, pad_token=tokenizer.pad_token
+            )
+            for tokens, masks in zip(tokens_list, masks_list)
         ]
-        for col in df.columns:
-            style = """
-<style>
-  code {
-    white-space : pre-wrap !important;
-    word-break: break-word;
-  }
-</style>
-            """
-            df[col] = df[col].apply(lambda x: style + x)
-
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
         df.to_parquet(path)
         return PlotData(path, encoding="df")

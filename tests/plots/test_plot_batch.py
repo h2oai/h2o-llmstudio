@@ -4,9 +4,9 @@ import pandas as pd
 from torch.utils.data import DataLoader
 
 from llm_studio.python_configs.text_causal_language_modeling_config import (
-    ConfigProblemBase,
     ConfigNLPCausalLMDataset,
     ConfigNLPCausalLMTokenizer,
+    ConfigProblemBase,
 )
 from llm_studio.src.datasets.text_causal_language_modeling_ds import CustomDataset
 from llm_studio.src.plots.text_causal_language_modeling_plots import Plots

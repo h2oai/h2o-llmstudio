@@ -98,11 +98,12 @@ def format_for_markdown_visualization(text: str) -> str:
     return text
 
 
-def list_to_markdown_representation(tokens, masks, num_chars=65):
+def list_to_markdown_representation(tokens, masks, pad_token, num_chars=65):
     """
     Creates a markdown representation string from a list of tokens,
     with HTML line breaks after 'num_chars' characters.
     Masked tokens will be emphasized in HTML representation.
+
     """
     x = []
     sublist = []
@@ -114,10 +115,13 @@ def list_to_markdown_representation(tokens, masks, num_chars=65):
             sublist = []
             raw_sublist = []
 
-        raw_sublist.append(str(token))
-        token = html.escape(token)
-        token = f"""***{token}***""" if mask else str(token)
-        sublist.append(str(token))
+        raw_sublist.append(token)
+        token_formatted = html.escape(token)
+        if mask:
+            token_formatted = f"""***{token_formatted}***"""
+        elif token == pad_token:
+            token_formatted = f"""<span style="color: rgba(70, 70, 70, 0.5);">*{token_formatted}*</span>."""
+        sublist.append(token_formatted)
 
     if sublist:  # add any remaining items in sublist
         x.append(", ".join(sublist))
