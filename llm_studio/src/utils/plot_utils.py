@@ -98,16 +98,29 @@ def format_for_markdown_visualization(text: str) -> str:
     return text
 
 
-def list_to_markdown_representation(lst, num_chars=65, newline_tag="<br />"):
+def list_to_markdown_representation(tokens, masks, num_chars=65):
     """
-    Create a string from a list, with newlines after num_chars characters.
+    Creates a markdown representation string from a list of tokens,
+    with HTML line breaks after 'num_chars' characters.
+    Masked tokens will be emphasized in HTML representation.
     """
     x = []
     sublist = []
-    for item in lst:
-        if len(str(item)) + len(", ".join(sublist)) > num_chars:
+    raw_sublist = []
+    for token, mask in zip(tokens, masks):
+        token = str(token)
+        if len(token) + len(", ".join(raw_sublist)) > num_chars:
             x.append(", ".join(sublist))
             sublist = []
-        sublist.append(html.escape(str(item)))
+            raw_sublist = []
 
-    return "[" + newline_tag.join(x) + "]"
+        raw_sublist.append(str(token))
+        token = html.escape(token)
+        token = f"""***{token}***""" if mask else str(token)
+        sublist.append(str(token))
+
+    if sublist:  # add any remaining items in sublist
+        x.append(", ".join(sublist))
+
+    list_representation = "\n[" + "<br />".join(x) + "]\n"
+    return list_representation

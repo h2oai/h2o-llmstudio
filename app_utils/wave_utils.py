@@ -151,7 +151,6 @@ def ui_table_from_df(
         columns.append(action_column)
 
     rows = []
-
     for i, row in df.iterrows():
         cells = []
 

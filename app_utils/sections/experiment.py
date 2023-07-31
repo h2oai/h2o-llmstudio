@@ -1034,6 +1034,8 @@ async def insights_tab(charts, q):
                 # limit to 2000 rows, still renders fast in wave
                 df = df.iloc[:2000]
                 min_widths = {col: "350" for col in df.columns if "text" in col}
+                if "tokenized_texts" in df.columns:
+                    min_widths["tokenized_texts"] = "550"
                 q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.form_card(
                     box="first",
                     items=[
@@ -1052,6 +1054,7 @@ async def insights_tab(charts, q):
                             height="calc(100vh - 245px)",
                             max_char_length=50_000,
                             cell_overflow="tooltip",
+                            group_by_row=True
                         )
                     ],
                 )

@@ -12,8 +12,8 @@ from llm_studio.src.utils.plot_utils import (
     PlotData,
     format_for_markdown_visualization,
     get_line_separator_html,
-    list_to_markdown_representation,
     text_to_html,
+    list_to_markdown_representation,
 )
 
 
@@ -26,44 +26,47 @@ class Plots:
 
         df = pd.DataFrame(
             dict(
-                texts=[
-                    tokenizer.decode(input_ids, skip_special_tokens=False)
-                    for input_ids in batch["input_ids"].detach().cpu().numpy()
+                prompt_texts=[
+                    tokenizer.decode(input_ids, skip_special_tokens=True)
+                    for input_ids in batch["prompt_input_ids"].detach().cpu().numpy()
                 ]
             )
         )
-        df["texts"] = df["texts"].apply(format_for_markdown_visualization)
-
-        df["tokenized_texts"] = [
-            list_to_markdown_representation(tokenizer.convert_ids_to_tokens(input_ids))
+        df["prompt_texts"] = df["prompt_texts"].apply(format_for_markdown_visualization)
+        if "labels" in batch.keys():
+            df["answer_texts"] = [
+                tokenizer.decode(
+                    [label for label in labels if label != -100],
+                    skip_special_tokens=True,
+                )
+                for labels in batch.get("labels", batch["input_ids"])
+                .detach()
+                .cpu()
+                .numpy()
+            ]
+        tokens_list = [
+            tokenizer.convert_ids_to_tokens(input_ids)
             for input_ids in batch["input_ids"].detach().cpu().numpy()
         ]
+        is_answer_mask_list = [
+            [label != -100 for label in labels]
+            for labels in batch.get("labels", batch["input_ids"]).detach().cpu().numpy()
+        ]
+        df["tokenized_texts"] = [
+            list_to_markdown_representation(tokens, is_answer_masks)
+            for tokens, is_answer_masks in zip(tokens_list, is_answer_mask_list)
+        ]
+        for col in df.columns:
+            style = """
+<style>
+  code {
+    white-space : pre-wrap !important;
+    word-break: break-word;
+  }
+</style>
+            """
+            df[col] = df[col].apply(lambda x: style + x)
 
-        if "labels" in batch.keys():
-            input_ids_labels = batch["labels"].detach().cpu().numpy()
-            input_ids_labels = [
-                [input_id for input_id in input_ids if input_id != -100]
-                for input_ids in input_ids_labels
-            ]
-
-            df["target_texts"] = [
-                tokenizer.decode(input_ids, skip_special_tokens=False)
-                for input_ids in input_ids_labels
-            ]
-            df["target_texts"] = df["target_texts"].apply(
-                format_for_markdown_visualization
-            )
-
-            df["tokenized_target_texts"] = [
-                list_to_markdown_representation(
-                    tokenizer.convert_ids_to_tokens(input_ids)
-                )
-                for input_ids in input_ids_labels
-            ]
-
-            df = df[
-                ["texts", "target_texts", "tokenized_texts", "tokenized_target_texts"]
-            ]
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
         df.to_parquet(path)
         return PlotData(path, encoding="df")
