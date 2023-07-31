@@ -25,16 +25,14 @@ class Plots:
         tokenizer = get_tokenizer(cfg)
 
         df = pd.DataFrame(
-            dict(
-                prompt_texts=[
-                    tokenizer.decode(input_ids, skip_special_tokens=True)
-                    for input_ids in batch["prompt_input_ids"].detach().cpu().numpy()
-                ]
-            )
+            {'Prompt Text': [
+                tokenizer.decode(input_ids, skip_special_tokens=True)
+                for input_ids in batch["prompt_input_ids"].detach().cpu().numpy()
+            ]}
         )
-        df["prompt_texts"] = df["prompt_texts"].apply(format_for_markdown_visualization)
+        df["Prompt Text"] = df["Prompt Text"].apply(format_for_markdown_visualization)
         if "labels" in batch.keys():
-            df["answer_texts"] = [
+            df["Answer Text"] = [
                 tokenizer.decode(
                     [label for label in labels if label != -100],
                     skip_special_tokens=True,
@@ -52,7 +50,7 @@ class Plots:
             [label != -100 for label in labels]
             for labels in batch.get("labels", batch["input_ids"]).detach().cpu().numpy()
         ]
-        df["tokenized_texts"] = [
+        df["Tokenized Text"] = [
             list_to_markdown_representation(
                 tokens, masks, pad_token=tokenizer.pad_token
             )

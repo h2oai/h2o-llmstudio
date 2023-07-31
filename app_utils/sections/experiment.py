@@ -1039,8 +1039,8 @@ async def insights_tab(charts, q):
                 df = pd.read_parquet(v2)
                 # limit to 2000 rows, still renders fast in wave
                 df = df.iloc[:2000]
-                min_widths = {col: "350" for col in df.columns if "text" in col}
-                if "tokenized_texts" in df.columns:
+                min_widths = {col: "350" for col in df.columns if "text" in col.lower()}
+                if "Tokenized Text" in df.columns:
                     min_widths["tokenized_texts"] = "550"
                 q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.form_card(
                     box="first",
