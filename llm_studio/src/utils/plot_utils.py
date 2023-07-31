@@ -120,7 +120,9 @@ def list_to_markdown_representation(tokens, masks, pad_token, num_chars=65):
         if mask:
             token_formatted = f"""***{token_formatted}***"""
         elif token == pad_token:
-            token_formatted = f"""<span style="color: rgba(70, 70, 70, 0.5);">*{token_formatted}*</span>."""
+            token_formatted = f"""<span style="color: rgba(70, 70, 70, 0.5);">*{
+            token_formatted
+            }*</span>."""
         sublist.append(token_formatted)
 
     if sublist:  # add any remaining items in sublist
