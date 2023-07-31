@@ -7,11 +7,11 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMArchitecture,
     ConfigNLPCausalLMDataset,
     ConfigNLPCausalLMEnvironment,
+    ConfigNLPCausalLMHF,
     ConfigNLPCausalLMLogging,
     ConfigNLPCausalLMPrediction,
     ConfigNLPCausalLMTokenizer,
     ConfigNLPCausalLMTraining,
-    ConfigNLPCausalLMHF,
 )
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigProblemBase,

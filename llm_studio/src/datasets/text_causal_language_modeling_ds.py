@@ -344,12 +344,6 @@ class CustomDataset(Dataset):
         encodings, system_encoding = self.get_encodings(idx)
         input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
         sample.update(self.get_labels(encodings))
-        self.pad_and_add_prompt_encoding(input_ids, encodings, sample, system_encoding)
-        return sample
-
-    def pad_and_add_prompt_encoding(
-        self, input_ids, encodings, sample, system_encoding
-    ):
         sample.update(
             self.pad_tokens(
                 input_ids,
@@ -378,6 +372,7 @@ class CustomDataset(Dataset):
                 sample["labels"][: len(system_encoding)] = -100
         if sample["prompt_input_ids"][0] != self.tokenizer.pad_token_id:
             sample["prompt_input_ids"][: len(system_encoding)] = system_encoding
+        return sample
 
     def get_labels(self, encodings):
         labels = torch.cat([torch.cat(encoding) for encoding in encodings]).clone()

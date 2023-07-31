@@ -20,21 +20,22 @@ class CustomDataset(CausalLMCustomDataset):
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
+        sample = super().__getitem__(idx)
         idx = self.indices[idx]
-
-        sample = dict()
-        encodings, system_encoding = self.get_encodings(idx)
-        # ground truth answer not used in RLHF training
-        encodings[-1][-1] = torch.empty(0)
-
-        input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
-
-        if self.mode != "train":  # no labels required for RLHF during training
-            sample.update(self.get_labels(encodings))
-
-        self.pad_and_add_prompt_encoding(input_ids, encodings, sample, system_encoding)
         sample["reward_model_prompt_text"] = self.get_reward_model_prompt_text(idx)
         return sample
+
+    def get_labels(self, encodings):
+        if self.mode != "train":  # no labels required for RLHF during training
+            return dict()
+        else:
+            return super().get_labels(encodings)
+
+    def get_encodings(self, idx):
+        encodings, system_encoding = super().get_encodings(idx)
+        # remove last ground truth answer, as RLHF will generate the answer from the prompt
+        encodings[-1][-1] = torch.empty(0)
+        return encodings, system_encoding
 
     def get_reward_model_prompt_text(self, idx):
         return (

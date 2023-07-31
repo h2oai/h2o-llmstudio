@@ -183,6 +183,7 @@ class ConfigProblemBaseABC(DefaultConfig):
     """
     Base class for all problem configs.
     """
+
     output_directory: str
     experiment_name: str
     _parent_experiment: str

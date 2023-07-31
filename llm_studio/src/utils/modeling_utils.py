@@ -18,14 +18,24 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
 )
 from torch.nn.parallel import DistributedDataParallel
 from tqdm import tqdm
-from transformers import AutoConfig, AutoModel, BitsAndBytesConfig, StoppingCriteria, GenerationMixin, \
-    StoppingCriteriaList
+from transformers import (
+    AutoConfig,
+    AutoModel,
+    BitsAndBytesConfig,
+    GenerationMixin,
+    StoppingCriteria,
+    StoppingCriteriaList,
+)
 from transformers.utils import logging as transformers_logging
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
-from llm_studio.src.utils.data_utils import cat_batches, get_inference_batch_size, batch_padding
+from llm_studio.src.utils.data_utils import (
+    batch_padding,
+    cat_batches,
+    get_inference_batch_size,
+)
 from llm_studio.src.utils.exceptions import LLMDataException, LLMModelException
 from llm_studio.src.utils.logging_utils import TqdmToLogger
 from llm_studio.src.utils.utils import save_pickle
@@ -782,5 +792,5 @@ def generate(backbone, batch, cfg, streamer):
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
     # remove the prompt tokens
-    output = output[:, input_ids.shape[1]:]
+    output = output[:, input_ids.shape[1] :]
     return output
