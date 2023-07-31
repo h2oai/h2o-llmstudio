@@ -60,6 +60,7 @@ class Plots:
         ]
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
         df.to_parquet(path)
+
         return PlotData(path, encoding="df")
 
     @classmethod

@@ -900,20 +900,26 @@ async def experiment_display(q: Q) -> None:
         ui.tab(name="experiment/display/summary", label="Summary"),
     ]
     # html for legacy experiments
-    if (
-        charts.get("df", dict()).get("train_data") is not None
-        or charts.get("html", dict()).get("train_data") is not None
-    ):
+    has_train_data_insights = any(
+        [
+            charts.get(plot_encoding, dict()).get("train_data") is not None
+            for plot_encoding in PLOT_ENCODINGS
+        ]
+    )
+    if has_train_data_insights:
         tabs += [
             ui.tab(
                 name="experiment/display/train_data_insights",
                 label="Train Data Insights",
             )
         ]
-    if (
-        charts.get("df", dict()).get("validation_predictions") is not None
-        or charts.get("html", dict()).get("validation_predictions") is not None
-    ):
+    has_validation_prediction_insights = any(
+        [
+            charts.get(plot_encoding, dict()).get("validation_predictions") is not None
+            for plot_encoding in PLOT_ENCODINGS
+        ]
+    )
+    if has_validation_prediction_insights:
         tabs += [
             ui.tab(
                 name="experiment/display/validation_prediction_insights",
