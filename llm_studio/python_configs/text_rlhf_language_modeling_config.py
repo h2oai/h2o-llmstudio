@@ -34,9 +34,14 @@ class ConfigRLHFLMDataset(ConfigNLPCausalLMDataset):
         self._visibility["system_column"] = False
 
 
+class LossClass:
+    def names(self):
+        return []
+
+
 @dataclass
 class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
-    loss_class: Any = None
+    loss_class: Any = LossClass
     loss_function: str = "RLHF"
     reward_model: str = "OpenAssistant/reward-model-deberta-v3-large-v2"
     adaptive_kl_control: bool = True
