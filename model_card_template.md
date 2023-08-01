@@ -128,7 +128,7 @@ model.cuda().eval()
 inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
 
 # generate configuration can be modified to your needs
-tokens = llm_studio.src.utils.modeling_utils.generate(
+tokens = model.generate(
     input_ids=inputs["input_ids"],
     attention_mask=inputs["attention_mask"],
     min_new_tokens={{min_new_tokens}},

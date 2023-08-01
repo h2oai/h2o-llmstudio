@@ -44,7 +44,7 @@ model.cuda().eval()
 
 inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
 # generate configuration can be modified to your needs
-tokens = llm_studio.src.utils.modeling_utils.generate(
+tokens = model.generate(
     **inputs,  # Input any question for the model. Ex: "What is the capital of USA?"
     max_new_tokens=256,
     temperature=0.3,
