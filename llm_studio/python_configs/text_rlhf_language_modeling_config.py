@@ -35,7 +35,8 @@ class ConfigRLHFLMDataset(ConfigNLPCausalLMDataset):
 
 
 class LossClass:
-    def names(self):
+    @classmethod
+    def names(cls):
         return []
 
 
