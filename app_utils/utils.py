@@ -8,6 +8,7 @@ import logging
 import math
 import os
 import pickle
+import re
 import shutil
 import socket
 import subprocess
@@ -1974,3 +1975,19 @@ def set_env(**environ):
     finally:
         os.environ.clear()
         os.environ.update(old_environ)
+
+
+def hf_repo_friendly_name(name: str) -> str:
+    """
+    Converts the given string into a huggingface-repository-friendly name.
+
+    • Repo id must use alphanumeric chars or '-', '_', and '.' allowed.
+    • '--' and '..' are forbidden
+    • '-' and '.' cannot start or end the name
+    • max length is 96
+    """
+    name = re.sub("[^0-9a-zA-Z]+", "-", name)
+    name = name[1:] if name.startswith("-") else name
+    name = name[:-1] if name.endswith("-") else name
+    name = name[:96]
+    return name
