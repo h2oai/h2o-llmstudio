@@ -79,10 +79,6 @@ class Model(nn.Module):
 
         self.backbone = prepare_lora(cfg=self.cfg, backbone=self.backbone)
 
-        self.loss_fn = self.cfg.training.loss_class.get(
-            self.cfg.training.loss_function
-        )(self.cfg)
-
         if self.cfg.prediction.metric == "Perplexity":
             self.perplexity = Perplexity(self.cfg, reduce=False)
 
@@ -121,10 +117,6 @@ class Model(nn.Module):
             attention_mask=batch["attention_mask"],
             output_hidden_states=True,
         )
-
-        if "labels" in batch:
-            loss = self.loss_fn(output.logits, batch["labels"])
-            outputs["loss"] = loss
 
         if self.cfg.prediction.metric == "Perplexity":
             outputs["perplexity"] = self.perplexity(output.logits, batch["labels"])

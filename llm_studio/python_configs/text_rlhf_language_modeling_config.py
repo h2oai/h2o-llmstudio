@@ -36,6 +36,8 @@ class ConfigRLHFLMDataset(ConfigNLPCausalLMDataset):
 
 @dataclass
 class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
+    loss_class: Any = None
+    loss_function: str = "RLHF"
     reward_model: str = "OpenAssistant/reward-model-deberta-v3-large-v2"
     adaptive_kl_control: bool = True
     initial_kl_coefficient: float = 0.2
@@ -101,6 +103,7 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
         )
 
         self._visibility["lora"] = -1
+        self._visibility["loss_function"] = -1
 
 
 @dataclass
