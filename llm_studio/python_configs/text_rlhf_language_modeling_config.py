@@ -14,9 +14,6 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMTraining,
 )
 from llm_studio.python_configs.text_causal_language_modeling_config import (
-    ConfigProblemBase,
-)
-from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigProblemBase as TextCausalLMConfigProblemBase,
 )
 from llm_studio.src import possible_values
@@ -190,4 +187,5 @@ class ConfigProblemBase(TextCausalLMConfigProblemBase):
                 cfg_dict.get("environment", {})
             ),
             logging=ConfigNLPCausalLMLogging.from_dict(cfg_dict.get("logging", {})),
+            hf=ConfigNLPCausalLMHF.from_dict(cfg_dict.get("hf", {})),
         )

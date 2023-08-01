@@ -199,6 +199,7 @@ class ConfigProblemBaseABC(DefaultConfig):
     logging: Any
     hf: Any
 
+    @classmethod
     def from_dict(cls, d: dict):
         raise NotImplementedError
 

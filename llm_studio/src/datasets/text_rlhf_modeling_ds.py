@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 class CustomDataset(CausalLMCustomDataset):
     def __init__(self, df: pd.DataFrame, cfg: Any, mode: str = "train"):
+        assert (
+            cfg.dataset.system_column == "None"
+        ), "RLHF is not compatible with system column."
         super().__init__(df, cfg, mode)
         self.raw_prompts = get_texts(df, self.cfg, separator="")
 
@@ -33,7 +36,8 @@ class CustomDataset(CausalLMCustomDataset):
 
     def get_encodings(self, idx):
         encodings, system_encoding = super().get_encodings(idx)
-        # remove last ground truth answer, as RLHF will generate the answer from the prompt
+        # remove last ground truth answer,
+        # as RLHF will generate the answer from the prompt
         encodings[-1][-1] = torch.empty(0)
         return encodings, system_encoding
 

@@ -2,12 +2,8 @@ import logging
 from typing import Any, Dict
 
 import torch
-from peft import LoraConfig, get_peft_model
-from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
 from torch import nn
-from transformers import AutoModelForCausalLM, StoppingCriteria, StoppingCriteriaList
-from transformers.generation.utils import GenerationMixin
-from transformers.utils import logging as transformers_logging
+from transformers import AutoModelForCausalLM
 
 from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
@@ -81,8 +77,7 @@ class Model(nn.Module):
             cfg, model_class=AutoModelForCausalLM
         )
 
-        if cfg.training.lora:
-            self.backbone = prepare_lora(cfg=self.cfg, backbone=self.backbone)
+        self.backbone = prepare_lora(cfg=self.cfg, backbone=self.backbone)
 
         self.loss_fn = self.cfg.training.loss_class.get(
             self.cfg.training.loss_function

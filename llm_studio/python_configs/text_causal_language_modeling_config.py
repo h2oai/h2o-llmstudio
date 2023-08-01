@@ -12,7 +12,7 @@ from llm_studio.src.augmentations.nlp_aug import BaseNLPAug
 from llm_studio.src.loggers import Loggers
 from llm_studio.src.losses import text_causal_language_modeling_losses
 from llm_studio.src.metrics import text_causal_language_modeling_metrics
-from llm_studio.src.models import text_causal_language_modeling_model, text_reward_model
+from llm_studio.src.models import text_causal_language_modeling_model
 from llm_studio.src.nesting import Dependency
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.plots import text_causal_language_modeling_plots
