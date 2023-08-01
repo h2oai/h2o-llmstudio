@@ -1051,9 +1051,13 @@ async def insights_tab(charts, q):
                             q=q,
                             df=df,
                             name=f"experiment/display/charts/{k1}_{k2}",
-                            sortables=["metrics"],
+                            sortables=[
+                                col for col in df.columns if col.startswith("Metric")
+                            ],
                             markdown_cells=[
-                                col for col in df.columns if col not in ["Metric"]
+                                col
+                                for col in df.columns
+                                if not col.startswith("Metric")
                             ],
                             searchables=list(df.columns),
                             downloadable=True,
