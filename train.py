@@ -236,7 +236,7 @@ def run_train(
         model.train()
 
         log_update_steps = max(epoch_steps // 20, 1)
-        evaluation_step = int(epoch_steps * cfg.training.evaluation_epochs)
+        evaluation_step = max(int(epoch_steps * cfg.training.evaluation_epochs), 1)
         for itr, data in enumerate(tr_it):
             cfg.environment._curr_step += (
                 cfg.training.batch_size * cfg.environment._world_size
@@ -499,7 +499,7 @@ def run_train_rlhf(
         model.train()
 
         log_update_steps = max(epoch_steps // 20, 1)
-        evaluation_step = int(epoch_steps * cfg.training.evaluation_epochs)
+        evaluation_step = max(int(epoch_steps * cfg.training.evaluation_epochs), 1)
         for itr, data in enumerate(tr_it):
             cfg.environment._curr_step += (
                 cfg.training.batch_size * cfg.environment._world_size
