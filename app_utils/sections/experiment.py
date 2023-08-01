@@ -1040,9 +1040,11 @@ async def insights_tab(charts, q):
                 min_widths = {
                     col: "350" for col in df.columns if "text" in str(col).lower()
                 }
-                if "Sample" in df.columns:
-                    min_widths["Sample"] = "800"
-                    min_widths["Description"] = "200"
+                #
+                if key == "train_data":
+                    min_widths["Sample Number"] = "150"
+                    min_widths["Field"] = "150"
+                    min_widths["Content"] = "800"
                 q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.form_card(
                     box="first",
                     items=[
@@ -1052,9 +1054,7 @@ async def insights_tab(charts, q):
                             name=f"experiment/display/charts/{k1}_{k2}",
                             sortables=["metrics"],
                             markdown_cells=[
-                                col
-                                for col in df.columns
-                                if col not in ["metrics", "tokenized_texts"]
+                                col for col in df.columns if col not in ["Metric"]
                             ],
                             searchables=list(df.columns),
                             downloadable=True,

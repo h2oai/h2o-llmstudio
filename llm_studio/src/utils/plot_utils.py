@@ -98,7 +98,9 @@ def format_for_markdown_visualization(text: str) -> str:
     return text
 
 
-def list_to_markdown_representation(tokens, masks, pad_token, num_chars=65):
+def list_to_markdown_representation(
+    tokens: List[str], masks: List[bool], pad_token: int, num_chars: int = 65
+):
     """
     Creates a markdown representation string from a list of tokens,
     with HTML line breaks after 'num_chars' characters.
@@ -106,8 +108,8 @@ def list_to_markdown_representation(tokens, masks, pad_token, num_chars=65):
 
     """
     x = []
-    sublist = []
-    raw_sublist = []
+    sublist: List[str] = []
+    raw_sublist: List[str] = []
     for token, mask in zip(tokens, masks):
         if len(token) + len(", ".join(raw_sublist)) > num_chars:
             x.append(", ".join(sublist))

@@ -62,22 +62,24 @@ class Plots:
         df = df.iloc[:2000]
 
         # Convert into a scrollable table by transposing the dataframe
-        # Rows are prompt text, answer text, and tokenized text, then prompt text, answer text, and tokenized text, etc.
-        df_transposed = pd.DataFrame(columns=["Description", "Sample"])
+        df_transposed = pd.DataFrame(columns=["Sample Number", "Field", "Content"])
         for i, row in df.iterrows():
             offset = 3 if "Answer Text" in df.columns else 2
             df_transposed.loc[i * offset] = [
-                f"Prompt Text Sample {i}",
+                i,
+                "Prompt Text",
                 row["Prompt Text"],
             ]
             if "Answer Text" in df.columns:
                 df_transposed.loc[i * offset + 1] = [
-                    f"Answer Text  Sample {i}",
-                    row[f"Answer Text"],
+                    i,
+                    "Answer Text",
+                    row["Answer Text"],
                 ]
             df_transposed.loc[i * offset + 2] = [
-                f"Tokenized Text  Sample {i}",
-                row[f"Tokenized Text"],
+                i,
+                "Tokenized Text",
+                row["Tokenized Text"],
             ]
 
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
@@ -127,22 +129,24 @@ class Plots:
 
         df = pd.DataFrame(
             {
-                "input_text": input_texts,
-                "target_text": target_text,
-                "predicted_text": predicted_text,
+                "Input Text": input_texts,
+                "Target Text": target_text,
+                "Predicted Text": predicted_text,
             }
         )
-        df["input_text"] = df["input_text"].apply(format_for_markdown_visualization)
-        df["target_text"] = df["target_text"].apply(format_for_markdown_visualization)
-        df["predicted_text"] = df["predicted_text"].apply(
+        df["Input Text"] = df["Input Text"].apply(format_for_markdown_visualization)
+        df["Target Text"] = df["Target Text"].apply(format_for_markdown_visualization)
+        df["Predicted Text"] = df["Predicted Text"].apply(
             format_for_markdown_visualization
         )
 
         if val_outputs.get("metrics") is not None:
-            df["metrics"] = val_outputs["metrics"]
-            df["metrics"] = df["metrics"].round(decimals=3)
+            df[f"Metric ({cfg.prediction.metric})"] = val_outputs["metrics"]
+            df[f"Metric ({cfg.prediction.metric})"] = df[
+                f"Metric ({cfg.prediction.metric})"
+            ].round(decimals=3)
         if val_outputs.get("explanations") is not None:
-            df["explanations"] = val_outputs["explanations"]
+            df["Explanation"] = val_outputs["explanations"]
 
         path = os.path.join(cfg.output_directory, f"{mode}_viz.parquet")
         df.to_parquet(path)
