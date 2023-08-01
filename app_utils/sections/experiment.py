@@ -1042,8 +1042,6 @@ async def insights_tab(charts, q):
                 }
                 #
                 if key == "train_data":
-                    min_widths["Sample Number"] = "150"
-                    min_widths["Field"] = "150"
                     min_widths["Content"] = "800"
                 q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.form_card(
                     box="first",
