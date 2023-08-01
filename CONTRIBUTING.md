@@ -13,14 +13,16 @@ process, please follow these steps:
 3. Specify the commit hash of the version you are using (running `git rev-parse HEAD`) in your report. If you are
    pasting the UI error message, the commit hash will also be included in the error message.
 4. If the error is reproducible, kindly include the steps to reproduce it.
-5. Whenever possible, attempt to reproduce the error using the default dataset.
+5. If possible, attempt to reproduce the error using the default dataset.
+6. Please mention any other details that might be useful, e.g. if you are using LLM Studio in a Docker container, etc.
 
 ## Pull Requests
 
 You can contribute to the project by fixing bugs, adding new features, refactoring code, or enhancing documentation.
 To ensure a smooth and collaborative process for everyone, please follow these guidelines:
 
-1. Check if the issue you plan to address is already [reported](https://github.com/h2oai/h2o-llmstudio/issues). If not, please open a new issue
+1. Check if the issue you plan to address is already [reported](https://github.com/h2oai/h2o-llmstudio/issues). If not,
+   please open a new issue
    to discuss your proposed changes.
 2. Avoid duplicating work by commenting on the issue you're working on and feel free to seek assistance or ask
    questions; our team is happy to help.
@@ -33,8 +35,7 @@ To ensure a smooth and collaborative process for everyone, please follow these g
 
 ## Setting up your development environment
 
-Assuming you develop on Linux (unless you are working on a dedicated feature for another OS), follow the instructions
-in [README](https://github.com/h2oai/h2o-llmstudio/blob/main/README.md) to set up your
+Follow the instructions in [README](https://github.com/h2oai/h2o-llmstudio/blob/main/README.md) to set up your
 environment. Run `make setup-dev` instead of `make setup` to install the development dependencies.
 
 ## Running linters and tests
