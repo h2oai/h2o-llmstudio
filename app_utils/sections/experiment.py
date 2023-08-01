@@ -34,6 +34,7 @@ from app_utils.utils import (
     get_problem_types,
     get_ui_elements,
     get_unique_name,
+    hf_repo_friendly_name,
     parse_ui_elements,
     remove_model_type,
     set_env,
@@ -1631,7 +1632,9 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             ui.textbox(
                 name="experiment/display/push_to_huggingface/model_name",
                 label="Model Name",
-                value=q.client["experiment/display/experiment"].name.replace(".", "-"),
+                value=hf_repo_friendly_name(
+                    q.client["experiment/display/experiment"].name
+                ),
                 width="500px",
                 required=True,
                 tooltip="The name of the model as shown on HF.",
