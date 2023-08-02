@@ -29,7 +29,6 @@ To publish a trained model to Hugging Face Hub:
 Use the following code snippet to utilize the converted model in Jupyter Notebook or Google Colab.
 
 ```python
-import llm_studio.src.utils.modeling_utils
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 model_name = "path_to_downloaded_model"  # either local folder or huggingface model name

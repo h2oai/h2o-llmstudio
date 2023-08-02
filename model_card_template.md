@@ -105,7 +105,6 @@ print(res[0]["generated_text"])
 You may also construct the pipeline from the loaded model and tokenizer yourself and consider the preprocessing steps:
 
 ```python
-import llm_studio.src.utils.modeling_utils
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 model_name = "{{repo_id}}"  # either local folder or huggingface model name
