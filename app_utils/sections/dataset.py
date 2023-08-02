@@ -495,7 +495,7 @@ async def dataset_import(
                 "Data Validity Check. Click <strong>Continue</strong> if the input "
                 "data and labels appear correctly."
             )
-            if plot.encoding == "png":
+            if plot.encoding == "image":
                 plot_item = ui.image(title="", type="png", image=plot.data)
             elif plot.encoding == "html":
                 plot_item = ui.markup(content=plot.data)
@@ -780,8 +780,8 @@ async def dataset_list_table(
                 df=df_viz,
                 name="dataset/list/table",
                 sortables=["train rows", "validation rows"],
-                searchables=[],
                 filterables=["name", "problem type"],
+                searchables=[],
                 min_widths=widths,
                 link_col="name",
                 height="calc(100vh - 245px)",
@@ -795,7 +795,6 @@ async def dataset_list_table(
 
 async def dataset_list(q: Q, reset: bool = True) -> None:
     """Display all datasets."""
-
     q.client["nav/active"] = "dataset/list"
 
     if reset:
@@ -1022,6 +1021,7 @@ async def dataset_display(q: Q) -> None:
                     name="dataset/display/data/table",
                     sortables=list(df.columns),
                     height="calc(100vh - 265px)",
+                    cell_overflow="wrap",
                 )
             ],
         )
@@ -1037,7 +1037,7 @@ async def dataset_display(q: Q) -> None:
             )
 
         card: ImageCard | MarkupCard
-        if plot.encoding == "png":
+        if plot.encoding == "image":
             card = ui.image_card(box="first", title="", type="png", image=plot.data)
         elif plot.encoding == "html":
             card = ui.markup_card(box="first", title="", content=plot.data)
@@ -1067,8 +1067,8 @@ async def dataset_display(q: Q) -> None:
                     df=stats,
                     name="dataset/display/statistics/table",
                     sortables=list(stats.columns),
-                    height="calc(100vh - 265px)",
                     min_widths=widths,
+                    height="calc(100vh - 265px)",
                 )
             ]
         q.page["dataset/display/statistics"] = ui.form_card(

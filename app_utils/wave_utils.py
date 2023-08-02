@@ -1,3 +1,4 @@
+import subprocess
 import sys
 import traceback
 from typing import TypedDict
@@ -69,6 +70,7 @@ def ui_table_from_df(
     sortables: list = None,
     filterables: list = None,
     searchables: list = None,
+    markdown_cells=None,
     numerics: list = None,
     times: list = None,
     tags: list = None,
@@ -83,36 +85,24 @@ def ui_table_from_df(
     height: str = None,
     checkbox_visibility: str = None,
     actions: dict = None,
-    # enables truncating the maximum length in characters of each cell on the
-    # server-side. Wave truncates on the client-side anyway, so truncating on
-    # the server side as well does not make a visible difference but we avoid
-    # sending excessive amounts of data.
     max_char_length: int = 500,
+    cell_overflow="tooltip",
 ) -> Component:
     """
     Convert a Pandas dataframe into Wave ui.table format.
     """
 
     df = df.reset_index(drop=True)
-
-    if not sortables:
-        sortables = []
-    if not filterables:
-        filterables = []
-    if not searchables:
-        searchables = []
-    if not numerics:
-        numerics = []
-    if not times:
-        times = []
-    if not tags:
-        tags = []
-    if not progresses:
-        progresses = []
-    if not min_widths:
-        min_widths = {}
-    if not max_widths:
-        max_widths = {}
+    sortables = sortables or []
+    filterables = filterables or []
+    searchables = searchables or []
+    numerics = numerics or []
+    times = times or []
+    tags = tags or []
+    progresses = progresses or []
+    markdown_cells = markdown_cells or []
+    min_widths = min_widths or {}
+    max_widths = max_widths or {}
 
     cell_types = {}
     for col in tags:
@@ -127,24 +117,27 @@ def ui_table_from_df(
         cell_types[col] = ui.progress_table_cell_type(
             wave_theme.get_primary_color(q),
         )
+    for col in markdown_cells:
+        # enables rendering of code in wave table
+        cell_types[col] = ui.markdown_table_cell_type()
 
     columns = [
         ui.table_column(
-            name=str(x),
-            label=str(x),
-            sortable=True if x in sortables else False,
-            filterable=True if x in filterables else False,
-            searchable=True if x in searchables else False,
+            name=str(col),
+            label=str(col),
+            sortable=True if col in sortables else False,
+            filterable=True if col in filterables else False,
+            searchable=True if col in searchables else False,
             data_type="number"
-            if x in numerics
-            else ("time" if x in times else "string"),
-            cell_type=cell_types[x] if x in cell_types.keys() else None,
-            min_width=min_widths[x] if x in min_widths.keys() else None,
-            max_width=max_widths[x] if x in max_widths.keys() else None,
-            link=True if x == link_col else False,
-            cell_overflow="tooltip",
+            if col in numerics
+            else ("time" if col in times else "string"),
+            cell_type=cell_types[col] if col in cell_types else None,
+            min_width=min_widths[col] if col in min_widths else None,
+            max_width=max_widths[col] if col in max_widths else None,
+            link=True if col == link_col else False,
+            cell_overflow=cell_overflow,
         )
-        for x in df.columns.values
+        for col in df.columns.values
     ]
 
     if actions:
@@ -158,7 +151,6 @@ def ui_table_from_df(
         columns.append(action_column)
 
     rows = []
-
     for i, row in df.iterrows():
         cells = []
 
@@ -262,6 +254,7 @@ def wave_utils_error_card(
 
     type_, value_, traceback_ = sys.exc_info()
     stack_trace = traceback.format_exception(type_, value_, traceback_)
+    git_version = subprocess.getoutput("git rev-parse HEAD")
     if not q.app.wave_utils_stack_trace_str:
         q.app.wave_utils_stack_trace_str = "### stacktrace\n" + "\n".join(stack_trace)
 
@@ -305,6 +298,7 @@ def wave_utils_error_card(
             ui.text_xs(content=q_args_str, visible=False),
             ui.text_xs(content=q.app.wave_utils_stack_trace_str, visible=False),
             ui.text_xs(content=f"### Error\n {error}", visible=False),
+            ui.text_xs(content=f"### Git Version\n {git_version}", visible=False),
         ],
     )
 
@@ -358,6 +352,7 @@ async def report_error(q: Q):
     q.page[card_name].items[11].text_xs.visible = True
     q.page[card_name].items[12].text_xs.visible = True
     q.page[card_name].items[13].text_xs.visible = True
+    q.page[card_name].items[14].text_xs.visible = True
 
     await q.page.save()
 

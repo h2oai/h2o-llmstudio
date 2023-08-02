@@ -8,6 +8,7 @@ import logging
 import math
 import os
 import pickle
+import re
 import shutil
 import socket
 import subprocess
@@ -1586,7 +1587,7 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
         env_vars.update(
             {"HUGGINGFACE_TOKEN": q.client["default_huggingface_api_token"]}
         )
-    cfg = copy_config(cfg)
+    cfg = copy_config(cfg, q)
     cfg.output_directory = f"{get_output_dir(q)}/{cfg.experiment_name}/"
     os.makedirs(cfg.output_directory)
     save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
@@ -1864,7 +1865,7 @@ def get_single_gpu_usage(sig_figs=1, highlight=None):
     return items
 
 
-def copy_config(cfg: Any) -> Any:
+def copy_config(cfg: Any, q: Q) -> Any:
     """Makes a copy of the config
 
     Args:
@@ -1873,8 +1874,8 @@ def copy_config(cfg: Any) -> Any:
         copy of the config
     """
     # make unique yaml file using uuid
-    os.makedirs("output", exist_ok=True)
-    tmp_file = os.path.join("output/", str(uuid.uuid4()) + ".yaml")
+    os.makedirs(get_output_dir(q), exist_ok=True)
+    tmp_file = os.path.join(f"{get_output_dir(q)}/", str(uuid.uuid4()) + ".yaml")
     save_config_yaml(tmp_file, cfg)
     cfg = load_config_yaml(tmp_file)
     os.remove(tmp_file)
@@ -1974,3 +1975,19 @@ def set_env(**environ):
     finally:
         os.environ.clear()
         os.environ.update(old_environ)
+
+
+def hf_repo_friendly_name(name: str) -> str:
+    """
+    Converts the given string into a huggingface-repository-friendly name.
+
+    • Repo id must use alphanumeric chars or '-', '_', and '.' allowed.
+    • '--' and '..' are forbidden
+    • '-' and '.' cannot start or end the name
+    • max length is 96
+    """
+    name = re.sub("[^0-9a-zA-Z]+", "-", name)
+    name = name[1:] if name.startswith("-") else name
+    name = name[:-1] if name.endswith("-") else name
+    name = name[:96]
+    return name
