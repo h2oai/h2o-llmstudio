@@ -419,6 +419,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     _rank: int = 0  # global rank
     _device: str = "cuda"
     _cpu_comm: Any = None
+    _model_card_template: str = "text_causal_language_modeling_model_card_template.md"
 
     def __post_init__(self):
         super().__post_init__()

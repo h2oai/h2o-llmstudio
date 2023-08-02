@@ -205,7 +205,7 @@ def load_config_yaml(path: str):
             ConfigProblemBase,
         )
     elif cfg_dict["problem_type"] == "text_sequence_to_sequence_modeling":
-        from llm_studio.python_configs.text_sequence_to_sequence_modeling_config import (
+        from llm_studio.python_configs.text_sequence_to_sequence_modeling_config import (  # noqa: E501
             ConfigProblemBase,
         )
     else:

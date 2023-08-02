@@ -1,11 +1,7 @@
-import multiprocessing
 import os
 from dataclasses import dataclass, field
-from typing import Any, Tuple
+from typing import Any
 
-import torch
-
-import llm_studio.src.datasets.text_causal_language_modeling_ds
 from llm_studio.python_configs.base import DefaultConfig
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPAugmentation,
@@ -18,18 +14,7 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMTraining,
 )
 from llm_studio.src import possible_values
-from llm_studio.src.augmentations.nlp_aug import BaseNLPAug
-from llm_studio.src.loggers import Loggers
-from llm_studio.src.losses import text_causal_language_modeling_losses
-from llm_studio.src.metrics import text_causal_language_modeling_metrics
-from llm_studio.src.models import (
-    text_reward_model,
-    text_sequence_to_sequence_modeling_model,
-)
-from llm_studio.src.nesting import Dependency
-from llm_studio.src.optimizers import Optimizers
-from llm_studio.src.plots import text_causal_language_modeling_plots
-from llm_studio.src.schedulers import Schedulers
+from llm_studio.src.models import text_sequence_to_sequence_modeling_model
 from llm_studio.src.utils.modeling_utils import generate_experiment_name
 
 
@@ -73,6 +58,19 @@ class ConfigNLPSeq2SeqTraining(ConfigNLPCausalLMTraining):
 @dataclass
 class ConfigNLPSeq2SeqArchitecture(ConfigNLPCausalLMArchitecture):
     model_class: Any = text_sequence_to_sequence_modeling_model.Model
+    backbone_dtype: str = "bfloat16"
+
+    def __post_init__(self):
+        super().__post_init__()
+
+
+@dataclass
+class ConfigNLPSeq2SeqEnvironment(ConfigNLPCausalLMEnvironment):
+    mixed_precision: bool = False
+
+    _model_card_template: str = (
+        "text_sequence_to_sequence_modeling_model_card_template.md"
+    )
 
     def __post_init__(self):
         super().__post_init__()
@@ -97,8 +95,8 @@ class ConfigProblemBase(DefaultConfig):
     prediction: ConfigNLPCausalLMPrediction = field(
         default_factory=ConfigNLPCausalLMPrediction
     )
-    environment: ConfigNLPCausalLMEnvironment = field(
-        default_factory=ConfigNLPCausalLMEnvironment
+    environment: ConfigNLPSeq2SeqEnvironment = field(
+        default_factory=ConfigNLPSeq2SeqEnvironment
     )
     logging: ConfigNLPCausalLMLogging = field(default_factory=ConfigNLPCausalLMLogging)
 
@@ -142,7 +140,7 @@ class ConfigProblemBase(DefaultConfig):
             prediction=ConfigNLPCausalLMPrediction.from_dict(
                 cfg_dict.get("prediction", {})
             ),
-            environment=ConfigNLPCausalLMEnvironment.from_dict(
+            environment=ConfigNLPSeq2SeqEnvironment.from_dict(
                 cfg_dict.get("environment", {})
             ),
             logging=ConfigNLPCausalLMLogging.from_dict(cfg_dict.get("logging", {})),
