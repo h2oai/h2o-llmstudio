@@ -9,7 +9,7 @@ import ReactPlayer from 'react-player'
 
 
 :::info Note 
-  In this video, Andreea Turcu delves in-depth into the world of language models, showcasing how users can unleash their incredible power through H2O.ai's LLM Studio.
+  In this video, Andreea Turcu delves in-depth into the world of language models, showcasing how users can use H2O.ai's LLM Studio to their full advantage.
 :::
 
 ---
