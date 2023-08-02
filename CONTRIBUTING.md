@@ -40,7 +40,7 @@ environment. Run `make setup-dev` instead of `make setup` to install the develop
 
 ## Running linters and tests
 
-Before submitting your pull request, ensure that your code adheres to our guidelines and passes the linters and tests.
+Before submitting your pull request, ensure that your code passes the linters and tests.
 To format your code, run `make format`. You can check for any style issues by running `make style`. To run the tests,
 run `make test`.
 
