@@ -440,7 +440,6 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
     _neptune_debug: bool = False
 
     plots_class: Any = text_causal_language_modeling_plots.Plots
-    number_of_texts: int = 10
 
     # the actual logger, will be set dynamically at runtime
     _logger: Any = None
@@ -448,7 +447,6 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
     def __post_init__(self):
         super().__post_init__()
         self._possible_values["logger"] = Loggers.names()
-        self._possible_values["number_of_texts"] = (0, 20, 2)
 
         self._nesting.add(
             ["neptune_project"],

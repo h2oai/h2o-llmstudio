@@ -45,7 +45,6 @@ def test_load_config_yaml():
 
     assert cfg.logging.logger == "None"
     assert cfg.logging.neptune_project == ""
-    assert cfg.logging.number_of_texts == 10
 
     assert cfg.prediction.batch_size_inference == 0
     assert cfg.prediction.do_sample is False
