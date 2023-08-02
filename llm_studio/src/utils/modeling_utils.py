@@ -187,23 +187,33 @@ def deepspeed_initialize(
         raise Exception(f"deepspeed do not support {cfg.llm_backbone}")
     ds_config = {
         "fp16": {
-            "enabled": True if cfg.architecture.backbone_dtype == "float16" else False
+            "enabled": True if cfg.architecture.backbone_dtype == "float16" else False,
+            "loss_scale_window": 100,
         },
         "bf16": {
-            "enabled": True if cfg.architecture.backbone_dtype == "bfloat16" else False
+            "enabled": True if cfg.architecture.backbone_dtype == "bfloat16" else False,
+            "loss_scale_window": 100,
         },
         # https://www.deepspeed.ai/docs/config-json/#zero-optimizations-for-fp16-training
         "zero_force_ds_cpu_optimizer": False,
         "zero_optimization": {
             "stage": 3,
-            "mics_shard_size": cfg.environment._world_size,
             "overlap_comm": False,
             "contiguous_gradients": True,
             "reduce_bucket_size": model_hidden_size * model_hidden_size,
+            # zero3
+            "mics_shard_size": cfg.environment._world_size,
             "stage3_prefetch_bucket_size": 0.9 * model_hidden_size * model_hidden_size,
             "stage3_param_persistence_threshold": 10 * model_hidden_size,
-            "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,
-            "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,
+            "stage3_max_live_parameters":
+                cfg.environment.deepspeed_stage3_max_live_parameters,
+            "stage3_max_reuse_distance":
+                cfg.environment.deepspeed_stage3_max_reuse_distance,
+            # zero++
+            # "reduce_scatter": True,
+            # "zero_quantized_weights": True,
+            # "zero_hpz_partition_size": 16,
+            # "zero_quantized_gradients": True,
         },
         "steps_per_print": 2000,
         "train_batch_size": cfg.training.batch_size * cfg.environment._world_size,
@@ -211,9 +221,14 @@ def deepspeed_initialize(
         "wall_clock_breakdown": False,
     }
     if cfg.environment.deepspeed_offload_optimizer:
-        ds_config["zero_optimization"]["offload_optimizer"] = {"device": "cpu", "pin_memory": True}
-#     if cfg.environment.deepspeed_offload_param:  ### RuntimeError: Tensors must be CUDA and dense
-#         ds_config["zero_optimization"]["offload_param"] = {"device": "cpu", "pin_memory": True}
+        ds_config["zero_optimization"]["offload_optimizer"] = {
+            "device": "cpu",
+            "pin_memory": True,
+        }
+    # TODO: RuntimeError: Tensors must be CUDA and dense
+    # if cfg.environment.deepspeed_offload_param:
+    #     ds_config["zero_optimization"]["offload_param"] =
+    #         {"device": "cpu", "pin_memory": True}
 
     model, optimizer, train_dataloader, scheduler = deepspeed.initialize(
         model=model,

@@ -10,6 +10,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import argparse
 import gc
 import logging
+import shutil
 import sys
 import time
 from distutils import util
@@ -19,6 +20,7 @@ import deepspeed
 import numpy as np
 import pandas as pd
 import torch
+from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
 from torch.cuda.amp import GradScaler, autocast
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from torch.utils.data import DataLoader
@@ -468,25 +470,65 @@ def run_train(
                 val_loss, val_metric = run_eval(
                     cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
                 )
-                if cfg.environment._local_rank == 0:
-                    if cfg.training.save_best_checkpoint:
-                        if objective_op(val_metric, best_val_metric):
-                            checkpoint_path = cfg.output_directory
+
+                if cfg.training.save_best_checkpoint:
+                    if objective_op(val_metric, best_val_metric):
+                        checkpoint_path = cfg.output_directory
+                        if cfg.environment._local_rank == 0:
                             logger.info(
                                 f"Saving best model checkpoint: "
                                 f"val_{cfg.prediction.metric} {best_val_metric:.5} -> "
                                 f"{val_metric:.5} to {checkpoint_path}"
                             )
-                            save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
-                            best_val_metric = val_metric
-                    else:
-                        checkpoint_path = cfg.output_directory
+                        if cfg.environment.use_deepspeed:
+                            model.save_checkpoint(
+                                os.path.join(checkpoint_path, "ds_checkpoint")
+                            )
+                            if cfg.environment._local_rank == 0:
+                                logger.info("ds checkpoint saved")
+                                state_dict = get_fp32_state_dict_from_zero_checkpoint(
+                                    os.path.join(checkpoint_path, "ds_checkpoint")
+                                )
+                                torch.save(
+                                    {"model": state_dict},
+                                    os.path.join(checkpoint_path, "checkpoint.pth"),
+                                )
+                                shutil.rmtree(
+                                    os.path.join(checkpoint_path, "ds_checkpoint")
+                                )
+                        else:
+                            if cfg.environment._local_rank == 0:
+                                save_checkpoint(
+                                    model=model, path=checkpoint_path, cfg=cfg
+                                )
+                        best_val_metric = val_metric
+                else:
+                    checkpoint_path = cfg.output_directory
+                    if cfg.environment._local_rank == 0:
                         logger.info(
                             f"Saving last model checkpoint: "
                             f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
                             f"{val_metric:.5} to {checkpoint_path}"
                         )
-                        save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
+                    if cfg.environment.use_deepspeed:
+                        model.save_checkpoint(
+                            os.path.join(checkpoint_path, "ds_checkpoint")
+                        )
+                        if cfg.environment._local_rank == 0:
+                            logger.info("ds checkpoint saved")
+                            state_dict = get_fp32_state_dict_from_zero_checkpoint(
+                                os.path.join(checkpoint_path, "ds_checkpoint")
+                            )
+                            torch.save(
+                                {"model": state_dict},
+                                os.path.join(checkpoint_path, "checkpoint.pth"),
+                            )
+                            shutil.rmtree(
+                                os.path.join(checkpoint_path, "ds_checkpoint")
+                            )
+                    else:
+                        if cfg.environment._local_rank == 0:
+                            save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
                 model.train()
 
