@@ -1,0 +1,281 @@
+# Contributing to H2O LLM STUDIO
+
+Everyone is welcome to contribute, and we value everybody's contribution. You can fix bugs or new features, fix typos or add missing documentation,  We have a few guidelines to ensure that the process is as smooth as possible for everyone involved.
+1. Check if there is already [an open issue](https://github.com/h2oai/h2o-llmstudio/issues). If not, first open a new issue.
+2. To avoid duplicate work, please comment on the issue that you are working on it. If you are new to the project, please ask for guidance on how to get started.
+4. Once you have commits to publish, create a pull request with the initial sketch of the implementation and ask for feedback. This is a also good time to ask for help if you are stuck.
+5. Verify that all tests pass (see below).
+
+
+## Setting up your development environment
+
+We assume the development environment is set up on a Linux machine. Please follow the recommended steps in README.md to set up your development environment.
+Please run `make setup-dev` instead of `make setup` to install the additional development packages.
+
+
+## Requirements for Pull Requests
+
+To ease the review process, please follow the instructions in this paragraph when creating a Pull Request.
+
+### PR Title
+We use elements from the [conventional commit convention](https://www.conventionalcommits.org/en/v1.0.0/) for our
+PR titles. Your PR title should follow the same structure of commit type, scope, and description as the convention
+specifies:
+
+```
+<type>[optional scope]: <description>
+```
+
+Common types are:
+- `feat` (for enhancements)
+- `bug` (for bug fixes)
+- `docs` (for changes to the documentation)
+- `test` (for changes to the tests)
+- `perf` (for performance improvements)
+- `refactor` (for code refactorings)
+
+If your change is breaking backwards compatibility (e.g. introducing a new required parameter) use a `!` after the type
+to indicate that your PR contains breaking changes.
+
+Examples:
+- `feat: add pinecone document store`
+- `bug: fix MultiLabel serialization`
+- `feat!: make all document store methods async`
+
+### PR Description
+Please use the existing [pull request template](https://github.com/deepset-ai/haystack/blob/main/.github/pull_request_template.md)
+for describing and documenting your changes:
+
+- Link the issue that this relates to
+- What is changing?
+- What are limitations?
+- Breaking changes (Example of before vs. after)
+- How did you test the change?
+
+### Release notes
+Each PR should include a file under the `releasenotes/notes` path created with `reno`, unless the PR doesn't have any
+impact on Haystack behavior, for example: tests and documentation updates, changes in code comments or docstrings,
+changes to the CI/CD systems. PRs that don't require a release note file must be labeled with `ignore-for-release-notes`
+by a maintainer in order to bypass the CI check.
+
+Say your PR is for bumping the `transformers` version in the `pyproject.toml` file. To create the corresponding release
+note, from the root of the repo run:
+```
+$ reno new bump-transformers-to-4-31
+loaded configuration file ./releasenotes/config.yaml
+Created new notes file in releasenotes/notes/bump-transformers-to-4-31-a645334d57eab673.yaml
+```
+`reno` will create the file appending a unique id to the name of the release note you provided (in this case,
+`bump-transformers-to-4-31`). You don't need to worry about duplicated entries, but be sure to use meaningful names
+so it's easier to find the file later. You can now edit the file to add the release note. In the file, you will find multiple
+sections along with an explanation of what they're for. Normally, you only need to fill one section; in this case, you
+would fill the `enhancements` section to describe the change:
+```yaml
+enhancements:
+  - |
+    Upgrade transformers to the latest version 4.31.0 so that Haystack can support the new LLama2 models.
+```
+You can now add the file to the git repo and commit your changes. Your release note will be reviewed along with the
+code you changed.
+
+## CI (Continuous Integration)
+
+We use GitHub Action for our Continuous Integration tasks. This means that, as soon as you open a PR, GitHub will start executing some workflows on your code, like automated tests, linting, formatting, api docs generation, etc.
+
+If all goes well, at the bottom of your PR page you should see something like this, where all checks are green.
+
+![Successful CI](docs/img/ci-success.png)
+
+If you see some red checks (like the following), then something didn't work, and action is needed from your side.
+
+![Failed CI](docs/img/ci-failure-example.png)
+
+Click on the failing test and see if there are instructions at the end of the logs of the failed test.
+For example, in the case above, the CI will give you instructions on how to fix the issue.
+
+![Logs of failed CI, with instructions for fixing the failure](docs/img/ci-failure-example-instructions.png)
+
+## Working from Github forks
+
+In order for maintainers to be able to help you, we usually ask contributors to give us push access to their fork.
+
+To do so, please verify that "Allow edits and access to secrets by maintainers" on the PR preview page is checked (you can check it later on the PR's sidebar once it's created).
+
+![Allow access to your branch to maintainers](docs/img/first_time_contributor_enable_access.png)
+
+
+## Running the tests
+
+Tests will automatically run in our CI for every commit you push to your PR on Github. This is usually the most convenient
+way and we encourage you to create early "draft pull requests" to leverage the CI at an early stage.
+
+Tests can also be executed locally, by launching `pytest` from the `/test` folder (this is important because running from the
+root folder would also execute the ui and rest API tests, that require specific dependencies).
+
+You can control which tests to run using Pytest markers, let's see how.
+
+### Running a subset of tests (recommended)
+In most cases you rather want to run a **subset of tests** locally that are related to your dev, and the most important
+option to reduce the number of tests in a meaningful way, is to run tests only for a list of **selected document stores**.
+This is possible by adding the `--document_store_type` arg to your `pytest` command (possible values are: `"elasticsearch, faiss, memory, weaviate, pinecone"`).
+
+For example, calling `pytest . --document_store_type="memory"` will run all the document store tests using the
+InMemoryDocumentStore only, skipping the others (the logs will show which ones). The `InMemoryDocument` store is a very
+good starting point as it doesn't require any external resource:
+```
+pytest . --document_store_type="memory"
+```
+
+You can also run the tests using a **combination of document stores**, provided the corresponding services are up and
+running in your local environment. For example, Elasticsearch must be running before launching the following:
+```
+pytest . --document_store_type="memory,elasticsearch"
+```
+
+**Note:** we recommend using Docker containers to run document stores locally:
+```
+# Elasticsearch
+docker run -d -p 9200:9200 -e "discovery.type=single-node" -e "ES_JAVA_OPTS=-Xms128m -Xmx256m" elasticsearch:7.9.2
+
+# Weaviate
+docker run -d -p 8080:8080 --name haystack_test_weaviate --env AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED='true' --env PERSISTENCE_DATA_PATH='/var/lib/weaviate' --env ENABLE_EXPERIMENTAL_BM25='true' semitechnologies/weaviate:1.14.1
+
+# Tika
+docker run -d -p 9998:9998 -e "TIKA_CHILD_JAVA_OPTS=-JXms128m" -e "TIKA_CHILD_JAVA_OPTS=-JXmx128m" apache/tika:1.28.4
+```
+
+Tests can be also run **individually**:
+```
+pytest -v test_retriever.py::test_dpr_embedding
+```
+
+Or you can select a **logical subset of tests** via markers and the optional "not" keyword:
+```
+pytest -m not elasticsearch
+pytest -m elasticsearch
+pytest -m generator
+pytest -m tika
+pytest -m not slow
+...
+```
+
+### Running all the tests
+**Important**: If you want to run **all** the tests locally, you'll need **all** document stores running in the background
+before you run the tests. Many of the tests will then be executed multiple times with different document stores.
+
+To run all tests, from the `/test` folder just run:
+```
+pytest
+```
+
+## Writing tests
+
+We formally define three scopes for tests in Haystack with different requirements and purposes:
+
+### Unit test
+- Tests a single logical concept
+- Execution time is a few milliseconds
+- Any external resource is mocked
+- Always returns the same result
+- Can run in any order
+- Runs at every commit in draft and ready PRs, automated through pytest
+- Can run locally with no additional setup
+- **Goal: being confident in merging code**
+
+### Integration test
+- Tests a single logical concept
+- Execution time is a few seconds
+- It uses external resources that must be available before execution
+- When using models, cannot use inference
+- Always returns the same result or an error
+- Can run in any order
+- Runs at every commit in ready PRs, automated through pytest
+- Can run locally with some additional setup (e.g. Docker)
+- **Goal: being confident in merging code**
+
+### End to End (e2e) test
+- Tests a sequence of multiple logical concepts
+- Execution time has no limits (can be always on)
+- Can use inference
+- Evaluates the results of the execution or the status of the system
+- It uses external resources that must be available before execution
+- Can return different results
+- Can be dependent on the order
+- Can be wrapped into any process execution
+- Runs outside the development cycle (nightly or on demand)
+- Might not be possible to run locally due to system and hardware requirements
+- **Goal: being confident in releasing Haystack**
+
+> **Note**: migrating the existing tests into these new categories is still in progress. Please ask the maintainers if you are in doubt about how to
+classify your tests or where to place them.
+
+If you are writing a test that depend on a document store, there are a few conventions to define on which document store
+type this test should/can run:
+
+### Option 1: The test should run on all document stores / those supplied in the CLI arg `--document_store_type`:
+Use one of the fixtures `document_store` or `document_store_with_docs` or `document_store_type`.
+Do not parameterize it yourself.
+
+Example:
+```
+def test_write_with_duplicate_doc_ids(document_store):
+        ...
+        document_store.write(docs)
+        ....
+
+```
+
+### Option 2: The test is only compatible with certain document stores:
+Some tests you don't want to run on all possible document stores. Either because the test is specific to one/few doc store(s) or the test is not really document store related and it's enough to test it on one document store and speed up the execution time.
+
+Example:
+```
+# Currently update_document_meta() is not implemented for InMemoryDocStore so it's not listed here as an option
+
+@pytest.mark.parametrize("document_store", ["elasticsearch", "faiss"], indirect=True)
+def test_update_meta(document_store):
+    ....
+```
+
+### Option 3: The test is not using a `document_store`/ fixture, but still has a hard requirement for a certain document store:
+Example:
+```
+@pytest.mark.elasticsearch
+def test_elasticsearch_custom_fields(elasticsearch_fixture):
+    client = Elasticsearch()
+    client.indices.delete(index='haystack_test_custom', ignore=[404])
+    document_store = ElasticsearchDocumentStore(index="haystack_test_custom", text_field="custom_text_field",
+                                                embedding_field="custom_embedding_field")
+```
+
+## Code format and style
+
+We use [Black](https://github.com/psf/black) to ensure consistent code style, [mypy](http://mypy-lang.org/) for static type checking and
+[pylint](https://pylint.org/) for linting and code quality.
+
+All checks and autoformatting happen on the CI, so in general you don't need to worry about configuring them in your local environment.
+However, should you prefer to execute them locally, here are a few details about the setup.
+
+### Black
+Black runs with no other configuration than increasing line length to 120 characters. Its configuration can be found in `pyproject.toml`.
+
+You can run it with `python -m black .` from the root folder.
+
+### Mypy
+Mypy currently runs with limited configuration options that can be found at the bottom of `pyproject.toml`.
+
+You can run it with `python -m mypy haystack/ rest_api/ ui/` from the root folder.
+
+### Pylint
+Pylint is still being integrated in Haystack. The current exclusion list is very long, and can be found in `pyproject.toml`.
+
+You can run it with `python -m pylint haystack/ rest_api/ ui/ -ry` from the root folder.
+
+
+## Contributor Licence Agreement (CLA)
+
+Significant contributions to Haystack require a Contributor License Agreement (CLA). If the contribution requires a CLA, we will get in contact with you. CLAs are quite common among company backed open-source frameworks and our CLA’s wording is similar to other popular projects, like [Rasa](https://cla-assistant.io/RasaHQ/rasa) or [Google's Tensorflow](https://cla.developers.google.com/clas/new?domain=DOMAIN_GOOGLE&kind=KIND_INDIVIDUAL) (retrieved 4th November 2021).
+
+The agreement's main purpose is to protect the continued open use of Haystack. At the same time it also helps in protecting you as a contributor. Contributions under this agreement will ensure that your code will continue to be open to everyone in the future (“You hereby grant to Deepset **and anyone** [...]”) as well as removing liabilities on your end (“you provide your Contributions on an AS IS basis, without warranties or conditions of any kind [...]”). You can find the Contributor Licence Agreement [here](https://cla-assistant.io/deepset-ai/haystack).
+
+If you have further questions about the licensing feel free to reach out to contributors@deepset.ai.
