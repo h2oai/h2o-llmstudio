@@ -12,6 +12,7 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMPrediction,
     ConfigNLPCausalLMTokenizer,
     ConfigNLPCausalLMTraining,
+    ConfigNLPCausalLMHF,
 )
 from llm_studio.src import possible_values
 from llm_studio.src.models import text_sequence_to_sequence_modeling_model
@@ -71,6 +72,9 @@ class ConfigNLPSeq2SeqEnvironment(ConfigNLPCausalLMEnvironment):
     _model_card_template: str = (
         "text_sequence_to_sequence_modeling_model_card_template.md"
     )
+    _summary_card_template: str = (
+        "text_sequence_to_sequence_modeling_experiment_summary_code_template.md"
+    )
 
     def __post_init__(self):
         super().__post_init__()
@@ -99,6 +103,7 @@ class ConfigProblemBase(DefaultConfig):
         default_factory=ConfigNLPSeq2SeqEnvironment
     )
     logging: ConfigNLPCausalLMLogging = field(default_factory=ConfigNLPCausalLMLogging)
+    hf: ConfigNLPCausalLMHF = field(default_factory=ConfigNLPCausalLMHF)
 
     def __post_init__(self):
         super().__post_init__()
@@ -144,4 +149,5 @@ class ConfigProblemBase(DefaultConfig):
                 cfg_dict.get("environment", {})
             ),
             logging=ConfigNLPCausalLMLogging.from_dict(cfg_dict.get("logging", {})),
+            hf=ConfigNLPCausalLMHF.from_dict(cfg_dict.get("hf", {})),
         )

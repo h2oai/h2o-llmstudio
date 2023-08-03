@@ -420,6 +420,9 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     _device: str = "cuda"
     _cpu_comm: Any = None
     _model_card_template: str = "text_causal_language_modeling_model_card_template.md"
+    _summary_card_template: str = (
+        "text_causal_language_modeling_experiment_summary_card_template.md"
+    )
 
     def __post_init__(self):
         super().__post_init__()
@@ -499,7 +502,6 @@ class ConfigProblemBase(DefaultConfig):
         default_factory=ConfigNLPCausalLMEnvironment
     )
     logging: ConfigNLPCausalLMLogging = field(default_factory=ConfigNLPCausalLMLogging)
-
     hf: ConfigNLPCausalLMHF = field(default_factory=ConfigNLPCausalLMHF)
 
     def __post_init__(self):
