@@ -41,13 +41,13 @@ from app_utils.utils import (
     start_experiment,
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
+from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,
     save_config_yaml,
 )
-from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.utils.exceptions import LLMResourceException
 from llm_studio.src.utils.export_utils import (
     check_available_space,
@@ -1879,7 +1879,9 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
 
 
 def get_experiment_summary_code_card(cfg) -> str:
-    with open(os.path.join("model_cards", cfg.environment._summary_card_template), "r") as f:
+    with open(
+        os.path.join("model_cards", cfg.environment._summary_card_template), "r"
+    ) as f:
         text = f.read()
 
     # Model repo
@@ -1895,9 +1897,14 @@ def get_experiment_summary_code_card(cfg) -> str:
 
     # Configs
     text = text.replace("{{text_prompt_start}}", str(cfg.dataset.text_prompt_start))
-    text = text.replace("{{text_answer_separator}}", str(cfg.dataset.text_answer_separator))
-    text = text.replace("{{end_of_sentence}}", str(cfg._tokenizer_eos_token) if cfg.dataset.add_eos_token_to_prompt else "")
-    
+    text = text.replace(
+        "{{text_answer_separator}}", str(cfg.dataset.text_answer_separator)
+    )
+    text = text.replace(
+        "{{end_of_sentence}}",
+        str(cfg._tokenizer_eos_token) if cfg.dataset.add_eos_token_to_prompt else "",
+    )
+
     text = text.replace("{{min_new_tokens}}", str(cfg.prediction.min_length_inference))
     text = text.replace("{{max_new_tokens}}", str(cfg.prediction.max_length_inference))
     text = text.replace("{{use_fast}}", str(cfg.tokenizer.use_fast))
