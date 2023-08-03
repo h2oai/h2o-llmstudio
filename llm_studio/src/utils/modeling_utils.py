@@ -10,6 +10,7 @@ import coolname
 import deepspeed
 import numpy as np
 import torch
+from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
 from torch.cuda.amp import autocast
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
@@ -76,15 +77,27 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
         Dictionary with all the keys to save
     """
 
-    model = unwrap_model(model)
-
-    if hasattr(cfg.training, "lora") and cfg.training.lora:
-        model.backbone.save_pretrained(path)
-
-    checkpoint = {"model": model.state_dict()}
-
-    if path is not None:
-        torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
+    if cfg.environment.use_deepspeed:
+        if path is not None:
+            # gather model params from all ranks
+            model.save_checkpoint(os.path.join(path, "ds_checkpoint"))
+            if cfg.environment._local_rank == 0:
+                # load to cpu
+                state_dict = get_fp32_state_dict_from_zero_checkpoint(
+                    os.path.join(path, "ds_checkpoint")
+                )
+                # save as normal checkpoint that can be loaded by `load_state_dict`
+                checkpoint = {"model": state_dict}
+                torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
+                shutil.rmtree(os.path.join(path, "ds_checkpoint"))
+    else:
+        if cfg.environment._local_rank == 0:
+            model = unwrap_model(model)
+            if hasattr(cfg.training, "lora") and cfg.training.lora:
+                model.backbone.save_pretrained(path)
+            checkpoint = {"model": model.state_dict()}
+            if path is not None:
+                torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
 
 
 def load_model_weights(
@@ -205,10 +218,8 @@ def deepspeed_initialize(
             "mics_shard_size": cfg.environment._world_size,
             "stage3_prefetch_bucket_size": 0.9 * model_hidden_size * model_hidden_size,
             "stage3_param_persistence_threshold": 10 * model_hidden_size,
-            "stage3_max_live_parameters":
-                cfg.environment.deepspeed_stage3_max_live_parameters,
-            "stage3_max_reuse_distance":
-                cfg.environment.deepspeed_stage3_max_reuse_distance,
+            "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,  # noqa: E501
+            "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,  # noqa: E501
             # zero++
             # "reduce_scatter": True,
             # "zero_quantized_weights": True,
