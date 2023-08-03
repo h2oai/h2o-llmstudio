@@ -34,6 +34,7 @@ from app_utils.utils import (
     get_problem_types,
     get_ui_elements,
     get_unique_name,
+    hf_repo_friendly_name,
     parse_ui_elements,
     remove_model_type,
     set_env,
@@ -59,6 +60,7 @@ from llm_studio.src.utils.export_utils import (
 )
 from llm_studio.src.utils.logging_utils import write_flag
 from llm_studio.src.utils.modeling_utils import check_disk_space, unwrap_model
+from llm_studio.src.utils.plot_utils import PLOT_ENCODINGS
 from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
 
 logger = logging.getLogger(__name__)
@@ -567,13 +569,13 @@ def get_experiment_table(
         df=df_viz,
         name="experiment/list/table",
         sortables=["val metric"],
-        searchables=["name", "dataset"],
         filterables=["name", "dataset", "problem type", "metric", "status"],
+        searchables=["name", "dataset"],
+        numerics=["val metric"],
         tags=["status"],
         progresses=["progress"],
         min_widths=min_widths,
         link_col="name",
-        numerics=["val metric"],
         height=height,
         actions=actions_dict,
     )
@@ -898,23 +900,33 @@ async def experiment_display(q: Q) -> None:
         ui.tab(name="experiment/display/charts", label="Charts"),
         ui.tab(name="experiment/display/summary", label="Summary"),
     ]
-    if (
-        "html" in charts
-        and "train_data" in charts["html"]
-        and charts["html"]["train_data"] is not None
-    ):
+    # html for legacy experiments
+    has_train_data_insights = any(
+        [
+            charts.get(plot_encoding, dict()).get("train_data") is not None
+            for plot_encoding in PLOT_ENCODINGS
+        ]
+    )
+    if has_train_data_insights:
         tabs += [
             ui.tab(
                 name="experiment/display/train_data_insights",
                 label="Train Data Insights",
             )
         ]
-    tabs += [
-        ui.tab(
-            name="experiment/display/validation_prediction_insights",
-            label="Validation Prediction Insights",
-        )
-    ]
+    has_validation_prediction_insights = any(
+        [
+            charts.get(plot_encoding, dict()).get("validation_predictions") is not None
+            for plot_encoding in PLOT_ENCODINGS
+        ]
+    )
+    if has_validation_prediction_insights:
+        tabs += [
+            ui.tab(
+                name="experiment/display/validation_prediction_insights",
+                label="Validation Prediction Insights",
+            )
+        ]
 
     tabs += [
         ui.tab(name="experiment/display/logs", label="Logs"),
@@ -1003,7 +1015,7 @@ async def insights_tab(charts, q):
         == "experiment/display/validation_prediction_insights"
     ):
         key = "validation_predictions"
-    for k1 in ["image", "html"]:
+    for k1 in PLOT_ENCODINGS:
         if k1 not in charts:
             continue
         for k2, v2 in charts[k1].items():
@@ -1017,9 +1029,45 @@ async def insights_tab(charts, q):
 
                 continue
 
-            if k1 == "image":
+            elif k1 == "image":
                 q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.image_card(
                     box="first", title="", type="png", image=v2
+                )
+                q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
+                continue
+
+            elif k1 == "df":
+                df = pd.read_parquet(v2)
+                min_widths = {
+                    col: "350" for col in df.columns if "text" in str(col).lower()
+                }
+                #
+                if key == "train_data":
+                    min_widths["Content"] = "800"
+                q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.form_card(
+                    box="first",
+                    items=[
+                        ui_table_from_df(
+                            q=q,
+                            df=df,
+                            name=f"experiment/display/charts/{k1}_{k2}",
+                            sortables=[
+                                col for col in df.columns if col.startswith("Metric")
+                            ],
+                            markdown_cells=[
+                                col
+                                for col in df.columns
+                                if not col.startswith("Metric")
+                            ],
+                            searchables=list(df.columns),
+                            downloadable=True,
+                            resettable=True,
+                            min_widths=min_widths,
+                            height="calc(100vh - 245px)",
+                            max_char_length=50_000,
+                            cell_overflow="tooltip",
+                        )
+                    ],
                 )
                 q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
                 continue
@@ -1631,7 +1679,9 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             ui.textbox(
                 name="experiment/display/push_to_huggingface/model_name",
                 label="Model Name",
-                value=q.client["experiment/display/experiment"].name.replace(".", "-"),
+                value=hf_repo_friendly_name(
+                    q.client["experiment/display/experiment"].name
+                ),
                 width="500px",
                 required=True,
                 tooltip="The name of the model as shown on HF.",

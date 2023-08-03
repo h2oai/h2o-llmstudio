@@ -8,6 +8,8 @@ from sqlitedict import SqliteDict
 
 __all__ = ["Loggers"]
 
+from llm_studio.src.utils.plot_utils import PLOT_ENCODINGS
+
 logger = logging.getLogger(__name__)
 
 
@@ -89,7 +91,7 @@ class LocalLogger:
             logs.commit()
 
     def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
-        if subset in ("image", "html"):
+        if subset in PLOT_ENCODINGS:
             with SqliteDict(self.logs) as logs:
                 if subset not in logs:
                     subset_dict = dict()
