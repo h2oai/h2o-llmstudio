@@ -1905,6 +1905,7 @@ def get_experiment_summary_code_card(cfg) -> str:
         str(cfg._tokenizer_eos_token) if cfg.dataset.add_eos_token_to_prompt else "",
     )
 
+    text = text.replace("{{trust_remote_code}}", str(cfg.environment.trust_remote_code))
     text = text.replace("{{min_new_tokens}}", str(cfg.prediction.min_length_inference))
     text = text.replace("{{max_new_tokens}}", str(cfg.prediction.max_length_inference))
     text = text.replace("{{use_fast}}", str(cfg.tokenizer.use_fast))

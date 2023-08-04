@@ -73,7 +73,7 @@ class ConfigNLPSeq2SeqEnvironment(ConfigNLPCausalLMEnvironment):
         "text_sequence_to_sequence_modeling_model_card_template.md"
     )
     _summary_card_template: str = (
-        "text_sequence_to_sequence_modeling_experiment_summary_code_template.md"
+        "text_sequence_to_sequence_modeling_experiment_summary_card_template.md"
     )
 
     def __post_init__(self):
