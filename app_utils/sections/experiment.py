@@ -41,6 +41,7 @@ from app_utils.utils import (
     start_experiment,
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
+from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
     load_config_py,
@@ -1079,6 +1080,7 @@ async def summary_tab(experiment_id, q):
     cfg = load_config_yaml(
         os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
     )
+    _ = get_tokenizer(cfg)
 
     # experiment card
     card_name = "experiment/display/summary/experiment"
@@ -1850,7 +1852,7 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
     )
     card = huggingface_hub.ModelCard.from_template(
         card_data,
-        template_path="model_card_template.md",
+        template_path=os.path.join("model_cards", cfg.environment._model_card_template),
         base_model=cfg.llm_backbone,  # will be replaced in template if it exists
         repo_id=repo_id,
         model_architecture=model.backbone.__repr__(),
@@ -1877,7 +1879,9 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
 
 
 def get_experiment_summary_code_card(cfg) -> str:
-    with open("experiment_summary_code_template.md", "r") as f:
+    with open(
+        os.path.join("model_cards", cfg.environment._summary_card_template), "r"
+    ) as f:
         text = f.read()
 
     # Model repo
@@ -1892,6 +1896,16 @@ def get_experiment_summary_code_card(cfg) -> str:
     text = text.replace("{{torch_version}}", torch.__version__)
 
     # Configs
+    text = text.replace("{{text_prompt_start}}", str(cfg.dataset.text_prompt_start))
+    text = text.replace(
+        "{{text_answer_separator}}", str(cfg.dataset.text_answer_separator)
+    )
+    text = text.replace(
+        "{{end_of_sentence}}",
+        str(cfg._tokenizer_eos_token) if cfg.dataset.add_eos_token_to_prompt else "",
+    )
+
+    text = text.replace("{{trust_remote_code}}", str(cfg.environment.trust_remote_code))
     text = text.replace("{{min_new_tokens}}", str(cfg.prediction.min_length_inference))
     text = text.replace("{{max_new_tokens}}", str(cfg.prediction.max_length_inference))
     text = text.replace("{{use_fast}}", str(cfg.tokenizer.use_fast))
