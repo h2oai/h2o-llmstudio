@@ -43,7 +43,7 @@ class GPTNeoXRewardModel(GPTNeoXPreTrainedModel):
     config_class = GPTNeoXRewardModelConfig
 
     def __init__(self, config):
-        if type(config) == GPTNeoXConfig:
+        if isinstance(config, GPTNeoXConfig):
             # When a normal GPTNeoX was loaded it will be converted into a reward model.
             # The direct `type(config) == GPTNeoXConfig` comparison is used (instead of
             # `isinstance()`) since the configuration class of the reward model is also

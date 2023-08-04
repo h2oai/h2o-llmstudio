@@ -1151,7 +1151,7 @@ def parse_ui_elements(
                 if isinstance(value, str):
                     value = [value]
                 value = tuple(value)
-            if type_annotations[k] == str and type(value) == list:
+            if isinstance(type_annotations[k], str) and isinstance(value, list):
                 # fix for combobox outputting custom values as list in wave 0.22
                 value = value[0]
             setattr(cfg, k, value)
