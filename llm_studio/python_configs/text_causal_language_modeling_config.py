@@ -360,6 +360,10 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     _rank: int = 0  # global rank
     _device: str = "cuda"
     _cpu_comm: Any = None
+    _model_card_template: str = "text_causal_language_modeling_model_card_template.md"
+    _summary_card_template: str = (
+        "text_causal_language_modeling_experiment_summary_card_template.md"
+    )
 
     def __post_init__(self):
         super().__post_init__()
@@ -381,7 +385,6 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
     _neptune_debug: bool = False
 
     plots_class: Any = text_causal_language_modeling_plots.Plots
-    number_of_texts: int = 10
 
     # the actual logger, will be set dynamically at runtime
     _logger: Any = None
@@ -389,7 +392,6 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
     def __post_init__(self):
         super().__post_init__()
         self._possible_values["logger"] = Loggers.names()
-        self._possible_values["number_of_texts"] = (0, 20, 2)
 
         self._nesting.add(
             ["neptune_project"],
@@ -441,7 +443,6 @@ class ConfigProblemBase(ConfigProblemBaseABC):
         default_factory=ConfigNLPCausalLMEnvironment
     )
     logging: ConfigNLPCausalLMLogging = field(default_factory=ConfigNLPCausalLMLogging)
-
     hf: ConfigNLPCausalLMHF = field(default_factory=ConfigNLPCausalLMHF)
 
     def __post_init__(self):

@@ -3,6 +3,17 @@ import ReactPlayer from 'react-player'
 
 # Videos
 
+## Discovering the Potential of LLMs
+
+<iframe width="930" height="515" src="https://www.youtube.com/embed/u48QaIAIFw4" title="Discovering the Potential of LLMs: A Journey through H2O.ai's LLM Studio!" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+
+:::info Note 
+  In this video, Andreea Turcu delves in-depth into the world of language models, showcasing how users can use H2O.ai's LLM Studio to their full advantage.
+:::
+
+---
+
 ## The Fine Art of Fine-Tuning Large Language Models
 
 <iframe width="930" height="515" src="https://www.youtube.com/embed/YWAS3QDFg40" title="The Fine Art of Fine-Tuning LLMs" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>

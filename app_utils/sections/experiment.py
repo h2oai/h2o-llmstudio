@@ -41,6 +41,7 @@ from app_utils.utils import (
     start_experiment,
 )
 from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
+from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
     load_config_py,
@@ -60,6 +61,7 @@ from llm_studio.src.utils.export_utils import (
 )
 from llm_studio.src.utils.logging_utils import write_flag
 from llm_studio.src.utils.modeling_utils import check_disk_space, unwrap_model
+from llm_studio.src.utils.plot_utils import PLOT_ENCODINGS
 from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
 
 logger = logging.getLogger(__name__)
@@ -568,13 +570,13 @@ def get_experiment_table(
         df=df_viz,
         name="experiment/list/table",
         sortables=["val metric"],
-        searchables=["name", "dataset"],
         filterables=["name", "dataset", "problem type", "metric", "status"],
+        searchables=["name", "dataset"],
+        numerics=["val metric"],
         tags=["status"],
         progresses=["progress"],
         min_widths=min_widths,
         link_col="name",
-        numerics=["val metric"],
         height=height,
         actions=actions_dict,
     )
@@ -899,23 +901,33 @@ async def experiment_display(q: Q) -> None:
         ui.tab(name="experiment/display/charts", label="Charts"),
         ui.tab(name="experiment/display/summary", label="Summary"),
     ]
-    if (
-        "html" in charts
-        and "train_data" in charts["html"]
-        and charts["html"]["train_data"] is not None
-    ):
+    # html for legacy experiments
+    has_train_data_insights = any(
+        [
+            charts.get(plot_encoding, dict()).get("train_data") is not None
+            for plot_encoding in PLOT_ENCODINGS
+        ]
+    )
+    if has_train_data_insights:
         tabs += [
             ui.tab(
                 name="experiment/display/train_data_insights",
                 label="Train Data Insights",
             )
         ]
-    tabs += [
-        ui.tab(
-            name="experiment/display/validation_prediction_insights",
-            label="Validation Prediction Insights",
-        )
-    ]
+    has_validation_prediction_insights = any(
+        [
+            charts.get(plot_encoding, dict()).get("validation_predictions") is not None
+            for plot_encoding in PLOT_ENCODINGS
+        ]
+    )
+    if has_validation_prediction_insights:
+        tabs += [
+            ui.tab(
+                name="experiment/display/validation_prediction_insights",
+                label="Validation Prediction Insights",
+            )
+        ]
 
     tabs += [
         ui.tab(name="experiment/display/logs", label="Logs"),
@@ -1004,7 +1016,7 @@ async def insights_tab(charts, q):
         == "experiment/display/validation_prediction_insights"
     ):
         key = "validation_predictions"
-    for k1 in ["image", "html"]:
+    for k1 in PLOT_ENCODINGS:
         if k1 not in charts:
             continue
         for k2, v2 in charts[k1].items():
@@ -1018,9 +1030,45 @@ async def insights_tab(charts, q):
 
                 continue
 
-            if k1 == "image":
+            elif k1 == "image":
                 q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.image_card(
                     box="first", title="", type="png", image=v2
+                )
+                q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
+                continue
+
+            elif k1 == "df":
+                df = pd.read_parquet(v2)
+                min_widths = {
+                    col: "350" for col in df.columns if "text" in str(col).lower()
+                }
+                #
+                if key == "train_data":
+                    min_widths["Content"] = "800"
+                q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.form_card(
+                    box="first",
+                    items=[
+                        ui_table_from_df(
+                            q=q,
+                            df=df,
+                            name=f"experiment/display/charts/{k1}_{k2}",
+                            sortables=[
+                                col for col in df.columns if col.startswith("Metric")
+                            ],
+                            markdown_cells=[
+                                col
+                                for col in df.columns
+                                if not col.startswith("Metric")
+                            ],
+                            searchables=list(df.columns),
+                            downloadable=True,
+                            resettable=True,
+                            min_widths=min_widths,
+                            height="calc(100vh - 245px)",
+                            max_char_length=50_000,
+                            cell_overflow="tooltip",
+                        )
+                    ],
                 )
                 q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")
                 continue
@@ -1032,6 +1080,7 @@ async def summary_tab(experiment_id, q):
     cfg = load_config_yaml(
         os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
     )
+    _ = get_tokenizer(cfg)
 
     # experiment card
     card_name = "experiment/display/summary/experiment"
@@ -1803,7 +1852,7 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
     )
     card = huggingface_hub.ModelCard.from_template(
         card_data,
-        template_path="model_card_template.md",
+        template_path=os.path.join("model_cards", cfg.environment._model_card_template),
         base_model=cfg.llm_backbone,  # will be replaced in template if it exists
         repo_id=repo_id,
         model_architecture=model.backbone.__repr__(),
@@ -1830,7 +1879,9 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
 
 
 def get_experiment_summary_code_card(cfg) -> str:
-    with open("experiment_summary_code_template.md", "r") as f:
+    with open(
+        os.path.join("model_cards", cfg.environment._summary_card_template), "r"
+    ) as f:
         text = f.read()
 
     # Model repo
@@ -1845,6 +1896,16 @@ def get_experiment_summary_code_card(cfg) -> str:
     text = text.replace("{{torch_version}}", torch.__version__)
 
     # Configs
+    text = text.replace("{{text_prompt_start}}", str(cfg.dataset.text_prompt_start))
+    text = text.replace(
+        "{{text_answer_separator}}", str(cfg.dataset.text_answer_separator)
+    )
+    text = text.replace(
+        "{{end_of_sentence}}",
+        str(cfg._tokenizer_eos_token) if cfg.dataset.add_eos_token_to_prompt else "",
+    )
+
+    text = text.replace("{{trust_remote_code}}", str(cfg.environment.trust_remote_code))
     text = text.replace("{{min_new_tokens}}", str(cfg.prediction.min_length_inference))
     text = text.replace("{{max_new_tokens}}", str(cfg.prediction.max_length_inference))
     text = text.replace("{{use_fast}}", str(cfg.tokenizer.use_fast))
