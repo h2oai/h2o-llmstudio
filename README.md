@@ -200,7 +200,7 @@ The interactive chat will also work with model that were finetuned using the UI.
 To publish the model to Hugging Face, use the following command:
 
 ```bash
-python publish_to_hugging_face.py -e {experiment_name} -d {device} -a {api_key} -u "{user_id}" -m "{model_name}"
+python publish_to_hugging_face.py -e {experiment_name} -d {device} -a {api_key} -u {user_id} -m {model_name}
 ``` 
 
 `experiment_name` is the output folder of the experiment you want to chat with (see configuration).
