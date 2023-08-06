@@ -1,5 +1,4 @@
 from app_utils import hugging_face_utils
-
 import argparse
 import logging
 import sys
