@@ -6,7 +6,6 @@ from llm_studio.src import possible_values
 from llm_studio.src.nesting import Dependency, Nesting
 from llm_studio.src.order import Order
 from llm_studio.src.tooltips import tooltips
-from llm_studio.src.utils.config_utils import convert_cfg_to_nested_dictionary
 
 logger = logging.getLogger(__name__)
 
@@ -196,16 +195,3 @@ class DefaultConfigProblemBase(DefaultConfig):
         for example: text_causal_language_modeling_config.py -> causal_language_modeling
         """
         return type(self).__dict__["__module__"].split(".")[-1].replace("_config", "")
-
-    def __dict__(self):
-        """
-        Returns a dictionary representation of the config object.
-        Protected attributes (starting with an underscore) are not included.
-        Nested configs are converted to nested dictionaries.
-        """
-        cfg_dict = convert_cfg_to_nested_dictionary(self)
-        cfg_dict["experiment_name"] = self.experiment_name
-        cfg_dict["output_directory"] = self.output_directory
-        cfg_dict["llm_backbone"] = self.llm_backbone
-        cfg_dict["problem_type"] = self.problem_type
-        return cfg_dict
