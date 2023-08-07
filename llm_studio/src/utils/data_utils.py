@@ -415,12 +415,12 @@ def cat_batches(
 
     for key, value in data.items():
         if len(value[0].shape) == 0:
-            if type(value[0]) == torch.Tensor:
+            if isinstance(value[0], torch.Tensor):
                 data[key] = torch.stack(value)
             else:
                 data[key] = np.stack(value)
         else:
-            if type(value[0]) == torch.Tensor:
+            if isinstance(value[0], torch.Tensor):
                 data[key] = torch.cat(value, dim=0)
             else:
                 data[key] = np.concatenate(value, axis=0)
