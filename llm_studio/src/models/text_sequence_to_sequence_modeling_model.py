@@ -8,8 +8,8 @@ from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplex
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import (
     create_nlp_backbone,
-    prepare_lora,
     generate,
+    prepare_lora,
 )
 
 logger = logging.getLogger(__name__)

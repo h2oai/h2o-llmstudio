@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Any
 
-from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPAugmentation,
     ConfigNLPCausalLMArchitecture,
