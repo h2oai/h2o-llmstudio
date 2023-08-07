@@ -200,12 +200,10 @@ def load_config_yaml(path: str):
     with open(path, "r") as fp:
         cfg_dict = yaml.load(fp, Loader=yaml.FullLoader)
 
-    if cfg_dict["problem_type"] == "text_causal_language_modeling":
-        from llm_studio.python_configs.text_causal_language_modeling_config import (
-            ConfigProblemBase,
-        )
-    else:
-        problem_type = cfg_dict["problem_type"]
+    problem_type = cfg_dict["problem_type"]
+    module_name = f"llm_studio.python_configs.{problem_type}_config"
+    try:
+        module = importlib.import_module(module_name)
+    except ModuleNotFoundError:
         raise NotImplementedError(f"Problem Type {problem_type} not implemented")
-
-    return ConfigProblemBase.from_dict(cfg_dict)
+    return module.ConfigProblemBase.from_dict(cfg_dict)

@@ -541,6 +541,7 @@ def batch_padding(
     training: bool = True,
     mask_key: str = "attention_mask",
     pad_keys: List[str] = ["input_ids", "attention_mask", "special_tokens_mask"],
+    padding_side: str = "left",
 ) -> Dict:
     """Pads a batch according to set quantile, or cuts it at maximum length"""
     if cfg.environment.compile_model:
@@ -552,7 +553,7 @@ def batch_padding(
     elif cfg.tokenizer.padding_quantile == 0:
         return batch
     elif training and cfg.tokenizer.padding_quantile < 1.0:
-        if cfg.tokenizer._padding_side == "left":
+        if padding_side == "left":
             idx = int(
                 torch.floor(
                     torch.quantile(
@@ -581,19 +582,19 @@ def batch_padding(
                 )
             )
     else:
-        if cfg.tokenizer._padding_side == "left":
+        if padding_side == "left":
             idx = int(torch.where(batch[mask_key] == 1)[1].min())
         else:
             idx = int(torch.where(batch[mask_key] == 1)[1].max())
 
-    if cfg.tokenizer._padding_side == "left":
+    if padding_side == "left":
         for key in pad_keys:
             if key in batch:
-                batch[key] = batch[key][:, idx:]
+                batch[key] = batch[key][:, idx:].contiguous()
     else:
         idx += 1
         for key in pad_keys:
             if key in batch:
-                batch[key] = batch[key][:, :idx]
+                batch[key] = batch[key][:, :idx].contiguous()
 
     return batch
