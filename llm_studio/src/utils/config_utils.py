@@ -117,11 +117,8 @@ def convert_cfg_base_to_nested_dictionary(cfg: DefaultConfigProblemBase) -> dict
         else:
             raise _get_type_annotation_error(v, type_annotations[k])
 
-    grouped_cfg_dict["experiment_name"] = cfg.experiment_name
-    grouped_cfg_dict["output_directory"] = cfg.output_directory
-    grouped_cfg_dict["llm_backbone"] = cfg.llm_backbone
+    # not an explicit field in the config
     grouped_cfg_dict["problem_type"] = cfg.problem_type
-
     return grouped_cfg_dict
 
 
