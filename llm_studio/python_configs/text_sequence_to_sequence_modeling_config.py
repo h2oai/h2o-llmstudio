@@ -47,16 +47,6 @@ class ConfigNLPSeq2SeqDataset(ConfigNLPCausalLMDataset):
 
 
 @dataclass
-class ConfigNLPSeq2SeqTraining(ConfigNLPCausalLMTraining):
-    use_rlhf: bool = False
-
-    def __post_init__(self):
-        super().__post_init__()
-
-        self._visibility["use_rlhf"] = -1
-
-
-@dataclass
 class ConfigNLPSeq2SeqArchitecture(ConfigNLPCausalLMArchitecture):
     model_class: Any = text_sequence_to_sequence_modeling_model.Model
     backbone_dtype: str = "bfloat16"
@@ -94,7 +84,9 @@ class ConfigProblemBase(DefaultConfig):
     architecture: ConfigNLPSeq2SeqArchitecture = field(
         default_factory=ConfigNLPSeq2SeqArchitecture
     )
-    training: ConfigNLPSeq2SeqTraining = field(default_factory=ConfigNLPSeq2SeqTraining)
+    training: ConfigNLPCausalLMTraining = field(
+        default_factory=ConfigNLPCausalLMTraining
+    )
     augmentation: ConfigNLPAugmentation = field(default_factory=ConfigNLPAugmentation)
     prediction: ConfigNLPCausalLMPrediction = field(
         default_factory=ConfigNLPCausalLMPrediction
@@ -141,7 +133,7 @@ class ConfigProblemBase(DefaultConfig):
             architecture=ConfigNLPSeq2SeqArchitecture.from_dict(
                 cfg_dict.get("architecture", {})
             ),
-            training=ConfigNLPSeq2SeqTraining.from_dict(cfg_dict.get("training", {})),
+            training=ConfigNLPCausalLMTraining.from_dict(cfg_dict.get("training", {})),
             prediction=ConfigNLPCausalLMPrediction.from_dict(
                 cfg_dict.get("prediction", {})
             ),
