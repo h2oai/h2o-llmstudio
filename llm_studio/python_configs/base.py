@@ -181,26 +181,31 @@ class DefaultConfig:
 
 @dataclass
 class DefaultConfigProblemBase(DefaultConfig):
+    """
+    Base class for all problem configs. Contains all fields that are common to all problems.
+    """
+
     experiment_name: str
     output_directory: str
     llm_backbone: str
 
     @property
-    def problem_type(self):
+    def problem_type(self) -> str:
         """
         Parse problem_type from config filename,
         for example: text_causal_language_modeling_config.py -> causal_language_modeling
-        Returns:
-
         """
         return type(self).__dict__["__module__"].split(".")[-1].replace("_config", "")
 
     def __dict__(self):
+        """
+        Returns a dictionary representation of the config object.
+        Protected attributes (starting with an underscore) are not included.
+        Nested configs are converted to nested dictionaries.
+        """
         cfg_dict = convert_cfg_to_nested_dictionary(self)
         cfg_dict["experiment_name"] = self.experiment_name
         cfg_dict["output_directory"] = self.output_directory
         cfg_dict["llm_backbone"] = self.llm_backbone
-        # Parse problem_type from config filename,
-        # for example: text_causal_language_modeling
         cfg_dict["problem_type"] = self.problem_type
         return cfg_dict
