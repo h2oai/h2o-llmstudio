@@ -26,7 +26,7 @@ To publish a trained model to Hugging Face Hub:
 
 1. Click **Download model** on the **View experiments** page to download the model locally.
 
-Use the following code snippet to utilize the converted model in Jupyter Notebook or Google Colab.
+Use the following code snippet to utilize the converted model in Jupyter Notebook or Google Colab. 
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
