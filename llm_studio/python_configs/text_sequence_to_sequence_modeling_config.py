@@ -8,7 +8,6 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMArchitecture,
     ConfigNLPCausalLMDataset,
     ConfigNLPCausalLMEnvironment,
-    ConfigNLPCausalLMHF,
     ConfigNLPCausalLMLogging,
     ConfigNLPCausalLMPrediction,
     ConfigNLPCausalLMTokenizer,
@@ -103,7 +102,6 @@ class ConfigProblemBase(DefaultConfig):
         default_factory=ConfigNLPSeq2SeqEnvironment
     )
     logging: ConfigNLPCausalLMLogging = field(default_factory=ConfigNLPCausalLMLogging)
-    hf: ConfigNLPCausalLMHF = field(default_factory=ConfigNLPCausalLMHF)
 
     def __post_init__(self):
         super().__post_init__()
@@ -149,5 +147,4 @@ class ConfigProblemBase(DefaultConfig):
                 cfg_dict.get("environment", {})
             ),
             logging=ConfigNLPCausalLMLogging.from_dict(cfg_dict.get("logging", {})),
-            hf=ConfigNLPCausalLMHF.from_dict(cfg_dict.get("hf", {})),
         )
