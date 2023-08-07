@@ -1762,7 +1762,6 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         api_key = q.client["experiment/display/push_to_huggingface/api_key"]
         user_id = q.client["experiment/display/push_to_huggingface/account_name"]
         safe_serialization = q.client["default_safe_serialization"]
-
         model_name = q.client[
             "experiment/display/push_to_huggingface/model_name"
         ].replace(".", "-")
