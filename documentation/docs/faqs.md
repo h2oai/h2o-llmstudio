@@ -96,8 +96,13 @@ Yes.
 1. After you have finished creating an experiment, click on the <Icon>more_vert</Icon> Kebab menu of the relevant experiment and select **New Experiment**. 
 
 2. Enable the **Use previous experiments weight** setting found at the top of the screen. 
-   This will now load the previous weights, and you can now change eval dataset, metric, and anything else as you see fit. To only do evaluation without any retraining, set the **Epochs** to 0.
+   This will now load the previous weights, and you can now change eval dataset, metric, and anything else as you see fit. To only do evaluation without any retraining, set the 
+   **Epochs** to 0.
+---
+### What are the hardware/infrastructure sizing recommendations for LLM Studio?
+For CPU needs, most modern options are suitable since NLP tasks don't heavily demand CPU performance. Optimal RAM is 128GB+, with 256GB+ recommended for accommodating substantial model weights in CPU RAM.
 
+----
 ----
 
 
