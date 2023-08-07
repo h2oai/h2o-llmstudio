@@ -43,7 +43,13 @@ model.cuda().eval()
 
 inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
 # generate configuration can be modified to your needs
-tokens = model.generate(**inputs)[0]
+tokens = model.generate(
+    **inputs, # Input any question for the model. Ex: "What is the capital of USA?"
+    max_new_tokens=256,
+    temperature=0.3,
+    repetition_penalty=1.2,
+    num_beams=1
+)[0]
 tokens = tokens[inputs["input_ids"].shape[1]:]
 answer = tokenizer.decode(tokens, skip_special_tokens=True)
 print(answer)
