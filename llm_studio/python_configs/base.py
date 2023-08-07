@@ -181,7 +181,8 @@ class DefaultConfig:
 @dataclass
 class DefaultConfigProblemBase(DefaultConfig):
     """
-    Base class for all problem configs. Contains all fields that are common to all problems.
+    Base class for all problem configs.
+    Contains all fields that are common to all problems.
     """
 
     experiment_name: str
