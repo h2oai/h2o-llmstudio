@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Type
 
 import yaml
 
-from llm_studio.python_configs.base import ConfigProblemBaseABC
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 
 
@@ -170,7 +169,7 @@ def parse_cfg_dataclass(cfg) -> List[Dict]:
     return items
 
 
-def save_config_yaml(path: str, cfg: ConfigProblemBaseABC) -> None:
+def save_config_yaml(path: str, cfg: Any) -> None:
     """Saves config as yaml file
 
     Args:
