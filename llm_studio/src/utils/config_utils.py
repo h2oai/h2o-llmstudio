@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Type
 
 import yaml
 
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 
 
@@ -169,22 +170,15 @@ def parse_cfg_dataclass(cfg) -> List[Dict]:
     return items
 
 
-def save_config_yaml(path: str, cfg: Any) -> None:
+def save_config_yaml(path: str, cfg: DefaultConfigProblemBase) -> None:
     """Saves config as yaml file
 
     Args:
         path: path of file to save to
         cfg: config to save
     """
-    cfg_dict = convert_cfg_to_nested_dictionary(cfg)
-    cfg_dict["experiment_name"] = cfg.experiment_name
-    cfg_dict["output_directory"] = cfg.output_directory
-    cfg_dict["llm_backbone"] = cfg.llm_backbone
-    # Parse problem_type from config filename,
-    # for example: text_causal_language_modeling
-    cfg_dict["problem_type"] = cfg.problem_type
     with open(path, "w") as fp:
-        yaml.dump(cfg_dict, fp, indent=4)
+        yaml.dump(dict(cfg), fp, indent=4)
 
 
 def load_config_yaml(path: str):

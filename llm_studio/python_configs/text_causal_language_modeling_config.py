@@ -6,7 +6,7 @@ from typing import Any, Optional, Tuple
 import torch
 
 import llm_studio.src.datasets.text_causal_language_modeling_ds
-from llm_studio.python_configs.base import DefaultConfig
+from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
 from llm_studio.src import possible_values
 from llm_studio.src.augmentations.nlp_aug import BaseNLPAug
 from llm_studio.src.loggers import Loggers
@@ -419,7 +419,7 @@ class ConfigNLPCausalLMHF(DefaultConfig):
 
 
 @dataclass
-class ConfigProblemBase(DefaultConfig):
+class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""

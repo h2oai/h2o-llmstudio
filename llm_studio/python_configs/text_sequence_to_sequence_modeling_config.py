@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Any
 
-from llm_studio.python_configs.base import DefaultConfig
+from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPAugmentation,
     ConfigNLPCausalLMArchitecture,
@@ -71,7 +71,7 @@ class ConfigNLPSeq2SeqEnvironment(ConfigNLPCausalLMEnvironment):
 
 
 @dataclass
-class ConfigProblemBase(DefaultConfig):
+class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""

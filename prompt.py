@@ -131,7 +131,7 @@ if __name__ == "__main__":
             with torch.no_grad():
                 with torch.cuda.amp.autocast():
                     output["predicted_answer_ids"] = (
-                        model.generate(inputs, cfg,,.detach().cpu()
+                        model.generate(inputs, cfg).detach().cpu()
                     )
 
             predicted_text = [
