@@ -738,7 +738,7 @@ def prepare_lora(cfg, backbone):
     return backbone
 
 
-def generate(backbone, batch, cfg, streamer):
+def generate(backbone, batch, cfg, streamer, remove_prompt=True):
     mask_key = "prompt_attention_mask"
     pad_keys = [
         "prompt_input_ids",
@@ -775,12 +775,12 @@ def generate(backbone, batch, cfg, streamer):
         generation_config=backbone.generation_config,
         min_new_tokens=cfg.prediction.min_length_inference,
         max_new_tokens=cfg.prediction.max_length_inference,
-        do_sample=(cfg.prediction.do_sample),
+        do_sample=cfg.prediction.do_sample,
         num_beams=cfg.prediction.num_beams,
         temperature=(float(cfg.prediction.temperature)),
         repetition_penalty=(float(cfg.prediction.repetition_penalty)),
-        top_k=(cfg.prediction.top_k),
-        top_p=(float(cfg.prediction.top_p)),
+        top_k=cfg.prediction.top_k,
+        top_p=float(cfg.prediction.top_p),
         stopping_criteria=stopping_criteria,
         renormalize_logits=True,
         return_dict_in_generate=False,
@@ -791,6 +791,6 @@ def generate(backbone, batch, cfg, streamer):
     # enable checkpointing again
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
-    # remove the prompt tokens
-    output = output[:, input_ids.shape[1] :]
+    if remove_prompt:
+        output = output[:, input_ids.shape[1] :]
     return output

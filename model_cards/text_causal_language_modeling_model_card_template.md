@@ -127,17 +127,7 @@ model.cuda().eval()
 inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
 
 # generate configuration can be modified to your needs
-tokens = model.generate(
-    input_ids=inputs["input_ids"],
-    attention_mask=inputs["attention_mask"],
-    min_new_tokens={{min_new_tokens}},
-    max_new_tokens={{max_new_tokens}},
-    do_sample={{do_sample}},
-    num_beams={{num_beams}},
-    temperature=float({{temperature}}),
-    repetition_penalty=float({{repetition_penalty}}),
-    renormalize_logits=True
-)[0]
+tokens = model.generate(,[0]
 
 tokens = tokens[inputs["input_ids"].shape[1]:]
 answer = tokenizer.decode(tokens, skip_special_tokens=True)

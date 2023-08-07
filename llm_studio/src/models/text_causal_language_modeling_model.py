@@ -3,10 +3,8 @@ from typing import Any, Dict
 
 from torch import nn
 from transformers import AutoModelForCausalLM
-import torch
-from transformers import AutoModelForCausalLM
 
-from llm_studio.src.models.text_base_model import BaseModel
+from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import (
     create_nlp_backbone,

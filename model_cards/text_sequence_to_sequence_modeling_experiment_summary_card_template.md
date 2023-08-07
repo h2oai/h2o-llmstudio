@@ -9,6 +9,7 @@ pip install transformers=={{transformers_version}}
 ```
 - Make sure to be logged in to your huggingface account if accessing a private repo
 - Then, you can use the following code snippet:
+
 ```python
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
@@ -32,17 +33,7 @@ model.cuda().eval()
 inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
 
 # generate configuration can be modified to your needs
-tokens = model.generate(
-    input_ids=inputs["input_ids"],
-    attention_mask=inputs["attention_mask"],
-    min_new_tokens={{min_new_tokens}},
-    max_new_tokens={{max_new_tokens}},
-    do_sample={{do_sample}},
-    num_beams={{num_beams}},
-    temperature=float({{temperature}}),
-    repetition_penalty=float({{repetition_penalty}}),
-    renormalize_logits=True
-)[0]
+tokens = model.generate(,[0]
 
 answer = tokenizer.decode(tokens, skip_special_tokens=True)
 print(answer)
