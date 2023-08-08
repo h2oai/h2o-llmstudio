@@ -64,7 +64,6 @@ if __name__ == "__main__":
     user_id = parser_args.user_id if parser_args.user_id is not None else ""
     model_name = parser_args.model_name if parser_args.model_name is not None else ""
 
-
     try:
         hugging_face_utils.publish_model_to_hugging_face(
             experiment_name=experiment_name,
@@ -72,7 +71,7 @@ if __name__ == "__main__":
             api_key=api_key,
             user_id=user_id,
             model_name=model_name,
-            safe_serialization=safe_serialization
+            safe_serialization=safe_serialization,
         )
     except Exception:
         logging.error("Exception occurred during the run:", exc_info=True)

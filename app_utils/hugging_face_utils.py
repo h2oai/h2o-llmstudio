@@ -90,9 +90,7 @@ def publish_model_to_hugging_face(
     elif device.startswith("cuda:") and device[5:].isdigit():
         pass  # 'cuda:integer' format is valid
     else:
-        raise ValueError(
-            "Invalid device value. Use 'cpu' or 'cuda:INTEGER'."
-        )
+        raise ValueError("Invalid device value. Use 'cpu' or 'cuda:INTEGER'.")
 
     with set_env(HUGGINGFACE_TOKEN=api_key):
         cfg, model, tokenizer = load_cfg_model_tokenizer(

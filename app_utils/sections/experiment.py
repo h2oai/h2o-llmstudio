@@ -37,7 +37,6 @@ from app_utils.utils import (
     hf_repo_friendly_name,
     parse_ui_elements,
     remove_model_type,
-    save_hf_yaml,
     set_env,
     start_experiment,
 )
