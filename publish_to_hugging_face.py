@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-d",
         "--device",
+        required=False,
         help="'cpu' or 'cuda:0', if the GPU device id is 0",
         default="cuda:0",
     )
@@ -40,18 +41,29 @@ if __name__ == "__main__":
     parser.add_argument(
         "-m",
         "--model_name",
-        required=True,
+        required=False,
         help="Hugging Face Model Name",
         default=argparse.SUPPRESS,
+    )
+
+    parser.add_argument(
+        "-s",
+        "--safe_serialization",
+        required=False,
+        help="A flag indicating whether safe serialization should be used.",
+        default=True,
     )
 
     parser_args, unknown = parser.parse_known_args(sys.argv)
 
     experiment_name = parser_args.experiment_name
     device = parser_args.device
-    api_key = parser_args.api_key
-    user_id = parser_args.user_id
-    model_name = parser_args.model_name
+    safe_serialization = parser_args.safe_serialization
+
+    api_key = parser_args.api_key if parser_args.api_key is not None else ""
+    user_id = parser_args.user_id if parser_args.user_id is not None else ""
+    model_name = parser_args.model_name if parser_args.model_name is not None else ""
+
 
     try:
         hugging_face_utils.publish_model_to_hugging_face(
@@ -60,6 +72,7 @@ if __name__ == "__main__":
             api_key=api_key,
             user_id=user_id,
             model_name=model_name,
+            safe_serialization=safe_serialization
         )
     except Exception:
         logging.error("Exception occurred during the run:", exc_info=True)
