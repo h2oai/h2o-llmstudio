@@ -272,6 +272,6 @@ class BaseModel(nn.Module):
 
         if cut_input:
             # remove the prompt tokens
-            output = output[:, batch["input_ids"].shape[1] :]
+            output = output[:, input_ids.shape[1] :]
 
         return output
