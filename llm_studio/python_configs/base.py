@@ -189,6 +189,15 @@ class DefaultConfigProblemBase(DefaultConfig):
     output_directory: str
     llm_backbone: str
 
+    dataset: Any
+    tokenizer: Any
+    architecture: Any
+    training: Any
+    augmentation: Any
+    prediction: Any
+    environment: Any
+    logging: Any
+
     @property
     def problem_type(self) -> str:
         """

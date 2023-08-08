@@ -1,7 +1,9 @@
+import os
 from dataclasses import dataclass, field
 from typing import Any
 
 import llm_studio.src.models.text_rlhf_language_modeling_model
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPAugmentation,
     ConfigNLPCausalLMArchitecture,
@@ -12,12 +14,8 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMTokenizer,
     ConfigNLPCausalLMTraining,
 )
-from llm_studio.python_configs.text_causal_language_modeling_config import (
-    ConfigProblemBase as TextCausalLMConfigProblemBase,
-)
 from llm_studio.src import possible_values
 from llm_studio.src.datasets.text_rlhf_modeling_ds import CustomDataset
-from llm_studio.src.metrics import text_causal_language_modeling_metrics
 from llm_studio.src.models import text_reward_model
 from llm_studio.src.utils.modeling_utils import generate_experiment_name
 
@@ -141,7 +139,12 @@ class ConfigRLHFLMPrediction(ConfigNLPCausalLMPrediction):
 
 
 @dataclass
-class ConfigProblemBase(TextCausalLMConfigProblemBase):
+class ConfigProblemBase(DefaultConfigProblemBase):
+    output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
+    experiment_name: str = field(default_factory=generate_experiment_name)
+    _parent_experiment: str = ""
+    llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
+
     dataset: ConfigRLHFLMDataset = field(default_factory=ConfigRLHFLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
         default_factory=ConfigNLPCausalLMTokenizer
