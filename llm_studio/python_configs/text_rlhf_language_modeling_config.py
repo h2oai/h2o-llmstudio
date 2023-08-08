@@ -30,7 +30,7 @@ class ConfigRLHFLMDataset(ConfigNLPCausalLMDataset):
         super().__post_init__()
         # RLHF is not compatible with system column.
         self.system_column = "None"
-        self._visibility["system_column"] = False
+        self._visibility["system_column"] = -1
 
 
 class LossClass:
@@ -64,7 +64,7 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
         self._possible_values[
             "differential_learning_rate_layers"
         ] = possible_values.String(
-            values=("backbone", "embed", "value_head"),
+            values=("backbone", "value_head"),
             allow_custom=False,
             placeholder="Select optional layers...",
         )
@@ -126,27 +126,14 @@ class ConfigRLHFLMArchitecture(ConfigNLPCausalLMArchitecture):
 
 @dataclass
 class ConfigRLHFLMPrediction(ConfigNLPCausalLMPrediction):
-    metric_class: Any = text_causal_language_modeling_metrics.Metrics
-    metric: str = "GPT"
-    metric_gpt_model: str = "gpt-3.5-turbo-0301"
-
-    min_length_inference: int = 2
-    max_length_inference: int = 256
-    batch_size_inference: int = 0
-
     do_sample: bool = True
-    num_beams: int = 1
-    temperature: float = 0.3
     repetition_penalty: float = 1.0
-    stop_tokens: str = ""
     top_k: int = 0
     top_p: float = 1.0
 
-    num_history: int = 4
-
     def __post_init__(self):
         super().__post_init__()
-        # fixed for RLHF
+        # These values are fixed for RLHF
         self._visibility["do_sample"] = -1
         self._visibility["repetition_penalty"] = -1
         self._visibility["top_p"] = -1

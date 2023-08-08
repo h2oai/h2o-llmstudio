@@ -29,7 +29,7 @@ class CustomDataset(CausalLMCustomDataset):
         return sample
 
     def get_labels(self, encodings):
-        if self.mode != "train":  # no labels required for RLHF during training
+        if self.mode == "train":  # no labels required for RLHF during training
             return dict()
         else:
             return super().get_labels(encodings)
