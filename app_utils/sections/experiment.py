@@ -478,7 +478,7 @@ async def experiment_start(q: Q) -> None:
     q.client.delete_cards.add("experiment/start/footer")
 
 
-async def experiment_run(q: Q, pre: str = "experiment/start") -> None:
+async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
     """Start an experiment.
 
     Args:
@@ -500,6 +500,8 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> None:
     stats = os.statvfs(".")
     available_size = stats.f_frsize * stats.f_bavail
 
+    # flag whether to list current experiments after this function
+    list_current_experiments = True
     if available_size < default_cfg.min_experiment_disk_space:
         entity = "Experiment" if pre == "experiment/start" else "Prediction"
         q.client["experiment_halt_reason"] = (
@@ -509,9 +511,23 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> None:
             f"{entity} has not started."
         )
         logger.error(q.client["experiment_halt_reason"])
-        return
+        return list_current_experiments
+
+    if len(cfg.environment.gpus) == 0:
+        q.page["meta"].dialog = ui.dialog(
+            title="No GPU selected.",
+            name="no_gpu_selected_dialog",
+            items=[
+                ui.text("Please select at least one GPU to start the experiment!"),
+            ],
+            closable=True,
+        )
+        q.client["keep_meta"] = True
+        await q.page.save()
+        return not list_current_experiments
 
     start_experiment(cfg=cfg, q=q, pre=pre)
+    return list_current_experiments
 
 
 def get_experiment_table(
