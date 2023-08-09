@@ -1701,30 +1701,22 @@ def check_valid_upload_content(upload_path: str) -> Tuple[bool, str]:
     return valid, error
 
 
+PASSWORDS = ["token", "key"]
+
+
 def load_user_settings(q: Q, force_defaults: bool = False):
     # get settings from settings pickle if it exists or set default values
     if os.path.isfile(get_usersettings_path(q)) and not force_defaults:
         logger.info("Reading settings")
-        with open(get_usersettings_path(q), "rb") as f:
-            user_settings = pickle.load(f)
 
-        # Potentially migrate token to keyring
-        if any(["token" in key for key in user_settings]):
-            logger.info("Migrating token to keyring")
-            for key in user_settings:
-                if "token" in key:
-                    keyring.set_password("h2o-llmstudio", key, user_settings[key])
-                    user_settings[key] = None
-            with open(get_usersettings_path(q), "wb") as f:
-                pickle.dump(user_settings, f)
-
+        maybe_migrate_to_yaml(q)
+        with open(get_usersettings_path(q), "r") as f:
+            user_settings = yaml.load(f, Loader=yaml.FullLoader)
         for key in default_cfg.user_settings:
-            if "token" in key:
+            if any(password in key for password in PASSWORDS):
                 q.client[key] = keyring.get_password("h2o-llmstudio", key)
             else:
-                q.client[key] = user_settings.get(
-                    key, default_cfg.user_settings[key]
-                )
+                q.client[key] = user_settings.get(key, default_cfg.user_settings[key])
     else:
         logger.info("Using default settings")
         for key in default_cfg.user_settings:
@@ -1735,7 +1727,7 @@ def save_user_settings(q: Q):
     # Hacky way to get a dict of q.client key/value pairs
     user_settings = {}
     for key in default_cfg.user_settings:
-        if "token" in key:
+        if any(password in key for password in PASSWORDS):
             keyring.set_password("h2o-llmstudio", key, q.client[key])
         else:
             user_settings.update({key: q.client[key]})
@@ -1748,8 +1740,28 @@ def save_user_settings(q: Q):
     q.client["dataset/import/kaggle_access_key"] = q.client["default_kaggle_username"]
     q.client["dataset/import/kaggle_secret_key"] = q.client["default_kaggle_secret_key"]
 
-    with open(get_usersettings_path(q), "wb") as f:
-        pickle.dump(user_settings, f)
+    with open(get_usersettings_path(q), "w") as f:
+        yaml.dump(user_settings, f)
+
+
+def maybe_migrate_to_yaml(q):
+    try:
+        with open(get_usersettings_path(q), "rb") as f:
+            user_settings = pickle.load(f)
+
+        if any(
+            [any(password in key for password in PASSWORDS) for key in user_settings]
+        ):
+            logger.info("Migrating token to keyring")
+            for key in list(user_settings.keys()):
+                if any(password in key for password in PASSWORDS):
+                    if isinstance(user_settings[key], str):
+                        keyring.set_password("h2o-llmstudio", key, user_settings[key])
+                    del user_settings[key]
+            with open(get_usersettings_path(q), "w") as f:
+                yaml.dump(user_settings, f)
+    except (pickle.UnpicklingError, ModuleNotFoundError):
+        pass
 
 
 def flatten_dict(d: collections.abc.MutableMapping) -> dict:
