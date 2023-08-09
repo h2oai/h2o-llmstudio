@@ -1707,13 +1707,24 @@ def load_user_settings(q: Q, force_defaults: bool = False):
         logger.info("Reading settings")
         with open(get_usersettings_path(q), "rb") as f:
             user_settings = pickle.load(f)
-            for key in default_cfg.user_settings:
+
+        # Potentially migrate token to keyring
+        if any(["token" in key for key in user_settings]):
+            logger.info("Migrating token to keyring")
+            for key in user_settings:
                 if "token" in key:
-                    q.client[key] = keyring.get_password("h2o-llmstudio", key)
-                else:
-                    q.client[key] = user_settings.get(
-                        key, default_cfg.user_settings[key]
-                    )
+                    keyring.set_password("h2o-llmstudio", key, user_settings[key])
+                    user_settings[key] = None
+            with open(get_usersettings_path(q), "wb") as f:
+                pickle.dump(user_settings, f)
+
+        for key in default_cfg.user_settings:
+            if "token" in key:
+                q.client[key] = keyring.get_password("h2o-llmstudio", key)
+            else:
+                q.client[key] = user_settings.get(
+                    key, default_cfg.user_settings[key]
+                )
     else:
         logger.info("Using default settings")
         for key in default_cfg.user_settings:
@@ -1738,7 +1749,6 @@ def save_user_settings(q: Q):
     q.client["dataset/import/kaggle_secret_key"] = q.client["default_kaggle_secret_key"]
 
     with open(get_usersettings_path(q), "wb") as f:
-        # slightly obfuscate to binary pickle file
         pickle.dump(user_settings, f)
 
 
