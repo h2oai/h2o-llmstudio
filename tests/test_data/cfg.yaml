@@ -49,6 +49,7 @@ prediction:
     repetition_penalty: 1.2
     stop_tokens: ""
     temperature: 0.3
+problem_type: text_causal_language_modeling
 tokenizer:
     max_length: 144
     max_length_answer: 256

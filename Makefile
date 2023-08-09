@@ -69,6 +69,8 @@ black: pipenv
 
 .PHONY: test
 test: reports
+	# Set the shell to include pipefail
+	SHELL=/bin/bash -o pipefail
 	export PYTHONPATH=$(PWD) && $(PIPENV) run pytest -v -s -x \
 		--junitxml=./reports/junit.xml \
 		tests/* | tee reports/pytest.log
