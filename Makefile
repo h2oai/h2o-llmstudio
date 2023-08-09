@@ -71,7 +71,7 @@ black: pipenv
 test: reports
 	export PYTHONPATH=$(PWD) && $(PIPENV) run pytest -v -s -x \
 		--junitxml=./reports/junit.xml \
-		tests/* | tee reports/pytest.log ; exit $${PIPESTATUS[0]}
+		tests/* || exit 1
 
 .PHONY: wave
 wave:
