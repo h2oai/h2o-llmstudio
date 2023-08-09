@@ -627,9 +627,10 @@ def run(cfg: Any) -> None:
         )
 
     # Prepare model
-    ds_config = get_ds_config(cfg)
-    # keep this object alive.
-    dschf = HfDeepSpeedConfig(ds_config)  # noqa: F841
+    if cfg.environment.use_deepspeed:
+        ds_config = get_ds_config(cfg)
+        # keep this object alive.
+        dschf = HfDeepSpeedConfig(ds_config)  # noqa: F841
     with torch.device(cfg.environment._device):
         model = cfg.architecture.model_class(cfg)
         check_disk_space(model, cfg.output_directory)
