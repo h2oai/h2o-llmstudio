@@ -1,4 +1,5 @@
 import codecs
+import html
 import logging
 import os
 from typing import Any
@@ -57,10 +58,18 @@ def get_tokenizer(cfg: Any):
         if cfg.environment._local_rank == 0:
             logger.warning(
                 "The eos token is an empty string or None. "
-                "We assigned it to </s>."
-                "Force Embedding Gradients should be enabled in the experiment settings "
-                "to ensure that the model learns to use the eos token."
+                f"We assigned it to {html.escape(tokenizer.eos_token)}."
             )
+            if (
+                not getattr(cfg.architecture, "force_embedding_gradients")
+                and cfg.training.lora
+            ):
+                logger.warning(
+                    "Force Embedding Gradients is currently disabled. "
+                    "This may result in suboptimal performance, as the "
+                    "model will not be able to learn the embeddings of "
+                    "the eos token."
+                )
 
     if tokenizer.pad_token is None:
         if tokenizer.unk_token is not None:
