@@ -21,7 +21,9 @@ from functools import partial
 from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
 
 import GPUtil
-import keyring
+import keyring as kr
+# need to import SecretService backend to make it available
+import keyring.backends.SecretService
 import numpy as np
 import pandas as pd
 import psutil
@@ -47,6 +49,9 @@ from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 from .config import default_cfg
 
 logger = logging.getLogger(__name__)
+
+# https://github.com/jaraco/keyring/issues/589
+keyring = kr.backends.SecretService.Keyring()
 
 
 def get_user_id(q):
