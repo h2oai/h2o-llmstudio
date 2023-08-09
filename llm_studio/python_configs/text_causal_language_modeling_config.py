@@ -392,6 +392,9 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     compile_model: bool = False
     use_fsdp: bool = False
     use_deepspeed: bool = False
+    deepspeed_reduce_bucket_size: int = 1e6
+    deepspeed_stage3_prefetch_bucket_size: int = 1e6
+    deepspeed_stage3_param_persistence_threshold: int = 1e6
     deepspeed_offload_optimizer: bool = False
     deepspeed_stage3_max_live_parameters: int = 1e9
     deepspeed_stage3_max_reuse_distance: int = 1e9
@@ -424,6 +427,15 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
         self._possible_values["number_of_workers"] = (1, multiprocessing.cpu_count(), 1)
         self._possible_values["seed"] = possible_values.Number(step=1, min=-1)
+        self._possible_values["deepspeed_reduce_bucket_size"] = possible_values.Number(
+            step=1, min=1e7
+        )
+        self._possible_values[
+            "deepspeed_stage3_prefetch_bucket_size"
+        ] = possible_values.Number(step=1, min=1e7)
+        self._possible_values[
+            "deepspeed_stage3_param_persistence_threshold"
+        ] = possible_values.Number(step=1, min=1e7)
         self._possible_values[
             "deepspeed_stage3_max_live_parameters"
         ] = possible_values.Number(step=1, min=1e7)
@@ -432,11 +444,19 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
         ] = possible_values.Number(step=1, min=1e7)
         self._nesting.add(
             [
+                "deepspeed_reduce_bucket_size",
+                "deepspeed_stage3_prefetch_bucket_size",
+                "deepspeed_stage3_param_persistence_threshold",
                 "deepspeed_offload_optimizer",
+            ],
+            [Dependency(key="use_deepspeed", value=False, is_set=False)],
+        )
+        self._nesting.add(
+            [
                 "deepspeed_stage3_max_live_parameters",
                 "deepspeed_stage3_max_reuse_distance",
             ],
-            [Dependency(key="use_deepspeed", value=False, is_set=False)],
+            [Dependency(key="deepspeed_offload_optimizer", value=False, is_set=False)],
         )
 
 
