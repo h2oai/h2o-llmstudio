@@ -23,7 +23,7 @@ from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
 import GPUtil
 import keyring as kr
 # need to import SecretService backend to make it available
-import keyring.backends.SecretService
+import keyring.backends.kwallet
 import numpy as np
 import pandas as pd
 import psutil
@@ -51,7 +51,7 @@ from .config import default_cfg
 logger = logging.getLogger(__name__)
 
 # https://github.com/jaraco/keyring/issues/589
-keyring = kr.backends.SecretService.Keyring()
+keyring = kr.backends.kwallet.DBusKeyring()
 
 
 def get_user_id(q):
