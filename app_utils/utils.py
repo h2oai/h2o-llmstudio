@@ -13,6 +13,7 @@ import shutil
 import socket
 import subprocess
 import time
+import traceback
 import uuid
 import zipfile
 from collections import defaultdict
@@ -1743,8 +1744,9 @@ async def save_user_settings(q: Q):
         if any(password in key for password in PASSWORDS):
             try:
                 keyring.set_password("h2o-llmstudio", key, q.client[key])
-            except Exception as e:
-                exception = e
+            except Exception:
+                exception = str(traceback.format_exc())
+
                 can_save_secrets = False
                 logger.error(f"Could not save password {key} to keyring")
         else:
