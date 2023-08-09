@@ -1720,7 +1720,10 @@ def load_user_settings(q: Q, force_defaults: bool = False):
             user_settings = yaml.load(f, Loader=yaml.FullLoader)
         for key in default_cfg.user_settings:
             if any(password in key for password in PASSWORDS):
-                q.client[key] = keyring.get_password("h2o-llmstudio", key)
+                try:
+                    q.client[key] = keyring.get_password("h2o-llmstudio", key)
+                except Exception as e:
+                    logger.error(f"Could not load password {key} from keyring due to {e}")
             else:
                 q.client[key] = user_settings.get(key, default_cfg.user_settings[key])
     else:
@@ -1786,7 +1789,7 @@ def maybe_migrate_to_yaml(q):
                     del user_settings[key]
             with open(get_usersettings_path(q), "w") as f:
                 yaml.dump(user_settings, f)
-    except (pickle.UnpicklingError, ModuleNotFoundError):
+    except Exception as e:
         pass
 
 
