@@ -183,21 +183,8 @@ def load_checkpoint(
         logger.info(f"Weights loaded from: {weights_path}")
 
 
-def deepspeed_initialize(
-    model: torch.nn.Module,
-    optimizer: torch.optim.Optimizer,
-    lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
-    training_data: torch.utils.data.Dataset,
-    validating_data: torch.utils.data.Dataset,
-    cfg: Any,
-):
-    mconfig = AutoConfig.from_pretrained(cfg.llm_backbone)
-    if hasattr(mconfig, "hidden_size"):
-        model_hidden_size = mconfig.hidden_size
-    elif hasattr(mconfig, "d_model"):
-        model_hidden_size = mconfig.d_model
-    else:
-        raise Exception(f"deepspeed do not support {cfg.llm_backbone}")
+def get_ds_config(cfg: Any):
+
     ds_config = {
         "fp16": {
             "enabled": True if cfg.architecture.backbone_dtype == "float16" else False,
@@ -211,13 +198,12 @@ def deepspeed_initialize(
         "zero_force_ds_cpu_optimizer": False,
         "zero_optimization": {
             "stage": 3,
-            "overlap_comm": False,
+            "overlap_comm": True,
             "contiguous_gradients": True,
-            "reduce_bucket_size": model_hidden_size * model_hidden_size,
+            "reduce_bucket_size": 1e6,
             # zero3
-            "mics_shard_size": cfg.environment._world_size,
-            "stage3_prefetch_bucket_size": 0.9 * model_hidden_size * model_hidden_size,
-            "stage3_param_persistence_threshold": 10 * model_hidden_size,
+            "stage3_prefetch_bucket_size": 1e6,
+            "stage3_param_persistence_threshold": 1e6,
             "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,  # noqa: E501
             "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,  # noqa: E501
             # zero++
@@ -241,6 +227,18 @@ def deepspeed_initialize(
     #     ds_config["zero_optimization"]["offload_param"] =
     #         {"device": "cpu", "pin_memory": True}
 
+    return ds_config
+
+
+def deepspeed_initialize(
+    model: torch.nn.Module,
+    optimizer: torch.optim.Optimizer,
+    lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
+    training_data: torch.utils.data.Dataset,
+    validating_data: torch.utils.data.Dataset,
+    cfg: Any,
+):
+    ds_config = get_ds_config(cfg)
     model, optimizer, train_dataloader, scheduler = deepspeed.initialize(
         model=model,
         optimizer=optimizer,

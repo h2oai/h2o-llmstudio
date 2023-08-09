@@ -10,7 +10,6 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import argparse
 import gc
 import logging
-import shutil
 import sys
 import time
 from distutils import util
@@ -24,6 +23,7 @@ from torch.cuda.amp import GradScaler, autocast
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from transformers.deepspeed import HfDeepSpeedConfig
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.loggers import MainLogger
@@ -53,6 +53,7 @@ from llm_studio.src.utils.logging_utils import (
 from llm_studio.src.utils.modeling_utils import (
     check_disk_space,
     deepspeed_initialize,
+    get_ds_config,
     get_number_of_validation_epochs,
     get_optimizer,
     get_scheduler,
@@ -626,6 +627,9 @@ def run(cfg: Any) -> None:
         )
 
     # Prepare model
+    ds_config = get_ds_config(cfg)
+    # keep this object alive.
+    dschf = HfDeepSpeedConfig(ds_config)  # noqa: F841
     with torch.device(cfg.environment._device):
         model = cfg.architecture.model_class(cfg)
         check_disk_space(model, cfg.output_directory)
@@ -643,6 +647,7 @@ def run(cfg: Any) -> None:
             load_checkpoint(cfg, model, strict=cfg.training.epochs == -1)
 
     model.to(cfg.environment._device)
+
     if cfg.training.use_rlhf:
         if cfg.training.offload_reward_model:
             reward_model.to("cpu")
