@@ -51,9 +51,16 @@ def get_tokenizer(cfg: Any):
     )
 
     # if the eos token is an empty string, we assign it to a token
-    if tokenizer.eos_token == "":
+    if tokenizer.eos_token == "" or tokenizer.eos_token is None:
         tokenizer.add_special_tokens({"eos_token": "</s>"})
         tokenizer.eos_token = "</s>"
+        if cfg.environment._local_rank == 0:
+            logger.warning(
+                "The eos token is an empty string or None. "
+                "We assigned it to </s>."
+                "Force Embedding Gradients should be enabled in the experiment settings "
+                "to ensure that the model learns to use the eos token."
+            )
 
     if tokenizer.pad_token is None:
         if tokenizer.unk_token is not None:
