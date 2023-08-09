@@ -73,7 +73,7 @@ async def handle(q: Q) -> None:
             await settings(q)
         elif q.args["save_settings"]:
             logger.info("Saving user settings")
-            save_user_settings(q)
+            await save_user_settings(q)
             await settings(q)
         elif q.args["load_settings"]:
             load_user_settings(q)

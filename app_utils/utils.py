@@ -22,6 +22,7 @@ from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
 
 import GPUtil
 import keyring as kr
+
 # need to import SecretService backend to make it available
 import keyring.backends.SecretService
 import numpy as np
@@ -1728,12 +1729,20 @@ def load_user_settings(q: Q, force_defaults: bool = False):
             q.client[key] = default_cfg.user_settings[key]
 
 
-def save_user_settings(q: Q):
+async def save_user_settings(q: Q):
     # Hacky way to get a dict of q.client key/value pairs
+
+    can_save_secrets = True
+    e = None
+
     user_settings = {}
     for key in default_cfg.user_settings:
         if any(password in key for password in PASSWORDS):
-            keyring.set_password("h2o-llmstudio", key, q.client[key])
+            try:
+                keyring.set_password("h2o-llmstudio", key, q.client[key])
+            except Exception as e:
+                can_save_secrets = False
+                logger.error(f"Could not save password {key} to keyring")
         else:
             user_settings.update({key: q.client[key]})
 
@@ -1747,6 +1756,18 @@ def save_user_settings(q: Q):
 
     with open(get_usersettings_path(q), "w") as f:
         yaml.dump(user_settings, f)
+
+    if not can_save_secrets:
+        q.page["meta"].dialog = ui.dialog(
+            title="Could not save secrets.",
+            name="secrets_error",
+            items=[
+                ui.text(f"The following error occurred: {e}."),
+            ],
+            closable=True,
+        )
+        q.client["keep_meta"] = True
+        await q.page.save()
 
 
 def maybe_migrate_to_yaml(q):
