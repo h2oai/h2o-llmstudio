@@ -11,7 +11,6 @@ from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
 
 from .config import default_cfg
 from .db import Database, Dataset
-from .migration import migrate_app
 from .utils import (
     get_data_dir,
     get_database_dir,
@@ -100,7 +99,6 @@ async def initialize_client(q: Q) -> None:
 
         load_user_settings(q)
 
-        await migrate_app(q)
         await interface(q)
 
         q.args[default_cfg.start_page] = True

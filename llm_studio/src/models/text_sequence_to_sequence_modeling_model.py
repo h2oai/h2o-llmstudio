@@ -62,7 +62,7 @@ class Model(nn.Module):
             self.backbone.config.use_cache = False
 
         outputs: Dict = {}
-        kwargs = {}
+        kwargs: Dict = {}
 
         if padding:
             mask_key = "prompt_attention_mask"
