@@ -1736,7 +1736,7 @@ async def save_user_settings(q: Q):
     # Hacky way to get a dict of q.client key/value pairs
 
     can_save_secrets = True
-    e = None
+    exception = None
 
     user_settings = {}
     for key in default_cfg.user_settings:
@@ -1744,6 +1744,7 @@ async def save_user_settings(q: Q):
             try:
                 keyring.set_password("h2o-llmstudio", key, q.client[key])
             except Exception as e:
+                exception = e
                 can_save_secrets = False
                 logger.error(f"Could not save password {key} to keyring")
         else:
@@ -1765,7 +1766,7 @@ async def save_user_settings(q: Q):
             title="Could not save secrets.",
             name="secrets_error",
             items=[
-                ui.text(f"The following error occurred: {e}."),
+                ui.text(f"The following error occurred: {exception}."),
             ],
             closable=True,
         )
