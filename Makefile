@@ -79,6 +79,7 @@ wave:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
+	PYTHON_KEYRING_BACKEND=keyring.backends.SecretService.Keyring \
 	$(PIPENV) run wave run app
 
 .PHONY: llmstudio
