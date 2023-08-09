@@ -78,7 +78,3 @@ def test_load_config_yaml():
     assert cfg.training.train_validation_data is False
     assert cfg.training.warmup_epochs == 0.0
     assert cfg.training.weight_decay == 0.0
-
-
-def test_this_test_should_fail():
-    assert False
