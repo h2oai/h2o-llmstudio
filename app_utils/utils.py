@@ -21,6 +21,7 @@ from functools import partial
 from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
 
 import GPUtil
+import keyring
 import numpy as np
 import pandas as pd
 import psutil
@@ -43,7 +44,6 @@ from llm_studio.src.utils.config_utils import (
 from llm_studio.src.utils.data_utils import is_valid_data_frame, read_dataframe
 from llm_studio.src.utils.export_utils import get_size_str
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
-
 from .config import default_cfg
 
 logger = logging.getLogger(__name__)
@@ -1708,7 +1708,12 @@ def load_user_settings(q: Q, force_defaults: bool = False):
         with open(get_usersettings_path(q), "rb") as f:
             user_settings = pickle.load(f)
             for key in default_cfg.user_settings:
-                q.client[key] = user_settings.get(key, default_cfg.user_settings[key])
+                if "token" in key:
+                    q.client[key] = keyring.get_password("h2o-llmstudio", key)
+                else:
+                    q.client[key] = user_settings.get(
+                        key, default_cfg.user_settings[key]
+                    )
     else:
         logger.info("Using default settings")
         for key in default_cfg.user_settings:
@@ -1719,7 +1724,10 @@ def save_user_settings(q: Q):
     # Hacky way to get a dict of q.client key/value pairs
     user_settings = {}
     for key in default_cfg.user_settings:
-        user_settings.update({key: q.client[key]})
+        if "token" in key:
+            keyring.set_password("h2o-llmstudio", key, q.client[key])
+        else:
+            user_settings.update({key: q.client[key]})
 
     # force dataset connector updated when the user decides to click on save
     q.client["dataset/import/s3_bucket"] = q.client["default_aws_bucket_name"]
