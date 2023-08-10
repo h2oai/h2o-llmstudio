@@ -79,10 +79,6 @@ def get_user_db_path(q):
     return os.path.join(get_database_dir(q), "user.db")
 
 
-def get_usersettings_path(q):
-    return os.path.join(get_database_dir(q), f"{get_user_id(q)}.settings")
-
-
 def find_free_port():
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         s.bind(("", 0))
