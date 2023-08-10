@@ -7,10 +7,10 @@ from app_utils import hugging_face_utils
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument(
-        "-e",
-        "--experiment_name",
+        "-p",
+        "--path_to_experiment",
         required=True,
-        help="experiment name",
+        help="Path to the experiment data",
         default=argparse.SUPPRESS,
     )
 
@@ -56,17 +56,17 @@ if __name__ == "__main__":
 
     parser_args, unknown = parser.parse_known_args(sys.argv)
 
-    experiment_name = parser_args.experiment_name
+    path_to_experiment = parser_args.path_to_experiment
     device = parser_args.device
     safe_serialization = parser_args.safe_serialization
 
-    api_key = parser_args.api_key if parser_args.api_key is not None else ""
-    user_id = parser_args.user_id if parser_args.user_id is not None else ""
-    model_name = parser_args.model_name if parser_args.model_name is not None else ""
+    api_key = getattr(parser_args, 'api_key', "")
+    user_id = getattr(parser_args, 'user_id', "")
+    model_name = getattr(parser_args, 'model_name', "")
 
     try:
         hugging_face_utils.publish_model_to_hugging_face(
-            experiment_name=experiment_name,
+            path_to_experiment=path_to_experiment,
             device=device,
             api_key=api_key,
             user_id=user_id,

@@ -62,7 +62,7 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
 
 
 def publish_model_to_hugging_face(
-    experiment_name: str,
+    path_to_experiment: str,
     model_name: str,
     user_id: str = None,
     api_key: str = None,
@@ -73,7 +73,7 @@ def publish_model_to_hugging_face(
     Method to publish the model to Hugging Face.
 
     Parameters:
-        experiment_name: The path where the files of the fine-tuned model are located.
+        path_to_experiment: The path where the files of the fine-tuned model are located.
         device: The target device for running the model, either 'cpu' or 'cuda:0'.
         user_id: The Hugging Face user ID.
         api_key: The Hugging Face API Key.
@@ -94,7 +94,7 @@ def publish_model_to_hugging_face(
 
     with set_env(HUGGINGFACE_TOKEN=api_key):
         cfg, model, tokenizer = load_cfg_model_tokenizer(
-            experiment_name,
+            path_to_experiment,
             merge=True,
             device=device,
         )
@@ -123,7 +123,7 @@ def publish_model_to_hugging_face(
     # push config to hub
     api = huggingface_hub.HfApi()
     api.upload_file(
-        path_or_fileobj=os.path.join(experiment_name, "cfg.yaml"),
+        path_or_fileobj=os.path.join(path_to_experiment, "cfg.yaml"),
         path_in_repo="cfg.yaml",
         repo_id=repo_id,
         repo_type="model",
@@ -167,7 +167,7 @@ def publish_model_to_hugging_face(
 
     custom_pipeline = pipeline_template.render(data)
 
-    custom_pipeline_path = os.path.join(experiment_name, "h2oai_pipeline.py")
+    custom_pipeline_path = os.path.join(path_to_experiment, "h2oai_pipeline.py")
 
     with open(custom_pipeline_path, "w") as f:
         f.write(custom_pipeline)
