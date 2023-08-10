@@ -24,6 +24,7 @@ import GPUtil
 import numpy as np
 import pandas as pd
 import psutil
+import yaml
 from boto3.session import Session
 from botocore.handlers import disable_signing
 from datasets import load_dataset
@@ -1151,7 +1152,7 @@ def parse_ui_elements(
                 if isinstance(value, str):
                     value = [value]
                 value = tuple(value)
-            if type_annotations[k] == str and type(value) == list:
+            if isinstance(type_annotations[k], str) and isinstance(value, list):
                 # fix for combobox outputting custom values as list in wave 0.22
                 value = value[0]
             setattr(cfg, k, value)
@@ -1991,3 +1992,18 @@ def hf_repo_friendly_name(name: str) -> str:
     name = name[:-1] if name.endswith("-") else name
     name = name[:96]
     return name
+
+
+def save_hf_yaml(
+    path: str, account_name: str, model_name: str, repo_id: Optional[str] = None
+):
+    with open(path, "w") as fp:
+        yaml.dump(
+            {
+                "account_name": account_name,
+                "model_name": model_name,
+                "repo_id": repo_id if repo_id else f"{account_name}/{model_name}",
+            },
+            fp,
+            indent=4,
+        )
