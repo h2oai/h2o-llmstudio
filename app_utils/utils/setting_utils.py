@@ -7,7 +7,7 @@ from typing import List, Any
 import keyring
 import yaml
 from h2o_wave import Q, ui
-from keyring.errors import PasswordDeleteError
+from keyring.errors import PasswordDeleteError, KeyringLocked
 
 from app_utils.config import default_cfg
 from app_utils.utils.utils import get_database_dir, get_user_id
@@ -45,7 +45,8 @@ class KeyRingSaver(NoSaver):
     def delete(self, name):
         try:
             keyring.delete_password(self.namespace, name)
-        except PasswordDeleteError:
+        except Exception as e:
+            # General exception handling, as keyring may be misconfigured
             pass
 
 
