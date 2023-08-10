@@ -12,7 +12,7 @@ from h2o_wave.types import ImageCard, MarkupCard, StatListItem, Tab
 from app_utils.config import default_cfg
 from app_utils.db import Dataset
 from app_utils.sections.experiment import experiment_start
-from app_utils.utils import (
+from app_utils.utils.utils import (
     add_model_type,
     check_valid_upload_content,
     clean_error,

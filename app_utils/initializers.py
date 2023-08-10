@@ -11,16 +11,16 @@ from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
 
 from .config import default_cfg
 from .db import Database, Dataset
-from .utils import (
+from app_utils.utils.utils import (
     get_data_dir,
     get_database_dir,
     get_download_dir,
     get_output_dir,
     get_user_db_path,
     get_user_name,
-    load_user_settings,
     prepare_default_dataset,
 )
+from .utils.setting_utils import load_user_settings
 
 logger = logging.getLogger(__name__)
 

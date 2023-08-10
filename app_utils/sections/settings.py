@@ -4,6 +4,7 @@ import torch
 from h2o_wave import Q, ui
 
 from app_utils.sections.common import clean_dashboard
+from app_utils.utils.setting_utils import Secrets
 from llm_studio.src.loggers import Loggers
 
 
@@ -23,6 +24,29 @@ async def settings(q: Q) -> None:
                 current session and can be made persistent by using the \
                 'Save settings persistently' button below. To reload \
                 the persistently saved settings, use the 'Load settings' button.",
+            ),
+            ui.separator("Credentials"),
+            ui.inline(
+                items=[
+                    ui.label("Credentials", width=label_width),
+                    ui.dropdown(
+                        name="credential_saver",
+                        value=q.client["credential_saver"],
+                        choices=[ui.choice(name, name) for name in Secrets.names()],
+                        trigger=False,
+                        width="300px",
+                    ),
+                ]
+            ),
+            ui.message_bar(
+                type="info",
+                text="Method used to save credentials if set. \
+                    For security reasons, it is recommended to use Keyring. \
+                    If Keyring is not configured on the system, a pop-up will inform the user about the failure. \
+                    In this case, you can choose to not save credentials persistently or use a local .env file. \
+                    Please use the latter only if no other person has access to your machine. \
+                    Credentials will be cleared from all methods if you select 'Do not save credentials' and click  \
+                    on 'Save settings persistently' ",
             ),
             ui.separator("Appearance"),
             ui.inline(

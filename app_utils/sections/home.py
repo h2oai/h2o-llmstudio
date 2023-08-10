@@ -4,7 +4,7 @@ from h2o_wave import Q, data, ui
 
 from app_utils.config import default_cfg
 from app_utils.sections.common import clean_dashboard
-from app_utils.utils import (
+from app_utils.utils.utils import (
     get_datasets,
     get_experiments,
     get_gpu_usage,

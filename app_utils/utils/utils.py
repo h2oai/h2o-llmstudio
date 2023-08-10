@@ -7,13 +7,11 @@ import json
 import logging
 import math
 import os
-import pickle
 import re
 import shutil
 import socket
 import subprocess
 import time
-import traceback
 import uuid
 import zipfile
 from collections import defaultdict
@@ -22,10 +20,6 @@ from functools import partial
 from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
 
 import GPUtil
-import keyring as kr
-
-# need to import SecretService backend to make it available
-import keyring.backends.SecretService
 import numpy as np
 import pandas as pd
 import psutil
@@ -48,12 +42,9 @@ from llm_studio.src.utils.config_utils import (
 from llm_studio.src.utils.data_utils import is_valid_data_frame, read_dataframe
 from llm_studio.src.utils.export_utils import get_size_str
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
-from .config import default_cfg
+from app_utils.config import default_cfg
 
 logger = logging.getLogger(__name__)
-
-# https://github.com/jaraco/keyring/issues/589
-keyring = kr.backends.SecretService.Keyring()
 
 
 def get_user_id(q):
@@ -1709,91 +1700,6 @@ def check_valid_upload_content(upload_path: str) -> Tuple[bool, str]:
 
 
 PASSWORDS = ["token", "key"]
-
-
-def load_user_settings(q: Q, force_defaults: bool = False):
-    # get settings from settings pickle if it exists or set default values
-    if os.path.isfile(get_usersettings_path(q)) and not force_defaults:
-        logger.info("Reading settings")
-
-        maybe_migrate_to_yaml(q)
-        with open(get_usersettings_path(q), "r") as f:
-            user_settings = yaml.load(f, Loader=yaml.FullLoader)
-        for key in default_cfg.user_settings:
-            if any(password in key for password in PASSWORDS):
-                try:
-                    q.client[key] = keyring.get_password("h2o-llmstudio", key)
-                except Exception as e:
-                    logger.error(f"Could not load password {key} from keyring due to {e}")
-            else:
-                q.client[key] = user_settings.get(key, default_cfg.user_settings[key])
-    else:
-        logger.info("Using default settings")
-        for key in default_cfg.user_settings:
-            q.client[key] = default_cfg.user_settings[key]
-
-
-async def save_user_settings(q: Q):
-    # Hacky way to get a dict of q.client key/value pairs
-
-    can_save_secrets = True
-    exception = None
-
-    user_settings = {}
-    for key in default_cfg.user_settings:
-        if any(password in key for password in PASSWORDS):
-            try:
-                keyring.set_password("h2o-llmstudio", key, q.client[key])
-            except Exception:
-                exception = str(traceback.format_exc())
-
-                can_save_secrets = False
-                logger.error(f"Could not save password {key} to keyring")
-        else:
-            user_settings.update({key: q.client[key]})
-
-    # force dataset connector updated when the user decides to click on save
-    q.client["dataset/import/s3_bucket"] = q.client["default_aws_bucket_name"]
-    q.client["dataset/import/s3_access_key"] = q.client["default_aws_access_key"]
-    q.client["dataset/import/s3_secret_key"] = q.client["default_aws_secret_key"]
-
-    q.client["dataset/import/kaggle_access_key"] = q.client["default_kaggle_username"]
-    q.client["dataset/import/kaggle_secret_key"] = q.client["default_kaggle_secret_key"]
-
-    with open(get_usersettings_path(q), "w") as f:
-        yaml.dump(user_settings, f)
-
-    if not can_save_secrets:
-        q.page["meta"].dialog = ui.dialog(
-            title="Could not save secrets.",
-            name="secrets_error",
-            items=[
-                ui.text(f"The following error occurred: {exception}."),
-            ],
-            closable=True,
-        )
-        q.client["keep_meta"] = True
-        await q.page.save()
-
-
-def maybe_migrate_to_yaml(q):
-    try:
-        with open(get_usersettings_path(q), "rb") as f:
-            user_settings = pickle.load(f)
-
-        if any(
-            [any(password in key for password in PASSWORDS) for key in user_settings]
-        ):
-            logger.info("Migrating token to keyring")
-            for key in list(user_settings.keys()):
-                if any(password in key for password in PASSWORDS):
-                    if isinstance(user_settings[key], str):
-                        keyring.set_password("h2o-llmstudio", key, user_settings[key])
-                    del user_settings[key]
-            with open(get_usersettings_path(q), "w") as f:
-                yaml.dump(user_settings, f)
-    except Exception as e:
-        pass
 
 
 def flatten_dict(d: collections.abc.MutableMapping) -> dict:

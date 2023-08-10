@@ -10,7 +10,7 @@ from app_utils.sections.experiment import (
     experiment_rename_form,
     get_table_and_message_item_indices,
 )
-from app_utils.utils import get_experiments_status
+from app_utils.utils.utils import get_experiments_status
 
 logger = logging.getLogger(__name__)
 

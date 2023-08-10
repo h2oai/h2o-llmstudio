@@ -21,7 +21,7 @@ from sqlitedict import SqliteDict
 from app_utils.config import default_cfg
 from app_utils.sections.chat import chat_tab, load_cfg_model_tokenizer
 from app_utils.sections.common import clean_dashboard
-from app_utils.utils import (
+from app_utils.utils.utils import (
     add_model_type,
     flatten_dict,
     get_cfg_list_items,
