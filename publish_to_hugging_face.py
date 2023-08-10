@@ -60,9 +60,9 @@ if __name__ == "__main__":
     device = parser_args.device
     safe_serialization = parser_args.safe_serialization
 
-    api_key = getattr(parser_args, 'api_key', "")
-    user_id = getattr(parser_args, 'user_id', "")
-    model_name = getattr(parser_args, 'model_name', "")
+    api_key = getattr(parser_args, "api_key", "")
+    user_id = getattr(parser_args, "user_id", "")
+    model_name = getattr(parser_args, "model_name", "")
 
     try:
         hugging_face_utils.publish_model_to_hugging_face(

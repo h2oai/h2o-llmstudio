@@ -73,7 +73,7 @@ def publish_model_to_hugging_face(
     Method to publish the model to Hugging Face.
 
     Parameters:
-        path_to_experiment: The path where the files of the fine-tuned model are located.
+        path_to_experiment: The file path of the fine-tuned model's files.
         device: The target device for running the model, either 'cpu' or 'cuda:0'.
         user_id: The Hugging Face user ID.
         api_key: The Hugging Face API Key.
