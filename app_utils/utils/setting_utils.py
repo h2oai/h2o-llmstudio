@@ -63,7 +63,7 @@ async def save_user_settings(q: Q):
 
     if not can_save_secrets:
         q.page["meta"].dialog = ui.dialog(
-            title="Could not save secrets.",
+            title="Could not save secrets. Please choose another Credential Handler.",
             name="secrets_error",
             items=[
                 ui.text(
