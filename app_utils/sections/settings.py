@@ -25,7 +25,7 @@ async def settings(q: Q) -> None:
                 'Save settings persistently' button below. To reload \
                 the persistently saved settings, use the 'Load settings' button.",
             ),
-            ui.separator("Credentials"),
+            ui.separator("Credential Storage"),
             ui.inline(
                 items=[
                     ui.label("Credentials", width=label_width),
@@ -40,14 +40,22 @@ async def settings(q: Q) -> None:
             ),
             ui.message_bar(
                 type="info",
-                text="Method used to save credentials if set. \
-                    For security reasons, it is recommended to use Keyring. \
-                    If Keyring is not configured on the system, a pop-up will inform the user about the failure. \
-                    In this case, you can choose to not save credentials persistently or use a local .env file. \
-                    Please use the latter only if no other person has access to your machine. \
-                    Credentials will be cleared from all non-selected methods  \
-                    on 'Save settings persistently'. \
-                    Credentials will be cleared from all methods on 'Restore Default Settings'.",
+                text="""
+                Method used to save credentials (passwords).
+                 The recommended approach for saving credentials (passwords) is to
+                 use either Keyring or to avoid permanent storage
+                 (requiring re-entry upon app restart).
+                 If Keyring isn't set up on the system,
+                 a pop-up will notify the user of the failure.
+                 In this scenario, you can choose not to save
+                 credentials long-term or utilize a local .env file.
+                 Only resort to the latter if your machine's
+                 accessibility is restricted to you.
+                 When you select 'Save settings persistently,'
+                 credentials will be removed from
+                 all non-selected methods.
+                 'Restore Default Settings' will clear credentials from all methods.
+                """,
             ),
             ui.separator("Appearance"),
             ui.inline(

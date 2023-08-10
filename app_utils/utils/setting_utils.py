@@ -13,7 +13,7 @@ from app_utils.config import default_cfg
 from app_utils.utils.utils import get_database_dir, get_user_id
 
 logger = logging.getLogger(__name__)
-PASSWORDS = ["token", "key"]
+PASSWORDS_PHRASES = ["token", "key"]
 
 
 class NoSaver:
@@ -45,9 +45,12 @@ class KeyRingSaver(NoSaver):
     def delete(self, name):
         try:
             keyring.delete_password(self.namespace, name)
+        # General exception handling, as keyring may be misconfigured
         except Exception as e:
-            # General exception handling, as keyring may be misconfigured
-            pass
+            if isinstance(e, (KeyringLocked, PasswordDeleteError)):
+                pass
+            else:
+                logger.warning(f"Error deleting password for keyring: {e}")
 
 
 class EnvFileSaver(NoSaver):
@@ -84,7 +87,7 @@ class Secrets:
 
     _secrets = {
         "Keyring": KeyRingSaver,
-        "Do not save credentials": NoSaver,
+        "Do not save credentials permanently": NoSaver,
         ".env File": EnvFileSaver,
     }
 
@@ -113,7 +116,7 @@ async def save_user_settings(q: Q):
     secret_keys = [
         key
         for key in default_cfg.user_settings
-        if any(password in key for password in PASSWORDS)
+        if any(password in key for password in PASSWORDS_PHRASES)
     ]
     user_settings = {
         key: q.client[key]
@@ -148,7 +151,8 @@ async def save_user_settings(q: Q):
             name="secrets_error",
             items=[
                 ui.text(
-                    f"The following error occurred when using {secret_name}: {exception}."
+                    f"The following error occurred when"
+                    f" using {secret_name}: {exception}."
                 ),
             ],
             closable=True,
@@ -175,7 +179,7 @@ def load_secrets(q):
     secret_keys = [
         key
         for key in default_cfg.user_settings
-        if any(password in key for password in PASSWORDS)
+        if any(password in key for password in PASSWORDS_PHRASES)
     ]
     for key in secret_keys:
         try:
@@ -219,18 +223,21 @@ def maybe_migrate_to_yaml(q):
             user_settings = pickle.load(f)
 
         if any(
-            [any(password in key for password in PASSWORDS) for key in user_settings]
+            [
+                any(password in key for password in PASSWORDS_PHRASES)
+                for key in user_settings
+            ]
         ):
             logger.info("Migrating token to keyring")
             for key in list(user_settings.keys()):
-                if any(password in key for password in PASSWORDS):
+                if any(password in key for password in PASSWORDS_PHRASES):
                     if isinstance(user_settings[key], str):
                         secrets_handler.save(key, user_settings[key])
                     del user_settings[key]
             with open(usersettings_path, "w") as f:
                 yaml.dump(user_settings, f)
-    except Exception as e:
-        logger.info(f"Migrating of pickle usersettings {usersettings_path} failed.")
+    except Exception:
+        pass
 
 
 def get_usersettings_path(q):
