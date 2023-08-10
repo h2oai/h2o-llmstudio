@@ -254,29 +254,30 @@ def _maybe_migrate_to_yaml(q):
         return
 
     try:
-        _, secrets_handler = _get_secrets_handler(q)
         with open(old_usersettings_path, "rb") as f:
             user_settings = pickle.load(f)
 
-        if any(
-            [
-                any(password in key for password in PASSWORDS_PHRASES)
-                for key in user_settings
-            ]
-        ):
-            logger.info("Migrating token to keyring")
-            for key in list(user_settings.keys()):
-                if any(password in key for password in PASSWORDS_PHRASES):
-                    if isinstance(user_settings[key], str):
-                        secrets_handler.save(key, user_settings[key])
-                    del user_settings[key]
-            with open(old_usersettings_path, "w") as f:
-                yaml.dump(user_settings, f)
+        with open(_get_usersettings_path(q), "w") as f:
+            yaml.dump(
+                {
+                    key: value
+                    for key, value in user_settings.items()
+                    if key not in SECRET_KEYS
+                },
+                f,
+            )
+
+        secret_name, secrets_handler = _get_secrets_handler(q)
+        logger.info(f"Migrating token using {secret_name}")
+        for key in SECRET_KEYS:
+            if key in user_settings:
+                secrets_handler.save(key, user_settings[key])
 
         os.remove(old_usersettings_path)
+        logger.info(f"Successfully migrated tokens to {secret_name}. Old file deleted.")
     except Exception as e:
         logger.info(
-            f"Could not migrate token to keyring. "
+            f"Could not migrate tokens. "
             f"Please delete {old_usersettings_path} and set your credentials again."
             f"Error: \n\n {e} {traceback.format_exc()}"
         )

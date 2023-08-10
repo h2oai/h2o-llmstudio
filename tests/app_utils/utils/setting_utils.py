@@ -50,14 +50,3 @@ def test_load_default_user_settings(mocker):
     mocker.patch("app_utils.utils.setting_utils.clear_secrets", return_value=None)
     load_default_user_settings(q)
     assert set(q.client.keys()) == set(default_cfg.user_settings.keys())
-
-
-# You would need to mock the Q class methods to test:
-# save_user_settings
-# load_user_settings
-# load_secrets
-# load_default_user_settings
-# get_secrets_handler
-# clear_secrets
-# maybe_migrate_to_yaml
-# get_usersettings_path
