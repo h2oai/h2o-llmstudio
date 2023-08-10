@@ -1695,9 +1695,6 @@ def check_valid_upload_content(upload_path: str) -> Tuple[bool, str]:
     return valid, error
 
 
-PASSWORDS = ["token", "key"]
-
-
 def flatten_dict(d: collections.abc.MutableMapping) -> dict:
     """
     Adapted from https://stackoverflow.com/a/6027615
