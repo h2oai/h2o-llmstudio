@@ -404,6 +404,21 @@ class CustomDataset(Dataset):
             )
         )
 
+        # get answer encodings
+        answer_input_ids = encodings[-1][1]
+        answer_attention_mask = torch.ones_like(answer_input_ids)
+
+        sample.update(
+            self.pad_tokens(
+                answer_input_ids,
+                attention_mask=answer_attention_mask,
+                max_length=self.cfg.tokenizer.max_length_answer,
+                pad_token_id=self.tokenizer.pad_token_id,
+                direction="right",
+                prefix="answer_",
+            )
+        )
+
         # Remove last answer from encoding to create the prompt for inference
         encodings[-1][1] = torch.empty(0)
         prompt_input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
@@ -520,6 +535,7 @@ class CustomDataset(Dataset):
         attention_mask,
         max_length,
         pad_token_id,
+        direction="left",
         prefix="",
         system_ids=None,
     ):
@@ -530,10 +546,16 @@ class CustomDataset(Dataset):
             attention_mask = attention_mask[-max_length:]
 
         if len(input_ids) > 0:
-            sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
-            sample[f"{prefix}input_ids"][-len(input_ids) :] = input_ids
-            sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
-            sample[f"{prefix}attention_mask"][-len(input_ids) :] = attention_mask
+            if direction == "left":
+                sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
+                sample[f"{prefix}input_ids"][-len(input_ids) :] = input_ids
+                sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
+                sample[f"{prefix}attention_mask"][-len(input_ids) :] = attention_mask
+            else:
+                sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
+                sample[f"{prefix}input_ids"][: len(input_ids)] = input_ids
+                sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
+                sample[f"{prefix}attention_mask"][: len(input_ids)] = attention_mask
         else:
             # Pad everything if empty (continued pretraining)
             sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
