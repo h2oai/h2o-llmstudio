@@ -40,16 +40,18 @@ async def settings(q: Q) -> None:
             ),
             ui.message_bar(
                 type="info",
-                text="""Method used to save credentials (passwords). \
+                text="""Method used to save credentials (passwords) \
+                for 'Save settings persistently'. \
                 The recommended approach for saving credentials (passwords) is to \
                 use either Keyring or to avoid permanent storage \
                 (requiring re-entry upon app restart). \
                 If Keyring isn't set up on the system, \
-                a pop-up will notify the user of the failure. 
+                a pop-up will notify the user of the failure. \
                 In this scenario, you can choose not to save \
                 credentials long-term or utilize a local .env file. \
-                Only resort to the latter if your machine's accessibility is restricted to you.\
-                When you select 'Save settings persistently,' \
+                Only resort to the latter if your machine's \
+                accessibility is restricted to you.\
+                When you select 'Save settings persistently', \
                 credentials will be removed from all non-selected methods. \
                 'Restore Default Settings' will clear credentials from all methods.
                 """,
