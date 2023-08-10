@@ -20,7 +20,7 @@ from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
 
 from .config import default_cfg
 from .db import Database, Dataset
-from .utils.setting_utils import load_user_settings
+from .utils.setting_utils import load_user_settings_and_secrets
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ async def initialize_client(q: Q) -> None:
 
         import_data(q)
 
-        load_user_settings(q)
+        load_user_settings_and_secrets(q)
 
         await interface(q)
 

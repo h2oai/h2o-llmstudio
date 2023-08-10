@@ -44,7 +44,7 @@ from app_utils.sections.project import (
 from app_utils.sections.settings import settings
 from app_utils.utils.setting_utils import (
     load_default_user_settings,
-    load_user_settings,
+    load_user_settings_and_secrets,
     save_user_settings,
 )
 from app_utils.utils.utils import add_model_type
@@ -81,7 +81,7 @@ async def handle(q: Q) -> None:
             await save_user_settings(q)
             await settings(q)
         elif q.args["load_settings"]:
-            load_user_settings(q)
+            load_user_settings_and_secrets(q)
             await settings(q)
         elif q.args["restore_default_settings"]:
             load_default_user_settings(q)

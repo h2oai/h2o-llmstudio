@@ -2,9 +2,9 @@ from unittest import mock
 
 from app_utils.config import default_cfg
 from app_utils.utils.setting_utils import (
-    NoSaver,
-    KeyRingSaver,
     EnvFileSaver,
+    KeyRingSaver,
+    NoSaver,
     Secrets,
     load_default_user_settings,
 )
