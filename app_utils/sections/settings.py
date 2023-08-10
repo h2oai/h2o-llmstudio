@@ -45,8 +45,9 @@ async def settings(q: Q) -> None:
                     If Keyring is not configured on the system, a pop-up will inform the user about the failure. \
                     In this case, you can choose to not save credentials persistently or use a local .env file. \
                     Please use the latter only if no other person has access to your machine. \
-                    Credentials will be cleared from all methods if you select 'Do not save credentials' and click  \
-                    on 'Save settings persistently' ",
+                    Credentials will be cleared from all non-selected methods  \
+                    on 'Save settings persistently'. \
+                    Credentials will be cleared from all methods on 'Restore Default Settings'.",
             ),
             ui.separator("Appearance"),
             ui.inline(

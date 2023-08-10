@@ -7,10 +7,6 @@ from bokeh.resources import Resources as BokehResources
 from h2o_wave import Q
 
 from app_utils.sections.common import interface
-from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
-
-from .config import default_cfg
-from .db import Database, Dataset
 from app_utils.utils.utils import (
     get_data_dir,
     get_database_dir,
@@ -20,6 +16,10 @@ from app_utils.utils.utils import (
     get_user_name,
     prepare_default_dataset,
 )
+from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
+
+from .config import default_cfg
+from .db import Database, Dataset
 from .utils.setting_utils import load_user_settings
 
 logger = logging.getLogger(__name__)

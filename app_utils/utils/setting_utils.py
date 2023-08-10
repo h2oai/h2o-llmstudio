@@ -2,12 +2,12 @@ import logging
 import os
 import pickle
 import traceback
-from typing import List, Any
+from typing import Any, List
 
 import keyring
 import yaml
 from h2o_wave import Q, ui
-from keyring.errors import PasswordDeleteError, KeyringLocked
+from keyring.errors import KeyringLocked, PasswordDeleteError
 
 from app_utils.config import default_cfg
 from app_utils.utils.utils import get_database_dir, get_user_id
@@ -187,6 +187,7 @@ def load_secrets(q):
 def load_default_user_settings(q: Q):
     for key in default_cfg.user_settings:
         q.client[key] = default_cfg.user_settings[key]
+        clear_secrets(q, key)
 
 
 def get_secrets_handler(q):

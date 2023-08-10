@@ -14,7 +14,12 @@ from h2o_wave import data as chat_data
 from h2o_wave import ui
 from transformers import AutoTokenizer, TextStreamer
 
-from app_utils.utils.utils import get_experiments, get_ui_elements, parse_ui_elements, set_env
+from app_utils.utils.utils import (
+    get_experiments,
+    get_ui_elements,
+    parse_ui_elements,
+    set_env,
+)
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.models.text_causal_language_modeling_model import Model
 from llm_studio.src.utils.config_utils import load_config_yaml
