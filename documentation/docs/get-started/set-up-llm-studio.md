@@ -7,7 +7,8 @@ import TabItem from '@theme/TabItem';
 
 H2O LLM Studio requires the following minimum requirements:
 
-- A machine with Ubuntu 16.04+ with atleast one recent Nvidia GPU 
+- A machine with Ubuntu 16.04+ with atleast one recent Nvidia GPU
+- Have at least 128GB+ of system RAM. Larger models and complex tasks may require 256GB+ or more.
 - Nvidia drivers v470.57.02 or a later version
 - Access to the following URLs:
   - developer.download.nvidia.com
