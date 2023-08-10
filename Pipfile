@@ -49,7 +49,7 @@ h2o-wave = "0.26"
 tiktoken = "0.4.0"
 hf-transfer = "0.1.3"
 peft = "0.4.0"
-keyring = "*"
+keyring = "24.2.0"
 
 [dev-packages]
 pytest = "==7.4.0"
