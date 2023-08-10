@@ -202,10 +202,10 @@ To publish the model to Hugging Face, use the following command:
 ```bash
 make shell 
 
-python publish_to_hugging_face.py -e {experiment_name} -d {device} -a {api_key} -u {user_id} -m {model_name} -s {safe_serialization}
+python publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_key} -u {user_id} -m {model_name} -s {safe_serialization}
 ``` 
 
-`experiment_name` is the output folder of the experiment.
+`path_to_experiment` is the output folder of the experiment.
 `device` is the target device for running the model, either 'cpu' or 'cuda:0'. Default is 'cuda:0'.
 `api_key` is the Hugging Face API Key. If user logged in, it can be omitted.
 `user_id` is the Hugging Face user ID. If user logged in, it can be omitted.
