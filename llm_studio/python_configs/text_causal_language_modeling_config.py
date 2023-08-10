@@ -428,20 +428,20 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
         self._possible_values["number_of_workers"] = (1, multiprocessing.cpu_count(), 1)
         self._possible_values["seed"] = possible_values.Number(step=1, min=-1)
         self._possible_values["deepspeed_reduce_bucket_size"] = possible_values.Number(
-            step=1, min=1e7
+            step=1, min=1e6
         )
         self._possible_values[
             "deepspeed_stage3_prefetch_bucket_size"
-        ] = possible_values.Number(step=1, min=1e7)
+        ] = possible_values.Number(step=1, min=1e6)
         self._possible_values[
             "deepspeed_stage3_param_persistence_threshold"
-        ] = possible_values.Number(step=1, min=1e7)
+        ] = possible_values.Number(step=1, min=1e6)
         self._possible_values[
             "deepspeed_stage3_max_live_parameters"
-        ] = possible_values.Number(step=1, min=1e7)
+        ] = possible_values.Number(step=1, min=1e6)
         self._possible_values[
             "deepspeed_stage3_max_reuse_distance"
-        ] = possible_values.Number(step=1, min=1e7)
+        ] = possible_values.Number(step=1, min=1e6)
         self._nesting.add(
             [
                 "deepspeed_reduce_bucket_size",
