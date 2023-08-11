@@ -218,6 +218,8 @@ def test_getitem():
             "attention_mask",
             "prompt_input_ids",
             "prompt_attention_mask",
+            "answer_input_ids",
+            "answer_attention_mask",
         ]
     )
 
