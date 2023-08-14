@@ -180,11 +180,6 @@ class DefaultConfig:
 
 @dataclass
 class DefaultConfigProblemBase(DefaultConfig):
-    """
-    Base class for all problem configs.
-    Contains all fields that are common to all problems.
-    """
-
     experiment_name: str
     output_directory: str
     llm_backbone: str
@@ -205,3 +200,28 @@ class DefaultConfigProblemBase(DefaultConfig):
         for example: text_causal_language_modeling_config.py -> causal_language_modeling
         """
         return type(self).__dict__["__module__"].split(".")[-1].replace("_config", "")
+
+    @classmethod
+    def from_dict(cls, cfg_dict: dict):
+        """
+        Create a new instance of the config class from a dictionary.
+        Args:
+            cfg_dict:
+
+        Returns:
+
+        """
+        annotations = cls.__annotations__
+
+        # Prepare arguments for creating a new dataclass instance
+        init_args = {}
+        for attr_name, attr_type in annotations.items():
+            # Only process annotated attributes that have `from_dict` method
+            if hasattr(attr_type, "from_dict"):
+                attr_value = cfg_dict.get(attr_name, {})
+                init_args[attr_name] = attr_type.from_dict(attr_value)
+            else:
+                init_args[attr_name] = cfg_dict.get(attr_name, getattr(cls, attr_name))
+
+        # Create and return a new instance
+        return cls(**init_args)

@@ -37,6 +37,13 @@ class LossClass:
         return []
 
 
+class ConfigRLHFLMAugmentation(ConfigNLPAugmentation):
+    def __post_init__(self):
+        super().__post_init__()
+        self._visibility["skip_parent_probability"] = -1
+        self._visibility["random_parent_probability"] = -1
+
+
 @dataclass
 class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
     loss_class: Any = LossClass
@@ -139,6 +146,13 @@ class ConfigRLHFLMPrediction(ConfigNLPCausalLMPrediction):
 
 
 @dataclass
+class ConfigRLHFLMEnvironment(ConfigNLPCausalLMEnvironment):
+    def __post_init__(self):
+        super().__post_init__()
+        self._visibility["use_fsdp"] = -1
+
+
+@dataclass
 class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
@@ -155,33 +169,35 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     training: ConfigRLHFLMTraining = field(default_factory=ConfigRLHFLMTraining)
     augmentation: ConfigNLPAugmentation = field(default_factory=ConfigNLPAugmentation)
     prediction: ConfigRLHFLMPrediction = field(default_factory=ConfigRLHFLMPrediction)
-    environment: ConfigNLPCausalLMEnvironment = field(
-        default_factory=ConfigNLPCausalLMEnvironment
+    environment: ConfigRLHFLMEnvironment = field(
+        default_factory=ConfigRLHFLMEnvironment
     )
     logging: ConfigNLPCausalLMLogging = field(default_factory=ConfigNLPCausalLMLogging)
 
-    @classmethod
-    def from_dict(cls, cfg_dict: dict):
-        return cls(
-            output_directory=cfg_dict.get(
-                "output_directory", ConfigProblemBase.output_directory
+    def __post_init__(self):
+        super().__post_init__()
+
+        self._visibility["output_directory"] = -1
+
+        self._possible_values["llm_backbone"] = possible_values.String(
+            values=(
+                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-7b-v3",
+                "h2oai/h2ogpt-gm-oasst1-en-2048-open-llama-7b",
+                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-40b-v2",
+                "tiiuae/falcon-7b",
+                "tiiuae/falcon-40b",
+                "openlm-research/open_llama_3b",
+                "openlm-research/open_llama_7b",
+                "openlm-research/open_llama_13b",
+                "EleutherAI/gpt-j-6B",
+                "EleutherAI/gpt-neox-20b",
+                "facebook/opt-125m",
+                "facebook/opt-2.7b",
+                "EleutherAI/pythia-1b-deduped",
+                "EleutherAI/pythia-2.8b-deduped",
+                "EleutherAI/pythia-6.9b-deduped",
+                "EleutherAI/pythia-12b-deduped",
+                "togethercomputer/GPT-NeoXT-Chat-Base-20B",
             ),
-            experiment_name=cfg_dict.get("experiment_name", generate_experiment_name()),
-            llm_backbone=cfg_dict.get("llm_backbone", ConfigProblemBase.llm_backbone),
-            dataset=ConfigRLHFLMDataset.from_dict(cfg_dict.get("dataset", {})),
-            tokenizer=ConfigNLPCausalLMTokenizer.from_dict(
-                cfg_dict.get("tokenizer", {})
-            ),
-            augmentation=ConfigNLPAugmentation.from_dict(
-                cfg_dict.get("augmentation", {})
-            ),
-            architecture=ConfigRLHFLMArchitecture.from_dict(
-                cfg_dict.get("architecture", {})
-            ),
-            training=ConfigRLHFLMTraining.from_dict(cfg_dict.get("training", {})),
-            prediction=ConfigRLHFLMPrediction.from_dict(cfg_dict.get("prediction", {})),
-            environment=ConfigNLPCausalLMEnvironment.from_dict(
-                cfg_dict.get("environment", {})
-            ),
-            logging=ConfigNLPCausalLMLogging.from_dict(cfg_dict.get("logging", {})),
+            allow_custom=True,
         )
