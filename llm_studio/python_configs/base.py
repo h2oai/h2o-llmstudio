@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 from dataclasses import dataclass, fields
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
@@ -203,25 +204,18 @@ class DefaultConfigProblemBase(DefaultConfig):
 
     @classmethod
     def from_dict(cls, cfg_dict: dict):
-        """
-        Create a new instance of the config class from a dictionary.
-        Args:
-            cfg_dict:
-
-        Returns:
-
-        """
-        annotations = cls.__annotations__
+        # Get class fields to access their default values
+        fields = {f.name: f for f in dataclasses.fields(cls)}
 
         # Prepare arguments for creating a new dataclass instance
         init_args = {}
-        for attr_name, attr_type in annotations.items():
-            # Only process annotated attributes that have `from_dict` method
-            if hasattr(attr_type, "from_dict"):
-                attr_value = cfg_dict.get(attr_name, {})
-                init_args[attr_name] = attr_type.from_dict(attr_value)
+        for field_name, field_obj in fields.items():
+            if hasattr(field_obj.type, "from_dict"):
+                attr_value = cfg_dict.get(field_name, {})
+                init_args[field_name] = field_obj.type.from_dict(attr_value)
             else:
-                init_args[attr_name] = cfg_dict.get(attr_name, getattr(cls, attr_name))
+                # Use the value from cfg_dict, or the field's default value if not available in cfg_dict
+                init_args[field_name] = cfg_dict.get(field_name, field_obj.default)
 
         # Create and return a new instance
         return cls(**init_args)
