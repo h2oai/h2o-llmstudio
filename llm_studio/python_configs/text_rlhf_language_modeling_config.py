@@ -168,8 +168,6 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     def __post_init__(self):
         super().__post_init__()
 
-        self._visibility["output_directory"] = -1
-
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
                 "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-7b-v3",
@@ -203,3 +201,9 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             # /src/models/text_reward_model.py
             allow_custom=False,
         )
+
+        self._order.insert(
+            "reward_model",
+            after="llm_backbone",
+        )
+        self._visibility["output_directory"] = -1
