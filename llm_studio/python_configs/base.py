@@ -219,7 +219,8 @@ class DefaultConfigProblemBase(DefaultConfig):
                 attr_value = cfg_dict.get(field_name, {})
                 init_args[field_name] = field_obj.type.from_dict(attr_value)
             else:
-                # Use the value from cfg_dict, or the field's default value if not available in cfg_dict
+                # Use the value from cfg_dict,
+                # or the field's default value if not available in cfg_dict
                 init_args[field_name] = cfg_dict.get(field_name, field_obj.default)
 
         # Create and return a new instance

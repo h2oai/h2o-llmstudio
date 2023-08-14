@@ -48,7 +48,6 @@ class ConfigRLHFLMAugmentation(ConfigNLPAugmentation):
 class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
     loss_class: Any = LossClass
     loss_function: str = "RLHF"
-    reward_model: str = "OpenAssistant/reward-model-deberta-v3-large-v2"
     adaptive_kl_control: bool = True
     initial_kl_coefficient: float = 0.2
     kl_target: float = 6.0
@@ -73,14 +72,6 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
             allow_custom=False,
             placeholder="Select optional layers...",
         )
-        self._possible_values["reward_model"] = possible_values.String(
-            values=(
-                "OpenAssistant/reward-model-deberta-v3-large-v2",
-                "OpenAssistant/oasst-rm-2.1-pythia-1.4b-epoch-2.5",
-                "OpenAssistant/oasst-rm-2-pythia-6.9b-epoch-1",
-            ),
-            allow_custom=False,
-        )
 
         self._possible_values["initial_kl_coefficient"] = (0.01, 0.5, 0.01)
         self._possible_values["kl_target"] = (0.1, 16, 0.1)
@@ -98,7 +89,6 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
             "adaptive_kl_control",
             "advantages_gamma",
             "offload_reward_model",
-            "reward_model",
             "kl_horizon",
             "ppo_generate_temperature",
             "kl_target",
@@ -158,6 +148,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
     llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
+    reward_model: str = "OpenAssistant/reward-model-deberta-v3-large-v2"
 
     dataset: ConfigRLHFLMDataset = field(default_factory=ConfigRLHFLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
@@ -200,4 +191,15 @@ class ConfigProblemBase(DefaultConfigProblemBase):
                 "togethercomputer/GPT-NeoXT-Chat-Base-20B",
             ),
             allow_custom=True,
+        )
+
+        self._possible_values["reward_model"] = possible_values.String(
+            values=(
+                "OpenAssistant/reward-model-deberta-v3-large-v2",
+                "OpenAssistant/oasst-rm-2.1-pythia-1.4b-epoch-2.5",
+                "OpenAssistant/oasst-rm-2-pythia-6.9b-epoch-1",
+            ),
+            # Custom models are not supported, as they would need to be implemented in
+            # /src/models/text_reward_model.py
+            allow_custom=False,
         )
