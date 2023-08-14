@@ -209,12 +209,11 @@ class DefaultConfigProblemBase(DefaultConfig):
 
     @classmethod
     def from_dict(cls, cfg_dict: dict):
-        # Get class fields to access their default values
-        fields = {f.name: f for f in dataclasses.fields(cls)}
+        class_fields = {f.name: f for f in dataclasses.fields(cls)}
 
         # Prepare arguments for creating a new dataclass instance
         init_args = {}
-        for field_name, field_obj in fields.items():
+        for field_name, field_obj in class_fields.items():
             if hasattr(field_obj.type, "from_dict"):
                 attr_value = cfg_dict.get(field_name, {})
                 init_args[field_name] = field_obj.type.from_dict(attr_value)
@@ -223,5 +222,4 @@ class DefaultConfigProblemBase(DefaultConfig):
                 # or the field's default value if not available in cfg_dict
                 init_args[field_name] = cfg_dict.get(field_name, field_obj.default)
 
-        # Create and return a new instance
         return cls(**init_args)
