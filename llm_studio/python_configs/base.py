@@ -181,6 +181,11 @@ class DefaultConfig:
 
 @dataclass
 class DefaultConfigProblemBase(DefaultConfig):
+    """
+    Base class for all problem configs.
+    Defines the interface for all problem configs.
+    """
+
     experiment_name: str
     output_directory: str
     llm_backbone: str
