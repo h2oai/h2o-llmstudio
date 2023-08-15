@@ -205,6 +205,8 @@ def test_getitem():
         tokenizer=ConfigNLPCausalLMTokenizer(max_length=513),
     )
 
+    cfg.llm_backbone = "EleutherAI/pythia-2.8b-deduped"
+
     dataset = CustomDataset(df, cfg)
     assert len(dataset) == 1
 

@@ -147,7 +147,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
-    llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
+    llm_backbone: str = "h2oai/h2ogpt-4096-llama2-7b"
     reward_model: str = "OpenAssistant/reward-model-deberta-v3-large-v2"
 
     dataset: ConfigRLHFLMDataset = field(default_factory=ConfigRLHFLMDataset)
@@ -170,23 +170,19 @@ class ConfigProblemBase(DefaultConfigProblemBase):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
-                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-7b-v3",
-                "h2oai/h2ogpt-gm-oasst1-en-2048-open-llama-7b",
-                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-40b-v2",
-                "tiiuae/falcon-7b",
+                "h2oai/h2ogpt-4096-llama2-70b",
+                "h2oai/h2ogpt-4096-llama2-70b-chat",
+                "h2oai/h2ogpt-4096-llama2-13b",
+                "h2oai/h2ogpt-4096-llama2-13b-chat",
+                "h2oai/h2ogpt-4096-llama2-7b",
+                "h2oai/h2ogpt-4096-llama2-7b-chat",
                 "tiiuae/falcon-40b",
-                "openlm-research/open_llama_3b",
-                "openlm-research/open_llama_7b",
+                "tiiuae/falcon-7b",
                 "openlm-research/open_llama_13b",
+                "openlm-research/open_llama_7b",
+                "openlm-research/open_llama_3b",
                 "EleutherAI/gpt-j-6B",
-                "EleutherAI/gpt-neox-20b",
                 "facebook/opt-125m",
-                "facebook/opt-2.7b",
-                "EleutherAI/pythia-1b-deduped",
-                "EleutherAI/pythia-2.8b-deduped",
-                "EleutherAI/pythia-6.9b-deduped",
-                "EleutherAI/pythia-12b-deduped",
-                "togethercomputer/GPT-NeoXT-Chat-Base-20B",
             ),
             allow_custom=True,
         )
