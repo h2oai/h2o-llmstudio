@@ -63,20 +63,22 @@ class Plots:
 
         # Convert into a scrollable table by transposing the dataframe
         df_transposed = pd.DataFrame(columns=["Sample Number", "Field", "Content"])
+        has_answer = "Answer Text" in df.columns
+
         for i, row in df.iterrows():
-            offset = 3 if "Answer Text" in df.columns else 2
+            offset = 2 + int(has_answer)
             df_transposed.loc[i * offset] = [
                 i,
                 "Prompt Text",
                 row["Prompt Text"],
             ]
-            if "Answer Text" in df.columns:
+            if has_answer:
                 df_transposed.loc[i * offset + 1] = [
                     i,
                     "Answer Text",
                     row["Answer Text"],
                 ]
-            df_transposed.loc[i * offset + 2] = [
+            df_transposed.loc[i * offset + 1 + int(has_answer)] = [
                 i,
                 "Tokenized Text",
                 row["Tokenized Text"],

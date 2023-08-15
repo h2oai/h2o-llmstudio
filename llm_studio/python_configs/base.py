@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 from dataclasses import dataclass, fields
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
@@ -176,3 +177,49 @@ class DefaultConfig:
                 f"Keys {set(d.keys()) - set(d_filtered.keys())} are not in the config."
             )
         return cls(**d_filtered)  # mypy: ignore
+
+
+@dataclass
+class DefaultConfigProblemBase(DefaultConfig):
+    """
+    Base class for all problem configs.
+    Defines the interface for all problem configs.
+    """
+
+    experiment_name: str
+    output_directory: str
+    llm_backbone: str
+
+    dataset: Any
+    tokenizer: Any
+    architecture: Any
+    training: Any
+    augmentation: Any
+    prediction: Any
+    environment: Any
+    logging: Any
+
+    @property
+    def problem_type(self) -> str:
+        """
+        Parse problem_type from config filename,
+        for example: text_causal_language_modeling_config.py -> causal_language_modeling
+        """
+        return type(self).__dict__["__module__"].split(".")[-1].replace("_config", "")
+
+    @classmethod
+    def from_dict(cls, cfg_dict: dict):
+        class_fields = {f.name: f for f in dataclasses.fields(cls)}
+
+        # Prepare arguments for creating a new dataclass instance
+        init_args = {}
+        for field_name, field_obj in class_fields.items():
+            if hasattr(field_obj.type, "from_dict"):
+                attr_value = cfg_dict.get(field_name, {})
+                init_args[field_name] = field_obj.type.from_dict(attr_value)
+            else:
+                # Use the value from cfg_dict,
+                # or the field's default value if not available in cfg_dict
+                init_args[field_name] = cfg_dict.get(field_name, field_obj.default)
+
+        return cls(**init_args)

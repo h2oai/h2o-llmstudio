@@ -62,8 +62,10 @@ class CustomDataset(Dataset):
 
         self.tokenizer = get_tokenizer(cfg)
 
-        self.raw_prompts = get_texts(df, self.cfg, separator="")
-        self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.raw_prompts]
+        self.prompts = [
+            self.parse_prompt(cfg, prompt)
+            for prompt in get_texts(df, self.cfg, separator="")
+        ]
 
         self.answers = (
             self.df[self.cfg.dataset.answer_column].astype(str).values.tolist()
@@ -89,12 +91,7 @@ class CustomDataset(Dataset):
 
         self.systems = None
         if self.cfg.dataset.system_column != "None":
-            if self.cfg.training.use_rlhf:
-                logger.warning(
-                    f"RLHF is not compatible with system column. "
-                    f"Disabling functionality for mode {self.mode}."
-                )
-            elif self.cfg.dataset.system_column not in self.df.columns:
+            if self.cfg.dataset.system_column not in self.df.columns:
                 logger.warning(
                     f"System column {self.cfg.dataset.system_column} not found."
                     f"Disabling functionality for mode {self.mode}."
@@ -251,11 +248,7 @@ class CustomDataset(Dataset):
         ]
         output["predicted_text"] = np.array(predicted_text)
 
-        if not cfg.training.use_rlhf:
-            del output["predicted_answer_ids"]
-        else:
-            output["predicted_answer_ids"].detach()
-
+        del output["predicted_answer_ids"]
         return output
 
     @staticmethod
@@ -348,53 +341,9 @@ class CustomDataset(Dataset):
         idx = self.indices[idx]
 
         sample = dict()
-        system_encoding, prompt_encoding, answer_encoding = self._get_sample_encoding(
-            idx
-        )
-
-        rlhf_is_in_training_mode = self.cfg.training.use_rlhf and self.mode == "train"
-        if rlhf_is_in_training_mode:
-            # ground truth answer not used in RLHF training
-            encodings = [[system_encoding, prompt_encoding, torch.empty(0)]]
-        else:
-            encodings = [[system_encoding, prompt_encoding, answer_encoding]]
-
-        encodings = self.get_parent_encodings(idx) + encodings
-
-        # in case of chained samples, we only want to keep the first system encoding
-        system_encoding = encodings[0][0]
-        # remove system encodings from list of encodings to only keep prompt and answer
-        encodings = [encoding[1:] for encoding in encodings]
-        # concatenate system encoding with root prompt encoding
-        encodings[0][0] = torch.cat([system_encoding, encodings[0][0]])
-
+        encodings, system_encoding = self.get_encodings(idx)
         input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
-        if not rlhf_is_in_training_mode:  # no labels required for RLHF during training
-            labels = input_ids.clone()
-
-            if self.cfg.dataset.mask_prompt_labels:
-                prompt_mask = torch.cat(
-                    [
-                        torch.cat(
-                            [
-                                torch.ones_like(prompt_encoding),
-                                torch.zeros_like(answer_encoding),
-                            ]
-                        )
-                        for prompt_encoding, answer_encoding in encodings
-                    ]
-                ).to(torch.bool)
-                labels.masked_fill_(prompt_mask, -100)
-            if self.cfg.dataset.add_eos_token_to_answer:
-                # eos_token may be equal to pad_token. Add the label back manually.
-                labels[-1] = self.tokenizer.eos_token_id
-
-            if self.cfg.tokenizer.max_length < len(input_ids):
-                labels = labels[-self.cfg.tokenizer.max_length :]
-
-            sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), -100)
-            sample["labels"][-len(labels) :] = labels
-
+        sample.update(self.get_labels(encodings))
         sample.update(
             self.pad_tokens(
                 input_ids,
@@ -423,7 +372,6 @@ class CustomDataset(Dataset):
         encodings[-1][1] = torch.empty(0)
         prompt_input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
         prompt_attention_mask = torch.ones_like(prompt_input_ids)
-
         sample.update(
             self.pad_tokens(
                 prompt_input_ids,
@@ -433,21 +381,54 @@ class CustomDataset(Dataset):
                 prefix="prompt_",
             )
         )
-
         # make sure system encoding is always prepended if max_length exceeded
         if sample["input_ids"][0] != self.tokenizer.pad_token_id:
             sample["input_ids"][: len(system_encoding)] = system_encoding
             if self.cfg.dataset.mask_prompt_labels:
                 sample["labels"][: len(system_encoding)] = -100
-
         if sample["prompt_input_ids"][0] != self.tokenizer.pad_token_id:
             sample["prompt_input_ids"][: len(system_encoding)] = system_encoding
-
-        if self.cfg.training.use_rlhf:
-            sample["reward_model_prompt_text"] = (
-                self.get_reward_model_parent_prompt_text(idx) + self.raw_prompts[idx]
-            )
         return sample
+
+    def get_labels(self, encodings):
+        labels = torch.cat([torch.cat(encoding) for encoding in encodings]).clone()
+
+        if self.cfg.dataset.mask_prompt_labels:
+            prompt_mask = torch.cat(
+                [
+                    torch.cat(
+                        [
+                            torch.ones_like(prompt_encoding),
+                            torch.zeros_like(answer_encoding),
+                        ]
+                    )
+                    for prompt_encoding, answer_encoding in encodings
+                ]
+            ).to(torch.bool)
+            labels.masked_fill_(prompt_mask, -100)
+        if self.cfg.dataset.add_eos_token_to_answer:
+            # eos_token may be equal to pad_token. Add the label back manually.
+            labels[-1] = self.tokenizer.eos_token_id
+        if self.cfg.tokenizer.max_length < len(labels):
+            labels = labels[-self.cfg.tokenizer.max_length :]
+
+        sample = dict(labels=torch.full((self.cfg.tokenizer.max_length,), -100))
+        sample["labels"][-len(labels) :] = labels
+        return sample
+
+    def get_encodings(self, idx):
+        system_encoding, prompt_encoding, answer_encoding = self._get_sample_encoding(
+            idx
+        )
+        encodings = [[system_encoding, prompt_encoding, answer_encoding]]
+        encodings = self.get_parent_encodings(idx) + encodings
+        # in case of chained samples, we only want to keep the first system encoding
+        system_encoding = encodings[0][0]
+        # remove system encodings from list of encodings to only keep prompt and answer
+        encodings = [encoding[1:] for encoding in encodings]
+        # concatenate system encoding with root prompt encoding
+        encodings[0][0] = torch.cat([system_encoding, encodings[0][0]])
+        return encodings, system_encoding
 
     def _get_sample_encoding(self, idx) -> List:
         if self.systems is not None:
@@ -517,17 +498,6 @@ class CustomDataset(Dataset):
                 rnd_idx = np.random.randint(len(self))
                 parent_encodings.insert(0, self._get_sample_encoding(int(rnd_idx)))
         return parent_encodings
-
-    def get_reward_model_parent_prompt_text(self, idx):
-        return "".join(
-            [
-                self.raw_prompts[int(parent_idx)]
-                + "<|endoftext|>"
-                + self.answers[int(parent_idx)]
-                + "<|endoftext|>"
-                for parent_idx in self.get_parent_ids(idx)
-            ]
-        )
 
     def pad_tokens(
         self,
