@@ -26,6 +26,7 @@
 - [Example: Run on OASST data via CLI](#example-run-on-oasst-data-via-cli)
 - [Model checkpoints](#model-checkpoints)
 - [Documentation](#documentation)
+- [Contributing](#contributing)
 - [License](#license)
 
 ## With H2O LLM Studio, you can
@@ -215,6 +216,9 @@ All open-source datasets and models are posted on [H2O.ai's Hugging Face page](h
 ## Documentation
 
 Detailed documentation and frequently asked questions (FAQs) for H2O LLM Studio can be found at <https://docs.h2o.ai/h2o-llmstudio/>. If you wish to contribute to the docs, navigate to the `/documentation` folder of this repo and refer to the [README.md](documentation/README.md) for more information.
+
+## Contributing
+We are happy to accept contributions to the H2O LLM Studio project. Please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
 
 ## License
 
