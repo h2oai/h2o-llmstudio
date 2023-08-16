@@ -240,7 +240,6 @@ class PPOTrainer(PyTorchModelHubMixin):
 
     def _step_safety_checker(
         self,
-        batch_size: int,
         queries: List[torch.LongTensor],
         responses: List[torch.LongTensor],
         scores: List[torch.Tensor],
@@ -250,8 +249,6 @@ class PPOTrainer(PyTorchModelHubMixin):
         device.
 
         Args:
-            batch_size (int):
-                Batch size from the config file.
             queries (List[`torch.LongTensor`]):
                 List of tensors containing the encoded queries of shape (`query_length`)
             responses (List[`torch.LongTensor`]):
@@ -273,9 +270,12 @@ class PPOTrainer(PyTorchModelHubMixin):
                 raise ValueError(
                     f"Elements in {name} must be tensors - got {type(tensor_list[0])}"
                 )
-            if batch_size is not None and len(tensor_list) != batch_size:
+            if self.cfg.training.batch_size is not None and len(tensor_list) != (
+                self.cfg.training.batch_size * self.cfg.training.rollout_steps
+            ):
                 raise ValueError(
-                    f"Batch size ({batch_size}) does not match number of examples"
+                    f"Batch size ({self.cfg.training.batch_size}) does not match "
+                    "number of examples"
                     f" - but got {len(tensor_list)} for: {name}"
                 )
 
@@ -317,10 +317,9 @@ class PPOTrainer(PyTorchModelHubMixin):
         Returns:
             `dict[str, Any]`: A summary of the training statistics
         """
-        bs = self.cfg.training.batch_size
 
         queries, responses, scores = self._step_safety_checker(
-            bs, queries, responses, scores
+            queries, responses, scores
         )
 
         timing = dict()
