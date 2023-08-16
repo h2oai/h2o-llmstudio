@@ -24,6 +24,11 @@ from llm_studio.src.utils.modeling_utils import generate_experiment_name
 class ConfigRLHFLMDataset(ConfigNLPCausalLMDataset):
     dataset_class: Any = CustomDataset
 
+    text_prompt_start: str = "<s>[INST] <<SYS>>\nYou are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.\n\nIf a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n<</SYS>>\n\n"  # noqa: E501
+    text_answer_separator: str = " [/INST]"
+    add_eos_token_to_prompt: bool = False
+    add_eos_token_to_answer: bool = False
+
     def __post_init__(self):
         super().__post_init__()
         # RLHF is not compatible with system column.
@@ -48,6 +53,12 @@ class ConfigRLHFLMAugmentation(ConfigNLPAugmentation):
 class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
     loss_class: Any = LossClass
     loss_function: str = "RLHF"
+
+    batch_size: int = 4
+    gradient_clip: float = 1.0
+    grad_accumulation: int = 16
+    evaluation_epochs: float = 0.25
+
     rollout_steps: int = 64
     adaptive_kl_control: bool = True
     full_kl_penalty: bool = True
@@ -60,7 +71,7 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
     ppo_clip_value: float = 0.2
     scaling_factor_value_loss: float = 0.1
     ppo_epochs: int = 4
-    ppo_batch_size: int = 4
+    ppo_batch_size: int = 8
     ppo_generate_temperature: float = 1.0
     offload_reward_model: bool = False
 
@@ -156,7 +167,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
-    llm_backbone: str = "h2oai/h2ogpt-4096-llama2-7b"
+    llm_backbone: str = "h2oai/h2ogpt-4096-llama2-7b-chat"
     reward_model: str = "OpenAssistant/reward-model-deberta-v3-large-v2"
 
     dataset: ConfigRLHFLMDataset = field(default_factory=ConfigRLHFLMDataset)
