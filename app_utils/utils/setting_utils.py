@@ -195,6 +195,9 @@ async def _save_secrets(q):
                         f"The following error occurred when"
                         f" using {secret_name}: {exception}."
                     ),
+                    ui.button(
+                        name="settings/close_error_dialog", label="Close", primary=True
+                    ),
                 ],
                 closable=True,
             )
