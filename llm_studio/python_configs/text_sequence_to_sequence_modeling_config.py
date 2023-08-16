@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Any
 
-from llm_studio.python_configs.base import DefaultConfig
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPAugmentation,
     ConfigNLPCausalLMArchitecture,
@@ -46,16 +46,6 @@ class ConfigNLPSeq2SeqDataset(ConfigNLPCausalLMDataset):
 
 
 @dataclass
-class ConfigNLPSeq2SeqTraining(ConfigNLPCausalLMTraining):
-    use_rlhf: bool = False
-
-    def __post_init__(self):
-        super().__post_init__()
-
-        self._visibility["use_rlhf"] = -1
-
-
-@dataclass
 class ConfigNLPSeq2SeqArchitecture(ConfigNLPCausalLMArchitecture):
     model_class: Any = text_sequence_to_sequence_modeling_model.Model
     backbone_dtype: str = "bfloat16"
@@ -80,7 +70,7 @@ class ConfigNLPSeq2SeqEnvironment(ConfigNLPCausalLMEnvironment):
 
 
 @dataclass
-class ConfigProblemBase(DefaultConfig):
+class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
@@ -93,7 +83,9 @@ class ConfigProblemBase(DefaultConfig):
     architecture: ConfigNLPSeq2SeqArchitecture = field(
         default_factory=ConfigNLPSeq2SeqArchitecture
     )
-    training: ConfigNLPSeq2SeqTraining = field(default_factory=ConfigNLPSeq2SeqTraining)
+    training: ConfigNLPCausalLMTraining = field(
+        default_factory=ConfigNLPCausalLMTraining
+    )
     augmentation: ConfigNLPAugmentation = field(default_factory=ConfigNLPAugmentation)
     prediction: ConfigNLPCausalLMPrediction = field(
         default_factory=ConfigNLPCausalLMPrediction
@@ -119,32 +111,4 @@ class ConfigProblemBase(DefaultConfig):
                 "google/flan-ul2",
             ),
             allow_custom=True,
-        )
-
-    @classmethod
-    def from_dict(cls, cfg_dict: dict):
-        return cls(
-            output_directory=cfg_dict.get(
-                "output_directory", ConfigProblemBase.output_directory
-            ),
-            experiment_name=cfg_dict.get("experiment_name", generate_experiment_name()),
-            llm_backbone=cfg_dict.get("llm_backbone", ConfigProblemBase.llm_backbone),
-            dataset=ConfigNLPSeq2SeqDataset.from_dict(cfg_dict.get("dataset", {})),
-            tokenizer=ConfigNLPCausalLMTokenizer.from_dict(
-                cfg_dict.get("tokenizer", {})
-            ),
-            augmentation=ConfigNLPAugmentation.from_dict(
-                cfg_dict.get("augmentation", {})
-            ),
-            architecture=ConfigNLPSeq2SeqArchitecture.from_dict(
-                cfg_dict.get("architecture", {})
-            ),
-            training=ConfigNLPSeq2SeqTraining.from_dict(cfg_dict.get("training", {})),
-            prediction=ConfigNLPCausalLMPrediction.from_dict(
-                cfg_dict.get("prediction", {})
-            ),
-            environment=ConfigNLPSeq2SeqEnvironment.from_dict(
-                cfg_dict.get("environment", {})
-            ),
-            logging=ConfigNLPCausalLMLogging.from_dict(cfg_dict.get("logging", {})),
         )

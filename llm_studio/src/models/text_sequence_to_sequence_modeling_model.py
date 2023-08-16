@@ -1,15 +1,21 @@
 import logging
 from typing import Any, Dict
 
+import torch.nn as nn
 from transformers import AutoModelForSeq2SeqLM
 
-from llm_studio.src.models.text_base_model import BaseModel
+from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
+from llm_studio.src.utils.modeling_utils import (
+    create_nlp_backbone,
+    generate,
+    prepare_lora,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class Model(BaseModel):
+class Model(nn.Module):
     """
     Model for causal language modeling problem type.
     """
@@ -20,12 +26,31 @@ class Model(BaseModel):
             cfg: config with all the hyperparameters
         """
 
-        super(Model, self).__init__(cfg, AutoModelForSeq2SeqLM)
+        super(Model, self).__init__()
+
+        self.cfg = cfg
+        self.backbone, self.backbone_config = create_nlp_backbone(
+            cfg, model_class=AutoModelForSeq2SeqLM
+        )
+
+        if cfg.training.lora:
+            self.backbone = prepare_lora(cfg, self.backbone)
+
+        self.loss_fn = self.cfg.training.loss_class.get(
+            self.cfg.training.loss_function
+        )(self.cfg)
+
+        if self.cfg.prediction.metric == "Perplexity":
+            self.perplexity = Perplexity(self.cfg, reduce=False)
 
     def generate(self, batch: Dict, cfg: Any, streamer=None):
-        output = self.generate_output(batch, cfg, cut_input=False, streamer=streamer)
-
-        return output
+        return generate(
+            backbone=self.backbone,
+            batch=batch,
+            cfg=cfg,
+            streamer=streamer,
+            remove_prompt=False,
+        )
 
     def forward(
         self,
