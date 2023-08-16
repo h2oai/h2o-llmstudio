@@ -15,9 +15,7 @@ logger = logging.getLogger(__name__)
 
 class ConversationChainHandler:
     """
-
-    ConversationChainHandler
-    Handles conversation chains and provides methods for retrieving chained prompt text.
+    Partitions the dataset into conversation chains.
     """
 
     def __init__(self, df, cfg):
@@ -43,11 +41,7 @@ class ConversationChainHandler:
         else:
             self.conversation_ids = [[idx] for idx in df.id]
 
-        self.prompts = [
-            self.parse_prompt(cfg, prompt)
-            for prompt in get_texts(df, self.cfg, separator="")
-        ]
-
+        self.prompts = get_texts(df, cfg, separator="")
         self.answers = df[cfg.dataset.answer_column].astype(str).tolist()
         self.systems = ["" for _ in range(len(self.prompts))]
 
@@ -58,10 +52,7 @@ class ConversationChainHandler:
                     f"Disabling functionality."
                 )
             else:
-                self.systems = [
-                    self.parse_system(cfg, system)
-                    for system in df[cfg.dataset.system_column].astype(str).tolist()
-                ]
+                self.systems = df[cfg.dataset.system_column].astype(str).tolist()
 
     def __len__(self):
         return len(self.conversation_ids)
@@ -83,39 +74,6 @@ class ConversationChainHandler:
             "answers": answers,
             "systems": systems,
         }
-
-    def _get_children_ids(self, id2children_id, start_id):
-        children_ids = [start_id]
-        current_id = start_id
-        while current_id in id2children_id:
-            current_id = id2children_id[current_id]
-            children_ids.append(current_id)
-        return children_ids
-
-    @staticmethod
-    def parse_prompt(cfg: Any, prompt: str):
-        prompt = (
-            f"{codecs.decode(cfg.dataset.text_prompt_start, 'unicode_escape')}{prompt}"
-        )
-        if cfg.dataset.add_eos_token_to_prompt:
-            prompt += cfg._tokenizer_eos_token
-        prompt = (
-            f"{prompt}"
-            f"{codecs.decode(cfg.dataset.text_answer_separator, 'unicode_escape')}"
-        )
-        return prompt
-
-    @staticmethod
-    def parse_system(cfg: Any, system: str):
-        # no system tokens if empty
-        if system == "":
-            return system
-        system = (
-            f"{codecs.decode(cfg.dataset.text_system_start, 'unicode_escape')}{system}"
-        )
-        if cfg.dataset.add_eos_token_to_system:
-            system += cfg._tokenizer_eos_token
-        return system
 
 
 class CustomDataset(Dataset):
@@ -141,7 +99,10 @@ class CustomDataset(Dataset):
         self.conversation_chain_handler = ConversationChainHandler(self.df, self.cfg)
         if cfg.environment._local_rank == 0:
             text_dict = self.conversation_chain_handler[0]
-            logger.info(f"Sample prompt: " f"{text_dict['prompts'][0]} ")
+            logger.info(
+                f"Sample prompt: "
+                f"{self.parse_prompt(self.cfg, text_dict['prompts'][0])} "
+            )
 
     def __len__(self) -> int:
         return len(self.conversation_chain_handler)
@@ -149,6 +110,7 @@ class CustomDataset(Dataset):
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
         input_text_dict = self.conversation_chain_handler[idx]
+        self.parse_text_dict(input_text_dict)
 
         sample = dict()
         encodings, system_encoding = self.get_encodings(input_text_dict=input_text_dict)
@@ -214,6 +176,26 @@ class CustomDataset(Dataset):
             f"{codecs.decode(cfg.dataset.text_answer_separator, 'unicode_escape')}"
         )
         return prompt
+
+    @staticmethod
+    def parse_system(cfg: Any, system: str):
+        # no system tokens if empty
+        if system == "":
+            return system
+        system = (
+            f"{codecs.decode(cfg.dataset.text_system_start, 'unicode_escape')}{system}"
+        )
+        if cfg.dataset.add_eos_token_to_system:
+            system += cfg._tokenizer_eos_token
+        return system
+
+    def parse_text_dict(self, input_text_dict):
+        input_text_dict["system"] = [
+            self.parse_system(self.cfg, system) for system in input_text_dict["system"]
+        ]
+        input_text_dict["prompt"] = [
+            self.parse_prompt(self.cfg, prompt) for prompt in input_text_dict["prompt"]
+        ]
 
     @staticmethod
     def batch_to_device(

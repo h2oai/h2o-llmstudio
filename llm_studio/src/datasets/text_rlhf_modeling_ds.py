@@ -24,8 +24,9 @@ class CustomDataset(CausalLMCustomDataset):
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
         sample = super().__getitem__(idx)
-        idx = self.indices[idx]
-        sample["reward_model_prompt_text"] = self.get_reward_model_prompt_text(idx)
+        sample["reward_model_prompt_text"] = "<|endoftext|>".join(
+            self.get_chained_prompt_text_list(idx)
+        )
         return sample
 
     def get_labels(self, encodings):
@@ -34,26 +35,12 @@ class CustomDataset(CausalLMCustomDataset):
         else:
             return super().get_labels(encodings)
 
-    def get_encodings(self, idx):
-        encodings, system_encoding = super().get_encodings(idx)
+    def get_encodings(self, input_text_dict):
+        encodings, system_encoding = super().get_encodings(input_text_dict)
         # remove last ground truth answer,
         # as RLHF will generate the answer from the prompt
         encodings[-1][-1] = torch.empty(0)
         return encodings, system_encoding
-
-    def get_reward_model_prompt_text(self, idx):
-        return (
-            "".join(
-                [
-                    self.raw_prompts[int(parent_idx)]
-                    + "<|endoftext|>"
-                    + self.answers[int(parent_idx)]
-                    + "<|endoftext|>"
-                    for parent_idx in self.get_parent_ids(idx)
-                ]
-            )
-            + self.raw_prompts[idx]
-        )
 
     def postprocess_batch_predictions(self, cfg: Any, output: Dict) -> Dict:
         if cfg.prediction.metric == "Perplexity":
