@@ -16,12 +16,20 @@ logger = logging.getLogger(__name__)
 class ConversationChainHandler:
     """
     Partitions the dataset into conversation chains.
+    The conversation chains consists of a list of conversations, where each conversation round consists of
+    a triple of (system, prompt, answer).
+
+    The conversation may be:
+    - a single (system, prompt, answer) round,
+      if the conversation is not chained
+      (cfg.dataset.parent_id_column == "None" or there is no parent_id for the conversation)
+    - a conversation potentially starting somewhere in the middle of the conversation,
+      if the conversation is chained and limit_chained_samples is set to False
+    - always a complete conversation, if the conversation is chained
+      and limit_chained_samples is set to True
     """
 
     def __init__(self, df, cfg):
-        if not hasattr(cfg, "_tokenizer_eos_token"):
-            get_tokenizer(cfg)
-
         if cfg.dataset.parent_id_column != "None":
             id2children_id = {
                 parent_id: id
@@ -34,15 +42,30 @@ class ConversationChainHandler:
             else:
                 conversation_start_ids = df["id"].values
 
-            self.conversation_ids = [
-                self._get_children_ids(id2children_id, conversation_start_id)
+            conversation_ids_lists = [
+                self.get_conversation_ids(id2children_id, conversation_start_id)
                 for conversation_start_id in conversation_start_ids
             ]
+            # map from df["id"] to enumeration index
+            dataframeid2idx = {
+                id: idx for idx, id in enumerate(df["id"].astype(str).tolist())
+            }
+            self.conversation_ids_lists = [
+                [
+                    dataframeid2idx[conversation_id]
+                    for conversation_id in conversation_ids
+                ]
+                for conversation_ids in conversation_ids_lists
+            ]
         else:
-            self.conversation_ids = [[idx] for idx in df.id]
+            # no parent id column, so each sample is a conversation chain
+            self.conversation_ids_lists = [[idx] for idx in range(len(df))]
 
         self.prompts = get_texts(df, cfg, separator="")
-        self.answers = df[cfg.dataset.answer_column].astype(str).tolist()
+        if cfg.dataset.answer_column not in df.columns:
+            self.answers = df[cfg.dataset.answer_column].astype(str).tolist()
+        else:
+            self.answers = ["" for _ in range(len(self.prompts))]
         self.systems = ["" for _ in range(len(self.prompts))]
 
         if cfg.dataset.system_column != "None":
@@ -54,8 +77,24 @@ class ConversationChainHandler:
             else:
                 self.systems = df[cfg.dataset.system_column].astype(str).tolist()
 
+    def get_conversation_ids(self, id2children_id, start_id):
+        loop_counter = 0  # prevent infinite loops in case of circular parent chains (dataframe issue)
+
+        conversation_chain_ids = [start_id]
+        current_id = start_id
+        while current_id in id2children_id:
+            loop_counter += 1
+            current_id = id2children_id[current_id]
+            conversation_chain_ids.append(current_id)
+            if loop_counter > 1000:
+                raise ValueError(
+                    f"Parent chain of sample with idx {start_id} exceeds max loop count. "
+                    f"Please ensure that parent chain is not circular."
+                )
+        return conversation_chain_ids
+
     def __len__(self):
-        return len(self.conversation_ids)
+        return len(self.conversation_ids_lists)
 
     def __getitem__(self, idx):
         """
@@ -66,9 +105,9 @@ class ConversationChainHandler:
         Returns:
 
         """
-        prompts = [self.prompts[i] for i in self.conversation_ids[idx]]
-        answers = [self.answers[i] for i in self.conversation_ids[idx]]
-        systems = [self.systems[i] for i in self.conversation_ids[idx]]
+        prompts = [self.prompts[i] for i in self.conversation_ids_lists[idx]]
+        answers = [self.answers[i] for i in self.conversation_ids_lists[idx]]
+        systems = [self.systems[i] for i in self.conversation_ids_lists[idx]]
         return {
             "prompts": prompts,
             "answers": answers,
@@ -99,10 +138,8 @@ class CustomDataset(Dataset):
         self.conversation_chain_handler = ConversationChainHandler(self.df, self.cfg)
         if cfg.environment._local_rank == 0:
             text_dict = self.conversation_chain_handler[0]
-            logger.info(
-                f"Sample prompt: "
-                f"{self.parse_prompt(self.cfg, text_dict['prompts'][0])} "
-            )
+            self.parse_text_dict(text_dict)
+            logger.info(f"Sample prompt: " f"{text_dict['prompts'][0]} ")
 
     def __len__(self) -> int:
         return len(self.conversation_chain_handler)
@@ -190,8 +227,8 @@ class CustomDataset(Dataset):
         return system
 
     def parse_text_dict(self, input_text_dict):
-        input_text_dict["system"] = [
-            self.parse_system(self.cfg, system) for system in input_text_dict["system"]
+        input_text_dict["systems"] = [
+            self.parse_system(self.cfg, system) for system in input_text_dict["systems"]
         ]
         input_text_dict["prompt"] = [
             self.parse_prompt(self.cfg, prompt) for prompt in input_text_dict["prompt"]
@@ -427,12 +464,12 @@ class CustomDataset(Dataset):
         sample["labels"][-len(labels) :] = labels
         return sample
 
-    def get_encodings(self, input_text_dict: Dict[List[str], List[str], List[str]]):
+    def get_encodings(self, input_text_dict: Dict[str, List[str]]):
         """
         Get encodings for a single conversation history.
         Args:
             input_text_dict: A dictionary containing the input text for a single sample.
-            Contains the keys "system", "prompt", "answer". System may be an empty string.
+            Contains the keys "systems", "prompts", "answers". System may be an empty string.
 
         Returns:
             encodings: A list of encodings for the sample. Each encoding is a tuple of
@@ -446,9 +483,9 @@ class CustomDataset(Dataset):
             self._get_sample_encoding(system, prompt, answer)
             for idx, (prompt, answer, system) in enumerate(
                 zip(
-                    input_text_dict["system"],
-                    input_text_dict["prompt"],
-                    input_text_dict["answer"],
+                    input_text_dict["systems"],
+                    input_text_dict["prompts"],
+                    input_text_dict["answers"],
                 )
             )
         ]
@@ -522,7 +559,9 @@ class CustomDataset(Dataset):
         )
 
         # system prompt may be an empty string
-        prompt_text = text_dict["system_prompt"][0] + chat_history + text_dict["prompt"][-1]
+        prompt_text = (
+            text_dict["system_prompt"][0] + chat_history + text_dict["prompt"][-1]
+        )
         return prompt_text.split(text_separator)
 
     def pad_tokens(
