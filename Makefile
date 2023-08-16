@@ -69,9 +69,9 @@ black: pipenv
 
 .PHONY: test
 test: reports
-	export PYTHONPATH=$(PWD) && $(PIPENV) run pytest -v -s -x \
-		--junitxml=./reports/junit.xml \
-		tests/* | tee reports/pytest.log
+	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); $(PIPENV) run pytest -v -s --junitxml=reports/junit.xml \
+    -o log_cli=true -o log_level=INFO -o log_file=reports/tests.log \
+    tests/* 2>&1 | tee reports/tests.log'
 
 .PHONY: wave
 wave:

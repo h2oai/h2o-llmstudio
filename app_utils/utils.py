@@ -1293,15 +1293,15 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
             cfg = None
 
         metric = ""
-        loss = ""
+        loss_function = ""
 
         if cfg is not None:
             try:
                 metric = cfg["prediction"].metric
-                loss = cfg["training"].loss_function
+                loss_function = cfg["training"].loss_function
             except KeyError:
                 metric = ""
-                loss = ""
+                loss_function = ""
 
         with SqliteDict(f"{row.path}/charts.db") as logs:
             if "internal" in logs.keys():
@@ -1382,7 +1382,7 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
 
         info["config_file"].append(config_file)
         info["dataset"].append(dataset)
-        info["loss"].append(loss)
+        info["loss"].append(loss_function)
         info["metric"].append(metric)
         info["eta"].append(eta)
         info["val metric"].append(score_val)

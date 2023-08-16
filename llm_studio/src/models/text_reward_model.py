@@ -110,7 +110,7 @@ class RewardModel(nn.Module):
         )
 
         self.cfg = cfg
-        self.model_name = cfg.training.reward_model
+        self.model_name = cfg.reward_model
         self.device = cfg.environment._device
         self.model = AutoModelForSequenceClassification.from_pretrained(
             self.model_name,
