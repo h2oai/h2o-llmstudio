@@ -50,7 +50,7 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
     loss_function: str = "RLHF"
     rollout_steps: int = 64
     adaptive_kl_control: bool = True
-    full_kl_penalty = True
+    full_kl_penalty: bool = True
     initial_kl_coefficient: float = 0.2
     kl_target: float = 6.0
     kl_horizon: int = 10000
