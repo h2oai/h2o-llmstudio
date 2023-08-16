@@ -593,6 +593,10 @@ def run_train_rlhf(
                 output_dict = ppo_trainer.step(query_tensors, response_tensors, rewards)
                 del query_tensors, response_tensors, rewards, scores
 
+                query_tensors = []
+                response_tensors = []
+                rewards = []
+
                 loss = output_dict["ppo/loss/total"]
                 losses.append(loss)
 
