@@ -48,6 +48,7 @@ class ConfigRLHFLMAugmentation(ConfigNLPAugmentation):
 class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
     loss_class: Any = LossClass
     loss_function: str = "RLHF"
+    rollout_steps: int = 64
     adaptive_kl_control: bool = True
     initial_kl_coefficient: float = 0.2
     kl_target: float = 6.0
@@ -58,7 +59,7 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
     ppo_clip_value: float = 0.2
     scaling_factor_value_loss: float = 0.1
     ppo_epochs: int = 4
-    ppo_batch_size: int = 1
+    ppo_batch_size: int = 4
     ppo_generate_temperature: float = 1.0
     offload_reward_model: bool = False
 
@@ -72,7 +73,9 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
             allow_custom=False,
             placeholder="Select optional layers...",
         )
+        self._possible_values["grad_accumulation"] = (1, 128, 1)
 
+        self._possible_values["rollout_steps"] = (1, 1024, 1)
         self._possible_values["initial_kl_coefficient"] = (0.01, 0.5, 0.01)
         self._possible_values["kl_target"] = (0.1, 16, 0.1)
         self._possible_values["kl_horizon"] = (1000, 20000, 1000)
@@ -86,6 +89,7 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
         self._possible_values["ppo_batch_size"] = (1, 256, 1)
 
         self._order.insert(
+            "rollout_steps",
             "adaptive_kl_control",
             "advantages_gamma",
             "offload_reward_model",
