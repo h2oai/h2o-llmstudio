@@ -124,7 +124,6 @@ def test_init(mock_auto_tokenizer):
     assert dataset.df.equals(df)
     assert dataset.mode == "train"
     assert all(dataset.indices == np.array([0, 1, 2]))
-    assert all(dataset.raw_prompts == ["1", "2", "3"])
     assert dataset.answers == ["4", "5", "6"]
 
 
@@ -206,6 +205,8 @@ def test_getitem():
         tokenizer=ConfigNLPCausalLMTokenizer(max_length=513),
     )
 
+    cfg.llm_backbone = "EleutherAI/pythia-2.8b-deduped"
+
     dataset = CustomDataset(df, cfg)
     assert len(dataset) == 1
 
@@ -218,6 +219,8 @@ def test_getitem():
             "attention_mask",
             "prompt_input_ids",
             "prompt_attention_mask",
+            "answer_input_ids",
+            "answer_attention_mask",
         ]
     )
 

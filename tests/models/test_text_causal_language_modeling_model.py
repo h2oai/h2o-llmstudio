@@ -1,6 +1,6 @@
 import torch
 
-from llm_studio.src.models.text_base_model import TokenStoppingCriteria
+from llm_studio.src.utils.modeling_utils import TokenStoppingCriteria
 
 
 def test_token_stopping_criteria():

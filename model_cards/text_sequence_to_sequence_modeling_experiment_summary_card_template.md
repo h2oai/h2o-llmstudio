@@ -9,6 +9,7 @@ pip install transformers=={{transformers_version}}
 ```
 - Make sure to be logged in to your huggingface account if accessing a private repo
 - Then, you can use the following code snippet:
+
 ```python
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 

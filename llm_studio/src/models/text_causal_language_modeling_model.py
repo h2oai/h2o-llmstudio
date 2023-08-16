@@ -1,16 +1,21 @@
 import logging
 from typing import Any, Dict
 
-import torch
+from torch import nn
 from transformers import AutoModelForCausalLM
 
-from llm_studio.src.models.text_base_model import BaseModel
+from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
+from llm_studio.src.utils.modeling_utils import (
+    create_nlp_backbone,
+    generate,
+    prepare_lora,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class Model(BaseModel):
+class Model(nn.Module):
     """
     Model for causal language modeling problem type.
     """
@@ -21,12 +26,25 @@ class Model(BaseModel):
             cfg: config with all the hyperparameters
         """
 
-        super(Model, self).__init__(cfg, AutoModelForCausalLM)
+        super(Model, self).__init__()
+
+        self.cfg = cfg
+        self.backbone, self.backbone_config = create_nlp_backbone(
+            cfg, model_class=AutoModelForCausalLM
+        )
+
+        if cfg.training.lora:
+            self.backbone = prepare_lora(cfg, self.backbone)
+
+        self.loss_fn = self.cfg.training.loss_class.get(
+            self.cfg.training.loss_function
+        )(self.cfg)
+
+        if self.cfg.prediction.metric == "Perplexity":
+            self.perplexity = Perplexity(self.cfg, reduce=False)
 
     def generate(self, batch: Dict, cfg: Any, streamer=None):
-        output = self.generate_output(batch, cfg, cut_input=True, streamer=streamer)
-
-        return output
+        return generate(self.backbone, batch, cfg, streamer)
 
     def forward(
         self,
@@ -38,11 +56,6 @@ class Model(BaseModel):
             self.backbone.config.use_cache = False
 
         outputs: Dict = {}
-        kwargs = {}
-
-        if self.training and self.cfg.training.use_rlhf:
-            kwargs["output_hidden_states"] = True
-
         mask_key = "attention_mask"
         pad_keys = [
             "input_ids",
@@ -64,7 +77,6 @@ class Model(BaseModel):
         output = self.backbone(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
-            **kwargs,
         )
 
         if "labels" in batch:
@@ -73,16 +85,6 @@ class Model(BaseModel):
 
         if self.cfg.prediction.metric == "Perplexity":
             outputs["perplexity"] = self.perplexity(output.logits, batch["labels"])
-
-        if self.training and self.cfg.training.use_rlhf:
-            last_hidden_state = output.hidden_states[-1]
-
-            # force upcast in fp32 if logits are in half-precision
-            if output.logits.dtype != torch.float32:
-                output.logits = output.logits.float()
-
-            outputs["logits"] = output.logits
-            outputs["value"] = self.value_head(last_hidden_state).squeeze(-1)
 
         # enable cache again if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:
