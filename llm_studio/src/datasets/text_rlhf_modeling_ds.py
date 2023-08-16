@@ -19,7 +19,6 @@ class CustomDataset(CausalLMCustomDataset):
             cfg.dataset.system_column == "None"
         ), "RLHF is not compatible with system column."
         super().__init__(df, cfg, mode)
-        self.raw_prompts = get_texts(df, self.cfg, separator="")
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""

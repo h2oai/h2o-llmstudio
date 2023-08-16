@@ -2,7 +2,7 @@ import codecs
 import collections.abc
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union, Optional
 
 import numpy as np
 import pandas as pd
@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ConversationChainHandlerConfig:
-    parent_id_column: str
     system_column: str
     prompt_column: str
     answer_column: str
+    parent_id_column: Optional[str] = None
     limit_chained_samples: bool = False
 
 
@@ -28,19 +28,12 @@ class ConversationChainHandler:
     Partitions the dataset into conversation chains.
     The conversation chains consists of a list of conversations, where each conversation round consists of
     a triple of (system, prompt, answer).
-
-    The conversation may be:
-    - a single (system, prompt, answer) round,
-      if the conversation is not chained
-      (cfg.dataset.parent_id_column == "None" or there is no parent_id for the conversation)
-    - a conversation potentially starting somewhere in the middle of the conversation,
-      if the conversation is chained and limit_chained_samples is set to False
-    - always a complete conversation, if the conversation is chained
-      and limit_chained_samples is True
     """
 
     def __init__(self, df, conversation_chain_cfg: ConversationChainHandlerConfig):
         if conversation_chain_cfg.parent_id_column != "None":
+            assert "id" in df.columns, "id column required for conversation chaining."
+
             id2children_id = {
                 parent_id: id
                 for id, parent_id in zip(
@@ -113,10 +106,13 @@ class ConversationChainHandler:
     def __getitem__(self, idx):
         """
         Gets a single conversation chain.
-        Args:
-            idx:
-
-        Returns:
+        The conversation may be:
+        - a single (system, prompt, answer) round,
+          if cfg.dataset.parent_id_column == "None" or there is no parent_id for the conversation
+        - a conversation potentially starting somewhere in the middle of the conversation,
+          if the conversation is chained and limit_chained_samples is set to False
+        - always a complete conversation, if the conversation is chained
+          and limit_chained_samples is True
 
         """
         prompts = [self.prompts[i] for i in self.conversation_ids_lists[idx]]
