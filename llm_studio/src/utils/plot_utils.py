@@ -95,7 +95,7 @@ def format_for_markdown_visualization(text: str) -> str:
     for x in ["```", "``", "`"]:
         text = text.replace(f"<br />{x}", f"\n{x}")
         text = text.replace(f"{x}<br />", f"{x}\n")
-    return text
+    return html.escape(text)
 
 
 def list_to_markdown_representation(
