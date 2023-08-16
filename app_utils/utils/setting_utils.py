@@ -15,7 +15,7 @@ from app_utils.utils.utils import get_database_dir, get_user_id
 __all__ = [
     "load_user_settings_and_secrets",
     "load_default_user_settings",
-    "save_user_settings",
+    "save_user_settings_and_secrets",
     "Secrets",
 ]
 
@@ -26,55 +26,12 @@ SECRET_KEYS = [
     for key in default_cfg.user_settings
     if any(password in key for password in PASSWORDS_PHRASES)
 ]
+USER_SETTING_KEYS = [key for key in default_cfg.user_settings if key not in SECRET_KEYS]
 
 
-async def save_user_settings(q: Q):
-    secret_name, secrets_handler = _get_secrets_handler(q)
-
-    can_save_secrets = True
-    exception = None
-
-    user_settings = {
-        key: q.client[key]
-        for key in default_cfg.user_settings
-        if key not in SECRET_KEYS
-    }
-    with open(_get_usersettings_path(q), "w") as f:
-        yaml.dump(user_settings, f)
-
-    for key in SECRET_KEYS:
-        try:
-            _clear_secrets(q, key, excludes=tuple(secret_name))
-            if q.client[key]:
-                secrets_handler.save(key, q.client[key])
-
-        except Exception:
-            exception = str(traceback.format_exc())
-            can_save_secrets = False
-            logger.error(f"Could not save password {key} to {secret_name}")
-
-    # force dataset connector updated when the user decides to click on save
-    q.client["dataset/import/s3_bucket"] = q.client["default_aws_bucket_name"]
-    q.client["dataset/import/s3_access_key"] = q.client["default_aws_access_key"]
-    q.client["dataset/import/s3_secret_key"] = q.client["default_aws_secret_key"]
-
-    q.client["dataset/import/kaggle_access_key"] = q.client["default_kaggle_username"]
-    q.client["dataset/import/kaggle_secret_key"] = q.client["default_kaggle_secret_key"]
-
-    if not can_save_secrets:
-        q.page["meta"].dialog = ui.dialog(
-            title="Could not save secrets. Please choose another Credential Handler.",
-            name="secrets_error",
-            items=[
-                ui.text(
-                    f"The following error occurred when"
-                    f" using {secret_name}: {exception}."
-                ),
-            ],
-            closable=True,
-        )
-        q.client["keep_meta"] = True
-        await q.page.save()
+async def save_user_settings_and_secrets(q: Q):
+    _save_user_settings(q)
+    await _save_secrets(q)
 
 
 def load_user_settings_and_secrets(q: Q):
@@ -203,14 +160,55 @@ class Secrets:
         return cls._secrets.get(name)
 
 
+def _save_user_settings(q):
+    user_settings = {key: q.client[key] for key in USER_SETTING_KEYS}
+    with open(_get_usersettings_path(q), "w") as f:
+        yaml.dump(user_settings, f)
+
+
 def _load_user_settings(q):
     if os.path.isfile(_get_usersettings_path(q)):
-        logger.info("Reading settings")
+        logger.info("Reading user settings")
         with open(_get_usersettings_path(q), "r") as f:
             user_settings = yaml.load(f, Loader=yaml.FullLoader)
-        for key in default_cfg.user_settings:
-            if key not in SECRET_KEYS:
-                q.client[key] = user_settings.get(key, default_cfg.user_settings[key])
+        for key in USER_SETTING_KEYS:
+            q.client[key] = user_settings.get(key, default_cfg.user_settings[key])
+
+
+async def _save_secrets(q):
+    secret_name, secrets_handler = _get_secrets_handler(q)
+    for key in SECRET_KEYS:
+        try:
+            _clear_secrets(q, key, excludes=tuple(secret_name))
+            if q.client[key]:
+                secrets_handler.save(key, q.client[key])
+
+        except Exception:
+            exception = str(traceback.format_exc())
+            logger.error(f"Could not save password {key} to {secret_name}")
+            q.page["meta"].dialog = ui.dialog(
+                title="Could not save secrets. "
+                "Please choose another Credential Handler.",
+                name="secrets_error",
+                items=[
+                    ui.text(
+                        f"The following error occurred when"
+                        f" using {secret_name}: {exception}."
+                    ),
+                ],
+                closable=True,
+            )
+            q.client["keep_meta"] = True
+            await q.page.save()
+
+            break
+
+    # force dataset connector updated when the user decides to click on save
+    q.client["dataset/import/s3_bucket"] = q.client["default_aws_bucket_name"]
+    q.client["dataset/import/s3_access_key"] = q.client["default_aws_access_key"]
+    q.client["dataset/import/s3_secret_key"] = q.client["default_aws_secret_key"]
+    q.client["dataset/import/kaggle_access_key"] = q.client["default_kaggle_username"]
+    q.client["dataset/import/kaggle_secret_key"] = q.client["default_kaggle_secret_key"]
 
 
 def _load_secrets(q):

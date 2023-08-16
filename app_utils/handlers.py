@@ -45,7 +45,7 @@ from app_utils.sections.settings import settings
 from app_utils.utils.setting_utils import (
     load_default_user_settings,
     load_user_settings_and_secrets,
-    save_user_settings,
+    save_user_settings_and_secrets,
 )
 from app_utils.utils.utils import add_model_type
 from app_utils.wave_utils import report_error, wave_utils_handle_error
@@ -78,7 +78,7 @@ async def handle(q: Q) -> None:
             await settings(q)
         elif q.args["save_settings"]:
             logger.info("Saving user settings")
-            await save_user_settings(q)
+            await save_user_settings_and_secrets(q)
             await settings(q)
         elif q.args["load_settings"]:
             load_user_settings_and_secrets(q)
