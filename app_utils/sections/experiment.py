@@ -519,6 +519,11 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
             name="no_gpu_selected_dialog",
             items=[
                 ui.text("Please select at least one GPU to start the experiment!"),
+                ui.button(
+                    name="experiment/start/no_gpu_selected_dialog/ok",
+                    label="OK",
+                    primary=True,
+                ),
             ],
             closable=True,
         )
