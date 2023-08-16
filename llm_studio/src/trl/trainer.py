@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
 import time
 import warnings
 from collections.abc import Mapping
@@ -556,7 +557,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         all_masks = []
         all_values = []
 
-        for i in range(int(bs / ppo_bs)):
+        for i in range(math.ceil(bs / ppo_bs)):
             model_inputs_batch = {
                 key: value[i * ppo_bs : (i + 1) * ppo_bs]
                 for key, value in model_inputs.items()
@@ -581,7 +582,7 @@ class PPOTrainer(PyTorchModelHubMixin):
             masks = torch.zeros_like(attention_mask)
             masks[:, :-1] = attention_mask[:, 1:]
 
-            for j in range(ppo_bs):
+            for j in range(len(query_batch)):
                 start = len(query_batch[j]) - 1
                 if attention_mask[j, 0] == 0:  # offset left padding
                     start += attention_mask[j, :].nonzero()[0]
