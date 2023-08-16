@@ -268,9 +268,9 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
 @dataclass
 class ConfigNLPAugmentation(DefaultConfig):
     nlp_augmentations_class: Any = BaseNLPAug
-    token_mask_probability: float = 0
-    skip_parent_probability: float = 0
-    random_parent_probability: float = 0
+    token_mask_probability: float = 0.0
+    skip_parent_probability: float = 0.0
+    random_parent_probability: float = 0.0
 
     def __post_init__(self):
         super().__post_init__()
@@ -323,7 +323,6 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._possible_values["repetition_penalty"] = (1, 10, 0.05)
         self._possible_values["top_k"] = (0, 100, 1)
         self._possible_values["top_p"] = (0.5, 1, 0.05)
-        self._possible_values["num_history"] = (1, 50, 1)
 
         self._visibility["metric_class"] = -1
         # possible values for num_history are only used in chatbot tab
