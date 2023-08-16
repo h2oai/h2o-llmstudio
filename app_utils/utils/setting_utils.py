@@ -200,15 +200,18 @@ async def _save_secrets(q):
             )
             q.client["keep_meta"] = True
             await q.page.save()
-
             break
-
-    # force dataset connector updated when the user decides to click on save
-    q.client["dataset/import/s3_bucket"] = q.client["default_aws_bucket_name"]
-    q.client["dataset/import/s3_access_key"] = q.client["default_aws_access_key"]
-    q.client["dataset/import/s3_secret_key"] = q.client["default_aws_secret_key"]
-    q.client["dataset/import/kaggle_access_key"] = q.client["default_kaggle_username"]
-    q.client["dataset/import/kaggle_secret_key"] = q.client["default_kaggle_secret_key"]
+    else:  # if no exception
+        # force dataset connector updated when the user decides to click on save
+        q.client["dataset/import/s3_bucket"] = q.client["default_aws_bucket_name"]
+        q.client["dataset/import/s3_access_key"] = q.client["default_aws_access_key"]
+        q.client["dataset/import/s3_secret_key"] = q.client["default_aws_secret_key"]
+        q.client["dataset/import/kaggle_access_key"] = q.client[
+            "default_kaggle_username"
+        ]
+        q.client["dataset/import/kaggle_secret_key"] = q.client[
+            "default_kaggle_secret_key"
+        ]
 
 
 def _load_secrets(q):
