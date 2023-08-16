@@ -103,9 +103,7 @@ class Plots:
 
         markup = ""
         for input_text, target_text in zip(input_texts, target_texts):
-            markup += (
-                f"<p><strong>Input Text: </strong>{html.escape(input_text)}</p>\n"
-            )
+            markup += f"<p><strong>Input Text: </strong>{html.escape(input_text)}</p>\n"
             markup += "\n"
             markup += (
                 f"<p><strong>Target Text: </strong>{html.escape(target_text)}</p>\n"
