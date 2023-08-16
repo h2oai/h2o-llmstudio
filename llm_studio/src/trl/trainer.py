@@ -225,6 +225,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
         self.scaler = scaler
+        self.num_updates = 0
 
         self.kl_ctl: AdaptiveKLController | FixedKLController
         if self.cfg.training.adaptive_kl_control:
@@ -386,21 +387,13 @@ class PPOTrainer(PyTorchModelHubMixin):
 
         t = time.time()
         all_stats = []
-        num_updates = 0
-
-        if (
-            self.cfg.training.ppo_epochs * self.cfg.training.grad_accumulation
-        ) % self.cfg.training.ppo_batch_size != 0:
-            raise ValueError(
-                "ppo_epochs * grad_accumulation must be multiply of ppo_batch_size"
-            )
 
         if self.cfg.training.ppo_batch_size > self.cfg.training.batch_size:
             raise ValueError("ppo_batch_size must not be larger than the batch_size")
 
         for _ in range(self.cfg.training.ppo_epochs):
             for batch in mini_batch_dataloader:
-                num_updates += 1
+                self.num_updates += 1
 
                 model_inputs = {k: batch[k] for k in model_inputs_names}
                 logprobs, logits, vpreds, _ = self.batched_forward_pass(
@@ -432,7 +425,7 @@ class PPOTrainer(PyTorchModelHubMixin):
                 # Backward pass
                 if self.cfg.environment.mixed_precision:
                     self.scaler.scale(loss).backward()
-                    if num_updates % self.cfg.training.grad_accumulation == 0:
+                    if self.num_updates % self.cfg.training.grad_accumulation == 0:
                         if self.cfg.training.gradient_clip > 0:
                             self.scaler.unscale_(self.optimizer)
                             torch.nn.utils.clip_grad_norm_(
@@ -443,7 +436,7 @@ class PPOTrainer(PyTorchModelHubMixin):
                         self.optimizer.zero_grad(set_to_none=True)
                 else:
                     loss.backward()
-                    if num_updates % self.cfg.training.grad_accumulation == 0:
+                    if self.num_updates % self.cfg.training.grad_accumulation == 0:
                         if self.cfg.training.gradient_clip > 0:
                             torch.nn.utils.clip_grad_norm_(
                                 self.model.parameters(), self.cfg.training.gradient_clip
