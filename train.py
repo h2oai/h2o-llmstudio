@@ -589,6 +589,10 @@ def run_train_rlhf(
             response_tensors += response_tensor
             rewards += reward
 
+            if cfg.environment._distributed:
+                torch.cuda.synchronize(device=cfg.environment._local_rank)
+                torch.distributed.barrier()
+
             if (itr + 1) % cfg.training.rollout_steps == 0:
                 output_dict = ppo_trainer.step(query_tensors, response_tensors, rewards)
                 del query_tensors, response_tensors, rewards, scores
@@ -648,6 +652,10 @@ def run_train_rlhf(
                             progress_bar.update(epoch_steps % log_update_steps)
 
                     del output_dict
+
+            if cfg.environment._distributed:
+                torch.cuda.synchronize(device=cfg.environment._local_rank)
+                torch.distributed.barrier()
 
             # Validation loop
             if (itr + 1) % evaluation_step == 0:
