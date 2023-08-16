@@ -427,7 +427,21 @@ class CustomDataset(Dataset):
         sample["labels"][-len(labels) :] = labels
         return sample
 
-    def get_encodings(self, input_text_dict):
+    def get_encodings(self, input_text_dict: Dict[List[str], List[str], List[str]]):
+        """
+        Get encodings for a single conversation history.
+        Args:
+            input_text_dict: A dictionary containing the input text for a single sample.
+            Contains the keys "system", "prompt", "answer". System may be an empty string.
+
+        Returns:
+            encodings: A list of encodings for the sample. Each encoding is a tuple of
+            (prompt_encoding, answer_encoding). The encodings are sorted such that the start of
+            the conversation is at the beginning of the list. If the system text is not empty,
+            the first prompt encoding is the encoding of the system text and the first prompt.
+            system_encoding: System encoding for the sample. The system encoding is taken from
+            the first system text, as this marks the beginning of the conversation.
+        """
         encodings = [
             self._get_sample_encoding(system, prompt, answer)
             for idx, (prompt, answer, system) in enumerate(
@@ -441,23 +455,23 @@ class CustomDataset(Dataset):
 
         if self.mode == "train":
             parent_encodings = encodings[:-1]
-            # randomly replace parent with another parent
-            parent_encodings = [
-                encoding
-                if np.random.random() > self.cfg.augmentation.replace_parent_probability
-                else self._get_sample_encoding(
-                    self.conversation_chain_handler.systems[idx],
-                    self.conversation_chain_handler.prompts[idx],
-                    self.conversation_chain_handler.answers[idx],
-                )
-                for idx, encoding in enumerate(parent_encodings)
-            ]
             # randomly skip parent
             parent_encodings = [
                 encoding
                 for idx, encoding in enumerate(parent_encodings)
                 if np.random.random() > self.cfg.augmentation.skip_parent_probability
             ]
+            # randomly replace parent with another parent
+            if np.random.random() > self.cfg.augmentation.replace_parent_probability:
+                idx = np.random.randint(len(self.conversation_chain_handler.prompts))
+                parent_encodings = [
+                    self._get_sample_encoding(
+                        self.conversation_chain_handler.systems[idx],
+                        self.conversation_chain_handler.prompts[idx],
+                        self.conversation_chain_handler.answers[idx],
+                    )
+                ] + parent_encodings[1:]
+
             encodings = parent_encodings + [encodings[-1]]
 
         system_encoding = encodings[0][0]
@@ -498,8 +512,7 @@ class CustomDataset(Dataset):
         text_separator = "TEXT_SEPARATOR"
         text_dict = self.conversation_chain_handler[idx]
         # system_prompt == Start of conversation
-        system_prompt = text_dict["system_prompt"][0]
-        history = "".join(
+        chat_history = "".join(
             [
                 prompt + text_separator + answer + text_separator
                 for prompt, answer in zip(
@@ -508,13 +521,8 @@ class CustomDataset(Dataset):
             ]
         )
 
-        prompt_text = ""
-        if system_prompt:
-            # No text separator as system prompt is part of the prompt
-            prompt_text += system_prompt
-        if history:
-            prompt_text += history
-        prompt_text += text_dict["prompt"][-1]
+        # system prompt may be an empty string
+        prompt_text = text_dict["system_prompt"][0] + chat_history + text_dict["prompt"][-1]
         return prompt_text.split(text_separator)
 
     def pad_tokens(
