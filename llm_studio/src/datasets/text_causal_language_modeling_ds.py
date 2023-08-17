@@ -26,27 +26,33 @@ class ConversationChainHandler:
             assert (
                 "id" in df.columns
             ), f"id column required for conversation chaining, DataFrame only has {df.columns}."
+            sample_ids = (
+                df["id"].astype(df[cfg.dataset.parent_id_column].dtype).tolist()
+            )
+            parent_ids = df[cfg.dataset.parent_id_column].tolist()
 
             id2parent_id = {
                 id: parent_id
-                for id, parent_id in zip(df["id"], df[cfg.dataset.parent_id_column])
-                if parent_id not in ["None", None]
+                for id, parent_id in zip(sample_ids, parent_ids)
+                if parent_id not in [None, "None"]
+                and (
+                    not isinstance(parent_id, float)
+                    or (not np.isnan(parent_id) and not np.isinf(parent_id))
+                )
             }
             if cfg.dataset.limit_chained_samples:
                 conversation_start_ids = [
-                    idx for idx in df["id"].values if idx not in id2parent_id.values()
+                    idx for idx in sample_ids if idx not in id2parent_id.values()
                 ]
             else:
-                conversation_start_ids = df["id"].values
+                conversation_start_ids = sample_ids
 
             conversation_ids_lists = [
                 self.get_conversation_ids(id2parent_id, conversation_start_id)
                 for conversation_start_id in conversation_start_ids
             ]
             # map from df["id"] to enumeration index
-            dataframeid2idx = {
-                id: idx for idx, id in enumerate(df["id"].astype(str).tolist())
-            }
+            dataframeid2idx = {id: idx for idx, id in enumerate(sample_ids)}
             self.conversation_ids_lists = [
                 [
                     dataframeid2idx[conversation_id]
@@ -241,8 +247,8 @@ class CustomDataset(Dataset):
         input_text_dict["systems"] = [
             self.parse_system(self.cfg, system) for system in input_text_dict["systems"]
         ]
-        input_text_dict["prompt"] = [
-            self.parse_prompt(self.cfg, prompt) for prompt in input_text_dict["prompt"]
+        input_text_dict["prompts"] = [
+            self.parse_prompt(self.cfg, prompt) for prompt in input_text_dict["prompts"]
         ]
 
     @staticmethod
@@ -510,7 +516,7 @@ class CustomDataset(Dataset):
                 if np.random.random() > self.cfg.augmentation.skip_parent_probability
             ]
             # randomly replace parent with another parent
-            if np.random.random() > self.cfg.augmentation.replace_parent_probability:
+            if np.random.random() > self.cfg.augmentation.random_parent_probability:
                 idx = np.random.randint(len(self.conversation_chain_handler.prompts))
                 parent_encodings = [
                     self._get_sample_encoding(

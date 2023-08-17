@@ -107,7 +107,6 @@ def test_chained_samples_disabled(df_short, cfg):
 
 
 def test_incomplete_chained_samples(cfg, df_short):
-    cfg.dataset.parent_id_column = "parent_id"
     cfg.dataset.limit_chained_samples = False
 
     handler = ConversationChainHandler(df_short, cfg)
@@ -133,3 +132,113 @@ def test_get_conversation_ids():
         ConversationChainHandler.get_conversation_ids(
             {"id1": "id4", "id2": "id1", "id3": "id2", "id4": "id3"}, "id4"
         )
+
+
+@pytest.fixture
+def df_with_nan():
+    # mapping is
+    # a1 -> " " -> -inf -> 1234567890 -> "1234567890" -> "x1" -> 1 -> 2 -> 3 -> 4
+    # a2
+    # a3
+    # a4
+    return pd.DataFrame(
+        {
+            "id": [
+                "a1",
+                " ",
+                "-inf",
+                1234567890,
+                "1234567890",
+                "x1",
+                1,
+                2,
+                3,
+                4,
+                "a2",
+                "a3",
+                "a4",
+            ],
+            "parent_id": [
+                " ",  # valid
+                "-inf",  # valid
+                1234567890,  # valid
+                "1234567890",  # valid, different type
+                "x1",  # valid
+                1.0,  # valid, needs to map to the int value
+                2.0,  # valid, needs to map to the int value
+                3.0,  # valid, needs to map to the int value
+                4.0,  # valid, needs to map to the int value
+                float("nan"),  # should be ignored
+                "None",  # should be ignored
+                None,  # should be ignored
+                float("inf"),  # should be ignored
+            ],
+            "answer": [f"answer{i+1}" for i in range(13)],
+            "system": [f"system{i+1}" for i in range(13)],
+            "prompt": [f"prompt{i+1}" for i in range(13)],
+        }
+    )
+
+
+def test_conversation_chain_handles_nan_parent_ids(df_with_nan, cfg):
+    handler = ConversationChainHandler(df_with_nan, cfg)
+    assert handler.conversation_ids_lists == [
+        [9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+        [10],
+        [11],
+        [12],
+    ]
+    assert len(handler) == 4
+    assert handler[0] == {
+        "prompts": [
+            "prompt10",
+            "prompt9",
+            "prompt8",
+            "prompt7",
+            "prompt6",
+            "prompt5",
+            "prompt4",
+            "prompt3",
+            "prompt2",
+            "prompt1",
+        ],
+        "answers": [
+            "answer10",
+            "answer9",
+            "answer8",
+            "answer7",
+            "answer6",
+            "answer5",
+            "answer4",
+            "answer3",
+            "answer2",
+            "answer1",
+        ],
+        "systems": [
+            "system10",
+            "system9",
+            "system8",
+            "system7",
+            "system6",
+            "system5",
+            "system4",
+            "system3",
+            "system2",
+            "system1",
+        ],
+    }
+    assert handler[1] == {
+        "prompts": ["prompt11"],
+        "answers": ["answer11"],
+        "systems": ["system11"],
+    }
+    assert handler[2] == {
+        "prompts": ["prompt12"],
+        "answers": ["answer12"],
+        "systems": ["system12"],
+    }
+    assert handler[3] == {
+        "prompts": ["prompt13"],
+        "answers": ["answer13"],
+        "systems": ["system13"],
+    }
