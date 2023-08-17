@@ -66,17 +66,17 @@ class NoSaver:
 
     """
 
-    def __init__(self, username, root_dir):
+    def __init__(self, username: str, root_dir: str):
         self.username = username
         self.root_dir = root_dir
 
-    def save(self, name, password):
+    def save(self, name: str, password: str):
         pass
 
-    def load(self, name):
+    def load(self, name: str):
         pass
 
-    def delete(self, name):
+    def delete(self, name: str):
         pass
 
 
@@ -86,17 +86,17 @@ class KeyRingSaver(NoSaver):
     Some machines may not have keyring installed, so this class may not be available.
     """
 
-    def __init__(self, username, root_dir):
+    def __init__(self, username: str, root_dir: str):
         super().__init__(username, root_dir)
         self.namespace = f"{username}_h2o_llmstudio"
 
-    def save(self, name, password):
+    def save(self, name: str, password: str):
         keyring.set_password(self.namespace, name, password)
 
-    def load(self, name):
+    def load(self, name: str):
         return keyring.get_password(self.namespace, name)
 
-    def delete(self, name):
+    def delete(self, name: str):
         try:
             keyring.delete_password(self.namespace, name)
         except (KeyringLocked, PasswordDeleteError):
@@ -116,7 +116,7 @@ class EnvFileSaver(NoSaver):
     def filename(self):
         return os.path.join(self.root_dir, f"{self.username}.env")
 
-    def save(self, name, password):
+    def save(self, name: str, password: str):
         data = {}
         if os.path.exists(self.filename):
             with open(self.filename, "r") as f:
@@ -125,12 +125,12 @@ class EnvFileSaver(NoSaver):
         with open(self.filename, "w") as f:
             yaml.safe_dump(data, f)
 
-    def load(self, name):
+    def load(self, name: str):
         with open(self.filename, "r") as f:
             data = yaml.safe_load(f)
             return data.get(name, None)
 
-    def delete(self, name):
+    def delete(self, name: str):
         if os.path.exists(self.filename):
             with open(self.filename, "r") as f:
                 data = yaml.safe_load(f)
@@ -160,13 +160,13 @@ class Secrets:
         return cls._secrets.get(name)
 
 
-def _save_user_settings(q):
+def _save_user_settings(q: Q):
     user_settings = {key: q.client[key] for key in USER_SETTING_KEYS}
     with open(_get_usersettings_path(q), "w") as f:
         yaml.dump(user_settings, f)
 
 
-def _load_user_settings(q):
+def _load_user_settings(q: Q):
     if os.path.isfile(_get_usersettings_path(q)):
         logger.info("Reading user settings")
         with open(_get_usersettings_path(q), "r") as f:
@@ -175,7 +175,7 @@ def _load_user_settings(q):
             q.client[key] = user_settings.get(key, default_cfg.user_settings[key])
 
 
-async def _save_secrets(q):
+async def _save_secrets(q: Q):
     secret_name, secrets_handler = _get_secrets_handler(q)
     for key in SECRET_KEYS:
         try:
@@ -217,7 +217,7 @@ async def _save_secrets(q):
         ]
 
 
-def _load_secrets(q):
+def _load_secrets(q: Q):
     secret_name, secrets_handler = _get_secrets_handler(q)
     for key in SECRET_KEYS:
         try:
@@ -226,7 +226,7 @@ def _load_secrets(q):
             logger.error(f"Could not load password {key} from {secret_name}")
 
 
-def _get_secrets_handler(q):
+def _get_secrets_handler(q: Q):
     secret_name = (
         q.client["credential_saver"] or default_cfg.user_settings["credential_saver"]
     )
@@ -246,7 +246,7 @@ def _clear_secrets(q: Q, name: str, excludes=tuple()):
             secrets_handler.delete(name)
 
 
-def _maybe_migrate_to_yaml(q):
+def _maybe_migrate_to_yaml(q: Q):
     """
     Migrate user settings from a pickle file to a YAML file.
     """
@@ -286,5 +286,5 @@ def _maybe_migrate_to_yaml(q):
         )
 
 
-def _get_usersettings_path(q):
+def _get_usersettings_path(q: Q):
     return os.path.join(get_database_dir(q), f"{get_user_id(q)}.yaml")
