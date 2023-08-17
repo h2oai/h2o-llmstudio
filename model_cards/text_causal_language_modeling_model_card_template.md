@@ -19,16 +19,21 @@ This model was trained using [H2O LLM Studio](https://github.com/h2oai/h2o-llmst
 
 ## Usage
 
-To use the model with the `transformers` library on a machine with GPUs, first make sure you have the `transformers`, `accelerate` and `torch` libraries installed.
+To use the model with the `transformers` library on a machine with GPUs, first make sure you have the `transformers` library installed.
 
 ```bash
 pip install transformers=={{transformers_version}}
-pip install accelerate=={{accelerate_version}}
-pip install torch=={{torch_version}}
 ```
 
+Also make sure you are providing your huggingface token to the pipeline if the model is lying in a private repo.
+    - Either leave `token=True` in the `pipeline` and login to hugginface_hub by running
+        ```python
+        import huggingface_hub
+        huggingface_hub.login(<ACCES_TOKEN>)
+        ```
+    - Or directly pass your <ACCES_TOKEN> to `token` in the `pipeline`
+
 ```python
-import torch
 from transformers import pipeline
 
 generate_text = pipeline(
@@ -37,6 +42,7 @@ generate_text = pipeline(
     trust_remote_code=True,
     use_fast={{use_fast}},
     device_map={"": "cuda:0"},
+    token=True,
 )
 
 res = generate_text(
@@ -65,7 +71,6 @@ print(generate_text.preprocess("Why is drinking water so healthy?")["prompt_text
 Alternatively, you can download [h2oai_pipeline.py](h2oai_pipeline.py), store it alongside your notebook, and construct the pipeline yourself from the loaded model and tokenizer. If the model and the tokenizer are fully supported in the `transformers` package, this will allow you to set `trust_remote_code=False`.
 
 ```python
-import torch
 from h2oai_pipeline import H2OTextGenerationPipeline
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -123,7 +128,8 @@ inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cu
 
 # generate configuration can be modified to your needs
 tokens = model.generate(
-    **inputs,
+    input_ids=inputs["input_ids"],
+    attention_mask=inputs["attention_mask"],
     min_new_tokens={{min_new_tokens}},
     max_new_tokens={{max_new_tokens}},
     do_sample={{do_sample}},
@@ -138,6 +144,10 @@ answer = tokenizer.decode(tokens, skip_special_tokens=True)
 print(answer)
 ```
 
+## Quantization and sharding
+
+You can load the models using quantization by specifying ```load_in_8bit=True``` or ```load_in_4bit=True```. Also, sharding on multiple GPUs is possible by setting ```device_map=auto```.
+
 ## Model Architecture
 
 ```
@@ -147,15 +157,6 @@ print(answer)
 ## Model Configuration
 
 This model was trained using H2O LLM Studio and with the configuration in [cfg.yaml](cfg.yaml). Visit [H2O LLM Studio](https://github.com/h2oai/h2o-llmstudio) to learn how to train your own large language models.
-
-
-## Model Validation
-
-Model validation results using [EleutherAI lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness).
-
-```bash
-CUDA_VISIBLE_DEVICES=0 python main.py --model hf-causal-experimental --model_args pretrained={{repo_id}} --tasks openbookqa,arc_easy,winogrande,hellaswag,arc_challenge,piqa,boolq --device cuda &> eval.log
-```
 
 
 ## Disclaimer

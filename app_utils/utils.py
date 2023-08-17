@@ -1,5 +1,6 @@
 import asyncio
 import collections
+import contextlib
 import dataclasses
 import glob
 import json
@@ -7,6 +8,7 @@ import logging
 import math
 import os
 import pickle
+import re
 import shutil
 import socket
 import subprocess
@@ -22,6 +24,7 @@ import GPUtil
 import numpy as np
 import pandas as pd
 import psutil
+import yaml
 from boto3.session import Session
 from botocore.handlers import disable_signing
 from datasets import load_dataset
@@ -30,9 +33,6 @@ from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
 
 from app_utils.db import Experiment
-from llm_studio.python_configs.text_causal_language_modeling_config import (
-    ConfigProblemBase,
-)
 from llm_studio.src import possible_values
 from llm_studio.src.utils.config_utils import (
     _get_type_annotation_error,
@@ -58,19 +58,23 @@ def get_user_name(q):
 
 
 def get_data_dir(q):
-    return os.path.join(default_cfg.data_folder, "user")
+    return os.path.join(default_cfg.llm_studio_workdir, default_cfg.data_folder, "user")
 
 
 def get_database_dir(q):
-    return os.path.join(default_cfg.data_folder, "dbs")
+    return os.path.join(default_cfg.llm_studio_workdir, default_cfg.data_folder, "dbs")
 
 
 def get_output_dir(q):
-    return os.path.join(default_cfg.output_folder, "user")
+    return os.path.join(
+        default_cfg.llm_studio_workdir, default_cfg.output_folder, "user"
+    )
 
 
 def get_download_dir(q):
-    return os.path.join(default_cfg.output_folder, "download")
+    return os.path.join(
+        default_cfg.llm_studio_workdir, default_cfg.output_folder, "download"
+    )
 
 
 def get_user_db_path(q):
@@ -89,7 +93,7 @@ def find_free_port():
 
 
 def start_process(
-    cfg: ConfigProblemBase, gpu_list: List, process_queue: List, env_vars: Dict
+    cfg: Any, gpu_list: List, process_queue: List, env_vars: Dict
 ) -> subprocess.Popen:
     """Starts train.py for a given configuration setting
 
@@ -1168,7 +1172,7 @@ def parse_ui_elements(
                 if isinstance(value, str):
                     value = [value]
                 value = tuple(value)
-            if type_annotations[k] == str and type(value) == list:
+            if isinstance(type_annotations[k], str) and isinstance(value, list):
                 # fix for combobox outputting custom values as list in wave 0.22
                 value = value[0]
             setattr(cfg, k, value)
@@ -1309,15 +1313,15 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
             cfg = None
 
         metric = ""
-        loss = ""
+        loss_function = ""
 
         if cfg is not None:
             try:
                 metric = cfg["prediction"].metric
-                loss = cfg["training"].loss_function
+                loss_function = cfg["training"].loss_function
             except KeyError:
                 metric = ""
-                loss = ""
+                loss_function = ""
 
         with SqliteDict(f"{row.path}/charts.db") as logs:
             if "internal" in logs.keys():
@@ -1364,9 +1368,12 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
                     if eta == 0:
                         eta = ""
                     else:
+                        # if more than one day, show days
+                        # need to subtract 1 day from time_took since strftime shows
+                        # day of year which starts counting at 1
                         if eta > 86400:
                             eta = time.strftime(
-                                "%-jd %H:%M:%S", time.gmtime(float(eta))
+                                "%-jd %H:%M:%S", time.gmtime(float(eta - 86400))
                             )
                         else:
                             eta = time.strftime("%H:%M:%S", time.gmtime(float(eta)))
@@ -1395,7 +1402,7 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
 
         info["config_file"].append(config_file)
         info["dataset"].append(dataset)
-        info["loss"].append(loss)
+        info["loss"].append(loss_function)
         info["metric"].append(metric)
         info["eta"].append(eta)
         info["val metric"].append(score_val)
@@ -1447,7 +1454,8 @@ def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
 
         try:
             cfg = load_config_yaml(config_file)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Could not load configuration from {config_file}. {e}")
             cfg = None
 
         if cfg is not None:
@@ -1600,7 +1608,7 @@ def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) 
         env_vars.update(
             {"HUGGINGFACE_TOKEN": q.client["default_huggingface_api_token"]}
         )
-    cfg = copy_config(cfg)
+    cfg = copy_config(cfg, q)
     cfg.output_directory = f"{get_output_dir(q)}/{cfg.experiment_name}/"
     os.makedirs(cfg.output_directory)
     save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
@@ -1684,13 +1692,9 @@ def dir_file_table(current_path: str) -> pd.DataFrame:
 
 
 def get_download_link(q, artifact_path):
-    url = default_cfg.url
-    if not url.endswith("/"):
-        url = url + "/"
-
     new_path = os.path.relpath(artifact_path, get_output_dir(q))
     new_path = os.path.join(get_download_dir(q), new_path)
-    url_path = os.path.relpath(new_path, new_path.split("/")[0])
+    url_path = os.path.relpath(new_path, get_output_dir(q))
 
     if not os.path.exists(new_path):
         os.makedirs(os.path.dirname(new_path), exist_ok=True)
@@ -1839,7 +1843,7 @@ def remove_temp_files(q: Q):
     datasets_df = q.client.app_db.get_datasets_df()
     all_files = glob.glob(os.path.join(get_data_dir(q), "*"))
     for file in all_files:
-        if file not in datasets_df["path"].values:
+        if not any([path in file for path in datasets_df["path"].values]):
             if os.path.isdir(file):
                 shutil.rmtree(file)
             else:
@@ -1882,7 +1886,7 @@ def get_single_gpu_usage(sig_figs=1, highlight=None):
     return items
 
 
-def copy_config(cfg: Any) -> Any:
+def copy_config(cfg: Any, q: Q) -> Any:
     """Makes a copy of the config
 
     Args:
@@ -1891,8 +1895,8 @@ def copy_config(cfg: Any) -> Any:
         copy of the config
     """
     # make unique yaml file using uuid
-    os.makedirs("output", exist_ok=True)
-    tmp_file = os.path.join("output/", str(uuid.uuid4()) + ".yaml")
+    os.makedirs(get_output_dir(q), exist_ok=True)
+    tmp_file = os.path.join(f"{get_output_dir(q)}/", str(uuid.uuid4()) + ".yaml")
     save_config_yaml(tmp_file, cfg)
     cfg = load_config_yaml(tmp_file)
     os.remove(tmp_file)
@@ -1967,3 +1971,59 @@ def prepare_default_dataset(path):
     )
 
     return df_assistant[(df_assistant["rank"] == 0.0) & (df_assistant["lang"] == "en")]
+
+
+# https://stackoverflow.com/questions/2059482/temporarily-modify-the-current-processs-environment
+@contextlib.contextmanager
+def set_env(**environ):
+    """
+    Temporarily set the process environment variables.
+
+    >>> with set_env(PLUGINS_DIR='test/plugins'):
+    ...   "PLUGINS_DIR" in os.environ
+    True
+
+    >>> "PLUGINS_DIR" in os.environ
+    False
+
+    :type environ: dict[str, unicode]
+    :param environ: Environment variables to set
+    """
+    old_environ = dict(os.environ)
+    os.environ.update(environ)
+    try:
+        yield
+    finally:
+        os.environ.clear()
+        os.environ.update(old_environ)
+
+
+def hf_repo_friendly_name(name: str) -> str:
+    """
+    Converts the given string into a huggingface-repository-friendly name.
+
+    • Repo id must use alphanumeric chars or '-', '_', and '.' allowed.
+    • '--' and '..' are forbidden
+    • '-' and '.' cannot start or end the name
+    • max length is 96
+    """
+    name = re.sub("[^0-9a-zA-Z]+", "-", name)
+    name = name[1:] if name.startswith("-") else name
+    name = name[:-1] if name.endswith("-") else name
+    name = name[:96]
+    return name
+
+
+def save_hf_yaml(
+    path: str, account_name: str, model_name: str, repo_id: Optional[str] = None
+):
+    with open(path, "w") as fp:
+        yaml.dump(
+            {
+                "account_name": account_name,
+                "model_name": model_name,
+                "repo_id": repo_id if repo_id else f"{account_name}/{model_name}",
+            },
+            fp,
+            indent=4,
+        )

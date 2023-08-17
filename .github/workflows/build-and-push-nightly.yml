@@ -20,6 +20,17 @@ jobs:
       - name: Configure Docker Client
         run: |-
           gcloud auth configure-docker --quiet #authenticate to gcr
+      - name: Clean Docker images
+        run: |-
+          echo "Available storage before cleaning:"
+          df -h
+          docker system prune --all --force
+          echo "Available storage:"
+          df -h
+          echo "Removing dotnet"
+          sudo rm -rf /usr/share/dotnet
+          echo "Available storage:"
+          df -h
       - name: Docker Build Image
         run: |-
           docker build -t gcr.io/$GCLOUD_PROJECT/h2oai/h2o-llmstudio:nightly .

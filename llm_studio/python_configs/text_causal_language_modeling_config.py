@@ -6,13 +6,13 @@ from typing import Any, Tuple
 import torch
 
 import llm_studio.src.datasets.text_causal_language_modeling_ds
-from llm_studio.python_configs.base import DefaultConfig
+from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
 from llm_studio.src import possible_values
 from llm_studio.src.augmentations.nlp_aug import BaseNLPAug
 from llm_studio.src.loggers import Loggers
 from llm_studio.src.losses import text_causal_language_modeling_losses
 from llm_studio.src.metrics import text_causal_language_modeling_metrics
-from llm_studio.src.models import text_causal_language_modeling_model, text_reward_model
+from llm_studio.src.models import text_causal_language_modeling_model
 from llm_studio.src.nesting import Dependency
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.plots import text_causal_language_modeling_plots
@@ -38,19 +38,22 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     data_sample: float = 1.0
     data_sample_choice: Tuple[str, ...] = ("Train", "Validation")
 
+    system_column: str = "None"
     prompt_column: Tuple[str, ...] = ("instruction", "input")
     answer_column: str = "output"
     parent_id_column: str = "None"
 
+    text_system_start: str = "<|system|>"
     text_prompt_start: str = "<|prompt|>"
     text_answer_separator: str = "<|answer|>"
 
     limit_chained_samples: bool = False
+    add_eos_token_to_system: bool = True
     add_eos_token_to_prompt: bool = True
     add_eos_token_to_answer: bool = True
     mask_prompt_labels: bool = True
 
-    _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq")
+    _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq", "parquet")
 
     def __post_init__(self):
         self.prompt_column = (
@@ -78,6 +81,9 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
         self._possible_values["validation_size"] = (0.01, 0.95, 0.01)
         self._possible_values["data_sample"] = (0.01, 1, 0.01)
         self._possible_values["data_sample_choice"] = ["Train", "Validation"]
+        self._possible_values["system_column"] = possible_values.Columns(
+            prefer_with=lambda column: column in ("system",), add_none=True
+        )
         self._possible_values["prompt_column"] = possible_values.Columns(
             prefer_with=lambda column: column in ("instruction", "prompt")
         )
@@ -111,6 +117,11 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
         self._nesting.add(
             ["limit_chained_samples"],
             [Dependency(key="parent_id_column", value="None", is_set=False)],
+        )
+
+        self._nesting.add(
+            ["text_system_start", "add_eos_token_to_system"],
+            [Dependency(key="system_column", value="None", is_set=False)],
         )
 
         self._visibility["dataset_class"] = -1
@@ -147,22 +158,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     evaluate_before_training: bool = False
     train_validation_data: bool = False
 
-    use_rlhf: bool = False
-    reward_model: str = "OpenAssistant/reward-model-deberta-v3-large-v2"
-    adaptive_kl_control: bool = True
-    initial_kl_coefficient: float = 0.2
-    kl_target: float = 6.0
-    kl_horizon: int = 10000
-    advantages_gamma: float = 0.99
-    advantages_lambda: float = 0.95
-    ppo_clip_policy: float = 0.2
-    ppo_clip_value: float = 0.2
-    scaling_factor_value_loss: float = 0.1
-    ppo_epochs: int = 4
-    ppo_batch_size: int = 1
-    ppo_generate_temperature: float = 1.0
-    offload_reward_model: bool = False
-
     def __post_init__(self):
         super().__post_init__()
         self._possible_values["loss_function"] = self.loss_class.names()
@@ -174,21 +169,13 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values[
             "differential_learning_rate_layers"
         ] = possible_values.String(
-            values=("backbone", "value_head"),
+            values=("backbone", "embed"),
             allow_custom=False,
             placeholder="Select optional layers...",
         )
         self._possible_values["differential_learning_rate"] = self._possible_values[
             "learning_rate"
         ]
-        self._possible_values["reward_model"] = possible_values.String(
-            values=(
-                "OpenAssistant/reward-model-deberta-v3-large-v2",
-                "OpenAssistant/oasst-rm-2.1-pythia-1.4b-epoch-2.5",
-                "OpenAssistant/oasst-rm-2-pythia-6.9b-epoch-1",
-            ),
-            allow_custom=False,
-        )
 
         self._possible_values["batch_size"] = (1, 256, 1)
         self._possible_values["epochs"] = (0, 10, 1)
@@ -205,23 +192,10 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
 
         self._possible_values["evaluation_epochs"] = (0.01, 1, 0.01)
 
-        self._possible_values["initial_kl_coefficient"] = (0.01, 0.5, 0.01)
-        self._possible_values["kl_target"] = (0.1, 16, 0.1)
-        self._possible_values["kl_horizon"] = (1000, 20000, 1000)
-        self._possible_values["advantages_gamma"] = (0.800, 0.999, 0.001)
-        self._possible_values["advantages_lambda"] = (0.8, 1.0, 0.01)
-        self._possible_values["ppo_clip_policy"] = (0.1, 0.5, 0.05)
-        self._possible_values["ppo_clip_value"] = (0.1, 0.5, 0.05)
-        self._possible_values["scaling_factor_value_loss"] = (0.01, 1, 0.01)
-        self._possible_values["ppo_epochs"] = (1, 16, 1)
-        self._possible_values["ppo_generate_temperature"] = (0.1, 1.0, 0.1)
-        self._possible_values["ppo_batch_size"] = (1, 256, 1)
-
         self._visibility["loss_class"] = -1
         self._visibility["drop_last_batch"] = -1
         self._visibility["differential_learning_rate_layers"] = 1
         self._visibility["differential_learning_rate"] = 1
-        self._visibility["ppo_batch_size"] = 1
 
         self._nesting.add(
             ["differential_learning_rate"],
@@ -238,26 +212,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._nesting.add(
             ["train_validation_data"],
             [Dependency(key="save_best_checkpoint", value=False, is_set=True)],
-        )
-        self._nesting.add(
-            [
-                "reward_model",
-                "differential_learning_rate",
-                "adaptive_kl_control",
-                "initial_kl_coefficient",
-                "kl_target",
-                "kl_horizon",
-                "advantages_gamma",
-                "advantages_lambda",
-                "ppo_clip_policy",
-                "ppo_clip_value",
-                "ppo_generate_temperature",
-                "scaling_factor_value_loss",
-                "ppo_epochs",
-                "ppo_batch_size",
-                "offload_reward_model",
-            ],
-            [Dependency(key="use_rlhf", value=False, is_set=False)],
         )
 
 
@@ -285,10 +239,9 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 @dataclass
 class ConfigNLPCausalLMArchitecture(DefaultConfig):
     model_class: Any = text_causal_language_modeling_model.Model
-    reward_model_class: Any = text_reward_model.RewardModel
     pretrained: bool = True
 
-    backbone_dtype: str = "float16"
+    backbone_dtype: str = "int4"
     gradient_checkpointing: bool = True
     force_embedding_gradients: bool = False
     intermediate_dropout: float = 0
@@ -309,7 +262,6 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
         )
 
         self._visibility["model_class"] = -1
-        self._visibility["reward_model_class"] = -1
         self._visibility["pretrained"] = -1
 
 
@@ -415,6 +367,10 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     _rank: int = 0  # global rank
     _device: str = "cuda"
     _cpu_comm: Any = None
+    _model_card_template: str = "text_causal_language_modeling_model_card_template.md"
+    _summary_card_template: str = (
+        "text_causal_language_modeling_experiment_summary_card_template.md"
+    )
 
     def __post_init__(self):
         super().__post_init__()
@@ -467,7 +423,6 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
     _neptune_debug: bool = False
 
     plots_class: Any = text_causal_language_modeling_plots.Plots
-    number_of_texts: int = 10
 
     # the actual logger, will be set dynamically at runtime
     _logger: Any = None
@@ -475,7 +430,6 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
     def __post_init__(self):
         super().__post_init__()
         self._possible_values["logger"] = Loggers.names()
-        self._possible_values["number_of_texts"] = (0, 20, 2)
 
         self._nesting.add(
             ["neptune_project"],
@@ -486,11 +440,11 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
 
 
 @dataclass
-class ConfigProblemBase(DefaultConfig):
+class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
-    llm_backbone: str = "EleutherAI/pythia-2.8b-deduped"
+    llm_backbone: str = "h2oai/h2ogpt-4096-llama2-7b"
 
     dataset: ConfigNLPCausalLMDataset = field(default_factory=ConfigNLPCausalLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
@@ -518,23 +472,19 @@ class ConfigProblemBase(DefaultConfig):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
-                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-7b-v3",
-                "h2oai/h2ogpt-gm-oasst1-en-2048-open-llama-7b",
-                "h2oai/h2ogpt-gm-oasst1-en-2048-falcon-40b-v2",
-                "tiiuae/falcon-7b",
+                "h2oai/h2ogpt-4096-llama2-70b",
+                "h2oai/h2ogpt-4096-llama2-70b-chat",
+                "h2oai/h2ogpt-4096-llama2-13b",
+                "h2oai/h2ogpt-4096-llama2-13b-chat",
+                "h2oai/h2ogpt-4096-llama2-7b",
+                "h2oai/h2ogpt-4096-llama2-7b-chat",
                 "tiiuae/falcon-40b",
-                "openlm-research/open_llama_3b",
-                "openlm-research/open_llama_7b",
+                "tiiuae/falcon-7b",
                 "openlm-research/open_llama_13b",
+                "openlm-research/open_llama_7b",
+                "openlm-research/open_llama_3b",
                 "EleutherAI/gpt-j-6B",
-                "EleutherAI/gpt-neox-20b",
                 "facebook/opt-125m",
-                "facebook/opt-2.7b",
-                "EleutherAI/pythia-1b-deduped",
-                "EleutherAI/pythia-2.8b-deduped",
-                "EleutherAI/pythia-6.9b-deduped",
-                "EleutherAI/pythia-12b-deduped",
-                "togethercomputer/GPT-NeoXT-Chat-Base-20B",
             ),
             allow_custom=True,
         )

@@ -1,7 +1,8 @@
+import html
+import os
 from typing import Any, Dict
 
 import pandas as pd
-from bokeh.models import Div, Panel, Tabs
 
 from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
 from llm_studio.src.utils.data_utils import (
@@ -10,11 +11,9 @@ from llm_studio.src.utils.data_utils import (
 )
 from llm_studio.src.utils.plot_utils import (
     PlotData,
-    color_code_tokenized_text,
-    get_best_and_worst_sample_idxs,
+    format_for_markdown_visualization,
     get_line_separator_html,
-    text_to_html,
-    to_html,
+    list_to_markdown_representation,
 )
 
 
@@ -25,69 +24,70 @@ class Plots:
     def plot_batch(cls, batch, cfg) -> PlotData:
         tokenizer = get_tokenizer(cfg)
 
-        texts = [
-            tokenizer.decode(input_ids, skip_special_tokens=False)
-            for input_ids in batch["input_ids"].detach().cpu().numpy()
-        ]
-
-        texts = [text_to_html(text) for text in texts]
-
-        tokenized_texts = [
-            color_code_tokenized_text(
-                tokenizer.convert_ids_to_tokens(input_ids), tokenizer
-            )
-            for input_ids in batch["input_ids"].detach().cpu().numpy()
-        ]
-
+        df = pd.DataFrame(
+            {
+                "Prompt Text": [
+                    tokenizer.decode(input_ids, skip_special_tokens=True)
+                    for input_ids in batch["prompt_input_ids"].detach().cpu().numpy()
+                ]
+            }
+        )
+        df["Prompt Text"] = df["Prompt Text"].apply(format_for_markdown_visualization)
         if "labels" in batch.keys():
-            input_ids_labels = batch["labels"].detach().cpu().numpy()
-            input_ids_labels = [
-                [input_id for input_id in input_ids if input_id != -100]
-                for input_ids in input_ids_labels
-            ]
-
-            target_texts = [
-                tokenizer.decode(input_ids, skip_special_tokens=False)
-                for input_ids in input_ids_labels
-            ]
-
-            tokenized_target_texts = [
-                color_code_tokenized_text(
-                    tokenizer.convert_ids_to_tokens(input_ids),
-                    tokenizer,
+            df["Answer Text"] = [
+                tokenizer.decode(
+                    [label for label in labels if label != -100],
+                    skip_special_tokens=True,
                 )
-                for input_ids in input_ids_labels
+                for labels in batch.get("labels", batch["input_ids"])
+                .detach()
+                .cpu()
+                .numpy()
+            ]
+        tokens_list = [
+            tokenizer.convert_ids_to_tokens(input_ids)
+            for input_ids in batch["input_ids"].detach().cpu().numpy()
+        ]
+        masks_list = [
+            [label != -100 for label in labels]
+            for labels in batch.get("labels", batch["input_ids"]).detach().cpu().numpy()
+        ]
+        df["Tokenized Text"] = [
+            list_to_markdown_representation(
+                tokens, masks, pad_token=tokenizer.pad_token, num_chars=100
+            )
+            for tokens, masks in zip(tokens_list, masks_list)
+        ]
+        # limit to 2000 rows, still renders fast in wave
+        df = df.iloc[:2000]
+
+        # Convert into a scrollable table by transposing the dataframe
+        df_transposed = pd.DataFrame(columns=["Sample Number", "Field", "Content"])
+        has_answer = "Answer Text" in df.columns
+
+        for i, row in df.iterrows():
+            offset = 2 + int(has_answer)
+            df_transposed.loc[i * offset] = [
+                i,
+                "Prompt Text",
+                row["Prompt Text"],
+            ]
+            if has_answer:
+                df_transposed.loc[i * offset + 1] = [
+                    i,
+                    "Answer Text",
+                    row["Answer Text"],
+                ]
+            df_transposed.loc[i * offset + 1 + int(has_answer)] = [
+                i,
+                "Tokenized Text",
+                row["Tokenized Text"],
             ]
 
-        if cfg.dataset.mask_prompt_labels:
-            markup = ""
-        else:
-            markup = (
-                """
-            <div padding: 10px;">
-            <p style="font-size: 20px;">
-            <b>Note:</b> <br> Model is jointly trained on prompt + answer text.
-            If you only want to use the answer text as a target,
-            restart the experiment and enable <i> Mask Prompt Labels </i>
-            </p>
-            </div>
-            """
-                + get_line_separator_html()
-            )
-        for i in range(len(tokenized_texts)):
-            markup += f"<p><strong>Input Text: </strong>{texts[i]}</p>\n"
-            markup += (
-                "<p><strong>Tokenized Input Text: "
-                f"</strong>{tokenized_texts[i]}</p>\n"
-            )
-            if "labels" in batch.keys():
-                markup += "<p><strong>Target Text: " f"</strong>{target_texts[i]}</p>\n"
-                markup += (
-                    "<p><strong>Tokenized Target Text:"
-                    f" </strong>{tokenized_target_texts[i]}</p>\n"
-                )
-            markup += get_line_separator_html()
-        return PlotData(markup, encoding="html")
+        path = os.path.join(cfg.output_directory, "batch_viz.parquet")
+        df_transposed.to_parquet(path)
+
+        return PlotData(path, encoding="df")
 
     @classmethod
     def plot_data(cls, cfg) -> PlotData:
@@ -103,76 +103,14 @@ class Plots:
 
         markup = ""
         for input_text, target_text in zip(input_texts, target_texts):
+            markup += f"<p><strong>Input Text: </strong>{html.escape(input_text)}</p>\n"
+            markup += "\n"
             markup += (
-                f"<p><strong>Input Text: </strong>{text_to_html(input_text)}</p>\n"
+                f"<p><strong>Target Text: </strong>{html.escape(target_text)}</p>\n"
             )
-            markup += "<br/>"
-            markup += (
-                f"<p><strong>Target Text: </strong>{text_to_html(target_text)}</p>\n"
-            )
-            markup += "<br/>"
+            markup += "\n"
             markup += get_line_separator_html()
         return PlotData(markup, encoding="html")
-
-    @classmethod
-    def selection_validation_predictions(
-        cls,
-        val_outputs: Dict,
-        cfg: Any,
-        val_df: pd.DataFrame,
-        metrics: Any,
-        sample_idx: Any,
-    ) -> str:
-        input_texts = get_texts(val_df, cfg, separator="")
-        markup = ""
-
-        true_labels = val_outputs["target_text"]
-        if "predicted_text" in val_outputs.keys():
-            pred_labels = val_outputs["predicted_text"]
-        else:
-            pred_labels = [
-                "No predictions are generated for the selected metric"
-            ] * len(true_labels)
-
-        for idx in sample_idx:
-            input_text = input_texts[idx]
-            markup += (
-                f"<p><strong>Input Text: </strong>{text_to_html(input_text)}</p>\n"
-            )
-
-            if true_labels is not None:
-                target_text = true_labels[idx]
-                markup += "<br/>"
-                markup += (
-                    f"<p><strong>Target Text: "
-                    f"</strong>{text_to_html(target_text)}</p>\n"
-                )
-
-            predicted_text = pred_labels[idx]
-            markup += "<br/>"
-            markup += (
-                f"<p><strong>Predicted Text: </strong>"
-                f"{text_to_html(predicted_text)}</p>\n"
-            )
-
-            if metrics is not None:
-                markup += "<br/>"
-                markup += (
-                    f"<p><strong>{cfg.prediction.metric} Score: </strong>"
-                    f"{metrics[idx]:.3f}"
-                )
-
-            if "explanations" in val_outputs:
-                markup += "<br/>"
-                markup += (
-                    f"<p><strong>Explanation: </strong>"
-                    f"{val_outputs['explanations'][idx]}"
-                )
-
-            if idx != sample_idx[-1]:
-                markup += get_line_separator_html()
-
-        return markup
 
     @classmethod
     def plot_validation_predictions(
@@ -180,33 +118,36 @@ class Plots:
     ) -> PlotData:
         assert mode in ["validation"]
 
-        metrics = val_outputs["metrics"]
-        best_samples, worst_samples = get_best_and_worst_sample_idxs(
-            cfg, metrics, n_plots=min(cfg.logging.number_of_texts, len(val_df))
-        )
-        random_samples = sample_indices(len(val_df), len(best_samples))
-        selection_plots = {
-            title: cls.selection_validation_predictions(
-                val_outputs=val_outputs,
-                cfg=cfg,
-                val_df=val_df,
-                metrics=metrics,
-                sample_idx=indices,
-            )
-            for (indices, title) in [
-                (random_samples, f"Random {mode} samples"),
-                (best_samples, f"Best {mode} samples"),
-                (worst_samples, f"Worst {mode} samples"),
-            ]
-        }
+        input_texts = get_texts(val_df, cfg, separator="")
+        target_text = val_outputs["target_text"]
+        if "predicted_text" in val_outputs.keys():
+            predicted_text = val_outputs["predicted_text"]
+        else:
+            predicted_text = [
+                "No predictions are generated for the selected metric"
+            ] * len(target_text)
 
-        tabs = [
-            Panel(
-                child=Div(
-                    text=markup, sizing_mode="scale_width", style={"font-size": "105%"}
-                ),
-                title=title,
-            )
-            for title, markup in selection_plots.items()
-        ]
-        return PlotData(to_html(Tabs(tabs=tabs)), encoding="html")
+        df = pd.DataFrame(
+            {
+                "Input Text": input_texts,
+                "Target Text": target_text,
+                "Predicted Text": predicted_text,
+            }
+        )
+        df["Input Text"] = df["Input Text"].apply(format_for_markdown_visualization)
+        df["Target Text"] = df["Target Text"].apply(format_for_markdown_visualization)
+        df["Predicted Text"] = df["Predicted Text"].apply(
+            format_for_markdown_visualization
+        )
+
+        if val_outputs.get("metrics") is not None:
+            df[f"Metric ({cfg.prediction.metric})"] = val_outputs["metrics"]
+            df[f"Metric ({cfg.prediction.metric})"] = df[
+                f"Metric ({cfg.prediction.metric})"
+            ].round(decimals=3)
+        if val_outputs.get("explanations") is not None:
+            df["Explanation"] = val_outputs["explanations"]
+
+        path = os.path.join(cfg.output_directory, f"{mode}_viz.parquet")
+        df.to_parquet(path)
+        return PlotData(data=path, encoding="df")

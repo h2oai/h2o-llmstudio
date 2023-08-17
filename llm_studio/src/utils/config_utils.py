@@ -5,18 +5,7 @@ from typing import Any, Dict, List, Type
 
 import yaml
 
-from llm_studio.python_configs.text_causal_language_modeling_config import (
-    ConfigNLPAugmentation,
-    ConfigNLPCausalLMArchitecture,
-    ConfigNLPCausalLMDataset,
-    ConfigNLPCausalLMEnvironment,
-    ConfigNLPCausalLMLogging,
-    ConfigNLPCausalLMPrediction,
-    ConfigNLPCausalLMTokenizer,
-    ConfigNLPCausalLMTraining,
-    ConfigProblemBase,
-)
-from llm_studio.src.utils.modeling_utils import generate_experiment_name
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 
 
@@ -87,7 +76,7 @@ def _get_type_annotation_error(v: Any, type_annotation: Type) -> ValueError:
     )
 
 
-def convert_cfg_to_nested_dictionary(cfg: ConfigProblemBase) -> dict:
+def convert_cfg_base_to_nested_dictionary(cfg: DefaultConfigProblemBase) -> dict:
     """Returns a grouped config settings dict for a given configuration
 
     Args:
@@ -128,10 +117,12 @@ def convert_cfg_to_nested_dictionary(cfg: ConfigProblemBase) -> dict:
         else:
             raise _get_type_annotation_error(v, type_annotations[k])
 
+    # not an explicit field in the config
+    grouped_cfg_dict["problem_type"] = cfg.problem_type
     return grouped_cfg_dict
 
 
-def get_parent_element(cfg: ConfigProblemBase):
+def get_parent_element(cfg):
     if hasattr(cfg, "_parent_experiment") and cfg._parent_experiment != "":
         key = "Parent Experiment"
         value = cfg._parent_experiment
@@ -140,7 +131,7 @@ def get_parent_element(cfg: ConfigProblemBase):
     return None
 
 
-def parse_cfg_dataclass(cfg: ConfigProblemBase) -> List[Dict]:
+def parse_cfg_dataclass(cfg) -> List[Dict]:
     """Returns all single config settings for a given configuration
 
     Args:
@@ -181,23 +172,24 @@ def parse_cfg_dataclass(cfg: ConfigProblemBase) -> List[Dict]:
     return items
 
 
-def save_config_yaml(path: str, cfg: ConfigProblemBase) -> None:
+def save_config_yaml(path: str, cfg: DefaultConfigProblemBase) -> None:
     """Saves config as yaml file
 
     Args:
         path: path of file to save to
         cfg: config to save
     """
-    cfg_dict = convert_cfg_to_nested_dictionary(cfg)
-    cfg_dict["experiment_name"] = cfg.experiment_name
-    cfg_dict["output_directory"] = cfg.output_directory
-    cfg_dict["llm_backbone"] = cfg.llm_backbone
-    cfg_dict["problem_type"] = "text_causal_language_modeling"
+    """
+    Returns a dictionary representation of the config object.
+    Protected attributes (starting with an underscore) are not included.
+    Nested configs are converted to nested dictionaries.
+    """
+    cfg_dict = convert_cfg_base_to_nested_dictionary(cfg)
     with open(path, "w") as fp:
         yaml.dump(cfg_dict, fp, indent=4)
 
 
-def load_config_yaml(path: str) -> ConfigProblemBase:
+def load_config_yaml(path: str):
     """Loads config from yaml file
 
     Args:
@@ -208,25 +200,10 @@ def load_config_yaml(path: str) -> ConfigProblemBase:
     with open(path, "r") as fp:
         cfg_dict = yaml.load(fp, Loader=yaml.FullLoader)
 
-    cfg = ConfigProblemBase(
-        output_directory=cfg_dict.get(
-            "output_directory", ConfigProblemBase.output_directory
-        ),
-        experiment_name=cfg_dict.get("experiment_name", generate_experiment_name()),
-        llm_backbone=cfg_dict.get("llm_backbone", ConfigProblemBase.llm_backbone),
-        dataset=ConfigNLPCausalLMDataset.from_dict(cfg_dict.get("dataset", {})),
-        tokenizer=ConfigNLPCausalLMTokenizer.from_dict(cfg_dict.get("tokenizer", {})),
-        augmentation=ConfigNLPAugmentation.from_dict(cfg_dict.get("augmentation", {})),
-        architecture=ConfigNLPCausalLMArchitecture.from_dict(
-            cfg_dict.get("architecture", {})
-        ),
-        training=ConfigNLPCausalLMTraining.from_dict(cfg_dict.get("training", {})),
-        prediction=ConfigNLPCausalLMPrediction.from_dict(
-            cfg_dict.get("prediction", {})
-        ),
-        environment=ConfigNLPCausalLMEnvironment.from_dict(
-            cfg_dict.get("environment", {})
-        ),
-        logging=ConfigNLPCausalLMLogging.from_dict(cfg_dict.get("logging", {})),
-    )
-    return cfg
+    problem_type = cfg_dict["problem_type"]
+    module_name = f"llm_studio.python_configs.{problem_type}_config"
+    try:
+        module = importlib.import_module(module_name)
+    except ModuleNotFoundError:
+        raise NotImplementedError(f"Problem Type {problem_type} not implemented")
+    return module.ConfigProblemBase.from_dict(cfg_dict)

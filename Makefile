@@ -6,6 +6,12 @@ PIPENV_PYTHON = $(PIPENV) run python
 PIPENV_PIP = $(PIPENV_PYTHON) -m pip
 PWD = $(shell pwd)
 
+ifeq ($(origin H2O_LLM_STUDIO_WORKDIR), environment)
+    WORKDIR := $(H2O_LLM_STUDIO_WORKDIR)
+else
+    WORKDIR := $(shell pwd)
+endif
+
 PHONY: pipenv
 pipenv:
 	$(PIP) install pip --upgrade
@@ -63,22 +69,23 @@ black: pipenv
 
 .PHONY: test
 test: reports
-	export PYTHONPATH=$(PWD) && $(PIPENV) run pytest -v -s -x \
-		--junitxml=./reports/junit.xml \
-		tests/* | tee reports/pytest.log
+	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); $(PIPENV) run pytest -v -s --junitxml=reports/junit.xml \
+    -o log_cli=true -o log_level=INFO -o log_file=reports/tests.log \
+    tests/* 2>&1 | tee reports/tests.log'
 
 .PHONY: wave
 wave:
+	HF_HUB_ENABLE_HF_TRANSFER=True \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
-	H2O_WAVE_PRIVATE_DIR="/download/@$(PWD)/output/download" \
+	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
 	$(PIPENV) run wave run app
 
-.PHONY: wave-no-reload
-wave-no-reload:
+.PHONY: llmstudio
+llmstudio:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
-	H2O_WAVE_PRIVATE_DIR="/download/@$(PWD)/output/download" \
+	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
 	$(PIPENV) run wave run --no-reload app
 
 .PHONY: docker-build-nightly

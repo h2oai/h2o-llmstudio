@@ -62,8 +62,10 @@ class CustomDataset(Dataset):
 
         self.tokenizer = get_tokenizer(cfg)
 
-        self.raw_prompts = get_texts(df, self.cfg, separator="")
-        self.prompts = [self.parse_prompt(cfg, prompt) for prompt in self.raw_prompts]
+        self.prompts = [
+            self.parse_prompt(cfg, prompt)
+            for prompt in get_texts(df, self.cfg, separator="")
+        ]
 
         self.answers = (
             self.df[self.cfg.dataset.answer_column].astype(str).values.tolist()
@@ -81,10 +83,24 @@ class CustomDataset(Dataset):
                 self.df_id_to_idx = {v: k for k, v in enumerate(self.df["id"].values)}
 
                 # limit chained samples to the longest chain
-                if self.cfg.dataset.limit_chained_samples:
+                if self.cfg.dataset.limit_chained_samples and self.mode == "train":
+                    unique_parent_ids = set(self.parent_ids)
                     self.indices = self.indices[
-                        [id not in self.parent_ids for id in self.df["id"].values]
+                        [id not in unique_parent_ids for id in self.df["id"].values]
                     ]
+
+        self.systems = None
+        if self.cfg.dataset.system_column != "None":
+            if self.cfg.dataset.system_column not in self.df.columns:
+                logger.warning(
+                    f"System column {self.cfg.dataset.system_column} not found."
+                    f"Disabling functionality for mode {self.mode}."
+                )
+            else:
+                systems = (
+                    self.df[self.cfg.dataset.system_column].astype(str).values.tolist()
+                )
+                self.systems = [self.parse_system(cfg, system) for system in systems]
 
         if self.cfg.environment._local_rank == 0:
             logger.info(f"Sample prompt: {self.prompts[0]}")
@@ -101,6 +117,18 @@ class CustomDataset(Dataset):
             f"{codecs.decode(cfg.dataset.text_answer_separator, 'unicode_escape')}"
         )
         return prompt
+
+    @staticmethod
+    def parse_system(cfg: Any, system: str):
+        # no system tokens if empty
+        if system == "":
+            return system
+        system = (
+            f"{codecs.decode(cfg.dataset.text_system_start, 'unicode_escape')}{system}"
+        )
+        if cfg.dataset.add_eos_token_to_system:
+            system += cfg._tokenizer_eos_token
+        return system
 
     def __len__(self) -> int:
         return len(self.indices)
@@ -220,11 +248,7 @@ class CustomDataset(Dataset):
         ]
         output["predicted_text"] = np.array(predicted_text)
 
-        if not cfg.training.use_rlhf:
-            del output["predicted_answer_ids"]
-        else:
-            output["predicted_answer_ids"].detach()
-
+        del output["predicted_answer_ids"]
         return output
 
     @staticmethod
@@ -299,58 +323,27 @@ class CustomDataset(Dataset):
         """
         Quick check whether Dataframe and configurations are correctly set.
         """
-        pass
+        if (
+            cfg.dataset.parent_id_column is not None
+            and cfg.dataset.parent_id_column in df.columns
+            and "id" in df.columns
+        ):
+            assert (
+                df[cfg.dataset.parent_id_column] != df["id"]
+            ).all(), "Parent id column is the same as id column for some rows"
+            assert (df[cfg.dataset.parent_id_column].fillna("") == "").sum() > 0, (
+                "Did not find any conversation start. "
+                "Please ensure that some parent ids are empty."
+            )
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
         idx = self.indices[idx]
 
         sample = dict()
-        prompt_encoding, answer_encoding = self._get_prompt_and_answer_encoding(idx)
-        rlhf_is_in_training_mode = self.cfg.training.use_rlhf and self.mode == "train"
-
-        if rlhf_is_in_training_mode:
-            # ground truth answer not used in RLHF training
-            encodings = [[prompt_encoding, torch.empty(0)]]
-        else:
-            encodings = [[prompt_encoding, answer_encoding]]
-
-        parent_encodings, reward_model_parent_prompt_text = self.get_parent_encodings(
-            idx
-        )
-        encodings = parent_encodings + encodings
-
-        sample["reward_model_prompt_text"] = (
-            reward_model_parent_prompt_text + self.raw_prompts[idx]
-        )
-
+        encodings, system_encoding = self.get_encodings(idx)
         input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
-        if not rlhf_is_in_training_mode:  # no labels required for RLHF during training
-            labels = input_ids.clone()
-
-            if self.cfg.dataset.mask_prompt_labels:
-                prompt_mask = torch.cat(
-                    [
-                        torch.cat(
-                            [
-                                torch.ones_like(prompt_encoding),
-                                torch.zeros_like(answer_encoding),
-                            ]
-                        )
-                        for prompt_encoding, answer_encoding in encodings
-                    ]
-                ).to(torch.bool)
-                labels.masked_fill_(prompt_mask, -100)
-            if self.cfg.dataset.add_eos_token_to_answer:
-                # eos_token may be equal to pad_token. Add the label back manually.
-                labels[-1] = self.tokenizer.eos_token_id
-
-            if self.cfg.tokenizer.max_length < len(input_ids):
-                labels = labels[-self.cfg.tokenizer.max_length :]
-
-            sample["labels"] = torch.full((self.cfg.tokenizer.max_length,), -100)
-            sample["labels"][-len(labels) :] = labels
-
+        sample.update(self.get_labels(encodings))
         sample.update(
             self.pad_tokens(
                 input_ids,
@@ -360,23 +353,91 @@ class CustomDataset(Dataset):
             )
         )
 
+        # get answer encodings
+        answer_input_ids = encodings[-1][1]
+        answer_attention_mask = torch.ones_like(answer_input_ids)
+
+        sample.update(
+            self.pad_tokens(
+                answer_input_ids,
+                attention_mask=answer_attention_mask,
+                max_length=self.cfg.tokenizer.max_length_answer,
+                pad_token_id=self.tokenizer.pad_token_id,
+                direction="right",
+                prefix="answer_",
+            )
+        )
+
         # Remove last answer from encoding to create the prompt for inference
         encodings[-1][1] = torch.empty(0)
         prompt_input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
         prompt_attention_mask = torch.ones_like(prompt_input_ids)
-
         sample.update(
             self.pad_tokens(
                 prompt_input_ids,
                 attention_mask=prompt_attention_mask,
-                max_length=self.cfg.tokenizer.max_length_prompt,
+                max_length=self.cfg.tokenizer.max_length,
                 pad_token_id=self.tokenizer.pad_token_id,
                 prefix="prompt_",
             )
         )
+        # make sure system encoding is always prepended if max_length exceeded
+        if sample["input_ids"][0] != self.tokenizer.pad_token_id:
+            sample["input_ids"][: len(system_encoding)] = system_encoding
+            if self.cfg.dataset.mask_prompt_labels:
+                sample["labels"][: len(system_encoding)] = -100
+        if sample["prompt_input_ids"][0] != self.tokenizer.pad_token_id:
+            sample["prompt_input_ids"][: len(system_encoding)] = system_encoding
         return sample
 
-    def _get_prompt_and_answer_encoding(self, idx) -> List:
+    def get_labels(self, encodings):
+        labels = torch.cat([torch.cat(encoding) for encoding in encodings]).clone()
+
+        if self.cfg.dataset.mask_prompt_labels:
+            prompt_mask = torch.cat(
+                [
+                    torch.cat(
+                        [
+                            torch.ones_like(prompt_encoding),
+                            torch.zeros_like(answer_encoding),
+                        ]
+                    )
+                    for prompt_encoding, answer_encoding in encodings
+                ]
+            ).to(torch.bool)
+            labels.masked_fill_(prompt_mask, -100)
+        if self.cfg.dataset.add_eos_token_to_answer:
+            # eos_token may be equal to pad_token. Add the label back manually.
+            labels[-1] = self.tokenizer.eos_token_id
+        if self.cfg.tokenizer.max_length < len(labels):
+            labels = labels[-self.cfg.tokenizer.max_length :]
+
+        sample = dict(labels=torch.full((self.cfg.tokenizer.max_length,), -100))
+        sample["labels"][-len(labels) :] = labels
+        return sample
+
+    def get_encodings(self, idx):
+        system_encoding, prompt_encoding, answer_encoding = self._get_sample_encoding(
+            idx
+        )
+        encodings = [[system_encoding, prompt_encoding, answer_encoding]]
+        encodings = self.get_parent_encodings(idx) + encodings
+        # in case of chained samples, we only want to keep the first system encoding
+        system_encoding = encodings[0][0]
+        # remove system encodings from list of encodings to only keep prompt and answer
+        encodings = [encoding[1:] for encoding in encodings]
+        # concatenate system encoding with root prompt encoding
+        encodings[0][0] = torch.cat([system_encoding, encodings[0][0]])
+        return encodings, system_encoding
+
+    def _get_sample_encoding(self, idx) -> List:
+        if self.systems is not None:
+            system = self.systems[idx]
+            system_encoding = self.encode(
+                self.tokenizer, system, self.cfg.tokenizer.max_length_prompt, "right"
+            )["input_ids"]
+        else:
+            system_encoding = torch.empty(0)
         prompt = self.prompts[idx]
         answer = self.answers[idx]
 
@@ -399,48 +460,54 @@ class CustomDataset(Dataset):
                 dim=0,
             )
 
-        return [prompt_encoding, answer_encoding]
+        return [system_encoding, prompt_encoding, answer_encoding]
 
-    def get_parent_encodings(self, idx):
-        parent_encodings: List = []
-        reward_model_parent_prompt_text: str = ""
+    def get_parent_ids(self, idx):
+        max_loop = 1_000
+        parent_idxs = []
         if self.parent_ids is not None:
             parent_idx = idx
             while (
-                parent_idx := self.df_id_to_idx.get(self.parent_ids[parent_idx], None)
+                (parent_idx := self.df_id_to_idx.get(self.parent_ids[parent_idx], None))
             ) is not None:
-                if (
-                    self.mode == "train"
-                    and np.random.random()
-                    < self.cfg.augmentation.skip_parent_probability
-                ):
-                    break
-                parent_encodings.insert(
-                    0, self._get_prompt_and_answer_encoding(int(parent_idx))
-                )
+                parent_idxs.append(parent_idx)
+                max_loop -= 1
+                if max_loop == 0:
+                    raise ValueError(
+                        f"Parent chain of sample with idx {idx} "
+                        f"exceeds max loop count. "
+                        f"Please ensure that parent chain is not circular."
+                    )
+        return parent_idxs[::-1]
 
-                # <|endoftext|> is replaced later in the pipeline
-                # and <prompt> + <answer> is prepended
-                reward_model_parent_prompt_text = (
-                    self.raw_prompts[int(parent_idx)]
-                    + "<|endoftext|>"
-                    + self.answers[int(parent_idx)]
-                    + "<|endoftext|>"
-                    + reward_model_parent_prompt_text
-                )
-        if (
-            self.mode == "train"
-            and np.random.random() < self.cfg.augmentation.random_parent_probability
-        ):
-            rnd_idx = np.random.randint(len(self))
-            parent_encodings.insert(
-                0, self._get_prompt_and_answer_encoding(int(rnd_idx))
-            )
-
-        return parent_encodings, reward_model_parent_prompt_text
+    def get_parent_encodings(self, idx):
+        parent_encodings = [
+            self._get_sample_encoding(int(parent_idx))
+            for parent_idx in self.get_parent_ids(idx)
+        ]
+        if self.mode == "train":
+            # Note that if condition is called for each parent encoding,
+            # thus the probability is not the same for each parent encoding.
+            parent_encodings = [
+                parent_encoding
+                for parent_encoding in parent_encodings
+                if not np.random.random()
+                < self.cfg.augmentation.skip_parent_probability
+            ]
+            if np.random.random() < self.cfg.augmentation.random_parent_probability:
+                rnd_idx = np.random.randint(len(self))
+                parent_encodings.insert(0, self._get_sample_encoding(int(rnd_idx)))
+        return parent_encodings
 
     def pad_tokens(
-        self, input_ids, attention_mask, max_length, pad_token_id, prefix=""
+        self,
+        input_ids,
+        attention_mask,
+        max_length,
+        pad_token_id,
+        direction="left",
+        prefix="",
+        system_ids=None,
     ):
         sample = {}
 
@@ -449,10 +516,16 @@ class CustomDataset(Dataset):
             attention_mask = attention_mask[-max_length:]
 
         if len(input_ids) > 0:
-            sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
-            sample[f"{prefix}input_ids"][-len(input_ids) :] = input_ids
-            sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
-            sample[f"{prefix}attention_mask"][-len(input_ids) :] = attention_mask
+            if direction == "left":
+                sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
+                sample[f"{prefix}input_ids"][-len(input_ids) :] = input_ids
+                sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
+                sample[f"{prefix}attention_mask"][-len(input_ids) :] = attention_mask
+            else:
+                sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)
+                sample[f"{prefix}input_ids"][: len(input_ids)] = input_ids
+                sample[f"{prefix}attention_mask"] = torch.zeros(max_length)
+                sample[f"{prefix}attention_mask"][: len(input_ids)] = attention_mask
         else:
             # Pad everything if empty (continued pretraining)
             sample[f"{prefix}input_ids"] = torch.full((max_length,), pad_token_id)

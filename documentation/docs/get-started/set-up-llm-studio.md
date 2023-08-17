@@ -7,12 +7,21 @@ import TabItem from '@theme/TabItem';
 
 H2O LLM Studio requires the following minimum requirements:
 
-- A machine with Ubuntu 16.04+ with atleast one recent Nvidia GPU 
+- A machine with Ubuntu 16.04+ with atleast one recent Nvidia GPU
+- Have at least 128GB+ of system RAM. Larger models and complex tasks may require 256GB+ or more.
 - Nvidia drivers v470.57.02 or a later version
+- Access to the following URLs:
+  - developer.download.nvidia.com
+  - pypi.org
+  - huggingface.co
+  - download.pytorch.org
+  - cdn-lfs.huggingface.co 
 
-:::info
-Atleast 24GB of GPU memory is recommended for larger models.
+:::info Notes
+- Atleast 24GB of GPU memory is recommended for larger models.
+- The required URLs are accessible by default when you start a GCP instance, however, if you have network rules or custom firewalls in place, it is recommended to confirm that the URLs are accessible before running `make setup`.
 :::
+
 
 ## Installation
 
@@ -65,7 +74,7 @@ There are several ways to run H2O LLM Studio depending on your requirements.
 Run the following command to start the H2O LLM Studio. 
 
 ```
-make wave
+make llmstudio
 ```
 
 This will start the H2O Wave server and the H2O LLM Studio app. Navigate to [http://localhost:10101/](http://localhost:10101/) (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models. 
@@ -96,6 +105,7 @@ docker run \
     -p 10101:10101 \
     -v `pwd`/data:/workspace/data \
     -v `pwd`/output:/workspace/output \
+    -v ~/.cache:/home/llmstudio/.cache \
     gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
 ```
 
@@ -117,6 +127,7 @@ docker run \
     -p 10101:10101 \
     -v `pwd`/data:/workspace/data \
     -v `pwd`/output:/workspace/output \
+    -v ~/.cache:/home/llmstudio/.cache \
     h2o-llmstudio
 ```
 

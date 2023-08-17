@@ -14,7 +14,7 @@ from h2o_wave import data as chat_data
 from h2o_wave import ui
 from transformers import AutoTokenizer, TextStreamer
 
-from app_utils.utils import get_experiments, get_ui_elements, parse_ui_elements
+from app_utils.utils import get_experiments, get_ui_elements, parse_ui_elements, set_env
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.models.text_causal_language_modeling_model import Model
 from llm_studio.src.utils.config_utils import load_config_yaml
@@ -103,9 +103,10 @@ async def chat_tab(q: Q, load_model=True):
     logger.info(torch.cuda.memory_allocated())
 
     if load_model:
-        cfg, model, tokenizer = load_cfg_model_tokenizer(
-            q.client["experiment/display/experiment_path"], device=f"cuda:{gpu_id}"
-        )
+        with set_env(HUGGINGFACE_TOKEN=q.client["default_huggingface_api_token"]):
+            cfg, model, tokenizer = load_cfg_model_tokenizer(
+                q.client["experiment/display/experiment_path"], device=f"cuda:{gpu_id}"
+            )
         q.client["experiment/display/chat/cfg"] = cfg
         q.client["experiment/display/chat/model"] = model
         q.client["experiment/display/chat/tokenizer"] = tokenizer
