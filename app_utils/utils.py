@@ -14,6 +14,7 @@ import socket
 import subprocess
 import time
 import uuid
+import warnings
 import zipfile
 from collections import defaultdict
 from contextlib import closing
@@ -24,6 +25,7 @@ import GPUtil
 import numpy as np
 import pandas as pd
 import psutil
+import yaml
 from boto3.session import Session
 from botocore.handlers import disable_signing
 from datasets import load_dataset
@@ -1151,7 +1153,7 @@ def parse_ui_elements(
                 if isinstance(value, str):
                     value = [value]
                 value = tuple(value)
-            if type_annotations[k] == str and type(value) == list:
+            if isinstance(type_annotations[k], str) and isinstance(value, list):
                 # fix for combobox outputting custom values as list in wave 0.22
                 value = value[0]
             setattr(cfg, k, value)
@@ -1287,20 +1289,25 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
     info = defaultdict(list)
     for _, row in df.iterrows():
         try:
-            cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
+            # load_config_yaml issues a warning if the yaml file contains keys
+            # that are no longer part of the dataclass fields.
+            # This can happen if the codebase has changed since the experiment was run.
+            # Ignore those warnings here
+            with warnings.filterwarnings("ignore", message="*are not in the config."):
+                cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
         except Exception:
             cfg = None
 
         metric = ""
-        loss = ""
+        loss_function = ""
 
         if cfg is not None:
             try:
                 metric = cfg["prediction"].metric
-                loss = cfg["training"].loss_function
+                loss_function = cfg["training"].loss_function
             except KeyError:
                 metric = ""
-                loss = ""
+                loss_function = ""
 
         with SqliteDict(f"{row.path}/charts.db") as logs:
             if "internal" in logs.keys():
@@ -1381,7 +1388,7 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
 
         info["config_file"].append(config_file)
         info["dataset"].append(dataset)
-        info["loss"].append(loss)
+        info["loss"].append(loss_function)
         info["metric"].append(metric)
         info["eta"].append(eta)
         info["val metric"].append(score_val)
@@ -1432,7 +1439,8 @@ def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
         path = row.path + "/"
 
         try:
-            cfg = load_config_yaml(config_file)
+            with warnings.filterwarnings("ignore", message="*are not in the config."):
+                cfg = load_config_yaml(config_file)
         except Exception as e:
             logger.warning(f"Could not load configuration from {config_file}. {e}")
             cfg = None
@@ -1991,3 +1999,18 @@ def hf_repo_friendly_name(name: str) -> str:
     name = name[:-1] if name.endswith("-") else name
     name = name[:96]
     return name
+
+
+def save_hf_yaml(
+    path: str, account_name: str, model_name: str, repo_id: Optional[str] = None
+):
+    with open(path, "w") as fp:
+        yaml.dump(
+            {
+                "account_name": account_name,
+                "model_name": model_name,
+                "repo_id": repo_id if repo_id else f"{account_name}/{model_name}",
+            },
+            fp,
+            indent=4,
+        )

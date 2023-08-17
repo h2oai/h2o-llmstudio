@@ -96,8 +96,12 @@ Yes.
 1. After you have finished creating an experiment, click on the <Icon>more_vert</Icon> Kebab menu of the relevant experiment and select **New Experiment**. 
 
 2. Enable the **Use previous experiments weight** setting found at the top of the screen. 
-   This will now load the previous weights, and you can now change eval dataset, metric, and anything else as you see fit. To only do evaluation without any retraining, set the **Epochs** to 0.
-
+   This will now load the previous weights, and you can now change eval dataset, metric, and anything else as you see fit. To only do evaluation without any retraining, set the 
+   **Epochs** to 0.
+---
+### What are the hardware/infrastructure sizing recommendations for H2O LLM Studio?
+When it comes to hardware requirements, it is important to note that the primary demand centers around the GPU and its associated VRAM. In terms of CPUs, most modern choices should suffice as NLP tasks typically do not heavily stress CPU performance. As for RAM, it's advisable to have a minimum of 128GB, with a stronger recommendation of 256GB or more, particularly when dealing with substantial model weights that must be accommodated in the CPU RAM.
+----
 ----
 
 

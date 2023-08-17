@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Type
 
 import yaml
 
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 
 
@@ -75,7 +76,7 @@ def _get_type_annotation_error(v: Any, type_annotation: Type) -> ValueError:
     )
 
 
-def convert_cfg_to_nested_dictionary(cfg) -> dict:
+def convert_cfg_base_to_nested_dictionary(cfg: DefaultConfigProblemBase) -> dict:
     """Returns a grouped config settings dict for a given configuration
 
     Args:
@@ -116,6 +117,8 @@ def convert_cfg_to_nested_dictionary(cfg) -> dict:
         else:
             raise _get_type_annotation_error(v, type_annotations[k])
 
+    # not an explicit field in the config
+    grouped_cfg_dict["problem_type"] = cfg.problem_type
     return grouped_cfg_dict
 
 
@@ -169,22 +172,19 @@ def parse_cfg_dataclass(cfg) -> List[Dict]:
     return items
 
 
-def save_config_yaml(path: str, cfg) -> None:
+def save_config_yaml(path: str, cfg: DefaultConfigProblemBase) -> None:
     """Saves config as yaml file
 
     Args:
         path: path of file to save to
         cfg: config to save
     """
-    cfg_dict = convert_cfg_to_nested_dictionary(cfg)
-    cfg_dict["experiment_name"] = cfg.experiment_name
-    cfg_dict["output_directory"] = cfg.output_directory
-    cfg_dict["llm_backbone"] = cfg.llm_backbone
-    # Parse problem_type from config filename,
-    # for example: text_causal_language_modeling
-    cfg_dict["problem_type"] = (
-        type(cfg).__dict__["__module__"].split(".")[-1].replace("_config", "")
-    )
+    """
+    Returns a dictionary representation of the config object.
+    Protected attributes (starting with an underscore) are not included.
+    Nested configs are converted to nested dictionaries.
+    """
+    cfg_dict = convert_cfg_base_to_nested_dictionary(cfg)
     with open(path, "w") as fp:
         yaml.dump(cfg_dict, fp, indent=4)
 

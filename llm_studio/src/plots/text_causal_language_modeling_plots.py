@@ -1,3 +1,4 @@
+import html
 import os
 from typing import Any, Dict
 
@@ -13,7 +14,6 @@ from llm_studio.src.utils.plot_utils import (
     format_for_markdown_visualization,
     get_line_separator_html,
     list_to_markdown_representation,
-    text_to_html,
 )
 
 
@@ -63,20 +63,22 @@ class Plots:
 
         # Convert into a scrollable table by transposing the dataframe
         df_transposed = pd.DataFrame(columns=["Sample Number", "Field", "Content"])
+        has_answer = "Answer Text" in df.columns
+
         for i, row in df.iterrows():
-            offset = 3 if "Answer Text" in df.columns else 2
+            offset = 2 + int(has_answer)
             df_transposed.loc[i * offset] = [
                 i,
                 "Prompt Text",
                 row["Prompt Text"],
             ]
-            if "Answer Text" in df.columns:
+            if has_answer:
                 df_transposed.loc[i * offset + 1] = [
                     i,
                     "Answer Text",
                     row["Answer Text"],
                 ]
-            df_transposed.loc[i * offset + 2] = [
+            df_transposed.loc[i * offset + 1 + int(has_answer)] = [
                 i,
                 "Tokenized Text",
                 row["Tokenized Text"],
@@ -101,14 +103,12 @@ class Plots:
 
         markup = ""
         for input_text, target_text in zip(input_texts, target_texts):
+            markup += f"<p><strong>Input Text: </strong>{html.escape(input_text)}</p>\n"
+            markup += "\n"
             markup += (
-                f"<p><strong>Input Text: </strong>{text_to_html(input_text)}</p>\n"
+                f"<p><strong>Target Text: </strong>{html.escape(target_text)}</p>\n"
             )
-            markup += "<br/>"
-            markup += (
-                f"<p><strong>Target Text: </strong>{text_to_html(target_text)}</p>\n"
-            )
-            markup += "<br/>"
+            markup += "\n"
             markup += get_line_separator_html()
         return PlotData(markup, encoding="html")
 

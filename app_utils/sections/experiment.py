@@ -37,6 +37,7 @@ from app_utils.utils import (
     hf_repo_friendly_name,
     parse_ui_elements,
     remove_model_type,
+    save_hf_yaml,
     set_env,
     start_experiment,
 )
@@ -477,7 +478,7 @@ async def experiment_start(q: Q) -> None:
     q.client.delete_cards.add("experiment/start/footer")
 
 
-async def experiment_run(q: Q, pre: str = "experiment/start") -> None:
+async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
     """Start an experiment.
 
     Args:
@@ -499,6 +500,8 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> None:
     stats = os.statvfs(".")
     available_size = stats.f_frsize * stats.f_bavail
 
+    # flag whether to list current experiments after this function
+    list_current_experiments = True
     if available_size < default_cfg.min_experiment_disk_space:
         entity = "Experiment" if pre == "experiment/start" else "Prediction"
         q.client["experiment_halt_reason"] = (
@@ -508,9 +511,28 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> None:
             f"{entity} has not started."
         )
         logger.error(q.client["experiment_halt_reason"])
-        return
+        return list_current_experiments
+
+    if len(cfg.environment.gpus) == 0:
+        q.page["meta"].dialog = ui.dialog(
+            title="No GPU selected.",
+            name="no_gpu_selected_dialog",
+            items=[
+                ui.text("Please select at least one GPU to start the experiment!"),
+                ui.button(
+                    name="experiment/start/no_gpu_selected_dialog/ok",
+                    label="OK",
+                    primary=True,
+                ),
+            ],
+            closable=True,
+        )
+        q.client["keep_meta"] = True
+        await q.page.save()
+        return not list_current_experiments
 
     start_experiment(cfg=cfg, q=q, pre=pre)
+    return list_current_experiments
 
 
 def get_experiment_table(
@@ -1790,10 +1812,13 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             safe_serialization=q.client["default_safe_serialization"],
         )
 
-        # Updating Config HF attributes & # re-save
-        cfg.hf.account_name = user_id
-        cfg.hf.model_name = exp_name
-        save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
+        # Storing HF attributes
+        save_hf_yaml(
+            path=f"{cfg.output_directory}/hf.yaml",
+            account_name=user_id,
+            model_name=exp_name,
+            repo_id=repo_id,
+        )
 
         # push pipeline to hub
         template_env = Environment(
@@ -1879,15 +1904,23 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
 
 
 def get_experiment_summary_code_card(cfg) -> str:
+    repo_id: Optional[str] = None
+    hf_yaml_path = f"{cfg.output_directory}/hf.yaml"
+
     with open(
         os.path.join("model_cards", cfg.environment._summary_card_template), "r"
     ) as f:
         text = f.read()
 
+    if os.path.exists(hf_yaml_path):
+        with open(hf_yaml_path, "r") as fp:
+            repo_id = yaml.load(fp, Loader=yaml.FullLoader)["repo_id"]
+
+    if repo_id is None:
+        repo_id = "account/model"
+
     # Model repo
-    text = text.replace(
-        "{{repo_id}}", cfg.hf.repo_id if cfg.hf.repo_id else "account/model"
-    )
+    text = text.replace("{{repo_id}}", repo_id)
 
     # Versions
     text = text.replace("{{transformers_version}}", transformers.__version__)

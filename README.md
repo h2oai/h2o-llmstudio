@@ -26,6 +26,7 @@
 - [Example: Run on OASST data via CLI](#example-run-on-oasst-data-via-cli)
 - [Model checkpoints](#model-checkpoints)
 - [Documentation](#documentation)
+- [Contributing](#contributing)
 - [License](#license)
 
 ## With H2O LLM Studio, you can
@@ -52,6 +53,8 @@ Using CLI for fine-tuning LLMs:
 
 ## What's New
 
+- [PR 328](https://github.com/h2oai/h2o-llmstudio/pull/328) RLHF is now a separate problem type. Note that starting a new RLHF experiment from an old experiment that used RLHF is no longer supported. To continue from a previous experiment, please start a new experiment and enter the settings from the previous experiment manually. 
+- [PR 308](https://github.com/h2oai/h2o-llmstudio/pull/308) Sequence to sequence models have been added as a new problem type.
 - [PR 152](https://github.com/h2oai/h2o-llmstudio/pull/152) Add RLHF functionality for fine-tuning LLMs.
 - [PR 132](https://github.com/h2oai/h2o-llmstudio/pull/131) Add 4bit training that allows training of larger LLM backbones with less GPU memory. See [here](https://huggingface.co/blog/4bit-transformers-bitsandbytes) for a comprehensive summary of this method.
 - [PR 40](https://github.com/h2oai/h2o-llmstudio/pull/40) Added functionality for supporting nested conversations in data. A new `parent_id_column` can be selected for datasets to support tree-like structures in your conversational data. Additional `augmentation` settings have been added for this feature.
@@ -213,6 +216,9 @@ All open-source datasets and models are posted on [H2O.ai's Hugging Face page](h
 ## Documentation
 
 Detailed documentation and frequently asked questions (FAQs) for H2O LLM Studio can be found at <https://docs.h2o.ai/h2o-llmstudio/>. If you wish to contribute to the docs, navigate to the `/documentation` folder of this repo and refer to the [README.md](documentation/README.md) for more information.
+
+## Contributing
+We are happy to accept contributions to the H2O LLM Studio project. Please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
 
 ## License
 
