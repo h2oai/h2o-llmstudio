@@ -12,8 +12,8 @@ jobs:
       - name: Maximize build space
         uses: easimon/maximize-build-space@master
         with:
-          root-reserve-mb: 512
-          swap-size-mb: 1024
+          root-reserve-mb: 2048
+          swap-size-mb: 2048
           remove-dotnet: 'true'
       - name: Checkout code
         uses: actions/checkout@v3
