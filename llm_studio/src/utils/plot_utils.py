@@ -33,13 +33,6 @@ def get_line_separator_html():
     )
 
 
-def text_to_html(text: str) -> str:
-    return html.escape(text).replace("\n", "<br>")
-
-
-#
-
-
 def decode_bytes(chunks: List[bytes]):
     """Decodes bytes to string
 
@@ -95,7 +88,7 @@ def format_for_markdown_visualization(text: str) -> str:
     for x in ["```", "``", "`"]:
         text = text.replace(f"<br />{x}", f"\n{x}")
         text = text.replace(f"{x}<br />", f"{x}\n")
-    return text
+    return html.escape(text.replace("<br />", "\n"))
 
 
 def list_to_markdown_representation(
