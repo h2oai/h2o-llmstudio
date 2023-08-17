@@ -940,4 +940,5 @@ if __name__ == "__main__":
         run(cfg=cfg)
     except Exception:
         logging.error("Exception occurred during the run:", exc_info=True)
-        kill_ddp_processes()
+        if ("WORLD_SIZE" in os.environ) and (int(os.environ["WORLD_SIZE"]) > 1):
+            kill_ddp_processes()
