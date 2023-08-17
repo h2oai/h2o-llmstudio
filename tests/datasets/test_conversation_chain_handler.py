@@ -3,9 +3,7 @@ from unittest.mock import MagicMock
 import pandas as pd
 import pytest
 
-from llm_studio.src.datasets.text_causal_language_modeling_ds import (
-    ConversationChainHandler,
-)
+from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
 
 
 @pytest.fixture

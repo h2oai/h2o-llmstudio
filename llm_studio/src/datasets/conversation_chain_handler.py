@@ -10,17 +10,21 @@ logger = logging.getLogger(__name__)
 class ConversationChainHandler:
     """
     Partitions the dataset into conversation chains.
-    The conversation chains consists of a list of conversations, where each conversation round consists of
+    The conversation chains consists of a list of conversations,
+    where each conversation round consists of
     a triple of (system, prompt, answer).
     """
 
-    def __init__(self, df, cfg, parser=None):
-        self.parser = parser
-
+    def __init__(
+        self,
+        df,
+        cfg,
+    ):
         if cfg.dataset.parent_id_column != "None":
-            assert (
-                "id" in df.columns
-            ), f"id column required for conversation chaining, DataFrame only has {df.columns}."
+            assert "id" in df.columns, (
+                f"id column required for conversation chaining, "
+                f"DataFrame only has {df.columns}."
+            )
             sample_ids = (
                 df["id"].astype(df[cfg.dataset.parent_id_column].dtype).tolist()
             )
@@ -80,13 +84,17 @@ class ConversationChainHandler:
         """
         Gets the conversation chain for a given starting conversation ID.
         Args:
-            id2parent_id: A dictionary containing the mapping of IDs to its previous parent ID.
+            id2parent_id: A dictionary containing the mapping of IDs
+            to its previous parent ID.
             start_id: The ID of the starting conversation in the chain.
         Returns:
-            A list of conversation IDs representing the conversation chain. The chain is ordered from the
-            starting conversation to the last conversation in the chain.
+            A list of conversation IDs representing the conversation chain.
+            The chain is ordered from the starting conversation to the last
+            conversation in the chain.
         """
-        loop_counter = 0  # prevent infinite loops in case of circular parent chains (dataframe issue)
+        # prevent infinite loops in case
+        # of circular parent chains (dataframe issue)
+        loop_counter = 0
 
         conversation_chain_ids = [start_id]
         parent_id = start_id
@@ -97,7 +105,8 @@ class ConversationChainHandler:
             conversation_chain_ids.append(parent_id)
             if loop_counter > 1000:
                 raise ValueError(
-                    f"Parent chain of sample with idx {start_id} exceeds max loop count of 1000. "
+                    f"Parent chain of sample with idx {start_id} "
+                    f"exceeds max loop count of 1000. "
                     f"Please ensure that parent chain is not circular."
                 )
         return conversation_chain_ids[::-1]
@@ -110,9 +119,11 @@ class ConversationChainHandler:
         Gets a single conversation chain.
         The conversation may be:
         - a single (system, prompt, answer) round,
-          if cfg.dataset.parent_id_column == "None" or there is no parent_id for the conversation
-        - a conversation potentially starting somewhere in the middle of the conversation,
-          if the conversation is chained and limit_chained_samples is set to False
+          if cfg.dataset.parent_id_column == "None" or
+          there is no parent_id for the conversation
+        - a conversation potentially starting somewhere in
+          the middle of the conversation, if the conversation
+          is chained and limit_chained_samples is set to False
         - always a complete conversation, if the conversation is chained
           and limit_chained_samples is True
 
@@ -120,11 +131,8 @@ class ConversationChainHandler:
         prompts = [self.prompts[i] for i in self.conversation_ids_lists[idx]]
         answers = [self.answers[i] for i in self.conversation_ids_lists[idx]]
         systems = [self.systems[i] for i in self.conversation_ids_lists[idx]]
-        text_dict = {
+        return {
             "prompts": prompts,
             "answers": answers,
             "systems": systems,
         }
-        if self.parser:
-            text_dict = self.parser(text_dict)
-        return text_dict

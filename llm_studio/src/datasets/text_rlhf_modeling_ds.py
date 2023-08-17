@@ -8,7 +8,6 @@ import torch
 from llm_studio.src.datasets.text_causal_language_modeling_ds import (
     CustomDataset as CausalLMCustomDataset,
 )
-from llm_studio.src.datasets.text_utils import get_texts
 
 logger = logging.getLogger(__name__)
 
@@ -28,18 +27,20 @@ class CustomDataset(CausalLMCustomDataset):
         )
         return sample
 
-    def get_labels(self, encodings):
+    def get_labels(self, prompt_encodings, answer_encodings):
         if self.mode == "train":  # no labels required for RLHF during training
             return dict()
         else:
-            return super().get_labels(encodings)
+            return super().get_labels(prompt_encodings, answer_encodings)
 
     def get_encodings(self, input_text_dict):
-        encodings, system_encoding = super().get_encodings(input_text_dict)
+        system_encoding, prompt_encodings, answer_encodings = super().get_encodings(
+            input_text_dict
+        )
         # remove last ground truth answer,
         # as RLHF will generate the answer from the prompt
-        encodings[-1][-1] = torch.empty(0)
-        return encodings, system_encoding
+        answer_encodings[-1] = torch.empty(0)
+        return system_encoding, prompt_encodings, answer_encodings
 
     def postprocess_batch_predictions(self, cfg: Any, output: Dict) -> Dict:
         if cfg.prediction.metric == "Perplexity":

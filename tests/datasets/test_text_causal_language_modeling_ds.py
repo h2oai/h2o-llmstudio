@@ -162,17 +162,15 @@ def test_getitem():
 
     result = dataset[0]
     assert isinstance(result, dict)
-    assert set(result.keys()) == set(
-        [
-            "labels",
-            "input_ids",
-            "attention_mask",
-            "prompt_input_ids",
-            "prompt_attention_mask",
-            "answer_input_ids",
-            "answer_attention_mask",
-        ]
-    )
+    assert set(result.keys()) == {
+        "labels",
+        "input_ids",
+        "attention_mask",
+        "prompt_input_ids",
+        "prompt_attention_mask",
+        "answer_input_ids",
+        "answer_attention_mask",
+    }
 
     dataset.tokenizer.convert_ids_to_tokens(result["input_ids"])
 
@@ -219,8 +217,10 @@ def test_getitem():
     assert result["input_ids"].shape == (513,)
     assert result["prompt_input_ids"].shape == (513,)
 
-
-    dataset.get_chained_prompt_text_list(0)
-
-
-
+    assert dataset.get_chained_prompt_text_list(0) == [
+        "system 1prompt 1",
+        "answer 1",
+        "prompt 2",
+        "answer 2",
+        "prompt 3",
+    ]

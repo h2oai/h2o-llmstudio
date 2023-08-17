@@ -1,139 +1,21 @@
 import codecs
 import collections.abc
 import logging
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
+from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
+from llm_studio.src.datasets.text_utils import get_tokenizer
 
 logger = logging.getLogger(__name__)
 
 
-class ConversationChainHandler:
-    """
-    Partitions the dataset into conversation chains.
-    The conversation chains consists of a list of conversations, where each conversation round consists of
-    a triple of (system, prompt, answer).
-    """
-
-    def __init__(self, df, cfg):
-        if cfg.dataset.parent_id_column != "None":
-            assert (
-                "id" in df.columns
-            ), f"id column required for conversation chaining, DataFrame only has {df.columns}."
-            sample_ids = (
-                df["id"].astype(df[cfg.dataset.parent_id_column].dtype).tolist()
-            )
-            parent_ids = df[cfg.dataset.parent_id_column].tolist()
-
-            id2parent_id = {
-                id: parent_id
-                for id, parent_id in zip(sample_ids, parent_ids)
-                if parent_id not in [None, "None"]
-                and (
-                    not isinstance(parent_id, float)
-                    or (not np.isnan(parent_id) and not np.isinf(parent_id))
-                )
-            }
-            if cfg.dataset.limit_chained_samples:
-                conversation_start_ids = [
-                    idx for idx in sample_ids if idx not in id2parent_id.values()
-                ]
-            else:
-                conversation_start_ids = sample_ids
-
-            conversation_ids_lists = [
-                self.get_conversation_ids(id2parent_id, conversation_start_id)
-                for conversation_start_id in conversation_start_ids
-            ]
-            # map from df["id"] to enumeration index
-            dataframeid2idx = {id: idx for idx, id in enumerate(sample_ids)}
-            self.conversation_ids_lists = [
-                [
-                    dataframeid2idx[conversation_id]
-                    for conversation_id in conversation_ids
-                ]
-                for conversation_ids in conversation_ids_lists
-            ]
-        else:
-            # no parent id column, so each sample is a conversation chain
-            self.conversation_ids_lists = [[idx] for idx in range(len(df))]
-
-        self.prompts = get_texts(df, cfg, separator="")
-        if cfg.dataset.answer_column in df.columns:
-            self.answers = df[cfg.dataset.answer_column].astype(str).tolist()
-        else:
-            self.answers = ["" for _ in range(len(self.prompts))]
-        self.systems = ["" for _ in range(len(self.prompts))]
-
-        if cfg.dataset.system_column != "None":
-            if cfg.dataset.system_column not in df.columns:
-                logger.warning(
-                    f"System column {cfg.dataset.system_column} not found."
-                    f"Disabling functionality."
-                )
-            else:
-                self.systems = df[cfg.dataset.system_column].astype(str).tolist()
-
-    @staticmethod
-    def get_conversation_ids(id2parent_id, start_id):
-        """
-        Gets the conversation chain for a given starting conversation ID.
-        Args:
-            id2parent_id: A dictionary containing the mapping of IDs to its previous parent ID.
-            start_id: The ID of the starting conversation in the chain.
-        Returns:
-            A list of conversation IDs representing the conversation chain. The chain is ordered from the
-            starting conversation to the last conversation in the chain.
-        """
-        loop_counter = 0  # prevent infinite loops in case of circular parent chains (dataframe issue)
-
-        conversation_chain_ids = [start_id]
-        parent_id = start_id
-        while parent_id in id2parent_id:
-            loop_counter += 1
-            # get next parent id
-            parent_id = id2parent_id[parent_id]
-            conversation_chain_ids.append(parent_id)
-            if loop_counter > 1000:
-                raise ValueError(
-                    f"Parent chain of sample with idx {start_id} exceeds max loop count of 1000. "
-                    f"Please ensure that parent chain is not circular."
-                )
-        return conversation_chain_ids[::-1]
-
-    def __len__(self):
-        return len(self.conversation_ids_lists)
-
-    def __getitem__(self, idx):
-        """
-        Gets a single conversation chain.
-        The conversation may be:
-        - a single (system, prompt, answer) round,
-          if cfg.dataset.parent_id_column == "None" or there is no parent_id for the conversation
-        - a conversation potentially starting somewhere in the middle of the conversation,
-          if the conversation is chained and limit_chained_samples is set to False
-        - always a complete conversation, if the conversation is chained
-          and limit_chained_samples is True
-
-        """
-        prompts = [self.prompts[i] for i in self.conversation_ids_lists[idx]]
-        answers = [self.answers[i] for i in self.conversation_ids_lists[idx]]
-        systems = [self.systems[i] for i in self.conversation_ids_lists[idx]]
-        return {
-            "prompts": prompts,
-            "answers": answers,
-            "systems": systems,
-        }
-
-
 class CustomDataset(Dataset):
-    """Base PyTorch dataset for any problem type."""
+    """Dataset for Causal Language modeling."""
 
     def __init__(self, df: pd.DataFrame, cfg: Any, mode: str = "train"):
         """
@@ -142,21 +24,12 @@ class CustomDataset(Dataset):
             cfg: config with all the hyperparameters
             mode: dataset mode. One of {"train", "validation"}
         """
-        assert mode in [
-            "train",
-            "validation",
-        ], f"There is no {mode} for the datasets"
-
         self.cfg = cfg
         self.mode = mode
         self.df = df.copy()
 
         self.tokenizer = get_tokenizer(self.cfg)
         self.conversation_chain_handler = ConversationChainHandler(self.df, cfg)
-        if cfg.environment._local_rank == 0:
-            text_dict = self.conversation_chain_handler[0]
-            self.parse_text_dict(text_dict)
-            logger.info(f"Sample prompt: " f"{text_dict['prompts'][0]} ")
 
     def __len__(self) -> int:
         return len(self.conversation_chain_handler)
@@ -167,10 +40,20 @@ class CustomDataset(Dataset):
         self.parse_text_dict(input_text_dict)
 
         sample = dict()
-        encodings, system_encoding = self.get_encodings(input_text_dict=input_text_dict)
+        system_encoding, prompt_encodings, answer_encodings = self.get_encodings(
+            input_text_dict=input_text_dict
+        )
 
-        input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
-        sample.update(self.get_labels(encodings))
+        input_ids = torch.cat(
+            [
+                torch.cat([prompt_encoding, answer_encoding])
+                for prompt_encoding, answer_encoding in zip(
+                    prompt_encodings, answer_encodings
+                )
+            ]
+        )
+
+        sample.update(self.get_labels(prompt_encodings, answer_encodings))
         sample.update(
             self.pad_tokens(
                 input_ids,
@@ -181,13 +64,10 @@ class CustomDataset(Dataset):
         )
 
         # get answer encodings
-        answer_input_ids = encodings[-1][1]
-        answer_attention_mask = torch.ones_like(answer_input_ids)
-
         sample.update(
             self.pad_tokens(
-                answer_input_ids,
-                attention_mask=answer_attention_mask,
+                answer_encodings[-1],
+                attention_mask=torch.ones_like(answer_encodings[-1]),
                 max_length=self.cfg.tokenizer.max_length_answer,
                 pad_token_id=self.tokenizer.pad_token_id,
                 direction="right",
@@ -196,8 +76,15 @@ class CustomDataset(Dataset):
         )
 
         # Remove last answer from encoding to create the prompt for inference
-        encodings[-1][1] = torch.empty(0)
-        prompt_input_ids = torch.cat([torch.cat(encoding) for encoding in encodings])
+        answer_encodings[-1] = torch.empty(0)
+        prompt_input_ids = torch.cat(
+            [
+                torch.cat([prompt_encoding, answer_encoding])
+                for prompt_encoding, answer_encoding in zip(
+                    prompt_encodings, answer_encodings
+                )
+            ]
+        )
         prompt_attention_mask = torch.ones_like(prompt_input_ids)
         sample.update(
             self.pad_tokens(
@@ -376,7 +263,7 @@ class CustomDataset(Dataset):
         if not cfg.prediction.metric == "Perplexity":
             output = self.clean_output(output, cfg)
 
-        output["target_text"] = self.answers
+        output["target_text"] = self.conversation_chain_handler.answers
 
         metric_func, _, _ = cfg.prediction.metric_class.get(cfg.prediction.metric)
 
@@ -455,8 +342,15 @@ class CustomDataset(Dataset):
                 "id" in df.columns
             ), "When using parent column, the dataframe requires an 'id' column. "
 
-    def get_labels(self, encodings):
-        labels = torch.cat([torch.cat(encoding) for encoding in encodings]).clone()
+    def get_labels(self, prompt_encodings, answer_encodings):
+        labels = torch.cat(
+            [
+                torch.cat([prompt_encoding, answer_encoding])
+                for prompt_encoding, answer_encoding in zip(
+                    prompt_encodings, answer_encodings
+                )
+            ]
+        ).clone()
 
         if self.cfg.dataset.mask_prompt_labels:
             prompt_mask = torch.cat(
@@ -467,7 +361,9 @@ class CustomDataset(Dataset):
                             torch.zeros_like(answer_encoding),
                         ]
                     )
-                    for prompt_encoding, answer_encoding in encodings
+                    for prompt_encoding, answer_encoding in zip(
+                        prompt_encodings, answer_encodings
+                    )
                 ]
             ).to(torch.bool)
             labels.masked_fill_(prompt_mask, -100)
@@ -486,15 +382,8 @@ class CustomDataset(Dataset):
         Get encodings for a single conversation history.
         Args:
             input_text_dict: A dictionary containing the input text for a single sample.
-            Contains the keys "systems", "prompts", "answers". System may be an empty string.
-
-        Returns:
-            encodings: A list of encodings for the sample. Each encoding is a tuple of
-            (prompt_encoding, answer_encoding). The encodings are sorted such that the start of
-            the conversation is at the beginning of the list. If the system text is not empty,
-            the first prompt encoding is the encoding of the system text and the first prompt.
-            system_encoding: System encoding for the sample. The system encoding is taken from
-            the first system text, as this marks the beginning of the conversation.
+            Contains the keys "systems", "prompts", "answers".
+            System may be an empty string.
         """
         encodings = [
             self._get_sample_encoding(system, prompt, answer)
@@ -533,11 +422,15 @@ class CustomDataset(Dataset):
             encodings = parent_encodings + [encodings[-1]]
 
         system_encoding = encodings[0][0]
-        # remove system encodings from list of encodings to only keep prompt and answer
-        encodings = [encoding[1:] for encoding in encodings]
+        prompt_encodings = [encoding[1] for encoding in encodings]
+        answer_encodings = [encoding[2] for encoding in encodings]
         # concatenate system encoding with root prompt encoding
-        encodings[0][0] = torch.cat([system_encoding, encodings[0][0]])
-        return encodings, system_encoding
+        prompt_encodings[0] = torch.cat([system_encoding, prompt_encodings[0]])
+        return (
+            system_encoding,
+            prompt_encodings,
+            answer_encodings,
+        )
 
     def _get_sample_encoding(self, system: str, prompt: str, answer: str) -> List:
         if len(system) > 0:
@@ -580,8 +473,8 @@ class CustomDataset(Dataset):
         prompt_text = text_dict["systems"][0] + chat_history + text_dict["prompts"][-1]
         return prompt_text.split(text_separator)
 
+    @staticmethod
     def pad_tokens(
-        self,
         input_ids,
         attention_mask,
         max_length,
