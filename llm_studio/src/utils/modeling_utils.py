@@ -200,10 +200,10 @@ def get_ds_config(cfg: Any):
             "stage": 3,
             "overlap_comm": True,
             "contiguous_gradients": True,
-            "reduce_bucket_size": 1e6,
+            "reduce_bucket_size": cfg.environment.deepspeed_reduce_bucket_size,
             # zero3
-            "stage3_prefetch_bucket_size": 1e6,
-            "stage3_param_persistence_threshold": 1e6,
+            "stage3_prefetch_bucket_size": cfg.environment.deepspeed_stage3_prefetch_bucket_size,  # noqa: E501
+            "stage3_param_persistence_threshold": cfg.environment.deepspeed_stage3_param_persistence_threshold,  # noqa: E501
             "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,  # noqa: E501
             "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,  # noqa: E501
             # zero++
@@ -213,8 +213,8 @@ def get_ds_config(cfg: Any):
             # "zero_quantized_gradients": True,
         },
         "steps_per_print": 2000,
-        "train_batch_size": cfg.training.batch_size * cfg.environment._world_size,
-        "train_micro_batch_size_per_gpu": 1,
+        "train_micro_batch_size_per_gpu": cfg.training.batch_size,
+        "gradient_accumulation_steps": cfg.training.grad_accumulation,
         "wall_clock_breakdown": False,
     }
     if cfg.environment.deepspeed_offload_optimizer:
