@@ -1291,8 +1291,6 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
             # that are no longer part of the dataclass fields.
             # This can happen if the codebase has changed since the experiment was run.
             # Ignore those warnings here
-            import logging
-
             logging_level = logging.getLogger().level
             logging.getLogger().setLevel(logging.ERROR)
             cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
