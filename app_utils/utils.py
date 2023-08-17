@@ -14,7 +14,6 @@ import socket
 import subprocess
 import time
 import uuid
-import warnings
 import zipfile
 from collections import defaultdict
 from contextlib import closing
@@ -44,7 +43,6 @@ from llm_studio.src.utils.config_utils import (
 from llm_studio.src.utils.data_utils import is_valid_data_frame, read_dataframe
 from llm_studio.src.utils.export_utils import get_size_str
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
-
 from .config import default_cfg
 
 logger = logging.getLogger(__name__)
@@ -1293,8 +1291,12 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
             # that are no longer part of the dataclass fields.
             # This can happen if the codebase has changed since the experiment was run.
             # Ignore those warnings here
-            with warnings.filterwarnings("ignore", message="*are not in the config."):
-                cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
+            import logging
+
+            logging_level = logging.getLogger().level
+            logging.getLogger().setLevel(logging.ERROR)
+            cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
+            logging.getLogger().setLevel(logging_level)
         except Exception:
             cfg = None
 
@@ -1439,8 +1441,10 @@ def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
         path = row.path + "/"
 
         try:
-            with warnings.filterwarnings("ignore", message="*are not in the config."):
-                cfg = load_config_yaml(config_file)
+            logging_level = logging.getLogger().level
+            logging.getLogger().setLevel(logging.ERROR)
+            cfg = load_config_yaml(config_file)
+            logging.getLogger().setLevel(logging_level)
         except Exception as e:
             logger.warning(f"Could not load configuration from {config_file}. {e}")
             cfg = None
