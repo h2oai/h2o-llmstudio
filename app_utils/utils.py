@@ -14,6 +14,7 @@ import socket
 import subprocess
 import time
 import uuid
+import warnings
 import zipfile
 from collections import defaultdict
 from contextlib import closing
@@ -1288,7 +1289,12 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
     info = defaultdict(list)
     for _, row in df.iterrows():
         try:
-            cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
+            # load_config_yaml issues a warning if the yaml file contains keys
+            # that are no longer part of the dataclass fields.
+            # This can happen if the codebase has changed since the experiment was run.
+            # Ignore those warnings here
+            with warnings.filterwarnings("ignore", message="*are not in the config."):
+                cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
         except Exception:
             cfg = None
 
@@ -1433,7 +1439,8 @@ def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
         path = row.path + "/"
 
         try:
-            cfg = load_config_yaml(config_file)
+            with warnings.filterwarnings("ignore", message="*are not in the config."):
+                cfg = load_config_yaml(config_file)
         except Exception as e:
             logger.warning(f"Could not load configuration from {config_file}. {e}")
             cfg = None
