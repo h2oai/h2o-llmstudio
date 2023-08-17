@@ -42,7 +42,11 @@ from llm_studio.app_utils.sections.project import (
     list_current_experiments,
 )
 from llm_studio.app_utils.sections.settings import settings
-from llm_studio.app_utils.utils import add_model_type, load_user_settings, save_user_settings
+from llm_studio.app_utils.utils import (
+    add_model_type,
+    load_user_settings,
+    save_user_settings,
+)
 from llm_studio.app_utils.wave_utils import report_error, wave_utils_handle_error
 
 logger = logging.getLogger(__name__)
