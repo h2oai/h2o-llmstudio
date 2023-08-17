@@ -9,12 +9,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@master
-        with:
-          root-reserve-mb: 2048
-          swap-size-mb: 2048
-          remove-dotnet: 'true'
+      # - name: Maximize build space
+      #   uses: easimon/maximize-build-space@master
+      #   with:
+      #     root-reserve-mb: 2048
+      #     swap-size-mb: 2048
+      #     remove-dotnet: 'true'
       - name: Checkout code
         uses: actions/checkout@v3
       - id: 'auth'
@@ -28,6 +28,9 @@ jobs:
       - name: Configure Docker Client
         run: |-
           gcloud auth configure-docker --quiet #authenticate to gcr
+      - name: Clean Docker images
+        run: |-
+          docker system prune --all --force
       - name: Docker Build Image
         run: |-
           docker build -t gcr.io/$GCLOUD_PROJECT/h2oai/h2o-llmstudio:nightly .
