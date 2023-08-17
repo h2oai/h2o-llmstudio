@@ -152,8 +152,8 @@ def df_with_nan():
                 "x1",
                 1,
                 2,
-                3,
-                4,
+                3.0,
+                4.0,
                 "a2",
                 "a3",
                 "a4",
@@ -166,8 +166,8 @@ def df_with_nan():
                 "x1",  # valid
                 1.0,  # valid, needs to map to the int value
                 2.0,  # valid, needs to map to the int value
-                3.0,  # valid, needs to map to the int value
-                4.0,  # valid, needs to map to the int value
+                3,  # valid, needs to map to the float value
+                4,  # valid, needs to map to the float value
                 float("nan"),  # should be ignored
                 "None",  # should be ignored
                 None,  # should be ignored

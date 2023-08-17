@@ -498,7 +498,7 @@ class CustomDataset(Dataset):
         """
         encodings = [
             self._get_sample_encoding(system, prompt, answer)
-            for idx, (prompt, answer, system) in enumerate(
+            for idx, (system, prompt, answer) in enumerate(
                 zip(
                     input_text_dict["systems"],
                     input_text_dict["prompts"],
@@ -516,12 +516,16 @@ class CustomDataset(Dataset):
                 if np.random.random() > self.cfg.augmentation.skip_parent_probability
             ]
             # randomly replace parent with another parent
-            if np.random.random() > self.cfg.augmentation.random_parent_probability:
+            if np.random.random() < self.cfg.augmentation.random_parent_probability:
                 idx = np.random.randint(len(self.conversation_chain_handler.prompts))
                 parent_encodings = [
                     self._get_sample_encoding(
-                        self.conversation_chain_handler.systems[idx],
-                        self.conversation_chain_handler.prompts[idx],
+                        self.parse_system(
+                            self.cfg, self.conversation_chain_handler.systems[idx]
+                        ),
+                        self.parse_prompt(
+                            self.cfg, self.conversation_chain_handler.prompts[idx]
+                        ),
                         self.conversation_chain_handler.answers[idx],
                     )
                 ] + parent_encodings[1:]
