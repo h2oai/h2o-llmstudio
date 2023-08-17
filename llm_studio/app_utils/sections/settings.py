@@ -3,7 +3,7 @@ import multiprocessing
 import torch
 from h2o_wave import Q, ui
 
-from app_utils.sections.common import clean_dashboard
+from llm_studio.app_utils.sections.common import clean_dashboard
 from llm_studio.src.loggers import Loggers
 
 

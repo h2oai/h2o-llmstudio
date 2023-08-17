@@ -70,7 +70,7 @@ This will allow you to revert to your existing version if needed.
 
 ### Once I have the [LoRA](guide/experiments/experiment-settings.md#lora), what is the recommended way of utilizing it with the base model?
 
-You can also export the LoRA weights. You may add them to the files to be exported [here](https://github.com/h2oai/h2o-llmstudio/blob/main/app_utils/sections/experiment.py#L1552). Before exporting, the LoRA weights are merged back into the original LLM backbone weights to make downstream tasks easier. You do not need to have PEFT, or anything else for your deployment.
+You can also export the LoRA weights. You may add them to the files to be exported [here](https://github.com/h2oai/h2o-llmstudio/blob/main/llm_studio/app_utils/sections/experiment.py#L1552). Before exporting, the LoRA weights are merged back into the original LLM backbone weights to make downstream tasks easier. You do not need to have PEFT, or anything else for your deployment.
 
 ---
 

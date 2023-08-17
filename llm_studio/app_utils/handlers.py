@@ -5,9 +5,9 @@ from typing import List
 import torch
 from h2o_wave import Q
 
-from app_utils.sections.chat import chat_tab, chat_update
-from app_utils.sections.common import delete_dialog
-from app_utils.sections.dataset import (
+from llm_studio.app_utils.sections.chat import chat_tab, chat_update
+from llm_studio.app_utils.sections.common import delete_dialog
+from llm_studio.app_utils.sections.dataset import (
     dataset_delete_current_datasets,
     dataset_delete_single,
     dataset_display,
@@ -19,7 +19,7 @@ from app_utils.sections.dataset import (
     dataset_merge,
     dataset_newexperiment,
 )
-from app_utils.sections.experiment import (
+from llm_studio.app_utils.sections.experiment import (
     experiment_delete,
     experiment_display,
     experiment_download_logs,
@@ -32,8 +32,8 @@ from app_utils.sections.experiment import (
     experiment_start,
     experiment_stop,
 )
-from app_utils.sections.home import home
-from app_utils.sections.project import (
+from llm_studio.app_utils.sections.home import home
+from llm_studio.app_utils.sections.project import (
     current_experiment_compare,
     current_experiment_list_compare,
     current_experiment_list_delete,
@@ -41,9 +41,9 @@ from app_utils.sections.project import (
     experiment_rename_action_workflow,
     list_current_experiments,
 )
-from app_utils.sections.settings import settings
-from app_utils.utils import add_model_type, load_user_settings, save_user_settings
-from app_utils.wave_utils import report_error, wave_utils_handle_error
+from llm_studio.app_utils.sections.settings import settings
+from llm_studio.app_utils.utils import add_model_type, load_user_settings, save_user_settings
+from llm_studio.app_utils.wave_utils import report_error, wave_utils_handle_error
 
 logger = logging.getLogger(__name__)
 
