@@ -30,14 +30,14 @@ USER_SETTING_KEYS = [key for key in default_cfg.user_settings if key not in SECR
 
 
 async def save_user_settings_and_secrets(q: Q):
-    _save_user_settings(q)
     await _save_secrets(q)
+    _save_user_settings(q)
 
 
 def load_user_settings_and_secrets(q: Q):
     _maybe_migrate_to_yaml(q)
-    _load_user_settings(q)
     _load_secrets(q)
+    _load_user_settings(q)
 
 
 def load_default_user_settings(q: Q):
@@ -261,22 +261,21 @@ def _maybe_migrate_to_yaml(q):
         with open(old_usersettings_path, "rb") as f:
             user_settings = pickle.load(f)
 
-        with open(_get_usersettings_path(q), "w") as f:
-            yaml.dump(
-                {
-                    key: value
-                    for key, value in user_settings.items()
-                    if key not in SECRET_KEYS
-                },
-                f,
-            )
-
         secret_name, secrets_handler = _get_secrets_handler(q)
         logger.info(f"Migrating token using {secret_name}")
         for key in SECRET_KEYS:
             if key in user_settings:
                 secrets_handler.save(key, user_settings[key])
 
+        with open(_get_usersettings_path(q), "w") as f:
+            yaml.dump(
+                {
+                    key: value
+                    for key, value in user_settings.items()
+                    if key in USER_SETTING_KEYS
+                },
+                f,
+            )
         os.remove(old_usersettings_path)
         logger.info(f"Successfully migrated tokens to {secret_name}. Old file deleted.")
     except Exception as e:
