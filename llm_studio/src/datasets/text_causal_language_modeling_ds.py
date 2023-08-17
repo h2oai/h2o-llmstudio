@@ -2,7 +2,7 @@ import codecs
 import collections.abc
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -14,15 +14,6 @@ from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class ConversationChainHandlerConfig:
-    system_column: str
-    prompt_column: str
-    answer_column: str
-    parent_id_column: Optional[str] = None
-    limit_chained_samples: bool = False
-
-
 class ConversationChainHandler:
     """
     Partitions the dataset into conversation chains.
@@ -30,25 +21,26 @@ class ConversationChainHandler:
     a triple of (system, prompt, answer).
     """
 
-    def __init__(self, df, conversation_chain_cfg: ConversationChainHandlerConfig):
-        if conversation_chain_cfg.parent_id_column != "None":
-            assert "id" in df.columns, "id column required for conversation chaining."
+    def __init__(self, df, cfg):
+        if cfg.dataset.parent_id_column != "None":
+            assert (
+                "id" in df.columns
+            ), f"id column required for conversation chaining, DataFrame only has {df.columns}."
 
-            id2children_id = {
-                parent_id: id
-                for id, parent_id in zip(
-                    df["id"], df[conversation_chain_cfg.parent_id_column]
-                )
+            id2parent_id = {
+                id: parent_id
+                for id, parent_id in zip(df["id"], df[cfg.dataset.parent_id_column])
+                if parent_id not in ["None", None]
             }
-            if conversation_chain_cfg.limit_chained_samples:
+            if cfg.dataset.limit_chained_samples:
                 conversation_start_ids = [
-                    idx for idx in df["id"].values if idx not in id2children_id
+                    idx for idx in df["id"].values if idx not in id2parent_id.values()
                 ]
             else:
                 conversation_start_ids = df["id"].values
 
             conversation_ids_lists = [
-                self.get_conversation_ids(id2children_id, conversation_start_id)
+                self.get_conversation_ids(id2parent_id, conversation_start_id)
                 for conversation_start_id in conversation_start_ids
             ]
             # map from df["id"] to enumeration index
@@ -66,39 +58,48 @@ class ConversationChainHandler:
             # no parent id column, so each sample is a conversation chain
             self.conversation_ids_lists = [[idx] for idx in range(len(df))]
 
-        self.prompts = get_texts(df, conversation_chain_cfg, separator="")
-        if conversation_chain_cfg.answer_column not in df.columns:
-            self.answers = df[conversation_chain_cfg.answer_column].astype(str).tolist()
+        self.prompts = get_texts(df, cfg, separator="")
+        if cfg.dataset.answer_column in df.columns:
+            self.answers = df[cfg.dataset.answer_column].astype(str).tolist()
         else:
             self.answers = ["" for _ in range(len(self.prompts))]
         self.systems = ["" for _ in range(len(self.prompts))]
 
-        if conversation_chain_cfg.system_column != "None":
-            if conversation_chain_cfg.system_column not in df.columns:
+        if cfg.dataset.system_column != "None":
+            if cfg.dataset.system_column not in df.columns:
                 logger.warning(
-                    f"System column {conversation_chain_cfg.system_column} not found."
+                    f"System column {cfg.dataset.system_column} not found."
                     f"Disabling functionality."
                 )
             else:
-                self.systems = (
-                    df[conversation_chain_cfg.system_column].astype(str).tolist()
-                )
+                self.systems = df[cfg.dataset.system_column].astype(str).tolist()
 
-    def get_conversation_ids(self, id2children_id, start_id):
+    @staticmethod
+    def get_conversation_ids(id2parent_id, start_id):
+        """
+        Gets the conversation chain for a given starting conversation ID.
+        Args:
+            id2parent_id: A dictionary containing the mapping of IDs to its previous parent ID.
+            start_id: The ID of the starting conversation in the chain.
+        Returns:
+            A list of conversation IDs representing the conversation chain. The chain is ordered from the
+            starting conversation to the last conversation in the chain.
+        """
         loop_counter = 0  # prevent infinite loops in case of circular parent chains (dataframe issue)
 
         conversation_chain_ids = [start_id]
-        current_id = start_id
-        while current_id in id2children_id:
+        parent_id = start_id
+        while parent_id in id2parent_id:
             loop_counter += 1
-            current_id = id2children_id[current_id]
-            conversation_chain_ids.append(current_id)
+            # get next parent id
+            parent_id = id2parent_id[parent_id]
+            conversation_chain_ids.append(parent_id)
             if loop_counter > 1000:
                 raise ValueError(
-                    f"Parent chain of sample with idx {start_id} exceeds max loop count. "
+                    f"Parent chain of sample with idx {start_id} exceeds max loop count of 1000. "
                     f"Please ensure that parent chain is not circular."
                 )
-        return conversation_chain_ids
+        return conversation_chain_ids[::-1]
 
     def __len__(self):
         return len(self.conversation_ids_lists)
@@ -145,16 +146,7 @@ class CustomDataset(Dataset):
         self.df = df.copy()
 
         self.tokenizer = get_tokenizer(self.cfg)
-        conversation_chain_cfg = ConversationChainHandlerConfig(
-            parent_id_column=self.cfg.dataset.parent_id_column,
-            limit_chained_samples=self.cfg.dataset.limit_chained_samples,
-            system_column=self.cfg.dataset.system_column,
-            prompt_column=self.cfg.dataset.prompt_column,
-            answer_column=self.cfg.dataset.answer_column,
-        )
-        self.conversation_chain_handler = ConversationChainHandler(
-            self.df, conversation_chain_cfg=conversation_chain_cfg
-        )
+        self.conversation_chain_handler = ConversationChainHandler(self.df, cfg)
         if cfg.environment._local_rank == 0:
             text_dict = self.conversation_chain_handler[0]
             self.parse_text_dict(text_dict)

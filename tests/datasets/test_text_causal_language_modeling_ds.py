@@ -10,11 +10,7 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMTokenizer,
     ConfigProblemBase,
 )
-from llm_studio.src.datasets.text_causal_language_modeling_ds import (
-    CustomDataset,
-    ConversationChainHandlerConfig,
-    ConversationChainHandler,
-)
+from llm_studio.src.datasets.text_causal_language_modeling_ds import CustomDataset
 
 
 def test_clean_output():
@@ -50,11 +46,13 @@ def test_clean_output():
 def test_sanity_check_raises_error():
     mock_config = MagicMock()
     mock_config.dataset.parent_id_column = "parent_id"
+    mock_config.dataset.answer_column = "answer"
 
     df_1 = pd.DataFrame(
         {
             "id": [1, 2, 3, 4],
             "parent_id": [2, None, 4, 1],
+            "answer": ["a", "b", "c", "d"],
             "other_data": ["a", "b", "c", "d"],
         }
     )
@@ -64,6 +62,7 @@ def test_sanity_check_raises_error():
         {
             "id": [1, 2, 3, 4],
             "parent_id": [None, None, None, None],
+            "answer": ["a", "b", "c", "d"],
             "other_data": ["a", "b", "c", "d"],
         }
     )
@@ -73,6 +72,7 @@ def test_sanity_check_raises_error():
         {
             "id": [1, 2, 3, 4],
             "parent_id": [1, 2, 3, 4],
+            "answer": ["a", "b", "c", "d"],
             "other_data": ["a", "b", "c", "d"],
         }
     )
@@ -127,58 +127,6 @@ def test_init(mock_auto_tokenizer):
 
     assert dataset.df.equals(df)
     assert dataset.mode == "train"
-
-
-def test_get_parent_ids(mock_auto_tokenizer):
-    df = pd.DataFrame(
-        {
-            "prompt": ["prompt 1", "prompt 2", "prompt 3"],
-            "answer": ["answer 1", "answer 2", "answer 3"],
-            "parent_id": [None, 0, 1],
-            "id": [0, 1, 2],
-        }
-    )
-
-    cfg = mock.MagicMock()
-    cfg.dataset.prompt_column = "prompt"
-    cfg.dataset.answer_column = "answer"
-    cfg.dataset.parent_id_column = "parent_id"
-    cfg.dataset.text_system_start = "System:"
-    cfg.dataset.text_prompt_start = "Prompt:"
-    cfg.dataset.text_answer_separator = "Answer:"
-
-    dataset = CustomDataset(df, cfg)
-
-    assert dataset.get_parent_ids(0) == []
-    assert dataset.get_parent_ids(1) == [0]
-    assert dataset.get_parent_ids(2) == [0, 1]
-
-
-def test_loop_fails(mock_auto_tokenizer):
-    df = pd.DataFrame(
-        {
-            "prompt": ["prompt 1", "prompt 2", "prompt 3"],
-            "answer": ["answer 1", "answer 2", "answer 3"],
-            "parent_id": [0, 1, 2],
-            "id": [1, 2, 0],
-        }
-    )
-
-    cfg = mock.MagicMock()
-    cfg.dataset.prompt_column = "prompt"
-    cfg.dataset.answer_column = "answer"
-    cfg.dataset.parent_id_column = "parent_id"
-    cfg.dataset.text_system_start = "System:"
-    cfg.dataset.text_prompt_start = "Prompt:"
-    cfg.dataset.text_answer_separator = "Answer:"
-
-    dataset = CustomDataset(df, cfg)
-    with pytest.raises(
-        ValueError,
-        match="Parent chain of sample with idx 2 exceeds max loop count. "
-        "Please ensure that parent chain is not circular.",
-    ):
-        dataset.get_parent_ids(2)
 
 
 def test_getitem():
@@ -270,168 +218,3 @@ def test_getitem():
 
     assert result["input_ids"].shape == (513,)
     assert result["prompt_input_ids"].shape == (513,)
-
-
-def test_conversation_chain_handler():
-    # create some mock data
-    df = pd.DataFrame(
-        {
-            "id": ["id1", "id2", "id3", "id4"],
-            "parent_id": ["None", "id1", "id2", "id3"],
-            "answer": ["answer1", "answer2", "answer3", "answer4"],
-            "system": ["system1", "system2", "system3", "system4"],
-            "prompt": ["prompt1", "prompt2", "prompt3", "prompt4"],
-        }
-    )
-
-    # Create a ConversationChainHandlerConfig
-    conversation_chain_cfg = ConversationChainHandlerConfig(
-        parent_id_column="parent_id",
-        system_column="system",
-        prompt_column="prompt",
-        answer_column="answer",
-        limit_chained_samples=False,
-    )
-
-    # create an instance of the ConversationChainHandler with the mock data and config
-    handler = ConversationChainHandler(df, conversation_chain_cfg)
-
-    # test the __len__ method
-    assert len(handler) == 4
-
-    # test the __getitem__ method
-    data = handler[0]
-    assert data == {
-        "prompts": ["prompt1"],
-        "answers": ["answer1"],
-        "systems": ["system1"],
-    }
-
-    # test the get_conversation_ids method - normal case
-    conv_ids = handler.get_conversation_ids(
-        {"id2": "id1", "id3": "id2", "id4": "id3", "id1": "None"}, "id4"
-    )
-    assert conv_ids == ["id4", "id3", "id2", "id1"]
-
-    # test the get_conversation_ids method - circular case, should raise ValueError
-    with pytest.raises(ValueError):
-        handler.get_conversation_ids(
-            {"id1": "id4", "id2": "id1", "id3": "id2", "id4": "id3"}, "id4"
-        )
-
-
-def test_no_parent_column():
-    # Test case where the configuration does not include a parent_id column
-    df = pd.DataFrame(
-        {
-            "id": ["id1", "id2", "id3", "id4"],
-            "answer": ["answer1", "answer2", "answer3", "answer4"],
-            "system": ["system1", "system2", "system3", "system4"],
-            "prompt": ["prompt1", "prompt2", "prompt3", "prompt4"],
-        }
-    )
-
-    conversation_chain_cfg = ConversationChainHandlerConfig(
-        parent_id_column="None",
-        system_column="system",
-        prompt_column="prompt",
-        answer_column="answer",
-    )
-
-    handler = ConversationChainHandler(df, conversation_chain_cfg)
-
-    assert len(handler) == 4
-    assert handler[2] == {
-        "prompts": ["prompt3"],
-        "answers": ["answer3"],
-        "systems": ["system3"],
-    }
-
-
-def test_no_system_column():
-    # Test case where the configuration does not include a system column
-    df = pd.DataFrame(
-        {
-            "id": ["id1", "id2", "id3", "id4"],
-            "parent_id": ["None", "id1", "id2", "id3"],
-            "answer": ["answer1", "answer2", "answer3", "answer4"],
-            "prompt": ["prompt1", "prompt2", "prompt3", "prompt4"],
-        }
-    )
-
-    conversation_chain_cfg = ConversationChainHandlerConfig(
-        parent_id_column="parent_id",
-        system_column="None",
-        prompt_column="prompt",
-        answer_column="answer",
-    )
-
-    handler = ConversationChainHandler(df, conversation_chain_cfg)
-
-    assert handler[3]["systems"] == [""]
-
-
-def test_limit_chained_samples():
-    # Test case where limit_chained_samples is enabled
-    df = pd.DataFrame(
-        {
-            "id": ["id1", "id2", "id3", "id4"],
-            "parent_id": ["None", "id1", "id2", "id3"],
-            "answer": ["answer1", "answer2", "answer3", "answer4"],
-            "system": ["system1", "system2", "system3", "system4"],
-            "prompt": ["prompt1", "prompt2", "prompt3", "prompt4"],
-        }
-    )
-
-    conversation_chain_cfg = ConversationChainHandlerConfig(
-        parent_id_column="parent_id",
-        system_column="system",
-        prompt_column="prompt",
-        answer_column="answer",
-        limit_chained_samples=True,
-    )
-
-    handler = ConversationChainHandler(df, conversation_chain_cfg)
-
-    assert handler[0] == {
-        "prompts": ["prompt1"],
-        "answers": ["answer1"],
-        "systems": ["system1"],
-    }
-
-
-def test_no_answer_column():
-    # Test case where the answer column does not exist in dataframe. It should default to empty string
-    df = pd.DataFrame(
-        {
-            "id": ["id1", "id2", "id3", "id4"],
-            "parent_id": ["None", "id1", "id2", "id3"],
-            "system": ["system1", "system2", "system3", "system4"],
-            "prompt": ["prompt1", "prompt2", "prompt3", "prompt4"],
-        }
-    )
-
-    conversation_chain_cfg = ConversationChainHandlerConfig(
-        parent_id_column="parent_id",
-        system_column="system",
-        prompt_column="prompt",
-        answer_column="non_existent",
-    )
-
-    handler = ConversationChainHandler(df, conversation_chain_cfg)
-
-    assert handler[0]["answers"] == [""]
-
-
-def test_empty_dataframe():
-    # Test case where input dataframe is empty
-    df = pd.DataFrame()
-
-    conversation_chain_cfg = ConversationChainHandlerConfig(
-        system_column="system",
-        prompt_column="prompt",
-        answer_column="answer",
-    )
-
-    handler = ConversationChainHandler(df, conversation_chain_cfg)
-    assert len(handler) == 0
