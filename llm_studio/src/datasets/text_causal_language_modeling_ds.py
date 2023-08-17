@@ -397,29 +397,7 @@ class CustomDataset(Dataset):
         ]
 
         if self.mode == "train":
-            parent_encodings = encodings[:-1]
-            # randomly skip parent
-            parent_encodings = [
-                encoding
-                for idx, encoding in enumerate(parent_encodings)
-                if np.random.random() > self.cfg.augmentation.skip_parent_probability
-            ]
-            # randomly replace parent with another parent
-            if np.random.random() < self.cfg.augmentation.random_parent_probability:
-                idx = np.random.randint(len(self.conversation_chain_handler.prompts))
-                parent_encodings = [
-                    self._get_sample_encoding(
-                        self.parse_system(
-                            self.cfg, self.conversation_chain_handler.systems[idx]
-                        ),
-                        self.parse_prompt(
-                            self.cfg, self.conversation_chain_handler.prompts[idx]
-                        ),
-                        self.conversation_chain_handler.answers[idx],
-                    )
-                ] + parent_encodings[1:]
-
-            encodings = parent_encodings + [encodings[-1]]
+            encodings = self.augment_data(encodings)
 
         system_encoding = encodings[0][0]
         prompt_encodings = [encoding[1] for encoding in encodings]
@@ -431,6 +409,31 @@ class CustomDataset(Dataset):
             prompt_encodings,
             answer_encodings,
         )
+
+    def augment_data(self, encodings):
+        parent_encodings = encodings[:-1]
+        # randomly skip parent
+        parent_encodings = [
+            encoding
+            for idx, encoding in enumerate(parent_encodings)
+            if np.random.random() > self.cfg.augmentation.skip_parent_probability
+        ]
+        # randomly replace parent with another parent
+        if np.random.random() < self.cfg.augmentation.random_parent_probability:
+            idx = np.random.randint(len(self.conversation_chain_handler.prompts))
+            parent_encodings = [
+                self._get_sample_encoding(
+                    self.parse_system(
+                        self.cfg, self.conversation_chain_handler.systems[idx]
+                    ),
+                    self.parse_prompt(
+                        self.cfg, self.conversation_chain_handler.prompts[idx]
+                    ),
+                    self.conversation_chain_handler.answers[idx],
+                )
+            ] + parent_encodings[1:]
+        encodings = parent_encodings + [encodings[-1]]
+        return encodings
 
     def _get_sample_encoding(self, system: str, prompt: str, answer: str) -> List:
         if len(system) > 0:
