@@ -1308,7 +1308,14 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
     info = defaultdict(list)
     for _, row in df.iterrows():
         try:
+            # load_config_yaml issues a warning if the yaml file contains keys
+            # that are no longer part of the dataclass fields.
+            # This can happen if the codebase has changed since the experiment was run.
+            # Ignore those warnings here
+            logging_level = logging.getLogger().level
+            logging.getLogger().setLevel(logging.ERROR)
             cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
+            logging.getLogger().setLevel(logging_level)
         except Exception:
             cfg = None
 
@@ -1453,7 +1460,10 @@ def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
         path = row.path + "/"
 
         try:
+            logging_level = logging.getLogger().level
+            logging.getLogger().setLevel(logging.ERROR)
             cfg = load_config_yaml(config_file)
+            logging.getLogger().setLevel(logging_level)
         except Exception as e:
             logger.warning(f"Could not load configuration from {config_file}. {e}")
             cfg = None
