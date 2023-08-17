@@ -218,3 +218,9 @@ def test_getitem():
 
     assert result["input_ids"].shape == (513,)
     assert result["prompt_input_ids"].shape == (513,)
+
+
+    dataset.get_chained_prompt_text_list(0)
+
+
+

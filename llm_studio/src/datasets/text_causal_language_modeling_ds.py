@@ -569,20 +569,15 @@ class CustomDataset(Dataset):
     def get_chained_prompt_text_list(self, idx) -> List[str]:
         text_separator = "TEXT_SEPARATOR"
         text_dict = self.conversation_chain_handler[idx]
-        # system_prompt == Start of conversation
         chat_history = "".join(
             [
                 prompt + text_separator + answer + text_separator
                 for prompt, answer in zip(
-                    text_dict["prompt"][:-1], text_dict["answer"][:-1]
+                    text_dict["prompts"][:-1], text_dict["answers"][:-1]
                 )
             ]
         )
-
-        # system prompt may be an empty string
-        prompt_text = (
-            text_dict["system_prompt"][0] + chat_history + text_dict["prompt"][-1]
-        )
+        prompt_text = text_dict["systems"][0] + chat_history + text_dict["prompts"][-1]
         return prompt_text.split(text_separator)
 
     def pad_tokens(
