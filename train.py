@@ -52,7 +52,6 @@ from llm_studio.src.utils.logging_utils import (
 )
 from llm_studio.src.utils.modeling_utils import (
     check_disk_space,
-    deepspeed_initialize,
     get_ds_config,
     get_number_of_validation_epochs,
     get_optimizer,
@@ -709,10 +708,13 @@ def run(cfg: Any) -> None:
 
     if cfg.environment.use_deepspeed and cfg.environment.use_fsdp:
         raise ValueError("Deepspeed and FSDP cannot be used at the same time.")
-    if cfg.architecture.backbone_dtype in ["int8", "int4"] and cfg.environment.use_deepspeed:
+    if (
+        cfg.architecture.backbone_dtype in ["int8", "int4"]
+        and cfg.environment.use_deepspeed
+    ):
         raise ValueError(
-            f"Deepspeed do not support backbone type {cfg.architecture.backbone_dtype}. " +
-            "Please set backbone type to float16 or bfloat16 for using deepspeed."
+            f"Deepspeed do not support backbone type {cfg.architecture.backbone_dtype}."
+            + " Please set backbone type to float16 or bfloat16 for using deepspeed."
         )
 
     # Prepare environment

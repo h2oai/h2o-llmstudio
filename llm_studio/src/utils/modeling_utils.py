@@ -244,7 +244,7 @@ def get_ds_config(cfg: Any):
     return ds_config
 
 
-def deepspeed_initialize(
+def wrap_model_distributed(
     model: torch.nn.Module,
     optimizer: torch.optim.Optimizer,
     lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
@@ -252,24 +252,7 @@ def deepspeed_initialize(
     validating_data: torch.utils.data.Dataset,
     cfg: Any,
 ):
-    ds_config = get_ds_config(cfg)
-    model, optimizer, train_dataloader, scheduler = deepspeed.initialize(
-        model=model,
-        optimizer=optimizer,
-        lr_scheduler=lr_scheduler,
-        training_data=training_data,
-        config_params=ds_config,
-    )
-    _, _, val_dataloader, _ = deepspeed.initialize(
-        model=torch.nn.Linear(1, 1),
-        training_data=validating_data,
-        config_params=ds_config,
-    )
-    return model, optimizer, train_dataloader, val_dataloader, scheduler
-
-
-def wrap_model_distributed(model: torch.nn.Module, cfg: Any, fsdp: bool):
-    if fsdp:
+    if cfg.environment.use_fsdp:
         auto_wrap_policy = None
 
         mixed_precision_policy = None
@@ -290,6 +273,20 @@ def wrap_model_distributed(model: torch.nn.Module, cfg: Any, fsdp: bool):
             # use_orig_params=False
             limit_all_gathers=True,
         )
+    elif cfg.environment.use_deepspeed:
+        ds_config = get_ds_config(cfg)
+        model, optimizer, train_dataloader, scheduler = deepspeed.initialize(
+            model=model,
+            optimizer=optimizer,
+            lr_scheduler=lr_scheduler,
+            training_data=training_data,
+            config_params=ds_config,
+        )
+        _, _, val_dataloader, _ = deepspeed.initialize(
+            model=torch.nn.Linear(1, 1),
+            training_data=validating_data,
+            config_params=ds_config,
+        )
     else:
         find_unused_parameters = cfg.environment.find_unused_parameters
         if getattr(cfg.architecture, "gradient_checkpointing", None):
@@ -300,7 +297,7 @@ def wrap_model_distributed(model: torch.nn.Module, cfg: Any, fsdp: bool):
             find_unused_parameters=find_unused_parameters,
         )
 
-    return model
+    return model, optimizer, train_dataloader, val_dataloader, scheduler
 
 
 def get_optimizer(model: torch.nn.Module, cfg: Any) -> torch.optim.Optimizer:
