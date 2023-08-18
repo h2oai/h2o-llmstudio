@@ -841,12 +841,18 @@ def run(cfg: Any) -> None:
     if cfg.environment._distributed and not cfg.environment.use_deepspeed:
         model = wrap_model_distributed(model, cfg, cfg.environment.use_fsdp)
 
-    # deepspeed do not support torch.compile
-    if cfg.environment.compile_model and not cfg.environment.use_deepspeed:
-        if cfg.environment._distributed:
-            model.module.backbone = torch.compile(model.module.backbone)
+    if cfg.environment.compile_model
+        # deepspeed do not support torch.compile
+        if cfg.environment.use_deepspeed:
+            logger.warning(
+                "Deepspeed is active, but it doesn't support torch.compile."
+                "Skipping compilation for this experiment."
+            )
         else:
-            model.backbone = torch.compile(model.backbone)
+            if cfg.environment._distributed:
+                model.module.backbone = torch.compile(model.module.backbone)
+            else:
+                model.backbone = torch.compile(model.backbone)
 
     # Force settings when saving best checkpoint
     if cfg.training.save_best_checkpoint:
