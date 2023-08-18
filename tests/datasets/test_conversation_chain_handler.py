@@ -120,14 +120,14 @@ def test_incomplete_chained_samples(cfg, df_short):
 
 def test_get_conversation_ids():
     # test the get_conversation_ids method - normal case
-    conv_ids = ConversationChainHandler.get_conversation_ids(
+    conv_ids = ConversationChainHandler.get_single_conversation_ids(
         {"id2": "id1", "id3": "id2", "id4": "id3"}, "id4"
     )
     assert conv_ids == ["id1", "id2", "id3", "id4"]
 
     # test the get_conversation_ids method - circular case, should raise ValueError
     with pytest.raises(ValueError):
-        ConversationChainHandler.get_conversation_ids(
+        ConversationChainHandler.get_single_conversation_ids(
             {"id1": "id4", "id2": "id1", "id3": "id2", "id4": "id3"}, "id4"
         )
 

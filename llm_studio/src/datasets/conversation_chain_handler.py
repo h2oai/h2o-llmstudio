@@ -9,10 +9,42 @@ logger = logging.getLogger(__name__)
 
 class ConversationChainHandler:
     """
-    Partitions the dataset into conversation chains.
-    The conversation chains consists of a list of conversations,
-    where each conversation round consists of
-    a triple of (system, prompt, answer).
+    This class partitions the dataset into chains of conversations.
+    Each chain is comprised of a list of conversation rounds.
+    Each round within a conversation is represented as a triplet:
+     (system, prompt, answer).
+
+    The resulting structure of the chains is conditional on
+    the DataFrame's structure and configuration:
+
+    - Without a 'parent_id' in the DataFrame, each conversation chain is a single round.
+     So, for every `i`-th row in the DataFrame, 0 <= `i` < len(df),
+     the chain would look like: [(system_i, prompt_i, answer_i)]
+
+    - With a 'parent_id' in the DataFrame and
+      if `cfg.dataset.limit_chained_samples` is set to False,
+      each chain encapsulates all preceding conversations
+      for every `i`-th row in the DataFrame,
+      0 <= `i` < len(df).
+      The resultant chain would take shape:
+          [(system_start_conversation_i,
+            prompt_start_conversation_i,
+            answer_start_conversation_i),
+           ...,
+           (system_i, prompt_i, answer_i)]
+
+    - With a 'parent_id' in the DataFrame and
+      if `cfg.dataset.limit_chained_samples` is set to True,
+      each conversation chain incorporates only full conversations.
+      The chain hence condenses into:
+          [(system_start_conversation_i,
+            prompt_start_conversation_i,
+            answer_start_conversation_i),
+           ...,
+          (system_end_conversation_i,
+           prompt_end_conversation_i,
+           answer_end_conversation_i)]
+      where `i` represents complete conversations only.
     """
 
     def __init__(
@@ -20,56 +52,20 @@ class ConversationChainHandler:
         df,
         cfg,
     ):
-        if cfg.dataset.parent_id_column != "None":
-            assert "id" in df.columns, (
-                f"id column required for conversation chaining, "
-                f"DataFrame only has {df.columns}."
-            )
-            sample_ids = (
-                df["id"].astype(df[cfg.dataset.parent_id_column].dtype).tolist()
-            )
-            parent_ids = df[cfg.dataset.parent_id_column].tolist()
-
-            id2parent_id = {
-                id: parent_id
-                for id, parent_id in zip(sample_ids, parent_ids)
-                if parent_id not in [None, "None"]
-                and (
-                    not isinstance(parent_id, float)
-                    or (not np.isnan(parent_id) and not np.isinf(parent_id))
-                )
-            }
-            if cfg.dataset.limit_chained_samples:
-                conversation_start_ids = [
-                    idx for idx in sample_ids if idx not in id2parent_id.values()
-                ]
-            else:
-                conversation_start_ids = sample_ids
-
-            conversation_ids_lists = [
-                self.get_conversation_ids(id2parent_id, conversation_start_id)
-                for conversation_start_id in conversation_start_ids
-            ]
-            # map from df["id"] to enumeration index
-            dataframeid2idx = {id: idx for idx, id in enumerate(sample_ids)}
-            self.conversation_ids_lists = [
-                [
-                    dataframeid2idx[conversation_id]
-                    for conversation_id in conversation_ids
-                ]
-                for conversation_ids in conversation_ids_lists
-            ]
-        else:
+        if cfg.dataset.parent_id_column == "None":
             # no parent id column, so each sample is a conversation chain
             self.conversation_ids_lists = [[idx] for idx in range(len(df))]
+        else:
+            self.conversation_ids_lists = self.get_conversation_chain_ids(cfg, df)
 
         self.prompts = get_texts(df, cfg, separator="")
+
         if cfg.dataset.answer_column in df.columns:
             self.answers = df[cfg.dataset.answer_column].astype(str).tolist()
         else:
             self.answers = ["" for _ in range(len(self.prompts))]
-        self.systems = ["" for _ in range(len(self.prompts))]
 
+        self.systems = ["" for _ in range(len(self.prompts))]
         if cfg.dataset.system_column != "None":
             if cfg.dataset.system_column not in df.columns:
                 logger.warning(
@@ -79,8 +75,43 @@ class ConversationChainHandler:
             else:
                 self.systems = df[cfg.dataset.system_column].astype(str).tolist()
 
+    def get_conversation_chain_ids(self, cfg, df):
+        assert "id" in df.columns, (
+            f"id column required for conversation chaining, "
+            f"DataFrame only has {df.columns}."
+        )
+        sample_ids = df["id"].astype(df[cfg.dataset.parent_id_column].dtype).tolist()
+        parent_ids = df[cfg.dataset.parent_id_column].tolist()
+
+        id2parent_id = {
+            id: parent_id
+            for id, parent_id in zip(sample_ids, parent_ids)
+            if parent_id not in [None, "None"]
+            and (
+                not isinstance(parent_id, float)
+                or (not np.isnan(parent_id) and not np.isinf(parent_id))
+            )
+        }
+        if cfg.dataset.limit_chained_samples:
+            conversation_start_ids = [
+                idx for idx in sample_ids if idx not in id2parent_id.values()
+            ]
+        else:
+            conversation_start_ids = sample_ids
+        conversation_ids_lists = [
+            self.get_single_conversation_ids(id2parent_id, conversation_start_id)
+            for conversation_start_id in conversation_start_ids
+        ]
+        # map from df["id"] to enumeration index
+        dataframeid2idx = {id: idx for idx, id in enumerate(sample_ids)}
+        conversation_ids_lists = [
+            [dataframeid2idx[conversation_id] for conversation_id in conversation_ids]
+            for conversation_ids in conversation_ids_lists
+        ]
+        return conversation_ids_lists
+
     @staticmethod
-    def get_conversation_ids(id2parent_id, start_id):
+    def get_single_conversation_ids(id2parent_id, start_id):
         """
         Gets the conversation chain for a given starting conversation ID.
         Args:
