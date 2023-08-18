@@ -83,9 +83,7 @@ def test_oasst_training(tmp_path, config_name):
 
     assert status == "finished"
 
-    assert os.path.exists(
-        os.path.join(cfg["output_directory"], "adapter_model.bin")
-    )
+    assert os.path.exists(os.path.join(cfg["output_directory"], "adapter_model.bin"))
     assert os.path.exists(os.path.join(cfg["output_directory"], "charts.db"))
     assert os.path.exists(os.path.join(cfg["output_directory"], "checkpoint.pth"))
     assert os.path.exists(os.path.join(cfg["output_directory"], "logs.log"))
