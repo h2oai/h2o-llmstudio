@@ -93,3 +93,5 @@ def test_oasst_training(tmp_path, config_name):
 
     else:
         print("Skipping test_oasst_training because CUDA is not available.")
+        # force test to fail
+        assert False
