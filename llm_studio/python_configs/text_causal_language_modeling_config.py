@@ -227,9 +227,9 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self._possible_values["max_length_prompt"] = (32, 8192, 32)
-        self._possible_values["max_length_answer"] = (32, 8192, 32)
-        self._possible_values["max_length"] = (32, 8192, 32)
+        self._possible_values["max_length_prompt"] = (32, 1024 * 16, 32)
+        self._possible_values["max_length_answer"] = (32, 1024 * 16, 32)
+        self._possible_values["max_length"] = (32, 1024 * 16, 32)
         self._possible_values["padding_quantile"] = (0, 1, 0.01)
         self._padding_side = "left"
 
