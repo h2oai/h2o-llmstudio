@@ -1,8 +1,10 @@
 import argparse
 import logging
 import sys
+import os
 
 from app_utils import hugging_face_utils
+from app_utils.utils import hf_repo_friendly_name
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
@@ -64,6 +66,12 @@ if __name__ == "__main__":
     user_id = getattr(parser_args, "user_id", "")
     model_name = getattr(parser_args, "model_name", "")
 
+    # If the model_name argument is not provided, 
+    # the function derives a model name from the last folder name
+    if model_name == "":
+        path_to_experiment = path_to_experiment.rstrip('/')
+        model_name = hf_repo_friendly_name(os.path.basename(path_to_experiment))
+        
     try:
         hugging_face_utils.publish_model_to_hugging_face(
             path_to_experiment=path_to_experiment,
