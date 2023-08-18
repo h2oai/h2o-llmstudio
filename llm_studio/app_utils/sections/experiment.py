@@ -42,7 +42,7 @@ from llm_studio.app_utils.utils import (
     start_experiment,
 )
 from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
-from llm_studio.src.dataset.text_utils import get_tokenizer
+from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
     load_config_py,

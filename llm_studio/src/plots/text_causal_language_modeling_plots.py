@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 import pandas as pd
 
-from llm_studio.src.dataset.text_utils import get_texts, get_tokenizer
+from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
 from llm_studio.src.utils.data_utils import (
     read_dataframe_drop_missing_labels,
     sample_indices,

@@ -5,7 +5,7 @@ from typing import Any, Tuple
 
 import torch
 
-import llm_studio.src.dataset.text_causal_language_modeling_ds
+import llm_studio.src.datasets.text_causal_language_modeling_ds
 from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
 from llm_studio.src import possible_values
 from llm_studio.src.augmentations.nlp_aug import BaseNLPAug
@@ -23,7 +23,7 @@ from llm_studio.src.utils.modeling_utils import generate_experiment_name
 @dataclass
 class ConfigNLPCausalLMDataset(DefaultConfig):
     dataset_class: Any = (
-        llm_studio.src.dataset.text_causal_language_modeling_ds.CustomDataset
+        llm_studio.src.datasets.text_causal_language_modeling_ds.CustomDataset
     )
 
     personalize: bool = False

@@ -8,7 +8,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-from llm_studio.src.dataset.text_utils import get_texts, get_tokenizer
+from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
 
 logger = logging.getLogger(__name__)
 

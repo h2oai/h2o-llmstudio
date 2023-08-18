@@ -5,10 +5,10 @@ import numpy as np
 import pandas as pd
 import torch
 
-from llm_studio.src.dataset.text_causal_language_modeling_ds import (
+from llm_studio.src.datasets.text_causal_language_modeling_ds import (
     CustomDataset as CausalLMCustomDataset,
 )
-from llm_studio.src.dataset.text_utils import get_texts
+from llm_studio.src.datasets.text_utils import get_texts
 
 logger = logging.getLogger(__name__)
 

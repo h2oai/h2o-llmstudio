@@ -20,7 +20,7 @@ from llm_studio.app_utils.utils import (
     parse_ui_elements,
     set_env,
 )
-from llm_studio.src.dataset.text_utils import get_tokenizer
+from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.models.text_causal_language_modeling_model import Model
 from llm_studio.src.utils.config_utils import load_config_yaml
 from llm_studio.src.utils.modeling_utils import load_checkpoint

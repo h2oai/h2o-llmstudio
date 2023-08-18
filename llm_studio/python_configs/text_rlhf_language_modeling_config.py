@@ -15,7 +15,7 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMTraining,
 )
 from llm_studio.src import possible_values
-from llm_studio.src.dataset.text_rlhf_modeling_ds import CustomDataset
+from llm_studio.src.datasets.text_rlhf_modeling_ds import CustomDataset
 from llm_studio.src.models import text_reward_model
 from llm_studio.src.utils.modeling_utils import generate_experiment_name
 
