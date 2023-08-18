@@ -199,7 +199,6 @@ def load_checkpoint(
 
 
 def get_ds_config(cfg: Any):
-
     ds_config = {
         "fp16": {
             "enabled": True if cfg.architecture.backbone_dtype == "float16" else False,
