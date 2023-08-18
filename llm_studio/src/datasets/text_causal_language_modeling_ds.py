@@ -85,11 +85,10 @@ class CustomDataset(Dataset):
                 )
             ]
         )
-        prompt_attention_mask = torch.ones_like(prompt_input_ids)
         sample.update(
             self.pad_tokens(
                 prompt_input_ids,
-                attention_mask=prompt_attention_mask,
+                attention_mask=torch.ones_like(prompt_input_ids),
                 max_length=self.cfg.tokenizer.max_length,
                 pad_token_id=self.tokenizer.pad_token_id,
                 prefix="prompt_",
