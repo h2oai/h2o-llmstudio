@@ -142,7 +142,7 @@ def get_size_str(
 
     act_i = 0
     if output_unit == "dynamic":
-        while x >= 1024 and act_i < len(names):
+        while x >= 1024 and act_i < len(names) - 1:
             x /= 1024
             act_i += 1
     else:

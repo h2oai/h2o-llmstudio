@@ -9,6 +9,8 @@ from typing import Any, Dict
 import coolname
 import numpy as np
 import torch
+from peft import LoraConfig, get_peft_model
+from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
 from torch.cuda.amp import autocast
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
@@ -16,12 +18,24 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
 )
 from torch.nn.parallel import DistributedDataParallel
 from tqdm import tqdm
-from transformers import AutoConfig, AutoModel, BitsAndBytesConfig
+from transformers import (
+    AutoConfig,
+    AutoModel,
+    BitsAndBytesConfig,
+    GenerationMixin,
+    StoppingCriteria,
+    StoppingCriteriaList,
+)
+from transformers.utils import logging as transformers_logging
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
-from llm_studio.src.utils.data_utils import cat_batches, get_inference_batch_size
+from llm_studio.src.utils.data_utils import (
+    batch_padding,
+    cat_batches,
+    get_inference_batch_size,
+)
 from llm_studio.src.utils.exceptions import LLMDataException, LLMModelException
 from llm_studio.src.utils.logging_utils import TqdmToLogger
 from llm_studio.src.utils.utils import save_pickle
@@ -620,3 +634,163 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         backbone.generation_config.bos_token_id = config.bos_token_id
 
     return backbone, config
+
+
+class TokenStoppingCriteria(StoppingCriteria):
+    """
+    Stopping criteria based on tokens.
+    Will stop generation when each generated sample contains at least one of the
+    stop_word_ids.
+    """
+
+    def __init__(self, stop_word_ids, prompt_input_ids_len):
+        super().__init__()
+        self.prompt_input_ids_len = prompt_input_ids_len
+        if stop_word_ids is None:
+            stop_word_ids = []
+        self.stop_word_ids = stop_word_ids
+
+    def should_stop(
+        self,
+        generated_ids: torch.Tensor,
+        stop_word_id: torch.Tensor,
+    ):
+        if len(stop_word_id.shape) == 0:
+            return (
+                torch.mean(((generated_ids == stop_word_id).sum(1) > 0).float()) == 1
+            ).item()
+        else:
+            return (
+                self.get_num_vector_found_in_matrix_rows(stop_word_id, generated_ids)
+                == generated_ids.shape[0]
+            )
+
+    @staticmethod
+    def get_num_vector_found_in_matrix_rows(vector, matrix):
+        """
+        Count the number of times a vector is found in a matrix row.
+        If the vector is found in a row, the search stops and the next row is searched.
+        """
+        assert len(vector.shape) == 1
+        assert len(matrix.shape) == 2
+
+        found = 0
+        for row in matrix:
+            # stride through the vector
+            for i in range(len(row) - len(vector) + 1):
+                # check if the vector contains the tensor
+                if torch.all(row[i : i + len(vector)] == vector):
+                    found += 1
+                    break
+
+        return found
+
+    def __call__(self, input_ids: torch.Tensor, scores: torch.FloatTensor, **kwargs):
+        generated_ids: torch.Tensor = input_ids[:, self.prompt_input_ids_len :]
+        for stop_word_id in self.stop_word_ids:
+            if self.should_stop(generated_ids, stop_word_id.to(generated_ids.device)):
+                if generated_ids.shape[1] == 1:
+                    logger.warning(
+                        f"Stopping criteria triggered for {stop_word_id} at first "
+                        "generated token."
+                    )
+                return True
+        return False
+
+
+def prepare_lora(cfg, backbone):
+    target_modules = (
+        [
+            lora_target_module.strip()
+            for lora_target_module in cfg.training.lora_target_modules.strip().split(  # noqa: E501
+                ","
+            )
+        ]
+        if cfg.training.lora_target_modules
+        else None
+    )
+    if (
+        not target_modules
+        and backbone.config.model_type
+        not in TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
+    ):
+        # extend LORA automatic target module mapping.
+        target_modules = {
+            "RefinedWebModel": [
+                "query_key_value",
+                "dense_h_to_4h",
+                "dense_4h_to_h",
+                "dense",
+            ],
+        }.get(backbone.config.model_type)
+    lora_config = LoraConfig(
+        r=cfg.training.lora_r,
+        lora_alpha=cfg.training.lora_alpha,
+        target_modules=target_modules,
+        lora_dropout=cfg.training.lora_dropout,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+    if cfg.architecture.gradient_checkpointing:
+        backbone.enable_input_require_grads()
+    backbone = get_peft_model(backbone, lora_config)
+    backbone.print_trainable_parameters()
+    return backbone
+
+
+def generate(backbone, batch, cfg, streamer, remove_prompt=True):
+    mask_key = "prompt_attention_mask"
+    pad_keys = [
+        "prompt_input_ids",
+        "prompt_attention_mask",
+    ]
+    batch = batch_padding(
+        cfg,
+        batch,
+        training=False,
+        mask_key=mask_key,
+        pad_keys=pad_keys,
+    )
+    input_ids = batch["prompt_input_ids"]
+    attention_mask = batch["prompt_attention_mask"]
+    # Adding GenerationMixin type annotation for faster lookup
+    generation_function: GenerationMixin.generate = backbone.generate
+    verbosity = transformers_logging.get_verbosity()
+    stopping_criteria = StoppingCriteriaList(
+        [
+            TokenStoppingCriteria(
+                stop_word_ids=cfg.tokenizer._stop_words_ids,
+                prompt_input_ids_len=input_ids.shape[1],
+            )
+        ]
+    )
+    # force to use cache and disable gradient checkpointing if enabled
+    backbone.config.use_cache = True
+    if cfg.architecture.gradient_checkpointing:
+        backbone.gradient_checkpointing_disable()
+    transformers_logging.set_verbosity_error()
+    output = generation_function(
+        inputs=input_ids,
+        attention_mask=attention_mask,
+        generation_config=backbone.generation_config,
+        min_new_tokens=cfg.prediction.min_length_inference,
+        max_new_tokens=cfg.prediction.max_length_inference,
+        do_sample=cfg.prediction.do_sample,
+        num_beams=cfg.prediction.num_beams,
+        temperature=(float(cfg.prediction.temperature)),
+        repetition_penalty=(float(cfg.prediction.repetition_penalty)),
+        top_k=cfg.prediction.top_k,
+        top_p=float(cfg.prediction.top_p),
+        stopping_criteria=stopping_criteria,
+        renormalize_logits=True,
+        return_dict_in_generate=False,
+        use_cache=True,
+        streamer=streamer,
+    )
+    transformers_logging.set_verbosity(verbosity)
+    # enable checkpointing again
+    if cfg.architecture.gradient_checkpointing:
+        backbone.gradient_checkpointing_enable()
+    if remove_prompt:
+        output = output[:, input_ids.shape[1] :]
+    return output
