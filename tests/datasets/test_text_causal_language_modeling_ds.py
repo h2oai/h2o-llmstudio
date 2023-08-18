@@ -172,8 +172,6 @@ def test_getitem():
         "answer_attention_mask",
     }
 
-    dataset.tokenizer.convert_ids_to_tokens(result["input_ids"])
-
     assert (
         dataset.tokenizer.decode(result["input_ids"], skip_special_tokens=True)
         == "System:system 1"
@@ -224,3 +222,66 @@ def test_getitem():
         "answer 2",
         "prompt 3",
     ]
+
+
+def test_getitem_no_chaining():
+    df = pd.DataFrame(
+        {
+            "prompt": ["prompt 1", "prompt 2", "prompt 3"],
+            "answer": ["answer 1", "answer 2", "answer 3"],
+            "parent_id": [None, 0, 1],
+            "system": ["system 1", "system 2", "system 3"],
+            "id": [0, 1, 2],
+        }
+    )
+
+    cfg = ConfigProblemBase(
+        dataset=ConfigNLPCausalLMDataset(
+            prompt_column=("prompt",),
+            answer_column="answer",
+            parent_id_column="None",
+            system_column="system",
+            text_system_start="System:",
+            text_prompt_start="Prompt:",
+            text_answer_separator="Answer:",
+            add_eos_token_to_answer=True,
+        ),
+        tokenizer=ConfigNLPCausalLMTokenizer(max_length=513),
+    )
+
+    cfg.llm_backbone = "EleutherAI/pythia-2.8b-deduped"
+
+    dataset = CustomDataset(df, cfg)
+    assert len(dataset) == 3
+
+    for i in range(3):
+        result = dataset[i]
+        assert isinstance(result, dict)
+        assert set(result.keys()) == {
+            "labels",
+            "input_ids",
+            "attention_mask",
+            "prompt_input_ids",
+            "prompt_attention_mask",
+            "answer_input_ids",
+            "answer_attention_mask",
+        }
+
+        assert (
+            dataset.tokenizer.decode(result["input_ids"], skip_special_tokens=True)
+            == f"System:system {i+1}"
+            f"Prompt:prompt {i+1}"
+            f"Answer:answer {i+1}"
+        )
+
+        assert (
+            dataset.tokenizer.decode(
+                result["prompt_input_ids"], skip_special_tokens=True
+            )
+            == f"System:system {i+1}"
+            f"Prompt:prompt {i+1}"
+            "Answer:"
+        )
+        assert dataset.get_chained_prompt_text_list(i) == [
+            f"system {i+1}prompt {i+1}",
+        ]

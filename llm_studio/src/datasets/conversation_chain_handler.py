@@ -73,7 +73,7 @@ class ConversationChainHandler:
             self.systems = ["" for _ in range(len(self.prompts))]
 
     def get_conversation_chain_ids(self, cfg, df):
-        if cfg.dataset.parent_id_column == "None":
+        if cfg.dataset.parent_id_column in ["None", None]:
             # no parent id column, so each triplet (system_i, prompt_i, answer_i)
             # is a conversation chain
             return [[idx] for idx in range(len(df))]
