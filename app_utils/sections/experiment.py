@@ -1766,7 +1766,12 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         ].replace(".", "-")
 
         publish_model_to_hugging_face(
-            experiment_path, device, api_key, user_id, model_name, safe_serialization
+            path_to_experiment=experiment_path,
+            device=device,
+            api_key=api_key,
+            user_id=user_id,
+            model_name=model_name,
+            safe_serialization=safe_serialization,
         )
 
         dialog_items = [
