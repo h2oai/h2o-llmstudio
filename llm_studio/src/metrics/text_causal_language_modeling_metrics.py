@@ -15,7 +15,7 @@ from tenacity import retry, stop_after_attempt, wait_random_exponential
 from torch import nn
 from tqdm import tqdm
 
-from llm_studio.src.datasets.text_utils import get_texts
+from llm_studio.src.dataset.text_utils import get_texts
 from llm_studio.src.utils.logging_utils import TqdmToLogger
 
 logger = logging.getLogger(__name__)

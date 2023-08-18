@@ -28,7 +28,7 @@ from transformers import (
 )
 from transformers.utils import logging as transformers_logging
 
-from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.dataset.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
 from llm_studio.src.utils.data_utils import (

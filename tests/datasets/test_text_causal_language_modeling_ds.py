@@ -11,7 +11,7 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMTokenizer,
     ConfigProblemBase,
 )
-from llm_studio.src.datasets.text_causal_language_modeling_ds import CustomDataset
+from llm_studio.src.dataset.text_causal_language_modeling_ds import CustomDataset
 
 
 def test_prepare_default_dataset(tmp_path):

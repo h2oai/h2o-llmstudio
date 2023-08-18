@@ -16,7 +16,7 @@ import argparse
 import numpy as np
 import torch
 
-from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.dataset.text_utils import get_tokenizer
 from llm_studio.src.utils.modeling_utils import load_checkpoint
 
 
