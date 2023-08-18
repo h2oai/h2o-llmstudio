@@ -37,7 +37,12 @@ class CustomDataset(Dataset):
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
         input_text_dict = self.conversation_chain_handler[idx]
-        self.parse_text_dict(input_text_dict)
+        input_text_dict["systems"] = [
+            self.parse_system(self.cfg, system) for system in input_text_dict["systems"]
+        ]
+        input_text_dict["prompts"] = [
+            self.parse_prompt(self.cfg, prompt) for prompt in input_text_dict["prompts"]
+        ]
 
         sample = dict()
         system_encoding, prompt_encodings, answer_encodings = self.get_encodings(
@@ -128,14 +133,6 @@ class CustomDataset(Dataset):
         if cfg.dataset.add_eos_token_to_system:
             system += cfg._tokenizer_eos_token
         return system
-
-    def parse_text_dict(self, input_text_dict):
-        input_text_dict["systems"] = [
-            self.parse_system(self.cfg, system) for system in input_text_dict["systems"]
-        ]
-        input_text_dict["prompts"] = [
-            self.parse_prompt(self.cfg, prompt) for prompt in input_text_dict["prompts"]
-        ]
 
     @staticmethod
     def batch_to_device(
