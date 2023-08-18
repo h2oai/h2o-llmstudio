@@ -682,7 +682,8 @@ class PPOTrainer(PyTorchModelHubMixin):
         self, logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor
     ) -> torch.FloatTensor:
         if self.cfg.training.full_kl_penalty:
-            # Flip is required due to this issue? :https://github.com/pytorch/pytorch/issues/57459
+            # Flip is required due to this issue?
+            # https://github.com/pytorch/pytorch/issues/57459
             return F.kl_div(
                 ref_logprob, logprob, log_target=True, reduction="none"
             ).sum(-1)
