@@ -8,8 +8,7 @@ import transformers
 from jinja2 import Environment, FileSystemLoader
 
 from app_utils.sections.chat import load_cfg_model_tokenizer
-from app_utils.utils import hf_repo_friendly_name, set_env
-from llm_studio.src.utils.config_utils import save_config_yaml
+from app_utils.utils import hf_repo_friendly_name, set_env, save_hf_yaml
 from llm_studio.src.utils.modeling_utils import check_disk_space
 
 
@@ -145,10 +144,14 @@ def publish_model_to_hugging_face(
         safe_serialization=safe_serialization,
     )
 
-    # Updating Config HF attributes & # re-save
-    cfg.hf.account_name = user_id
-    cfg.hf.model_name = model_name
-    save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
+    # Storing HF attributes
+    output_directory = cfg.output_directory
+    save_hf_yaml(
+        path=f"{output_directory.rstrip('/')}/hf.yaml",
+        account_name=user_id,
+        model_name=model_name,
+        repo_id=repo_id,
+    )
 
     # push pipeline to hub
     template_env = Environment(loader=FileSystemLoader(searchpath="llm_studio/src/"))
