@@ -71,7 +71,7 @@ class Model(BaseModel):
             loss = self.loss_fn(output.logits, batch["labels"])
             outputs["loss"] = loss
 
-        if self.cfg.prediction.metric == "Perplexity":
+        if not self.training and self.cfg.prediction.metric == "Perplexity":
             outputs["perplexity"] = self.perplexity(output.logits, batch["labels"])
 
         if self.training and self.cfg.training.use_rlhf:
