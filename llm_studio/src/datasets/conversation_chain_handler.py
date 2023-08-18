@@ -83,8 +83,8 @@ class ConversationChainHandler:
             f"DataFrame only has {df.columns}."
         )
         # sample and parent ids can have any dtype, such as str, int, float, etc.
-        # id column can be int, while parent_id column can be float (as some values are NaN)
-        # so we cast id to the same dtype
+        # id column can be int, while parent_id column can be float
+        # (as some values are NaN) so we cast id to the same dtype
         sample_ids = df["id"].astype(df[cfg.dataset.parent_id_column].dtype).tolist()
         parent_ids = df[cfg.dataset.parent_id_column].tolist()
 

@@ -52,3 +52,6 @@ class CustomDataset(CausalLMCustomDataset):
         output["predicted_text"] = np.array(predicted_text)
         output["predicted_answer_ids"] = output["predicted_answer_ids"].detach()
         return output
+
+    def augment_data(self, encodings):
+        return encodings
