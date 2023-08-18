@@ -384,7 +384,7 @@ class CustomDataset(Dataset):
         # make sure system encoding is always prepended if max_length exceeded
         if sample["input_ids"][0] != self.tokenizer.pad_token_id:
             sample["input_ids"][: len(system_encoding)] = system_encoding
-            if self.cfg.dataset.mask_prompt_labels:
+            if self.cfg.dataset.mask_prompt_labels and "labels" in sample.keys():
                 sample["labels"][: len(system_encoding)] = -100
         if sample["prompt_input_ids"][0] != self.tokenizer.pad_token_id:
             sample["prompt_input_ids"][: len(system_encoding)] = system_encoding
