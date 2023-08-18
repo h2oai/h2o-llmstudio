@@ -713,10 +713,6 @@ def run(cfg: Any) -> None:
         cfg: config object with all the hyperparameters
     """
 
-    if cfg.environment.use_deepspeed:
-        # To avoid warnings about parallelism in tokenizers
-        os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
     os.makedirs(cfg.output_directory, exist_ok=True)
 
     # Force evaluation if user trains 0 epochs
