@@ -108,7 +108,7 @@ def test_incomplete_chained_samples(cfg, df_short):
     cfg.dataset.limit_chained_samples = False
 
     handler = ConversationChainHandler(df_short, cfg)
-    assert handler.conversation_ids_lists == [[0], [0, 1], [0, 1, 2], [0, 1, 2, 3]]
+    assert handler.conversation_chain_ids == [[0], [0, 1], [0, 1, 2], [0, 1, 2, 3]]
     assert len(handler) == 4
     for i in range(4):
         assert handler[i] == {
@@ -120,14 +120,14 @@ def test_incomplete_chained_samples(cfg, df_short):
 
 def test_get_conversation_ids():
     # test the get_conversation_ids method - normal case
-    conv_ids = ConversationChainHandler.get_single_conversation_ids(
+    conv_ids = ConversationChainHandler.compute_conversation_history_ids(
         {"id2": "id1", "id3": "id2", "id4": "id3"}, "id4"
     )
     assert conv_ids == ["id1", "id2", "id3", "id4"]
 
     # test the get_conversation_ids method - circular case, should raise ValueError
     with pytest.raises(ValueError):
-        ConversationChainHandler.get_single_conversation_ids(
+        ConversationChainHandler.compute_conversation_history_ids(
             {"id1": "id4", "id2": "id1", "id3": "id2", "id4": "id3"}, "id4"
         )
 
@@ -180,7 +180,7 @@ def df_with_nan():
 
 def test_conversation_chain_handles_nan_parent_ids(df_with_nan, cfg):
     handler = ConversationChainHandler(df_with_nan, cfg)
-    assert handler.conversation_ids_lists == [
+    assert handler.conversation_chain_ids == [
         [9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
         [10],
         [11],

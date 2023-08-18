@@ -52,12 +52,7 @@ class ConversationChainHandler:
         df,
         cfg,
     ):
-        if cfg.dataset.parent_id_column == "None":
-            # no parent id column, so each sample is a conversation chain
-            self.conversation_ids_lists = [[idx] for idx in range(len(df))]
-        else:
-            self.conversation_ids_lists = self.get_conversation_chain_ids(cfg, df)
-
+        self.conversation_chain_ids = self.get_conversation_chain_ids(cfg, df)
         self.prompts = get_texts(df, cfg, separator="")
 
         if cfg.dataset.answer_column in df.columns:
@@ -65,17 +60,24 @@ class ConversationChainHandler:
         else:
             self.answers = ["" for _ in range(len(self.prompts))]
 
-        self.systems = ["" for _ in range(len(self.prompts))]
         if cfg.dataset.system_column != "None":
             if cfg.dataset.system_column not in df.columns:
                 logger.warning(
                     f"System column {cfg.dataset.system_column} not found."
                     f"Disabling functionality."
                 )
+                self.systems = ["" for _ in range(len(self.prompts))]
             else:
                 self.systems = df[cfg.dataset.system_column].astype(str).tolist()
+        else:
+            self.systems = ["" for _ in range(len(self.prompts))]
 
     def get_conversation_chain_ids(self, cfg, df):
+        if cfg.dataset.parent_id_column == "None":
+            # no parent id column, so each triplet (system_i, prompt_i, answer_i)
+            # is a conversation chain
+            return [[idx] for idx in range(len(df))]
+
         assert "id" in df.columns, (
             f"id column required for conversation chaining, "
             f"DataFrame only has {df.columns}."
@@ -93,57 +95,57 @@ class ConversationChainHandler:
             )
         }
         if cfg.dataset.limit_chained_samples:
-            conversation_start_ids = [
+            # end id == id is not a parent id of another conversation id
+            conversation_end_ids = [
                 idx for idx in sample_ids if idx not in id2parent_id.values()
             ]
         else:
-            conversation_start_ids = sample_ids
-        conversation_ids_lists = [
-            self.get_single_conversation_ids(id2parent_id, conversation_start_id)
-            for conversation_start_id in conversation_start_ids
+            conversation_end_ids = sample_ids
+        conversation_chain_ids = [
+            self.compute_conversation_history_ids(id2parent_id, conversation_end_id)
+            for conversation_end_id in conversation_end_ids
         ]
         # map from df["id"] to enumeration index
         dataframeid2idx = {id: idx for idx, id in enumerate(sample_ids)}
-        conversation_ids_lists = [
+        conversation_chain_ids = [
             [dataframeid2idx[conversation_id] for conversation_id in conversation_ids]
-            for conversation_ids in conversation_ids_lists
+            for conversation_ids in conversation_chain_ids
         ]
-        return conversation_ids_lists
+        return conversation_chain_ids
 
     @staticmethod
-    def get_single_conversation_ids(id2parent_id, start_id):
+    def compute_conversation_history_ids(id2parent_id, end_id):
         """
         Gets the conversation chain for a given starting conversation ID.
         Args:
             id2parent_id: A dictionary containing the mapping of IDs
             to its previous parent ID.
-            start_id: The ID of the starting conversation in the chain.
+            end_id: The ID of the end of the conversation in the chain.
         Returns:
             A list of conversation IDs representing the conversation chain.
-            The chain is ordered from the starting conversation to the last
-            conversation in the chain.
+            The chain is ordered from the first conversation id to end_id in the chain.
         """
         # prevent infinite loops in case
         # of circular parent chains (dataframe issue)
         loop_counter = 0
 
-        conversation_chain_ids = [start_id]
-        parent_id = start_id
+        conversation_chain_ids = [end_id]
+        parent_id = end_id
         while parent_id in id2parent_id:
             loop_counter += 1
-            # get next parent id
+
             parent_id = id2parent_id[parent_id]
-            conversation_chain_ids.append(parent_id)
+            conversation_chain_ids = [parent_id] + conversation_chain_ids
             if loop_counter > 1000:
                 raise ValueError(
-                    f"Parent chain of sample with idx {start_id} "
+                    f"Parent chain of sample with idx {end_id} "
                     f"exceeds max loop count of 1000. "
                     f"Please ensure that parent chain is not circular."
                 )
-        return conversation_chain_ids[::-1]
+        return conversation_chain_ids
 
     def __len__(self):
-        return len(self.conversation_ids_lists)
+        return len(self.conversation_chain_ids)
 
     def __getitem__(self, idx):
         """
@@ -159,9 +161,9 @@ class ConversationChainHandler:
           and limit_chained_samples is True
 
         """
-        prompts = [self.prompts[i] for i in self.conversation_ids_lists[idx]]
-        answers = [self.answers[i] for i in self.conversation_ids_lists[idx]]
-        systems = [self.systems[i] for i in self.conversation_ids_lists[idx]]
+        prompts = [self.prompts[i] for i in self.conversation_chain_ids[idx]]
+        answers = [self.answers[i] for i in self.conversation_chain_ids[idx]]
+        systems = [self.systems[i] for i in self.conversation_chain_ids[idx]]
         return {
             "prompts": prompts,
             "answers": answers,
