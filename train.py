@@ -155,6 +155,9 @@ def run_eval(
 def run_train(
     cfg: Any,
     model: torch.nn.Module,
+    optimizer,
+    scheduler,
+    epoch_steps,
     train_dataloader,
     val_dataloader,
     val_df: pd.DataFrame,
@@ -175,27 +178,6 @@ def run_train(
         Validation metric
         Last train batch
     """
-
-    epoch_steps = len(train_dataloader)
-
-    optimizer = get_optimizer(model=model, cfg=cfg)
-    scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
-
-    if cfg.environment.use_deepspeed:
-        (
-            model,
-            optimizer,
-            train_dataloader,
-            val_dataloader,
-            scheduler,
-        ) = deepspeed_initialize(
-            model=model,
-            optimizer=optimizer,
-            lr_scheduler=scheduler,
-            training_data=train_dataloader.dataset,
-            validating_data=val_dataloader.dataset,
-            cfg=cfg,
-        )
 
     scaler: GradScaler | ShardedGradScaler | None = None
     if cfg.environment.mixed_precision:
@@ -418,6 +400,9 @@ def run_train(
 def run_train_rlhf(
     cfg: Any,
     model: torch.nn.Module,
+    optimizer,
+    scheduler,
+    epoch_steps,
     train_dataloader,
     val_dataloader,
     val_df: pd.DataFrame,
@@ -439,10 +424,8 @@ def run_train_rlhf(
         Last train batch
     """
 
-    epoch_steps = len(train_dataloader)
-
-    optimizer = get_optimizer(model=model, cfg=cfg)
-    scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
+#     optimizer = get_optimizer(model=model, cfg=cfg)
+#     scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
 
     scaler: GradScaler | ShardedGradScaler | None = None
     if cfg.environment.mixed_precision:
@@ -727,6 +710,14 @@ def run(cfg: Any) -> None:
     else:
         cfg.environment._seed = cfg.environment.seed
 
+    if cfg.environment.use_deepspeed and cfg.environment.use_fsdp:
+        raise ValueError("Deepspeed and FSDP cannot be used at the same time.")
+    if cfg.architecture.backbone_dtype in ["int8", "int4"] and cfg.environment.use_deepspeed:
+        raise ValueError(
+            f"Deepspeed do not support backbone type {cfg.architecture.backbone_dtype}. " +
+            "Please set backbone type to float16 or bfloat16 for using deepspeed."
+        )
+
     # Prepare environment
     if "WORLD_SIZE" in os.environ:
         cfg.environment._distributed = int(os.environ["WORLD_SIZE"]) > 1
@@ -816,7 +807,7 @@ def run(cfg: Any) -> None:
             * cfg.environment._world_size
         )
 
-    # Prepare model
+    # Prepare model and optimizer
     if cfg.environment.use_deepspeed:
         ds_config = get_ds_config(cfg)
         # keep this object alive.
@@ -831,6 +822,10 @@ def run(cfg: Any) -> None:
             load_checkpoint(cfg, model, strict=cfg.training.epochs == -1)
     model.to(cfg.environment._device)
 
+    epoch_steps = len(train_dataloader)
+    optimizer = get_optimizer(model=model, cfg=cfg)
+    scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
+
     if getattr(cfg.architecture, "force_embedding_gradients"):
         for module in model.modules():
             if isinstance(module, torch.nn.Embedding):
@@ -838,10 +833,23 @@ def run(cfg: Any) -> None:
                     param.requires_grad = True
                     param.data = param.data.float()
 
-    if cfg.environment._distributed and not cfg.environment.use_deepspeed:
-        model = wrap_model_distributed(model, cfg, cfg.environment.use_fsdp)
+    if cfg.environment._distributed:
+        (
+            model,
+            optimizer,
+            train_dataloader,
+            val_dataloader,
+            scheduler,
+        ) = wrap_model_distributed(
+            model=model,
+            optimizer=optimizer,
+            lr_scheduler=scheduler,
+            training_data=train_dataloader.dataset,
+            validating_data=val_dataloader.dataset,
+            cfg=cfg,
+        )
 
-    if cfg.environment.compile_model
+    if cfg.environment.compile_model:
         # deepspeed do not support torch.compile
         if cfg.environment.use_deepspeed:
             logger.warning(
@@ -896,6 +904,9 @@ def run(cfg: Any) -> None:
     val_loss, val_metric = train_function(
         cfg=cfg,
         model=model,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        epoch_steps=epoch_steps,
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
         val_df=val_df,
