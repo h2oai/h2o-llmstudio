@@ -248,8 +248,8 @@ def wrap_model_distributed(
     model: torch.nn.Module,
     optimizer: torch.optim.Optimizer,
     lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
-    training_data: torch.utils.data.Dataset,
-    validating_data: torch.utils.data.Dataset,
+    train_dataloader: torch.utils.data.DataLoader,
+    val_dataloader: torch.utils.data.DataLoader,
     cfg: Any,
 ):
     if cfg.environment.use_fsdp:
@@ -275,16 +275,16 @@ def wrap_model_distributed(
         )
     elif cfg.environment.use_deepspeed:
         ds_config = get_ds_config(cfg)
-        model, optimizer, train_dataloader, scheduler = deepspeed.initialize(
+        model, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
             model=model,
             optimizer=optimizer,
             lr_scheduler=lr_scheduler,
-            training_data=training_data,
+            training_data=train_dataloader.dataset,
             config_params=ds_config,
         )
         _, _, val_dataloader, _ = deepspeed.initialize(
             model=torch.nn.Linear(1, 1),
-            training_data=validating_data,
+            training_data=val_dataloader.dataset,
             config_params=ds_config,
         )
     else:
@@ -297,7 +297,7 @@ def wrap_model_distributed(
             find_unused_parameters=find_unused_parameters,
         )
 
-    return model, optimizer, train_dataloader, val_dataloader, scheduler
+    return model, optimizer, train_dataloader, val_dataloader, lr_scheduler
 
 
 def get_optimizer(model: torch.nn.Module, cfg: Any) -> torch.optim.Optimizer:

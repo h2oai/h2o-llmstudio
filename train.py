@@ -843,8 +843,8 @@ def run(cfg: Any) -> None:
             model=model,
             optimizer=optimizer,
             lr_scheduler=scheduler,
-            training_data=train_dataloader.dataset,
-            validating_data=val_dataloader.dataset,
+            train_dataloader=train_dataloader,
+            val_dataloader=val_dataloader,
             cfg=cfg,
         )
 
