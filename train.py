@@ -424,9 +424,6 @@ def run_train_rlhf(
         Last train batch
     """
 
-#     optimizer = get_optimizer(model=model, cfg=cfg)
-#     scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
-
     scaler: GradScaler | ShardedGradScaler | None = None
     if cfg.environment.mixed_precision:
         if cfg.environment.use_fsdp:
