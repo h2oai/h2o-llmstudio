@@ -356,25 +356,26 @@ def run_train(
                 val_loss, val_metric = run_eval(
                     cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
                 )
-                if cfg.environment._local_rank == 0:
-                    if cfg.training.save_best_checkpoint:
-                        if objective_op(val_metric, best_val_metric):
-                            checkpoint_path = cfg.output_directory
+                if cfg.training.save_best_checkpoint:
+                    if objective_op(val_metric, best_val_metric):
+                        checkpoint_path = cfg.output_directory
+                        if cfg.environment._local_rank == 0:
                             logger.info(
                                 f"Saving best model checkpoint: "
                                 f"val_{cfg.prediction.metric} {best_val_metric:.5} -> "
                                 f"{val_metric:.5} to {checkpoint_path}"
                             )
-                            save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
-                            best_val_metric = val_metric
-                    else:
-                        checkpoint_path = cfg.output_directory
+                        save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
+                        best_val_metric = val_metric
+                else:
+                    checkpoint_path = cfg.output_directory
+                    if cfg.environment._local_rank == 0:
                         logger.info(
                             f"Saving last model checkpoint: "
                             f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
                             f"{val_metric:.5} to {checkpoint_path}"
                         )
-                        save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
+                    save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
                 model.train()
 
