@@ -82,12 +82,15 @@ class ConversationChainHandler:
             f"id column required for conversation chaining, "
             f"DataFrame only has {df.columns}."
         )
+        # sample and parent ids can have any dtype, such as str, int, float, etc.
+        # id column can be int, while parent_id column can be float (as some values are NaN)
+        # so we cast id to the same dtype
         sample_ids = df["id"].astype(df[cfg.dataset.parent_id_column].dtype).tolist()
         parent_ids = df[cfg.dataset.parent_id_column].tolist()
 
         id2parent_id = {
-            id: parent_id
-            for id, parent_id in zip(sample_ids, parent_ids)
+            idx: parent_id
+            for idx, parent_id in zip(sample_ids, parent_ids)
             if parent_id not in [None, "None"]
             and (
                 not isinstance(parent_id, float)
@@ -102,7 +105,7 @@ class ConversationChainHandler:
         else:
             conversation_end_ids = sample_ids
         conversation_chain_ids = [
-            self.compute_conversation_history_ids(id2parent_id, conversation_end_id)
+            self.get_conversation_ids(id2parent_id, conversation_end_id)
             for conversation_end_id in conversation_end_ids
         ]
         # map from df["id"] to enumeration index
@@ -114,7 +117,7 @@ class ConversationChainHandler:
         return conversation_chain_ids
 
     @staticmethod
-    def compute_conversation_history_ids(id2parent_id, end_id):
+    def get_conversation_ids(id2parent_id, end_id):
         """
         Gets the conversation chain for a given starting conversation ID.
         Args:
