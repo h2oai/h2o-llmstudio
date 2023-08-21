@@ -1765,7 +1765,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
                 device=q.client["experiment/display/push_to_huggingface/device"],
             )
 
-        check_disk_space(model.backbone, "./")
+        check_disk_space(model.backbone, "./", False)
 
         huggingface_hub.login(
             q.client["experiment/display/push_to_huggingface/api_key"]

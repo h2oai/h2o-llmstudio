@@ -54,7 +54,7 @@ def unwrap_model(model: torch.nn.Module):
     return model
 
 
-def check_disk_space(model: torch.nn.Module, path: str):
+def check_disk_space(model: torch.nn.Module, path: str, use_deepspeed: bool):
     total, used, free = shutil.disk_usage(path)
 
     model_size_in_bytes = 0
@@ -70,7 +70,7 @@ def check_disk_space(model: torch.nn.Module, path: str):
             model_size_in_bytes += param.numel() * 4
             logger.warning(f"Unsupported data type: {param.data.dtype}")
 
-    if cfg.environment.use_deepspeed:
+    if use_deepspeed:
         model_size_in_bytes *= 2  # need double space for converting deepspeed engine.
     if model_size_in_bytes * 1.03 < free:  # leave a 3% margin here.
         logger.info("Enough space available for saving model weights.")
