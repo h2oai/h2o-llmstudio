@@ -70,6 +70,8 @@ def check_disk_space(model: torch.nn.Module, path: str):
             model_size_in_bytes += param.numel() * 4
             logger.warning(f"Unsupported data type: {param.data.dtype}")
 
+    if cfg.environment.use_deepspeed:
+        model_size_in_bytes *= 2  # need double space for converting deepspeed engine.
     if model_size_in_bytes * 1.03 < free:  # leave a 3% margin here.
         logger.info("Enough space available for saving model weights.")
     else:
@@ -95,6 +97,8 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
     if cfg.environment.use_deepspeed:
         if path is not None:
             # gather model params from all ranks
+            if hasattr(cfg.training, "lora") and cfg.training.lora:
+                model.backbone.save_pretrained(path)
             model.save_checkpoint(os.path.join(path, "ds_checkpoint"))
             if cfg.environment._local_rank == 0:
                 # load to cpu
