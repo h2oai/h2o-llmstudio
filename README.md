@@ -197,6 +197,22 @@ python prompt.py -e {experiment_name}
 where `experiment_name` is the output folder of the experiment you want to chat with (see configuration).
 The interactive chat will also work with model that were finetuned using the UI.
 
+To publish the model to Hugging Face, use the following command:
+
+```bash
+make shell 
+
+python publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_key} -u {user_id} -m {model_name} -s {safe_serialization}
+``` 
+
+`path_to_experiment` is the output folder of the experiment.
+`device` is the target device for running the model, either 'cpu' or 'cuda:0'. Default is 'cuda:0'.
+`api_key` is the Hugging Face API Key. If user logged in, it can be omitted.
+`user_id` is the Hugging Face user ID. If user logged in, it can be omitted.
+`model_name` is the name of the model to be published on Hugging Face. It can be omitted.
+`safe_serialization` is a flag indicating whether safe serialization should be used. Default is True.
+
+
 ## Data format and example data
 
 For details on the data format required when importing your data or example data that you can use to try out H2O LLM Studio, see [Data format](https://docs.h2o.ai/h2o-llmstudio/guide/datasets/data-connectors-format#data-format) in the H2O LLM Studio documentation. 
