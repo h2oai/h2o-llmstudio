@@ -314,66 +314,58 @@ def get_optimizer(model: torch.nn.Module, cfg: Any) -> torch.optim.Optimizer:
     Returns:
         Optimizer
     """
-    if cfg.environment.use_deepspeed and cfg.training.lora:
-        logger.info(
-            "Deepspeed /w Lora training do not support differential learning rate."
-        )
-        optimizer = Optimizers.get(cfg.training.optimizer)(
-            model.parameters(), lr=cfg.training.learning_rate
-        )
-    else:
-        no_decay = ["bias", "LayerNorm.weight"]
-        differential_layers = cfg.training.differential_learning_rate_layers
-        optimizer = Optimizers.get(cfg.training.optimizer)(
-            [
-                {
-                    "params": [
-                        param
-                        for name, param in model.named_parameters()
-                        if (not any(layer in name for layer in differential_layers))
-                        and (not any(nd in name for nd in no_decay))
-                        # and param.requires_grad
-                    ],
-                    "lr": cfg.training.learning_rate,
-                    "weight_decay": cfg.training.weight_decay,
-                },
-                {
-                    "params": [
-                        param
-                        for name, param in model.named_parameters()
-                        if (not any(layer in name for layer in differential_layers))
-                        and (any(nd in name for nd in no_decay))
-                        # and param.requires_grad
-                    ],
-                    "lr": cfg.training.learning_rate,
-                    "weight_decay": 0,
-                },
-                {
-                    "params": [
-                        param
-                        for name, param in model.named_parameters()
-                        if (any(layer in name for layer in differential_layers))
-                        and (not any(nd in name for nd in no_decay))
-                        # and param.requires_grad
-                    ],
-                    "lr": cfg.training.differential_learning_rate,
-                    "weight_decay": cfg.training.weight_decay,
-                },
-                {
-                    "params": [
-                        param
-                        for name, param in model.named_parameters()
-                        if (any(layer in name for layer in differential_layers))
-                        and (any(nd in name for nd in no_decay))
-                        # and param.requires_grad
-                    ],
-                    "lr": cfg.training.differential_learning_rate,
-                    "weight_decay": 0,
-                },
-            ],
-            lr=cfg.training.learning_rate,
-            weight_decay=cfg.training.weight_decay,
-        )
+    no_decay = ["bias", "LayerNorm.weight"]
+    differential_layers = cfg.training.differential_learning_rate_layers
+    optimizer = Optimizers.get(cfg.training.optimizer)(
+        [
+            {
+                "params": [
+                    param
+                    for name, param in model.named_parameters()
+                    if (not any(layer in name for layer in differential_layers))
+                    and (not any(nd in name for nd in no_decay))
+                    and param.requires_grad
+                ],
+                "lr": cfg.training.learning_rate,
+                "weight_decay": cfg.training.weight_decay,
+            },
+            {
+                "params": [
+                    param
+                    for name, param in model.named_parameters()
+                    if (not any(layer in name for layer in differential_layers))
+                    and (any(nd in name for nd in no_decay))
+                    and param.requires_grad
+                ],
+                "lr": cfg.training.learning_rate,
+                "weight_decay": 0,
+            },
+            {
+                "params": [
+                    param
+                    for name, param in model.named_parameters()
+                    if (any(layer in name for layer in differential_layers))
+                    and (not any(nd in name for nd in no_decay))
+                    and param.requires_grad
+                ],
+                "lr": cfg.training.differential_learning_rate,
+                "weight_decay": cfg.training.weight_decay,
+            },
+            {
+                "params": [
+                    param
+                    for name, param in model.named_parameters()
+                    if (any(layer in name for layer in differential_layers))
+                    and (any(nd in name for nd in no_decay))
+                    and param.requires_grad
+                ],
+                "lr": cfg.training.differential_learning_rate,
+                "weight_decay": 0,
+            },
+        ],
+        lr=cfg.training.learning_rate,
+        weight_decay=cfg.training.weight_decay,
+    )
 
     return optimizer
 
