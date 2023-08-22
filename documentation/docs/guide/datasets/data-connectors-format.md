@@ -22,6 +22,9 @@ H2O LLM Studio supports the following data connectors to access or upload extern
     - **Answer Column:** The column in the dataset containing the expected output.
     - **Parent Id Column:** An optional column specifying the parent id to be used for chained conversations. The value of this column needs to match an additional column with the name `id`. If provided, the prompt will be concatenated after preceeding parent rows.
 
+:::info
+To train a chatbot style model, you need to convert your data into a question and answer format. There are other enterprise solutions by H2O.ai that may help you prep your data. For more information, see [H2O.ai's Generative AI page](https://h2o.ai/) and this blogpost about [H2O LLM DataStudio: Streamlining Data Curation and Data Preparation for LLMs related tasks](https://blog.h2o.ai/blog/streamlining-data-preparation-for-fine-tuning-of-large-language-models/).
+
 ## Example data
 
 H2O LLM Studio provides a sample dataset (converted dataset from [OpenAssistant/oasst1](https://huggingface.co/datasets/OpenAssistant/oasst1))
