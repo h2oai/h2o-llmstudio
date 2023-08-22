@@ -10,7 +10,7 @@ from h2o_wave import Q, app, copy_expando, main, ui  # noqa: F401
 
 from app_utils.handlers import handle
 from app_utils.initializers import initialize_app, initialize_client
-from app_utils.sections.common import interface
+from app_utils.sections.common import heap_redact, interface
 
 logger = logging.getLogger(__name__)
 
@@ -42,4 +42,5 @@ async def serve(q: Q):
     if not q.args["experiment/display/chat/chatbot"]:
         await interface(q)
 
+    await heap_redact(q)
     await q.page.save()
