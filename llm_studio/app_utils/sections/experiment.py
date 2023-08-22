@@ -18,7 +18,10 @@ from h2o_wave import Q, data, ui
 from sqlitedict import SqliteDict
 
 from llm_studio.app_utils.config import default_cfg
-from llm_studio.app_utils.hugging_face_utils import get_model_card, publish_model_to_hugging_face
+from llm_studio.app_utils.hugging_face_utils import (
+    get_model_card,
+    publish_model_to_hugging_face,
+)
 from llm_studio.app_utils.sections.chat import chat_tab, load_cfg_model_tokenizer
 from llm_studio.app_utils.sections.common import clean_dashboard
 from llm_studio.app_utils.utils import (
