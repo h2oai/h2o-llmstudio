@@ -107,8 +107,8 @@ class Model(nn.Module):
 
         outputs["loss"] = output.loss
 
-        if self.cfg.prediction.metric == "Perplexity":
-            outputs["perplexity"] = self.perplexity(output.logits, batch["labels"])
+        if not self.training and self.cfg.prediction.metric == "Perplexity":
+            outputs["perplexity"] = self.perplexity(output.logits, labels)
 
         # enable cache again if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:
