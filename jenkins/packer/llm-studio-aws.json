@@ -26,7 +26,7 @@
           },
 
           "run_volume_tags": {
-            "Name": "H2oai-dai-{{user `dai_version`}}",
+            "Name": "h2oai-llm-studio-{{user `llm_studio_version`}}",
             "Owner": "ops@h2o.ai",
             "Project": "DevOps",
             "Department": "Engineering",
@@ -35,7 +35,7 @@
           },
 
           "run_tags": {
-            "Name": "H2oai-dai-{{user `dai_version`}}",
+            "Name": "h2oai-llm-studio-{{user `llm_studio_version`}}",
             "Owner": "ops@h2o.ai",
             "Project": "DevOps",
             "Department": "Engineering",
