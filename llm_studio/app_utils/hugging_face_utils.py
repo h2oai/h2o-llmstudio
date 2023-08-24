@@ -5,10 +5,10 @@ import einops
 import huggingface_hub
 import torch
 import transformers
-from app_utils.sections.chat import load_cfg_model_tokenizer
-from app_utils.utils import hf_repo_friendly_name, save_hf_yaml, set_env
 from jinja2 import Environment, FileSystemLoader
 
+from llm_studio.app_utils.sections.chat import load_cfg_model_tokenizer
+from llm_studio.app_utils.utils import hf_repo_friendly_name, save_hf_yaml, set_env
 from llm_studio.src.utils.modeling_utils import check_disk_space
 
 
