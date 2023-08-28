@@ -84,6 +84,7 @@ This will start the H2O Wave server and the H2O LLM Studio app. Navigate to [htt
 If you are running H2O LLM Studio with a custom environment other than Pipenv, start the app as follows: 
 
 ```
+H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 H2O_WAVE_NO_LOG=True \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
