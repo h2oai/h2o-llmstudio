@@ -38,6 +38,7 @@ RUN \
 COPY . .
 
 ENV HOME=/home/llmstudio
+ENV H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756
 ENV H2O_WAVE_MAX_REQUEST_SIZE=25MB
 ENV H2O_WAVE_NO_LOG=true
 ENV H2O_WAVE_PRIVATE_DIR="/download/@/workspace/output/download"

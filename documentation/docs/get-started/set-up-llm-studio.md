@@ -15,13 +15,12 @@ H2O LLM Studio requires the following minimum requirements:
   - pypi.org
   - huggingface.co
   - download.pytorch.org
-  - cdn-lfs.huggingface.co 
+  - cdn-lfs.huggingface.co
 
 :::info Notes
 - Atleast 24GB of GPU memory is recommended for larger models.
 - The required URLs are accessible by default when you start a GCP instance, however, if you have network rules or custom firewalls in place, it is recommended to confirm that the URLs are accessible before running `make setup`.
 :::
-
 
 ## Installation
 
@@ -59,7 +58,6 @@ H2O LLM Studio requires the following minimum requirements:
 </Tabs>
 :::
 
-
 ## Run H2O LLM Studio
 
 There are several ways to run H2O LLM Studio depending on your requirements.
@@ -71,19 +69,20 @@ There are several ways to run H2O LLM Studio depending on your requirements.
 
 ### Run H2O LLM Studio GUI
 
-Run the following command to start the H2O LLM Studio. 
+Run the following command to start the H2O LLM Studio.
 
-```
+```sh
 make llmstudio
 ```
 
-This will start the H2O Wave server and the H2O LLM Studio app. Navigate to [http://localhost:10101/](http://localhost:10101/) (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models. 
+This will start the H2O Wave server and the H2O LLM Studio app. Navigate to [http://localhost:10101/](http://localhost:10101/) (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models.
 
 ![home-screen](llm-studio-home-screen.png)
 
-If you are running H2O LLM Studio with a custom environment other than Pipenv, start the app as follows: 
+If you are running H2O LLM Studio with a custom environment other than Pipenv, start the app as follows:
 
-```
+```sh
+H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 H2O_WAVE_NO_LOG=True \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
@@ -94,7 +93,7 @@ wave run app
 
 First, install Docker by following the instructions from the [NVIDIA Container Installation Guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker). H2O LLM Studio images are stored in the `h2oai GCR vorvan` container repository.
 
-```
+```sh
 mkdir -p `pwd`/data
 mkdir -p `pwd`/output
 docker run \
@@ -109,7 +108,7 @@ docker run \
     gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
 ```
 
-Navigate to [http://localhost:10101/](http://localhost:10101/) (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models. 
+Navigate to [http://localhost:10101/](http://localhost:10101/) (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models.
 
 :::info
 Other helpful docker commands are `docker ps` and `docker kill`.
@@ -117,7 +116,7 @@ Other helpful docker commands are `docker ps` and `docker kill`.
 
 ### Run by building your own Docker image
 
-```
+```sh
 docker build -t h2o-llmstudio .
 docker run \
     --runtime=nvidia \
@@ -131,17 +130,19 @@ docker run \
     h2o-llmstudio
 ```
 
-
 ### Run with command line interface (CLI)
-You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`. 
+
+You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`.
 
 To specify the path to the configuration file that contains the experiment parameters, run:
-```
+
+```sh
 python train.py -C {path_to_config_file}
 ```
 
 To run on multiple GPUs in DDP mode, run:
-```
+
+```sh
 bash distributed_train.sh {NR_OF_GPUS} -C {path_to_config_file}
 ```
 
@@ -150,11 +151,9 @@ By default, the framework will run on the first `k` GPUs. If you want to specify
 :::
 
 To start an interactive chat with your trained model, run:
-```
+
+```sh
 python prompt.py -e {experiment_name}
 ```
-    
+
 `experiment_name` is the output folder of the experiment you want to chat with. The interactive chat will also work with models that were fine-tuned using the GUI.
-
-
-
