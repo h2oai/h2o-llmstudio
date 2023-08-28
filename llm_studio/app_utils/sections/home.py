@@ -2,15 +2,15 @@ import psutil
 import torch
 from h2o_wave import Q, data, ui
 
-from app_utils.config import default_cfg
-from app_utils.sections.common import clean_dashboard
-from app_utils.utils import (
+from llm_studio.app_utils.config import default_cfg
+from llm_studio.app_utils.sections.common import clean_dashboard
+from llm_studio.app_utils.utils import (
     get_datasets,
     get_experiments,
     get_gpu_usage,
     get_single_gpu_usage,
 )
-from app_utils.wave_utils import ui_table_from_df, wave_theme
+from llm_studio.app_utils.wave_utils import ui_table_from_df, wave_theme
 from llm_studio.src.utils.export_utils import get_size_str
 
 

@@ -17,11 +17,14 @@ import yaml
 from h2o_wave import Q, data, ui
 from sqlitedict import SqliteDict
 
-from app_utils.config import default_cfg
-from app_utils.hugging_face_utils import get_model_card, publish_model_to_hugging_face
-from app_utils.sections.chat import chat_tab, load_cfg_model_tokenizer
-from app_utils.sections.common import clean_dashboard
-from app_utils.utils import (
+from llm_studio.app_utils.config import default_cfg
+from llm_studio.app_utils.hugging_face_utils import (
+    get_model_card,
+    publish_model_to_hugging_face,
+)
+from llm_studio.app_utils.sections.chat import chat_tab, load_cfg_model_tokenizer
+from llm_studio.app_utils.sections.common import clean_dashboard
+from llm_studio.app_utils.utils import (
     add_model_type,
     flatten_dict,
     get_cfg_list_items,
@@ -40,7 +43,7 @@ from app_utils.utils import (
     set_env,
     start_experiment,
 )
-from app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
+from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (

@@ -9,10 +9,10 @@ from typing import List, Optional
 from h2o_wave import Q, ui
 from h2o_wave.types import ImageCard, MarkupCard, StatListItem, Tab
 
-from app_utils.config import default_cfg
-from app_utils.db import Dataset
-from app_utils.sections.experiment import experiment_start
-from app_utils.utils import (
+from llm_studio.app_utils.config import default_cfg
+from llm_studio.app_utils.db import Dataset
+from llm_studio.app_utils.sections.experiment import experiment_start
+from llm_studio.app_utils.utils import (
     add_model_type,
     check_valid_upload_content,
     clean_error,
@@ -33,7 +33,7 @@ from app_utils.utils import (
     s3_download,
     s3_file_options,
 )
-from app_utils.wave_utils import busy_dialog, ui_table_from_df
+from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,
