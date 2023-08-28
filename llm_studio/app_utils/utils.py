@@ -32,7 +32,7 @@ from h2o_wave import Q, ui
 from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
 
-from app_utils.db import Experiment
+from llm_studio.app_utils.db import Experiment
 from llm_studio.src import possible_values
 from llm_studio.src.utils.config_utils import (
     _get_type_annotation_error,

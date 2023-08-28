@@ -3,8 +3,8 @@ import logging
 import os
 import sys
 
-from app_utils import hugging_face_utils
-from app_utils.utils import hf_repo_friendly_name
+from llm_studio.app_utils import hugging_face_utils
+from llm_studio.app_utils.utils import hf_repo_friendly_name
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
