@@ -1,16 +1,16 @@
 import logging
 import os
 
-from app_utils.sections.chat import show_chat_is_running_dialog
+from llm_studio.app_utils.sections.chat import show_chat_is_running_dialog
 from llm_studio.src.utils.logging_utils import initialize_logging
 
 os.environ["MKL_THREADING_LAYER"] = "GNU"
 
 from h2o_wave import Q, app, copy_expando, main, ui  # noqa: F401
 
-from app_utils.handlers import handle
-from app_utils.initializers import initialize_app, initialize_client
-from app_utils.sections.common import heap_redact, interface
+from llm_studio.app_utils.handlers import handle
+from llm_studio.app_utils.initializers import initialize_app, initialize_client
+from llm_studio.app_utils.sections.common import heap_redact, interface
 
 logger = logging.getLogger(__name__)
 

@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 from bokeh.resources import Resources as BokehResources
 from h2o_wave import Q
 
-from app_utils.sections.common import interface
+from llm_studio.app_utils.sections.common import interface
 from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
 
 from .config import default_cfg
@@ -115,7 +115,7 @@ async def initialize_app(q: Q) -> None:
 
     logger.info("Initializing app ...")
 
-    icons_pth = "app_utils/static/"
+    icons_pth = "llm_studio/app_utils/static/"
     (q.app["icon_path"],) = await q.site.upload([f"{icons_pth}/icon.png"])
 
     script_sources = []
