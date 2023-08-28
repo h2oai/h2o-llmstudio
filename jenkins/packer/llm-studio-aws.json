@@ -17,8 +17,32 @@
         "ssh_username": "ubuntu",
         "tags": 
           {
-            "name": "h2oai-llm-studio-{{user `llm_studio_version`}}"
+            "name": "h2oai-llm-studio-{{user `llm_studio_version`}}",
+            "Owner": "ops@h2o.ai",
+            "Project": "DevOps",
+            "Department": "Engineering",
+            "Environment": "Dev",
+            "Scheduling": "self-managed"
           },
+
+          "run_volume_tags": {
+            "Name": "h2oai-llm-studio-{{user `llm_studio_version`}}",
+            "Owner": "ops@h2o.ai",
+            "Project": "DevOps",
+            "Department": "Engineering",
+            "Environment": "Dev",
+            "Scheduling": "self-managed"
+          },
+
+          "run_tags": {
+            "Name": "h2oai-llm-studio-{{user `llm_studio_version`}}",
+            "Owner": "ops@h2o.ai",
+            "Project": "DevOps",
+            "Department": "Engineering",
+            "Environment": "Dev",
+            "Scheduling": "self-managed"
+          },
+
         "access_key": "{{user `aws_access_key`}}",
         "secret_key": "{{user `aws_secret_key`}}",
         "region": "{{user `aws_region`}}",
