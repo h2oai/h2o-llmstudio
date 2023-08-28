@@ -222,8 +222,9 @@ def get_ds_config(cfg: Any):
             # zero3
             "stage3_prefetch_bucket_size": cfg.environment.deepspeed_stage3_prefetch_bucket_size,  # noqa: E501
             "stage3_param_persistence_threshold": cfg.environment.deepspeed_stage3_param_persistence_threshold,  # noqa: E501
-            "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,  # noqa: E501
-            "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,  # noqa: E501
+            # zero3 offload cpu
+            # "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,  # noqa: E501
+            # "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,  # noqa: E501
             # zero++
             # "reduce_scatter": True,
             # "zero_quantized_weights": True,
@@ -235,11 +236,12 @@ def get_ds_config(cfg: Any):
         "gradient_accumulation_steps": cfg.training.grad_accumulation,
         "wall_clock_breakdown": False,
     }
-    if cfg.environment.deepspeed_offload_optimizer:
-        ds_config["zero_optimization"]["offload_optimizer"] = {
-            "device": "cpu",
-            "pin_memory": True,
-        }
+    # TODO: Do not enable offload cpu for now.
+    # if cfg.environment.deepspeed_offload_optimizer:
+    #     ds_config["zero_optimization"]["offload_optimizer"] = {
+    #         "device": "cpu",
+    #         "pin_memory": True,
+    #     }
     # TODO: RuntimeError: Tensors must be CUDA and dense
     # if cfg.environment.deepspeed_offload_param:
     #     ds_config["zero_optimization"]["offload_param"] =

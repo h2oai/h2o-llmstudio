@@ -347,9 +347,9 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     deepspeed_reduce_bucket_size: int = 1e6
     deepspeed_stage3_prefetch_bucket_size: int = 1e6
     deepspeed_stage3_param_persistence_threshold: int = 1e6
-    deepspeed_offload_optimizer: bool = False
-    deepspeed_stage3_max_live_parameters: int = 1e9
-    deepspeed_stage3_max_reuse_distance: int = 1e9
+#     deepspeed_offload_optimizer: bool = False
+#     deepspeed_stage3_max_live_parameters: int = 1e9
+#     deepspeed_stage3_max_reuse_distance: int = 1e9
 
     find_unused_parameters: bool = False
     trust_remote_code: bool = True
@@ -403,17 +403,17 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
                 "deepspeed_reduce_bucket_size",
                 "deepspeed_stage3_prefetch_bucket_size",
                 "deepspeed_stage3_param_persistence_threshold",
-                "deepspeed_offload_optimizer",
+                # "deepspeed_offload_optimizer",
             ],
             [Dependency(key="use_deepspeed", value=False, is_set=False)],
         )
-        self._nesting.add(
-            [
-                "deepspeed_stage3_max_live_parameters",
-                "deepspeed_stage3_max_reuse_distance",
-            ],
-            [Dependency(key="deepspeed_offload_optimizer", value=False, is_set=False)],
-        )
+        # self._nesting.add(
+        #     [
+        #         "deepspeed_stage3_max_live_parameters",
+        #         "deepspeed_stage3_max_reuse_distance",
+        #     ],
+        #     [Dependency(key="deepspeed_offload_optimizer", value=False, is_set=False)],  # noqa: E501
+        # )
 
 
 @dataclass
