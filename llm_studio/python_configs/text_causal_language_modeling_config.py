@@ -347,9 +347,9 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     deepspeed_reduce_bucket_size: int = 1e6
     deepspeed_stage3_prefetch_bucket_size: int = 1e6
     deepspeed_stage3_param_persistence_threshold: int = 1e6
-#     deepspeed_offload_optimizer: bool = False
-#     deepspeed_stage3_max_live_parameters: int = 1e9
-#     deepspeed_stage3_max_reuse_distance: int = 1e9
+    #     deepspeed_offload_optimizer: bool = False
+    #     deepspeed_stage3_max_live_parameters: int = 1e9
+    #     deepspeed_stage3_max_reuse_distance: int = 1e9
 
     find_unused_parameters: bool = False
     trust_remote_code: bool = True
