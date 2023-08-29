@@ -54,7 +54,7 @@ def unwrap_model(model: torch.nn.Module):
     return model
 
 
-def check_disk_space(model: torch.nn.Module, path: str, use_deepspeed: bool):
+def check_disk_space(model: torch.nn.Module, path: str, use_deepspeed: bool = False):
     total, used, free = shutil.disk_usage(path)
 
     model_size_in_bytes = 0
