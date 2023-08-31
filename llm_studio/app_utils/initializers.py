@@ -132,5 +132,8 @@ async def initialize_app(q: Q) -> None:
 
     q.app["script_sources"] = script_sources
     q.app["initialized"] = True
+    q.app.version = default_cfg.version
+    q.app.name = default_cfg.name
+    q.app.heap_mode = default_cfg.heap_mode
 
     logger.info("Initializing app ... done")
