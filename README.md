@@ -17,6 +17,7 @@
 - [Setup](#setup)
   - [Recommended Install](#recommended-install)
   - [Using requirements.txt](#using-requirementstxt)
+  - [Installing custom packages](#installing-custom-packages)
 - [Run H2O LLM Studio GUI](#run-h2o-llm-studio-gui)
 - [Run H2O LLM Studio GUI using Docker from a nightly build](#run-h2o-llm-studio-gui-using-docker-from-a-nightly-build)
 - [Run H2O LLM Studio GUI by building your own Docker image](#run-h2o-llm-studio-gui-by-building-your-own-docker-image)
@@ -109,6 +110,18 @@ If you wish to use conda or another virtual environment, you can also install th
 ```bash
 pip install -r requirements.txt
 ```
+
+### Installing custom packages
+
+If you need to install additional Python packages into your environment, you can do so using pip after activating your virtual environment via ```make shell```. For example, to install flash-attention, you would use the following commands:
+    
+```bash 
+make shell
+pip install flash-attn --no-build-isolation
+pip install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
+```
+
+Alternatively, you can also directly install via ```pipenv install package_name```.
 
 ## Run H2O LLM Studio GUI
 
