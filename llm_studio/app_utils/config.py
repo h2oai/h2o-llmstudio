@@ -46,6 +46,7 @@ default_cfg = {
         "ALLOWED_FILE_EXTENSIONS", ".zip,.csv,.pq,.parquet"
     ).split(","),
     "llm_studio_workdir": f"{os.getenv('H2O_LLM_STUDIO_WORKDIR', os.getcwd())}",
+    "heap_mode": os.getenv("H2O_LLM_STUDIO_ENABLE_HEAP", "False") == "True",
     "data_folder": "data/",
     "output_folder": "output/",
     "s3_bucket": f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
