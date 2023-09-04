@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BRANCH_VERSION=$(groovy llm-studio-cloud-images.groovy.groovy)
+BRANCH_VERSION=$(groovy llm-studio-cloud-images.groovy)
 
 echo "git clone and checkout"
 
