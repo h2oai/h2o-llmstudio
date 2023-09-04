@@ -38,7 +38,7 @@ node('docker') {
                                              string(credentialsId: "AWS_MARKETPLACE_SG", variable: "aws_security_group_id")]) {
                                 dir('jenkins/packer') {
                                     if (params.AWS) {
-                                        sh("packer build \
+                                        sh("BRANCH_VERSION=${params.BRANCH_VERSION} packer build \
                                         -var 'aws_access_key=$AWS_ACCESS_KEY_ID' \
                                         -var 'aws_secret_key=$AWS_SECRET_ACCESS_KEY' \
                                         -var 'llm_studio_version=${LLM_STUDIO_VERSION}' \
