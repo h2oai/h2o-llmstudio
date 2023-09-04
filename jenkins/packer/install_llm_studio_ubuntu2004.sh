@@ -2,13 +2,11 @@
 
 echo "Branch version is $VERSION"
 
-sleep 30
-
 echo "git clone and checkout"
 
 git clone https://github.com/h2oai/h2o-llmstudio.git
 cd h2o-llmstudio
-git checkout "$BRANCH_VERSION"
+git checkout "$VERSION"
 
 # Print the current Git branch
 current_branch=$(git branch --show-current)
