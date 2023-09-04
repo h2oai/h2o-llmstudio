@@ -142,20 +142,22 @@ def start_process(
         free_port = find_free_port()
         if cfg.environment.use_deepspeed:
             logger.info("Starting deepspeed...")
+            cmd = [
+                "env",
+                "deepspeed",
+                "--include",
+                f"localhost:{','.join(gpu_list)}",
+                "--master_port",
+                f"{str(free_port)}",
+                "train_wave.py",
+                "-Y",
+                config_name,
+            ]
+            if len(process_queue) > 0:
+                cmd.append("-Q")
+                cmd.append(",".join([str(x) for x in process_queue]))
             p = subprocess.Popen(
-                [
-                    "env",
-                    "deepspeed",
-                    "--include",
-                    f"localhost:{','.join(gpu_list)}",
-                    "--master_port",
-                    f"{str(free_port)}",
-                    "train_wave.py",
-                    "-Y",
-                    config_name,
-                    "-Q",
-                    ",".join([str(x) for x in process_queue]),
-                ],
+                cmd,
                 env=env,
             )
         else:
