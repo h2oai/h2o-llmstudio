@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export BRANCH_TAG_VERSION=$1
+
 # Install core packages
 sudo apt update
 sudo apt install -y software-properties-common
