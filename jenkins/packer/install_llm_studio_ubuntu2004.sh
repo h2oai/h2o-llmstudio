@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/bin/bash -e
 
-BRANCH_VERSION="$BRANCH_VERSION"
+echo "Branch version is $VERSION"
+
+sleep 30
 
 echo "git clone and checkout"
 

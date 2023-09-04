@@ -82,7 +82,7 @@
     "provisioners": [
        { 
          "type": "shell",
-         "environment_vars": [],
+         "environment_vars": ["VERSION={{user `BRANCH_VERSION`}}"],
          "script": "./install_llm_studio_ubuntu2004.sh"
        }
     ]
