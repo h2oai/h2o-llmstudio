@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export BRANCH_TAG_VERSION=$1
+BRANCH_VERSION=$(groovy llm-studio-cloud-images.groovy.groovy)
 
 # Install core packages
 sudo apt update
@@ -44,7 +44,7 @@ rm cuda-repo-ubuntu2004-*.deb
 # Clone h2o-llmstudio
 git clone https://github.com/h2oai/h2o-llmstudio.git
 cd h2o-llmstudio
-git checkout "$BRANCH_TAG_VERSION" 
+git checkout "$BRANCH_VERSION" 
 
 
 # Create virtual environment (pipenv)

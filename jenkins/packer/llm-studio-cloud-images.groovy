@@ -5,7 +5,7 @@ properties(
         parameters(
             [
                 string(name: 'BRANCH_TAG', defaultValue: 'origin/main'),
-                string(name: 'BRANCH_VERSION', defaultValue: 'origin/main'),
+                string(name: 'BRANCH_VERSION', defaultValue: 'v0.1.0'),
                 booleanParam(name: 'AWS', defaultValue: true, description: 'Make Amazon Machine Image/Not?'),
                 booleanParam(name: 'GCP', defaultValue: true, description: 'Make GCP Image/Not?'),
                 booleanParam(name: 'AZURE', defaultValue: true, description: 'Make AZURE Image/Not?'),
@@ -22,6 +22,9 @@ node('docker') {
         checkout scm
         sh('ls -al')
     }
+
+
+
 
     stage('Build Images') {
         try {
