@@ -17,9 +17,33 @@ sudo apt -y install python3.10
 sudo apt-get -y install python3.10-distutils
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 
+
+#add GPU support
+set -eo pipefail
+set -x
+
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda-repo-ubuntu2004-11-8-local_11.8.0-520.61.05-1_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu2004-11-8-local_11.8.0-520.61.05-1_amd64.deb
+sudo cp /var/cuda-repo-ubuntu2004-11-8-local/cuda-*-keyring.gpg /usr/share/keyrings/
+sudo apt-get update
+sudo apt-get -y install cuda
+
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey \
+| sudo apt-key add - && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list \
+| sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+
+sudo apt-get -y update
+sudo apt-get install -y nvidia-container-runtime
+rm cuda-repo-ubuntu2004-*.deb
+
+
 # Clone h2o-llmstudio
 git clone https://github.com/h2oai/h2o-llmstudio.git
 cd h2o-llmstudio
+git checkout v0.1.0 
+
 
 # Create virtual environment (pipenv)
 make setup
