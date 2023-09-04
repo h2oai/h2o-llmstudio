@@ -5,7 +5,6 @@ properties(
         parameters(
             [
                 string(name: 'BRANCH_TAG', defaultValue: 'origin/main'),
-                string(name: 'BRANCH_TAG_VERSION', defaultValue: 'v0.1.0'),
                 booleanParam(name: 'AWS', defaultValue: true, description: 'Make Amazon Machine Image/Not?'),
                 booleanParam(name: 'GCP', defaultValue: true, description: 'Make GCP Image/Not?'),
                 booleanParam(name: 'AZURE', defaultValue: true, description: 'Make AZURE Image/Not?'),
@@ -21,16 +20,6 @@ node('docker') {
         currentBuild.displayName = "#${BUILD_NUMBER} - Rel:${LLM_STUDIO_VERSION}"
         checkout scm
         sh('ls -al')
-    }
-
-
-    stage('Checkout Branch') {
-        steps {
-            script {
-                def branchTag = params.BRANCH_TAG_VERSION
-                env.BRANCH_TAG_VERSION = branchTag
-            }
-        }
     }
 
     stage('Build Images') {
