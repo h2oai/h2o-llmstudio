@@ -2,6 +2,19 @@
 
 BRANCH_VERSION=$(groovy llm-studio-cloud-images.groovy.groovy)
 
+echo "git clone and checkout"
+
+git clone https://github.com/h2oai/h2o-llmstudio.git
+cd h2o-llmstudio
+git checkout "$BRANCH_VERSION"
+
+# Print the current Git branch
+current_branch=$(git branch --show-current)
+echo "Current Git branch: $current_branch"
+
+# Sleep for 30 seconds
+sleep 30
+
 # Install core packages
 sudo apt update
 sudo apt install -y software-properties-common
