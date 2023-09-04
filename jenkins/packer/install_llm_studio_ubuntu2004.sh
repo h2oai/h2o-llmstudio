@@ -1,19 +1,5 @@
 #!/bin/bash -e
 
-echo "Branch version is $VERSION"
-
-echo "git clone and checkout"
-
-git clone https://github.com/h2oai/h2o-llmstudio.git
-cd h2o-llmstudio
-git checkout "$VERSION"
-
-# Print the current Git branch
-current_branch=$(git branch --show-current)
-echo "Current Git branch: $current_branch"
-
-# Sleep for 30 seconds
-sleep 30
 
 # Install core packages
 sudo apt update
@@ -57,7 +43,7 @@ rm cuda-repo-ubuntu2004-*.deb
 # Clone h2o-llmstudio
 git clone https://github.com/h2oai/h2o-llmstudio.git
 cd h2o-llmstudio
-git checkout "$BRANCH_VERSION" 
+git checkout "$VERSION" 
 
 
 # Create virtual environment (pipenv)
