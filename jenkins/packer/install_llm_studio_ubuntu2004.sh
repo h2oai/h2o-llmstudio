@@ -71,3 +71,60 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 sudo systemctl enable llm_studio.service
 sudo systemctl start llm_studio.service
+
+#Install nginx
+
+sudo apt update
+sudo apt install -y nginx
+
+
+#configure nginx for port forwarding
+
+cd /etc/nginx/conf.d
+sudo chown -R ubuntu:ubuntu .
+cd $HOME
+printf """
+server {
+    listen 80;
+    listen [::]:80;
+    server_name <|_SUBST_PUBLIC_IP|>;  # Change this to your domain name
+
+    location / {  # Change this if you'd like to server your Gradio app on a different path
+        proxy_pass http://0.0.0.0:10101/; # Change this if your Gradio app will be running on a different port
+        proxy_redirect off;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \"upgrade\";
+        proxy_set_header Host \$host;
+    }
+}
+""" > temp.conf
+
+printf """
+ip=\$(dig +short myip.opendns.com @resolver1.opendns.com)
+sed \"s/<|_SUBST_PUBLIC_IP|>;/\$ip;/g\" /home/ubuntu/temp.conf  > /etc/nginx/conf.d/llm.conf
+""" > run_nginx.sh
+
+sudo chmod u+x run_nginx.sh
+
+cd /etc/systemd/system
+sudo chown -R ubuntu:ubuntu .
+printf """
+[Unit]
+Description=LLM Nginx Server
+After=network.target
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu
+ExecStart=bash /home/ubuntu/run_nginx.sh
+Restart=always
+[Install]
+WantedBy=multi-user.target
+""" > llm_nginx.service
+
+sudo systemctl daemon-reload
+sudo systemctl enable llm_nginx.service
+
+
+
