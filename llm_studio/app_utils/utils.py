@@ -153,30 +153,27 @@ def start_process(
                 "-Y",
                 config_name,
             ]
-            if len(process_queue) > 0:
-                cmd.append("-Q")
-                cmd.append(",".join([str(x) for x in process_queue]))
-            p = subprocess.Popen(
-                cmd,
-                env=env,
-            )
         else:
             logger.info("Starting torchrun...")
-            p = subprocess.Popen(
-                [
-                    "env",
-                    f"CUDA_VISIBLE_DEVICES={','.join(gpu_list)}",
-                    "torchrun",
-                    f"--nproc_per_node={str(num_gpus)}",
-                    f"--master_port={str(free_port)}",
-                    "train_wave.py",
-                    "-Y",
-                    config_name,
-                    "-Q",
-                    ",".join([str(x) for x in process_queue]),
-                ],
-                env=env,
-            )
+            cmd = [
+                "env",
+                f"CUDA_VISIBLE_DEVICES={','.join(gpu_list)}",
+                "torchrun",
+                f"--nproc_per_node={str(num_gpus)}",
+                f"--master_port={str(free_port)}",
+                "train_wave.py",
+                "-Y",
+                config_name,
+            ]
+
+        if len(process_queue) > 0:
+            cmd.append("-Q")
+            cmd.append(",".join([str(x) for x in process_queue]))
+        p = subprocess.Popen(
+            cmd,
+            env=env,
+        )
+
     logger.info(f"Percentage of RAM memory used: {psutil.virtual_memory().percent}")
 
     return p
