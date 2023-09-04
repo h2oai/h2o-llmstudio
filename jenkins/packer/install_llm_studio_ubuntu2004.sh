@@ -42,7 +42,7 @@ rm cuda-repo-ubuntu2004-*.deb
 # Clone h2o-llmstudio
 git clone https://github.com/h2oai/h2o-llmstudio.git
 cd h2o-llmstudio
-git checkout v0.1.0 
+git checkout "$BRANCH_TAG_VERSION" 
 
 
 # Create virtual environment (pipenv)
