@@ -62,6 +62,7 @@ node('docker') {
                                         sh("packer build \
                                             -var 'project_id=h2o-gce' \
                                             -var 'account_file=$GCP_ACCOUNT_FILE' \
+                                            -var 'BRANCH_VERSION=${BRANCH_VERSION}' \
                                             -var 'llm_studio_version=${LLM_STUDIO_VERSION}' \
                                             llm-studio-gcp.json"
                                         )
@@ -86,6 +87,7 @@ node('docker') {
                                             -var 'managed_image_resource_group_name=H2OIMAGES' \
                                             -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
                                             -var 'tenant_id=$AZURE_TENANT_ID' \
+                                            -var 'BRANCH_VERSION=${BRANCH_VERSION}' \
                                             -var 'llm_studio_version=${LLM_STUDIO_VERSION}' \
                                             llm-studio-azure.json"
                                         )
