@@ -127,5 +127,8 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 sudo systemctl enable llm_nginx.service
 
+sudo systemctl restart llm_studio.service
+sudo systemctl restart nginx
+
 
 
