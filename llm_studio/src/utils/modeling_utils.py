@@ -10,6 +10,7 @@ import coolname
 import deepspeed
 import numpy as np
 import torch
+from deepspeed.runtime.dataloader import DeepSpeedDataLoader
 from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
 from peft import LoraConfig, get_peft_model
 from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
@@ -19,6 +20,7 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
     MixedPrecision,
 )
 from torch.nn.parallel import DistributedDataParallel
+from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 from transformers import (
     AutoConfig,
@@ -288,10 +290,13 @@ def wrap_model_distributed(
             training_data=train_dataloader.dataset,
             config_params=ds_config,
         )
-        _, _, val_dataloader, _ = deepspeed.initialize(
-            model=torch.nn.Linear(1, 1),
-            training_data=val_dataloader.dataset,
-            config_params=ds_config,
+        val_dataloader = DeepSpeedDataLoader(
+            val_dataloader.dataset,
+            batch_size=val_dataloader.batch_size,
+            local_rank=cfg.environment._local_rank,
+            pin_memory=True,
+            tput_timer=None,
+            data_sampler=DistributedSampler(val_dataloader.dataset, shuffle=False),
         )
     else:
         find_unused_parameters = cfg.environment.find_unused_parameters
