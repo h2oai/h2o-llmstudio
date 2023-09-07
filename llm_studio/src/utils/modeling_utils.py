@@ -10,7 +10,6 @@ import coolname
 import numpy as np
 import torch
 from peft import LoraConfig, get_peft_model
-from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
 from torch.cuda.amp import autocast
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
