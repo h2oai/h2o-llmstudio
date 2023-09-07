@@ -115,6 +115,36 @@ async def settings(q: Q) -> None:
             ),
             ui.inline(
                 items=[
+                    ui.label("Azure Datalake connection string", width=label_width),
+                    ui.textbox(
+                        name="default_azure_conn_string",
+                        label=None,
+                        value=q.client["default_azure_conn_string"],
+                        width=textbox_width,
+                        password=True,
+                        trigger=False,
+                        tooltip="Set the value for the Azure Datalake \
+                            connection string for dataset import.",
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
+                    ui.label("Azure Datalake container name", width=label_width),
+                    ui.textbox(
+                        name="default_azure_container",
+                        label=None,
+                        value=q.client["default_azure_container"],
+                        width=textbox_width,
+                        password=False,
+                        trigger=False,
+                        tooltip="Set the value for the Azure Datalake \
+                            container name for dataset import.",
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
                     ui.label("Kaggle username", width=label_width),
                     ui.textbox(
                         name="default_kaggle_username",
