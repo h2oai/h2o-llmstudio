@@ -36,6 +36,7 @@ from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
 from llm_studio.src.utils.data_utils import (
+    OrderedDistributedSampler,
     batch_padding,
     cat_batches,
     get_inference_batch_size,
@@ -296,7 +297,11 @@ def wrap_model_distributed(
             local_rank=cfg.environment._local_rank,
             pin_memory=True,
             tput_timer=None,
-            data_sampler=DistributedSampler(val_dataloader.dataset, shuffle=False),
+            data_sampler=OrderedDistributedSampler(
+                val_dataloader.dataset,
+                num_replicas=cfg.environment._world_size,
+                rank=cfg.environment._local_rank,
+            )
         )
     else:
         find_unused_parameters = cfg.environment.find_unused_parameters
