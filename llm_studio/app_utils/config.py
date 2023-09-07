@@ -88,6 +88,8 @@ default_cfg = {
         "default_aws_bucket_name": f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
         "default_aws_access_key": os.getenv("AWS_ACCESS_KEY_ID", ""),
         "default_aws_secret_key": os.getenv("AWS_SECRET_ACCESS_KEY", ""),
+        "default_azure_conn_string": "",
+        "default_azure_container": "",
         "default_kaggle_username": "",
         "default_kaggle_secret_key": "",
         "set_max_epochs": 50,
