@@ -709,19 +709,22 @@ def prepare_lora(cfg, backbone):
         if cfg.training.lora_target_modules
         else None
     )
-    
+
     if target_modules is None:
         target_modules = []
         for name, module in backbone.named_modules():
-            if isinstance(module, (torch.nn.Linear, torch.nn.Conv1d)) and 'head' not in name:
+            if (
+                isinstance(module, (torch.nn.Linear, torch.nn.Conv1d))
+                and "head" not in name
+            ):
                 # peft checks with .endswith('name') so we need to add the dot
-                name = "." + name.split('.')[-1] if '.' in name else name
+                name = "." + name.split(".")[-1] if "." in name else name
                 if name not in target_modules:
                     target_modules.append(name)
-                    
+
     if cfg.environment._local_rank == 0:
         logger.info(f"Lora module names: {target_modules}")
-        
+
     lora_config = LoraConfig(
         r=cfg.training.lora_r,
         lora_alpha=cfg.training.lora_alpha,
