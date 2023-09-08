@@ -5,6 +5,7 @@ properties(
         parameters(
             [
                 string(name: 'BRANCH_TAG', defaultValue: 'origin/main'),
+                string(defaultValue: 'v0.1.0', description: 'eg: v0.1.0', name: 'BRANCH_VERSION', trim: true),
                 booleanParam(name: 'AWS', defaultValue: true, description: 'Make Amazon Machine Image/Not?'),
                 booleanParam(name: 'GCP', defaultValue: true, description: 'Make GCP Image/Not?'),
                 booleanParam(name: 'AZURE', defaultValue: true, description: 'Make AZURE Image/Not?'),
@@ -37,6 +38,7 @@ node('docker') {
                                         sh("packer build \
                                         -var 'aws_access_key=$AWS_ACCESS_KEY_ID' \
                                         -var 'aws_secret_key=$AWS_SECRET_ACCESS_KEY' \
+                                        -var 'BRANCH_VERSION=${BRANCH_VERSION}' \
                                         -var 'llm_studio_version=${LLM_STUDIO_VERSION}' \
                                         -var 'aws_region=us-east-1' \
                                         -var 'aws_vpc_id=$aws_vpc_id' \
@@ -60,6 +62,7 @@ node('docker') {
                                         sh("packer build \
                                             -var 'project_id=h2o-gce' \
                                             -var 'account_file=$GCP_ACCOUNT_FILE' \
+                                            -var 'BRANCH_VERSION=${BRANCH_VERSION}' \
                                             -var 'llm_studio_version=${LLM_STUDIO_VERSION}' \
                                             llm-studio-gcp.json"
                                         )
@@ -84,6 +87,7 @@ node('docker') {
                                             -var 'managed_image_resource_group_name=H2OIMAGES' \
                                             -var 'subscription_id=$AZURE_SUBSCRIPTION_ID' \
                                             -var 'tenant_id=$AZURE_TENANT_ID' \
+                                            -var 'BRANCH_VERSION=${BRANCH_VERSION}' \
                                             -var 'llm_studio_version=${LLM_STUDIO_VERSION}' \
                                             llm-studio-azure.json"
                                         )
