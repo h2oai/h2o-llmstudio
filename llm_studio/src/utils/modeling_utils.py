@@ -716,8 +716,7 @@ def prepare_lora(cfg, backbone):
                 isinstance(module, (torch.nn.Linear, torch.nn.Conv1d))
                 and "head" not in name
             ):
-                # peft checks with .endswith('name') so we need to add the dot
-                name = "." + name.split(".")[-1] if "." in name else name
+                name = name.split(".")[-1]
                 if name not in target_modules:
                     target_modules.append(name)
 
