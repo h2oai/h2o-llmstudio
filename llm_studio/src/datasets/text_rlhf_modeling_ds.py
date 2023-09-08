@@ -55,13 +55,19 @@ class CustomDataset(CausalLMCustomDataset):
             + self.raw_prompts[idx]
         )
 
-    def postprocess_batch_predictions(self, cfg: Any, output: Dict) -> Dict:
-        if cfg.prediction.metric == "Perplexity":
+    def postprocess_batch_predictions(
+        self, cfg: Any, output: Dict, force_transform: bool = False
+    ) -> Dict:
+        if cfg.prediction.metric == "Perplexity" and not force_transform:
+            # we still need the predicted answer for the reward model during training
+            # force that with force_transform=True in the train loop
             return output
+
         predicted_text = [
             self.tokenizer.decode(ids, skip_special_tokens=True).strip()
             for ids in output["predicted_answer_ids"]
         ]
+
         output["predicted_text"] = np.array(predicted_text)
         output["predicted_answer_ids"] = output["predicted_answer_ids"].detach()
         return output
