@@ -36,7 +36,7 @@ class ConfigRLHFLMDataset(ConfigNLPCausalLMDataset):
         self.system_column = "None"
         self._visibility["system_column"] = -1
         # RLHF is not compatible with limiting the chains
-        self.visibility["limit_chained_samples"] = -1
+        self._visibility["limit_chained_samples"] = -1
 
 
 class LossClass:
