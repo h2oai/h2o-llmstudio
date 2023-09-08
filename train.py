@@ -918,15 +918,16 @@ def run(cfg: Any) -> None:
 
     experiment_path = f"{cfg.output_directory}"
 
+    if cfg.training.epochs == 0:
+        checkpoint_path = cfg.output_directory
+        logger.info(
+            f"Saving last model checkpoint: "
+            f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
+            f"{val_metric:.5} to {checkpoint_path}"
+        )
+        save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
+
     if cfg.environment._local_rank == 0:
-        if cfg.training.epochs == 0:
-            checkpoint_path = cfg.output_directory
-            logger.info(
-                f"Saving last model checkpoint: "
-                f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
-                f"{val_metric:.5} to {checkpoint_path}"
-            )
-            save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
         save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 

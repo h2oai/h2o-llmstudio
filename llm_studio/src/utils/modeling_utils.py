@@ -100,8 +100,8 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
     if cfg.environment.use_deepspeed:
         if path is not None:
             # gather model params from all ranks
-            if hasattr(cfg.training, "lora") and cfg.training.lora:
-                model.backbone.save_pretrained(path)
+            # if hasattr(cfg.training, "lora") and cfg.training.lora:
+            #     model.backbone.save_pretrained(path)
             model.save_checkpoint(os.path.join(path, "ds_checkpoint"))
             if cfg.environment._local_rank == 0:
                 # load to cpu
@@ -115,8 +115,8 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
     else:
         if cfg.environment._local_rank == 0:
             model = unwrap_model(model)
-            if hasattr(cfg.training, "lora") and cfg.training.lora:
-                model.backbone.save_pretrained(path)
+            # if hasattr(cfg.training, "lora") and cfg.training.lora:
+            #     model.backbone.save_pretrained(path)
             checkpoint = {"model": model.state_dict()}
             if path is not None:
                 torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
