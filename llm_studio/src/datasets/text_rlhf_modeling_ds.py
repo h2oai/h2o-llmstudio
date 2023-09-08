@@ -18,6 +18,9 @@ class CustomDataset(CausalLMCustomDataset):
         assert (
             cfg.dataset.system_column == "None"
         ), "RLHF is not compatible with system column."
+        assert (
+            cfg.dataset.limit_chained_samples is False
+        ), "RLHF is not compatible with limit_chained_samples."
         super().__init__(df, cfg, mode)
         self.raw_prompts = get_texts(df, self.cfg, separator="")
 

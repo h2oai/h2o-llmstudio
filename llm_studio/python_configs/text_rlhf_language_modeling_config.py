@@ -28,12 +28,15 @@ class ConfigRLHFLMDataset(ConfigNLPCausalLMDataset):
     text_answer_separator: str = " [/INST]"
     add_eos_token_to_prompt: bool = False
     add_eos_token_to_answer: bool = False
+    limit_chained_samples: bool = False
 
     def __post_init__(self):
         super().__post_init__()
         # RLHF is not compatible with system column.
         self.system_column = "None"
         self._visibility["system_column"] = -1
+        # RLHF is not compatible with limiting the chains
+        self.visibility["limit_chained_samples"] = -1
 
 
 class LossClass:
