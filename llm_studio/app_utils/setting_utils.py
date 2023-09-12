@@ -23,11 +23,10 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
-PASSWORDS_PHRASES = ["token", "key"]
 SECRET_KEYS = [
     key
     for key in default_cfg.user_settings
-    if any(password in key for password in PASSWORDS_PHRASES)
+    if any(password in key for password in ["token", "key"])
 ]
 USER_SETTING_KEYS = [key for key in default_cfg.user_settings if key not in SECRET_KEYS]
 
