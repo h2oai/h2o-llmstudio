@@ -142,14 +142,18 @@ class EnvFileSaver(NoSaver):
 
 class Secrets:
     """
-    Factory class to get the secrets handler.
+    Factory class to get the secrets' handler.
     """
 
     _secrets = {
-        "Keyring": KeyRingSaver,
         "Do not save credentials permanently": NoSaver,
         ".env File": EnvFileSaver,
     }
+    try:
+        keyring.get_password('service', 'username')
+        _secrets["Keyring"] = KeyRingSaver
+    except Exception as e:
+        logger.warning(f"Error loading keyring: {e}. Disabling keyring save option.")
 
     @classmethod
     def names(cls) -> List[str]:
@@ -188,7 +192,7 @@ async def _save_secrets(q: Q):
             logger.error(f"Could not save password {key} to {secret_name}")
             q.page["meta"].dialog = ui.dialog(
                 title="Could not save secrets. "
-                "Please choose another Credential Handler.",
+                      "Please choose another Credential Handler.",
                 name="secrets_error",
                 items=[
                     ui.text(
@@ -228,7 +232,7 @@ def _load_secrets(q: Q):
 
 def _get_secrets_handler(q: Q):
     secret_name = (
-        q.client["credential_saver"] or default_cfg.user_settings["credential_saver"]
+            q.client["credential_saver"] or default_cfg.user_settings["credential_saver"]
     )
     secrets_handler = Secrets.get(secret_name)(
         username=get_user_id(q), root_dir=get_database_dir(q)
