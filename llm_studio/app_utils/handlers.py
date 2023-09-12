@@ -42,11 +42,12 @@ from llm_studio.app_utils.sections.project import (
     list_current_experiments,
 )
 from llm_studio.app_utils.sections.settings import settings
-from llm_studio.app_utils.utils import (
-    add_model_type,
-    load_user_settings,
-    save_user_settings,
+from llm_studio.app_utils.setting_utils import (
+    load_default_user_settings,
+    load_user_settings_and_secrets,
+    save_user_settings_and_secrets,
 )
+from llm_studio.app_utils.utils import add_model_type
 from llm_studio.app_utils.wave_utils import report_error, wave_utils_handle_error
 
 logger = logging.getLogger(__name__)
@@ -77,13 +78,13 @@ async def handle(q: Q) -> None:
             await settings(q)
         elif q.args["save_settings"]:
             logger.info("Saving user settings")
-            save_user_settings(q)
+            await save_user_settings_and_secrets(q)
             await settings(q)
         elif q.args["load_settings"]:
-            load_user_settings(q)
+            load_user_settings_and_secrets(q)
             await settings(q)
         elif q.args["restore_default_settings"]:
-            load_user_settings(q, force_defaults=True)
+            load_default_user_settings(q)
             await settings(q)
 
         elif q.args["report_error"]:
