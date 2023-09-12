@@ -20,7 +20,7 @@ def get_size(x):
         return 2**31
 
 
-version = "0.2.0-dev"
+version = "0.3.0-dev"
 
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -85,6 +85,7 @@ default_cfg = {
     ],
     "user_settings": {
         "theme_dark": True,
+        "credential_saver": ".env File",
         "default_aws_bucket_name": f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
         "default_aws_access_key": os.getenv("AWS_ACCESS_KEY_ID", ""),
         "default_aws_secret_key": os.getenv("AWS_SECRET_ACCESS_KEY", ""),
