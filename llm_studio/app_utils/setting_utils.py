@@ -1,7 +1,10 @@
+import errno
+import functools
 import logging
 import multiprocessing
 import os
 import pickle
+import signal
 import time
 import traceback
 from typing import Any, List
@@ -128,6 +131,9 @@ class EnvFileSaver(NoSaver):
             yaml.safe_dump(data, f)
 
     def load(self, name: str):
+        if not os.path.exists(self.filename):
+            return None
+
         with open(self.filename, "r") as f:
             data = yaml.safe_load(f)
             return data.get(name, None)
@@ -142,13 +148,32 @@ class EnvFileSaver(NoSaver):
                 yaml.safe_dump(data, f)
 
 
-def _test_keyring():
-    try:
-        keyring.get_password("service", "username")
-    except Exception:
-        time.sleep(4)
+# https://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish
+class TimeoutError(Exception):
+    pass
 
 
+def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
+    def decorator(func):
+        def _handle_timeout(signum, frame):
+            raise TimeoutError(error_message)
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, _handle_timeout)
+            signal.alarm(seconds)
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                signal.alarm(0)
+            return result
+
+        return wrapper
+
+    return decorator
+
+
+@timeout(3)
 def check_if_keyring_works():
     """
     Test if keyring is working. On misconfigured machines,
@@ -160,14 +185,10 @@ def check_if_keyring_works():
     To avoid waiting for 2 minutes, we test if keyring works in a separate process and kill it after 3 seconds.
     """
 
-    p = multiprocessing.Process(target=_test_keyring)
-    p.start()
-    p.join(3)
-
-    if p.is_alive():
-        p.kill()
-        return False
-    return True
+    try:
+        keyring.get_password("service", "username")
+    except Exception:
+        time.sleep(4)
 
 
 class Secrets:
@@ -179,9 +200,11 @@ class Secrets:
         "Do not save credentials permanently": NoSaver,
         ".env File": EnvFileSaver,
     }
-    if check_if_keyring_works():
+    try:
+        check_if_keyring_works()
+        logger.info(f"Keyring is correctly configured on this machine.")
         _secrets["Keyring"] = KeyRingSaver
-    else:
+    except TimeoutError:
         logger.warning(f"Error loading keyring. Disabling keyring save option.")
 
     @classmethod
