@@ -1,6 +1,8 @@
 import logging
+import multiprocessing
 import os
 import pickle
+import time
 import traceback
 from typing import Any, List
 
@@ -140,6 +142,33 @@ class EnvFileSaver(NoSaver):
                 yaml.safe_dump(data, f)
 
 
+def check_if_keyring_works():
+    """
+    Test if keyring is working. On misconfigured machines,
+    keyring may hang up to 2 minutes with the following error:
+    jeepney.wrappers.DBusErrorResponse:
+    [org.freedesktop.DBus.Error.TimedOut]
+    ("Failed to activate service 'org.freedesktop.secrets': timed out (service_start_timeout=120000ms)",)
+
+    To avoid waiting for 2 minutes, we test if keyring works in a separate process and kill it after 3 seconds.
+    """
+
+    def test_keyring():
+        try:
+            keyring.get_password("service", "username")
+        except Exception:
+            time.sleep(4)
+
+    p = multiprocessing.Process(target=test_keyring)
+    p.start()
+    p.join(3)
+
+    if p.is_alive():
+        p.kill()
+        return False
+    return True
+
+
 class Secrets:
     """
     Factory class to get the secrets' handler.
@@ -149,11 +178,10 @@ class Secrets:
         "Do not save credentials permanently": NoSaver,
         ".env File": EnvFileSaver,
     }
-    try:
-        keyring.get_password('service', 'username')
+    if check_if_keyring_works():
         _secrets["Keyring"] = KeyRingSaver
-    except Exception as e:
-        logger.warning(f"Error loading keyring: {e}. Disabling keyring save option.")
+    else:
+        logger.warning(f"Error loading keyring. Disabling keyring save option.")
 
     @classmethod
     def names(cls) -> List[str]:
@@ -192,7 +220,7 @@ async def _save_secrets(q: Q):
             logger.error(f"Could not save password {key} to {secret_name}")
             q.page["meta"].dialog = ui.dialog(
                 title="Could not save secrets. "
-                      "Please choose another Credential Handler.",
+                "Please choose another Credential Handler.",
                 name="secrets_error",
                 items=[
                     ui.text(
@@ -232,7 +260,7 @@ def _load_secrets(q: Q):
 
 def _get_secrets_handler(q: Q):
     secret_name = (
-            q.client["credential_saver"] or default_cfg.user_settings["credential_saver"]
+        q.client["credential_saver"] or default_cfg.user_settings["credential_saver"]
     )
     secrets_handler = Secrets.get(secret_name)(
         username=get_user_id(q), root_dir=get_database_dir(q)
