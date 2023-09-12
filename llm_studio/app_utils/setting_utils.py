@@ -180,7 +180,7 @@ def check_if_keyring_works():
     [org.freedesktop.DBus.Error.TimedOut]
     ("Failed to activate service 'org.freedesktop.secrets': timed out (service_start_timeout=120000ms)",)
 
-    To avoid waiting for 2 minutes, we test if keyring works in a separate process and kill it after 3 seconds.
+    To avoid waiting for 2 minutes, we kill the process after 3 seconds.
     """
     keyring.get_password("service", "username")
 
@@ -199,7 +199,9 @@ class Secrets:
         logger.info(f"Keyring is correctly configured on this machine.")
         _secrets["Keyring"] = KeyRingSaver
     except TimeoutError:
-        logger.warning(f"Error loading keyring due to timeout. Disabling keyring save option.")
+        logger.warning(
+            f"Error loading keyring due to timeout. Disabling keyring save option."
+        )
     except Exception as e:
         logger.warning(f"Error loading keyring: {e}. Disabling keyring save option.")
 
@@ -240,7 +242,7 @@ async def _save_secrets(q: Q):
             logger.error(f"Could not save password {key} to {secret_name}")
             q.page["meta"].dialog = ui.dialog(
                 title="Could not save secrets. "
-                      "Please choose another Credential Handler.",
+                "Please choose another Credential Handler.",
                 name="secrets_error",
                 items=[
                     ui.text(
@@ -280,7 +282,7 @@ def _load_secrets(q: Q):
 
 def _get_secrets_handler(q: Q):
     secret_name = (
-            q.client["credential_saver"] or default_cfg.user_settings["credential_saver"]
+        q.client["credential_saver"] or default_cfg.user_settings["credential_saver"]
     )
     secrets_handler = Secrets.get(secret_name)(
         username=get_user_id(q), root_dir=get_database_dir(q)
