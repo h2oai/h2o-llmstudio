@@ -14,7 +14,7 @@ from h2o_wave import data as chat_data
 from h2o_wave import ui
 from transformers import AutoTokenizer, TextStreamer
 
-from app_utils.utils.utils import (
+from llm_studio.app_utils.utils import (
     get_experiments,
     get_ui_elements,
     parse_ui_elements,

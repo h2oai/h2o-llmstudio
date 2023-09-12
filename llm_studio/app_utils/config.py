@@ -46,6 +46,7 @@ default_cfg = {
         "ALLOWED_FILE_EXTENSIONS", ".zip,.csv,.pq,.parquet"
     ).split(","),
     "llm_studio_workdir": f"{os.getenv('H2O_LLM_STUDIO_WORKDIR', os.getcwd())}",
+    "heap_mode": os.getenv("H2O_LLM_STUDIO_ENABLE_HEAP", "False") == "True",
     "data_folder": "data/",
     "output_folder": "output/",
     "s3_bucket": f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
@@ -88,6 +89,8 @@ default_cfg = {
         "default_aws_bucket_name": f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
         "default_aws_access_key": os.getenv("AWS_ACCESS_KEY_ID", ""),
         "default_aws_secret_key": os.getenv("AWS_SECRET_ACCESS_KEY", ""),
+        "default_azure_conn_string": "",
+        "default_azure_container": "",
         "default_kaggle_username": "",
         "default_kaggle_secret_key": "",
         "set_max_epochs": 50,

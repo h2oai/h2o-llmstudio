@@ -9,8 +9,8 @@ import yaml
 from h2o_wave import Q, ui
 from keyring.errors import KeyringLocked, PasswordDeleteError
 
-from app_utils.config import default_cfg
-from app_utils.utils.utils import get_database_dir, get_user_id
+from llm_studio.app_utils.config import default_cfg
+from llm_studio.app_utils.utils import get_database_dir, get_user_id
 
 __all__ = [
     "load_user_settings_and_secrets",

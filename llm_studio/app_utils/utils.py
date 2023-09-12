@@ -7,13 +7,14 @@ import json
 import logging
 import math
 import os
+import random
 import re
 import shutil
 import socket
+import string
 import subprocess
 import time
 import uuid
-import warnings
 import zipfile
 from collections import defaultdict
 from contextlib import closing
@@ -25,6 +26,7 @@ import numpy as np
 import pandas as pd
 import psutil
 import yaml
+from azure.storage.filedatalake import DataLakeServiceClient
 from boto3.session import Session
 from botocore.handlers import disable_signing
 from datasets import load_dataset
@@ -32,8 +34,7 @@ from h2o_wave import Q, ui
 from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
 
-from app_utils.config import default_cfg
-from app_utils.db import Experiment
+from llm_studio.app_utils.db import Experiment
 from llm_studio.src import possible_values
 from llm_studio.src.utils.config_utils import (
     _get_type_annotation_error,
@@ -44,6 +45,8 @@ from llm_studio.src.utils.config_utils import (
 from llm_studio.src.utils.data_utils import is_valid_data_frame, read_dataframe
 from llm_studio.src.utils.export_utils import get_size_str
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
+
+from .config import default_cfg
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +81,10 @@ def get_download_dir(q):
 
 def get_user_db_path(q):
     return os.path.join(get_database_dir(q), "user.db")
+
+
+def get_usersettings_path(q):
+    return os.path.join(get_database_dir(q), f"{get_user_id(q)}.settings")
 
 
 def find_free_port():
@@ -388,6 +395,125 @@ async def s3_download(
     extract_if_zip(file, s3_path)
 
     return s3_path, "".join(filename.split("/")[-1].split(".")[:-1])
+
+
+def azure_file_options(conn_string: str, container: str) -> List[str]:
+    """Returns all zip files in the target azure datalake container
+
+    Args:
+        conn_string: connection string
+        container: container including sub-paths
+
+    Returns:
+        - List of files in storage or empty list in case of access error
+
+    """
+
+    try:
+        service_client = DataLakeServiceClient.from_connection_string(  # type: ignore
+            conn_string
+        )
+
+        container_split = container.split(os.sep)
+        container = container_split[0]
+
+        folder = "/".join(container_split[1:])
+
+        file_system_client = service_client.get_file_system_client(
+            file_system=container
+        )
+
+        files = file_system_client.get_paths(path=folder)
+        files = next(files.by_page())
+        files = [x.name for x in files]
+
+        files = filter_valid_files(files)
+        return files
+
+    except Exception as e:
+        logger.warning(f"Can't load Azure datasets list: {e}")
+        return []
+
+
+async def download_progress(q, title, seen_so_far, total_len):
+    if seen_so_far is not None and total_len is not None:
+        percentage = seen_so_far / total_len
+        value = percentage
+        caption = (
+            f"{convert_file_size(seen_so_far)} of "
+            f"{convert_file_size(total_len)} "
+            f"({percentage * 100:.2f}%)"
+        )
+    else:
+        value = None
+        caption = None
+
+    q.page["meta"].dialog = ui.dialog(
+        title=title,
+        blocking=True,
+        items=[ui.progress(label="Please be patient...", caption=caption, value=value)],
+    )
+    await q.page.save()
+
+
+async def azure_download(
+    q: Any, conn_string: str, container: str, filename: str
+) -> Tuple[str, str]:
+    """Downloads a file from azure
+
+    Args:
+        q: Q
+        conn_string: connection string
+        container: container
+        filename: filename to download
+
+    Returns:
+        Download location path
+    """
+
+    service_client = DataLakeServiceClient.from_connection_string(  # type: ignore
+        conn_string
+    )
+
+    container_split = container.split(os.sep)
+    container = container_split[0]
+
+    file_system_client = service_client.get_file_system_client(file_system=container)
+
+    filename_split = filename.split(os.sep)
+    folder = "/".join(filename_split[:-1])
+    filename = filename_split[-1]
+
+    rnd_folder = "".join(random.choice(string.digits) for i in range(10))
+    azure_path = f"{get_data_dir(q)}/tmp_{rnd_folder}"
+    azure_path = get_valid_temp_data_folder(q, azure_path)
+
+    if os.path.exists(azure_path):
+        shutil.rmtree(azure_path)
+    os.makedirs(azure_path, exist_ok=True)
+
+    file = f"{azure_path}/{filename}"
+
+    file_client = file_system_client.get_file_client(f"{folder}/{filename}")
+
+    download = file_client.download_file()
+
+    blocks = download.chunks()
+
+    seen_so_far = 0
+    with open(file, "wb") as local_file:
+        for block in blocks:
+            local_file.write(block)
+
+            seen_so_far += len(block)
+
+            await download_progress(
+                q, "Azure Datalake file download in progress", seen_so_far, len(blocks)
+            )
+
+    extract_if_zip(file, azure_path)
+
+    return azure_path, "".join(filename.split(".")[:-1])
 
 
 async def local_download(q: Any, filename: str) -> Tuple[str, str]:
@@ -1287,8 +1413,10 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
             # that are no longer part of the dataclass fields.
             # This can happen if the codebase has changed since the experiment was run.
             # Ignore those warnings here
-            with warnings.filterwarnings("ignore", message="*are not in the config."):
-                cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
+            logging_level = logging.getLogger().level
+            logging.getLogger().setLevel(logging.ERROR)
+            cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
+            logging.getLogger().setLevel(logging_level)
         except Exception:
             cfg = None
 
@@ -1433,8 +1561,10 @@ def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
         path = row.path + "/"
 
         try:
-            with warnings.filterwarnings("ignore", message="*are not in the config."):
-                cfg = load_config_yaml(config_file)
+            logging_level = logging.getLogger().level
+            logging.getLogger().setLevel(logging.ERROR)
+            cfg = load_config_yaml(config_file)
+            logging.getLogger().setLevel(logging_level)
         except Exception as e:
             logger.warning(f"Could not load configuration from {config_file}. {e}")
             cfg = None

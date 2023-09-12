@@ -3,14 +3,14 @@ import os
 
 from h2o_wave import Q, ui
 
-from app_utils.sections.experiment import (
+from llm_studio.app_utils.sections.experiment import (
     experiment_compare,
     experiment_list,
     experiment_rename_action,
     experiment_rename_form,
     get_table_and_message_item_indices,
 )
-from app_utils.utils.utils import get_experiments_status
+from llm_studio.app_utils.utils import get_experiments_status
 
 logger = logging.getLogger(__name__)
 

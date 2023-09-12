@@ -788,7 +788,8 @@ def run(cfg: Any) -> None:
     # Prepare model
     with torch.device(cfg.environment._device):
         model = cfg.architecture.model_class(cfg)
-        check_disk_space(model, cfg.output_directory)
+        if cfg.environment._local_rank == 0:
+            check_disk_space(model, cfg.output_directory)
 
         # load model weights
         if cfg.architecture.pretrained_weights != "":
@@ -940,4 +941,5 @@ if __name__ == "__main__":
         run(cfg=cfg)
     except Exception:
         logging.error("Exception occurred during the run:", exc_info=True)
-        kill_ddp_processes()
+        if ("WORLD_SIZE" in os.environ) and (int(os.environ["WORLD_SIZE"]) > 1):
+            kill_ddp_processes()

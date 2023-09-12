@@ -17,6 +17,7 @@
             "capture_container_name": "h2ovhdimages",
             "capture_name_prefix": "h2oai-llm-studio-{{user `llm_studio_version`}}",
             "resource_group_name": "{{user `managed_image_resource_group_name`}}",
+            "temp_resource_group_name": "Engineering_DevOps_LLM-Studio-Ubuntu",
             "storage_account": "h2ovhdimages",
             "os_type": "Linux",
             "image_publisher": "Canonical",
@@ -25,7 +26,13 @@
             "os_disk_size_gb": 512,
             "azure_tags": {
                 "dept": "Engineering",
-                "task": "Image deployment"
+                "task": "Image deployment",
+                "Name": "LLM-STUDIO-CLOUD-IMAGES",
+                "Owner": "ops@h2o.ai",
+                "Project": "DevOps",
+                "Department": "Engineering",
+                "Environment": "Dev",
+                "Scheduling": "self-managed"
             },
             "location": "East US",
             "vm_size": "Standard_DS2_v2",
@@ -46,6 +53,7 @@
     "provisioners": [
         {
             "type": "shell",
+            "environment_vars": ["VERSION={{user `BRANCH_VERSION`}}"],
             "script": "./install_llm_studio_ubuntu2004.sh"
         }
     ]

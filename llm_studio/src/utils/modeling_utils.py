@@ -10,7 +10,6 @@ import coolname
 import numpy as np
 import torch
 from peft import LoraConfig, get_peft_model
-from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
 from torch.cuda.amp import autocast
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     FullyShardedDataParallel,
@@ -709,20 +708,21 @@ def prepare_lora(cfg, backbone):
         if cfg.training.lora_target_modules
         else None
     )
-    if (
-        not target_modules
-        and backbone.config.model_type
-        not in TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
-    ):
-        # extend LORA automatic target module mapping.
-        target_modules = {
-            "RefinedWebModel": [
-                "query_key_value",
-                "dense_h_to_4h",
-                "dense_4h_to_h",
-                "dense",
-            ],
-        }.get(backbone.config.model_type)
+
+    if target_modules is None:
+        target_modules = []
+        for name, module in backbone.named_modules():
+            if (
+                isinstance(module, (torch.nn.Linear, torch.nn.Conv1d))
+                and "head" not in name
+            ):
+                name = name.split(".")[-1]
+                if name not in target_modules:
+                    target_modules.append(name)
+
+    if cfg.environment._local_rank == 0:
+        logger.info(f"Lora module names: {target_modules}")
+
     lora_config = LoraConfig(
         r=cfg.training.lora_r,
         lora_alpha=cfg.training.lora_alpha,

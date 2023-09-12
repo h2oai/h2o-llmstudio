@@ -6,8 +6,11 @@ from tempfile import NamedTemporaryFile
 from bokeh.resources import Resources as BokehResources
 from h2o_wave import Q
 
-from app_utils.sections.common import interface
-from app_utils.utils.utils import (
+from llm_studio.app_utils.config import default_cfg
+from llm_studio.app_utils.db import Database, Dataset
+from llm_studio.app_utils.sections.common import interface
+from llm_studio.app_utils.setting_utils import load_user_settings_and_secrets
+from llm_studio.app_utils.utils import (
     get_data_dir,
     get_database_dir,
     get_download_dir,
@@ -17,10 +20,6 @@ from app_utils.utils.utils import (
     prepare_default_dataset,
 )
 from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
-
-from .config import default_cfg
-from .db import Database, Dataset
-from .utils.setting_utils import load_user_settings_and_secrets
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +114,7 @@ async def initialize_app(q: Q) -> None:
 
     logger.info("Initializing app ...")
 
-    icons_pth = "app_utils/static/"
+    icons_pth = "llm_studio/app_utils/static/"
     (q.app["icon_path"],) = await q.site.upload([f"{icons_pth}/icon.png"])
 
     script_sources = []
@@ -132,5 +131,8 @@ async def initialize_app(q: Q) -> None:
 
     q.app["script_sources"] = script_sources
     q.app["initialized"] = True
+    q.app.version = default_cfg.version
+    q.app.name = default_cfg.name
+    q.app.heap_mode = default_cfg.heap_mode
 
     logger.info("Initializing app ... done")

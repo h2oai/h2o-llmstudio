@@ -9,11 +9,13 @@ from typing import List, Optional
 from h2o_wave import Q, ui
 from h2o_wave.types import ImageCard, MarkupCard, StatListItem, Tab
 
-from app_utils.config import default_cfg
-from app_utils.db import Dataset
-from app_utils.sections.experiment import experiment_start
-from app_utils.utils.utils import (
+from llm_studio.app_utils.config import default_cfg
+from llm_studio.app_utils.db import Dataset
+from llm_studio.app_utils.sections.experiment import experiment_start
+from llm_studio.app_utils.utils import (
     add_model_type,
+    azure_download,
+    azure_file_options,
     check_valid_upload_content,
     clean_error,
     dir_file_table,
@@ -33,7 +35,7 @@ from app_utils.utils.utils import (
     s3_download,
     s3_file_options,
 )
-from app_utils.wave_utils import busy_dialog, ui_table_from_df
+from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,
@@ -99,6 +101,7 @@ async def dataset_import(
             ui.choice("Upload", "Upload"),
             ui.choice("Local", "Local"),
             ui.choice("S3", "AWS S3"),
+            ui.choice("Azure", "Azure Datalake"),
             ui.choice("Kaggle", "Kaggle"),
         ]
 
@@ -187,6 +190,65 @@ async def dataset_import(
                     required=True,
                     password=True,
                     tooltip="Optional AWS secret key; empty for anonymous access.",
+                ),
+                ui_filename,
+            ]
+
+        elif (
+            q.client["dataset/import/source"] is None
+            or q.client["dataset/import/source"] == "Azure"
+        ):
+            if q.client["dataset/import/azure_conn_string"] is None:
+                q.client["dataset/import/azure_conn_string"] = q.client[
+                    "default_azure_conn_string"
+                ]
+            if q.client["dataset/import/azure_container"] is None:
+                q.client["dataset/import/azure_container"] = q.client[
+                    "default_azure_container"
+                ]
+
+            files = azure_file_options(
+                q.client["dataset/import/azure_conn_string"],
+                q.client["dataset/import/azure_container"],
+            )
+            print(files)
+
+            if not files:
+                ui_filename = ui.textbox(
+                    name="dataset/import/azure_filename",
+                    label="File name",
+                    value="",
+                    required=True,
+                    tooltip="File name to be imported",
+                )
+            else:
+                default_file = files[0]
+                ui_filename = ui.dropdown(
+                    name="dataset/import/azure_filename",
+                    label="File name",
+                    value=default_file,
+                    choices=[ui.choice(x, x.split("/")[-1]) for x in files],
+                    required=True,
+                    tooltip="File name to be imported",
+                )
+
+            items += [
+                ui.textbox(
+                    name="dataset/import/azure_conn_string",
+                    label="Datalake connection string",
+                    value=q.client["dataset/import/azure_conn_string"],
+                    trigger=True,
+                    required=True,
+                    password=True,
+                    tooltip="Azure connection string to connect to Datalake storage",
+                ),
+                ui.textbox(
+                    name="dataset/import/azure_container",
+                    label="Datalake container name",
+                    value=q.client["dataset/import/azure_container"],
+                    trigger=True,
+                    required=True,
+                    tooltip="Azure Datalake container name including relative paths",
                 ),
                 ui_filename,
             ]
@@ -314,6 +376,16 @@ async def dataset_import(
                         q.client["dataset/import/s3_filename"],
                         q.client["dataset/import/s3_access_key"],
                         q.client["dataset/import/s3_secret_key"],
+                    )
+                elif q.client["dataset/import/source"] == "Azure":
+                    (
+                        q.client["dataset/import/path"],
+                        q.client["dataset/import/name"],
+                    ) = await azure_download(
+                        q,
+                        q.client["dataset/import/azure_conn_string"],
+                        q.client["dataset/import/azure_container"],
+                        q.client["dataset/import/azure_filename"],
                     )
                 elif q.client["dataset/import/source"] in ("Upload", "Local"):
                     (
