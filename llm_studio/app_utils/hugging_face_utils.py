@@ -73,7 +73,8 @@ def publish_model_to_hugging_face(
 
     Parameters:
         path_to_experiment: The file path of the fine-tuned model's files.
-        device: The target device for running the model, either 'cpu' or 'cuda:0'.
+        device: The target device for running the model, either 'cpu', 'cpu_shard'
+            or 'cuda:0'.
         user_id: The Hugging Face user ID.
         api_key: The Hugging Face API Key.
         model_name: The name of the model to be published on Hugging Face.
@@ -84,12 +85,14 @@ def publish_model_to_hugging_face(
     """
 
     # Check if the 'device' value is valid, raise an exception if not
-    if device == "cpu":
+    if device == "cpu" or device == "cpu_shard":
         pass  # 'cpu' is a valid value
     elif device.startswith("cuda:") and device[5:].isdigit():
         pass  # 'cuda:integer' format is valid
     else:
-        raise ValueError("Invalid device value. Use 'cpu' or 'cuda:INTEGER'.")
+        raise ValueError(
+            "Invalid device value. Use 'cpu', 'cpu_shard' or 'cuda:INTEGER'."
+        )
 
     with set_env(HUGGINGFACE_TOKEN=api_key):
         cfg, model, tokenizer = load_cfg_model_tokenizer(
