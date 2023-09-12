@@ -85,7 +85,7 @@ default_cfg = {
     ],
     "user_settings": {
         "theme_dark": True,
-        "credential_saver": "Keyring",
+        "credential_saver": ".env File",
         "default_aws_bucket_name": f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
         "default_aws_access_key": os.getenv("AWS_ACCESS_KEY_ID", ""),
         "default_aws_secret_key": os.getenv("AWS_SECRET_ACCESS_KEY", ""),
