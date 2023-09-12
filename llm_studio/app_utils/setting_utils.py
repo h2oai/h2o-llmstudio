@@ -142,6 +142,13 @@ class EnvFileSaver(NoSaver):
                 yaml.safe_dump(data, f)
 
 
+def _test_keyring():
+    try:
+        keyring.get_password("service", "username")
+    except Exception:
+        time.sleep(4)
+
+
 def check_if_keyring_works():
     """
     Test if keyring is working. On misconfigured machines,
@@ -153,13 +160,7 @@ def check_if_keyring_works():
     To avoid waiting for 2 minutes, we test if keyring works in a separate process and kill it after 3 seconds.
     """
 
-    def test_keyring():
-        try:
-            keyring.get_password("service", "username")
-        except Exception:
-            time.sleep(4)
-
-    p = multiprocessing.Process(target=test_keyring)
+    p = multiprocessing.Process(target=_test_keyring)
     p.start()
     p.join(3)
 
@@ -220,7 +221,7 @@ async def _save_secrets(q: Q):
             logger.error(f"Could not save password {key} to {secret_name}")
             q.page["meta"].dialog = ui.dialog(
                 title="Could not save secrets. "
-                "Please choose another Credential Handler.",
+                      "Please choose another Credential Handler.",
                 name="secrets_error",
                 items=[
                     ui.text(
@@ -260,7 +261,7 @@ def _load_secrets(q: Q):
 
 def _get_secrets_handler(q: Q):
     secret_name = (
-        q.client["credential_saver"] or default_cfg.user_settings["credential_saver"]
+            q.client["credential_saver"] or default_cfg.user_settings["credential_saver"]
     )
     secrets_handler = Secrets.get(secret_name)(
         username=get_user_id(q), root_dir=get_database_dir(q)
