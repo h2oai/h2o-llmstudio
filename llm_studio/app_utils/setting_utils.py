@@ -177,7 +177,8 @@ def check_if_keyring_works():
     Keyring may hang up to 2 minutes with the following error:
     jeepney.wrappers.DBusErrorResponse:
     [org.freedesktop.DBus.Error.TimedOut]
-    ("Failed to activate service 'org.freedesktop.secrets': timed out (service_start_timeout=120000ms)",)
+    ("Failed to activate service 'org.freedesktop.secrets':
+     timed out (service_start_timeout=120000ms)",)
 
     To avoid waiting for 2 minutes, we kill the process after 3 seconds.
     """
@@ -195,11 +196,11 @@ class Secrets:
     }
     try:
         check_if_keyring_works()
-        logger.info(f"Keyring is correctly configured on this machine.")
+        logger.info("Keyring is correctly configured on this machine.")
         _secrets["Keyring"] = KeyRingSaver
     except TimeoutError:
         logger.warning(
-            f"Error loading keyring due to timeout. Disabling keyring save option."
+            "Error loading keyring due to timeout. Disabling keyring save option."
         )
     except Exception as e:
         logger.warning(f"Error loading keyring: {e}. Disabling keyring save option.")
