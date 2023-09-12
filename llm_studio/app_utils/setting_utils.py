@@ -1,11 +1,9 @@
 import errno
 import functools
 import logging
-import multiprocessing
 import os
 import pickle
 import signal
-import time
 import traceback
 from typing import Any, List
 
@@ -177,18 +175,14 @@ def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
 def check_if_keyring_works():
     """
     Test if keyring is working. On misconfigured machines,
-    keyring may hang up to 2 minutes with the following error:
+    Keyring may hang up to 2 minutes with the following error:
     jeepney.wrappers.DBusErrorResponse:
     [org.freedesktop.DBus.Error.TimedOut]
     ("Failed to activate service 'org.freedesktop.secrets': timed out (service_start_timeout=120000ms)",)
 
     To avoid waiting for 2 minutes, we test if keyring works in a separate process and kill it after 3 seconds.
     """
-
-    try:
-        keyring.get_password("service", "username")
-    except Exception:
-        time.sleep(4)
+    keyring.get_password("service", "username")
 
 
 class Secrets:
@@ -205,7 +199,9 @@ class Secrets:
         logger.info(f"Keyring is correctly configured on this machine.")
         _secrets["Keyring"] = KeyRingSaver
     except TimeoutError:
-        logger.warning(f"Error loading keyring. Disabling keyring save option.")
+        logger.warning(f"Error loading keyring due to timeout. Disabling keyring save option.")
+    except Exception as e:
+        logger.warning(f"Error loading keyring: {e}. Disabling keyring save option.")
 
     @classmethod
     def names(cls) -> List[str]:
