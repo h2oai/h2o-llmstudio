@@ -3,9 +3,7 @@ from typing import Any, Dict
 
 import pandas as pd
 
-from llm_studio.src.datasets.conversation_chain_handler import (
-    get_conversation_chains,
-)
+from llm_studio.src.datasets.conversation_chain_handler import get_conversation_chains
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.utils.data_utils import read_dataframe_drop_missing_labels
 from llm_studio.src.utils.plot_utils import (
@@ -97,10 +95,10 @@ class Plots:
         conversations_to_display = []
         for conversation_length in range(1, max_conversation_length + 1):
             conversations_to_display += [
-                                            conversation
-                                            for conversation in conversations
-                                            if len(conversation["prompts"]) == conversation_length
-                                        ][:5]
+                conversation
+                for conversation in conversations
+                if len(conversation["prompts"]) == conversation_length
+            ][:5]
 
         # Convert into a scrollable table by transposing the dataframe
         df_transposed = pd.DataFrame(columns=["Sample Number", "Field", "Content"])
@@ -140,35 +138,31 @@ class Plots:
 
     @classmethod
     def plot_validation_predictions(
-            cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
+        cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
     ) -> PlotData:
+        conversations = get_conversation_chains(
+            val_df, cfg, limit_chained_samples=cfg.dataset.limit_chained_samples
+        )
 
-        conversations = get_conversation_chains(val_df, cfg, limit_chained_samples=cfg.dataset.limit_chained_samples)
+        target_texts = [conversation["answers"][-1] for conversation in conversations]
+
         input_texts = []
         for conversation in conversations:
-            input_texts += [
-                "\n".join(
-                    [
-                        f"{system} {prompt}"
-                        for system, prompt in zip(
-                        conversation["systems"], conversation["prompts"]
-                    )
-                    ]
-                )
-            ]
-        input_texts = [[prompt + answer for prompt, answer in zip(
-            conversation["prompts"], conversation["answers"]
-        )] for conversation in conversations]
-        target_texts = [
-            conversation["answers"][-1] for conversation in conversations
-        ]
+            input_text = conversation["systems"][0]
+            prompts = conversation["prompts"]
+            answers = conversation["answers"]
+            # exclude last answer
+            answers[-1] = ""
+            for prompt, answer in zip(prompts, answers):
+                input_text += prompt + answer
+            input_texts += [input_text]
 
         if "predicted_text" in val_outputs.keys():
             predicted_texts = val_outputs["predicted_text"]
         else:
             predicted_texts = [
-                                  "No predictions are generated for the selected metric"
-                              ] * len(target_texts)
+                "No predictions are generated for the selected metric"
+            ] * len(target_texts)
 
         df = pd.DataFrame(
             {

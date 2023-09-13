@@ -39,9 +39,7 @@ from llm_studio.app_utils.utils import (
     s3_file_options,
 )
 from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df
-from llm_studio.src.datasets.conversation_chain_handler import (
-    get_conversation_chains,
-)
+from llm_studio.src.datasets.conversation_chain_handler import get_conversation_chains
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,
