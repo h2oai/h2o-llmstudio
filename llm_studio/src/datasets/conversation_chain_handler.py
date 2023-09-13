@@ -189,10 +189,10 @@ class ConversationChainHandler:
         }
 
 
-def get_full_conversation_chains(df, cfg) -> List[Dict[str, List[str]]]:
-    limit_chained_samples = cfg.dataset.limit_chained_samples
-    cfg.dataset.limit_chained_samples = False
-    conversation_chain_handler = ConversationChainHandler(df, cfg)
+def get_conversation_chains(df, cfg, limit_chained_samples=True) -> List[Dict[str, List[str]]]:
+    orig_limit_chained_samples = cfg.dataset.limit_chained_samples
     cfg.dataset.limit_chained_samples = limit_chained_samples
+    conversation_chain_handler = ConversationChainHandler(df, cfg)
+    cfg.dataset.limit_chained_samples = orig_limit_chained_samples
     conversations = [conversation for conversation in conversation_chain_handler]
     return conversations

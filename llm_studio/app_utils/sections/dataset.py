@@ -40,7 +40,7 @@ from llm_studio.app_utils.utils import (
 )
 from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df
 from llm_studio.src.datasets.conversation_chain_handler import (
-    get_full_conversation_chains,
+    get_conversation_chains,
 )
 from llm_studio.src.utils.config_utils import (
     load_config_py,
@@ -1214,7 +1214,7 @@ async def show_summary_tab(dataset_id, q):
 async def show_statistics_tab(dataset, cfg, q):
     df_train = read_dataframe(dataset["train_dataframe"])
 
-    conversations = get_full_conversation_chains(df=df_train, cfg=cfg)
+    conversations = get_conversation_chains(df=df_train, cfg=cfg)
     number_of_prompts = [len(conversation["prompts"]) for conversation in conversations]
     prompts = [
         prompt for conversation in conversations for prompt in conversation["prompts"]
