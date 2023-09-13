@@ -73,6 +73,18 @@ class ConversationChainHandler:
             self.systems = ["" for _ in range(len(self.prompts))]
 
     def get_conversation_chain_ids(self, cfg, df):
+        """
+        Gets the conversation chain IDs for the given DataFrame.
+        E.g. if conversation_chain_ids = [[13, 44, 8], ...],
+        then the first conversation chain consists of
+        [df.iloc[13], df.iloc[44], df.iloc[8]]
+        with
+            - df.iloc[13] denotes the first round of the conversation
+            - df.iloc[44] denotes the second round of the conversation
+            - df.iloc[8] denotes the end of the conversation
+        if limit_chained_samples is True, df.iloc[13] will have no parent_id,
+        i.e. it is the start of the conversation.
+        """
         if cfg.dataset.parent_id_column in ["None", None]:
             # no parent id column, so each triplet (system_i, prompt_i, answer_i)
             # is a conversation chain
@@ -87,6 +99,8 @@ class ConversationChainHandler:
         # (as some values are NaN) so we cast id to the same dtype
         sample_ids = df["id"].astype(df[cfg.dataset.parent_id_column].dtype).tolist()
         parent_ids = df[cfg.dataset.parent_id_column].tolist()
+        # Some datasets may include parent ids that are not in the dataset.
+        parent_ids = [idx if idx in sample_ids else "None" for idx in parent_ids]
 
         id2parent_id = {
             idx: parent_id
