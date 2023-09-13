@@ -1,25 +1,23 @@
-import html
 import os
 from typing import Any, Dict
 
 import pandas as pd
 
-from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
+from llm_studio.src.datasets.conversation_chain_handler import (
+    get_full_conversation_chains,
+)
+from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.utils.data_utils import (
     read_dataframe_drop_missing_labels,
-    sample_indices,
 )
 from llm_studio.src.utils.plot_utils import (
     PlotData,
     format_for_markdown_visualization,
-    get_line_separator_html,
     list_to_markdown_representation,
 )
 
 
 class Plots:
-    NUM_TEXTS: int = 20
-
     @classmethod
     def plot_batch(cls, batch, cfg) -> PlotData:
         tokenizer = get_tokenizer(cfg)
@@ -89,36 +87,51 @@ class Plots:
 
         return PlotData(path, encoding="df")
 
+    @classmethod
     def plot_data(cls, cfg) -> PlotData:
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
-        input_text_lists, target_texts = cls.get_chained_conversations(df, cfg, True)
 
-        idxs = sample_indices(len(input_text_lists), Plots.NUM_TEXTS)
-        input_text_lists = [input_text_lists[i] for i in idxs]
-        target_texts = [target_texts[i] for i in idxs]
-
-        df = pd.DataFrame(
-            {
-                "Input Text List": input_text_lists,
-                "Target Text": target_texts,
-            }
+        conversations = get_full_conversation_chains(df, cfg)
+        conversations = sorted(
+            conversations, key=lambda x: len(x["prompts"]), reverse=True
         )
+        max_conversation_length = max(
+            [len(conversation["prompts"]) for conversation in conversations]
+        )
+
+        conversations_to_display = []
+        for conversation_lenght in range(1, max_conversation_length + 1):
+            conversations_to_display += [
+                conversation
+                for conversation in conversations
+                if len(conversation["prompts"]) == conversation_lenght
+            ][:5]
+
         # Convert into a scrollable table by transposing the dataframe
         df_transposed = pd.DataFrame(columns=["Sample Number", "Field", "Content"])
 
         i = 0
-        for sample_number, row in df.iterrows():
-            input_text_lists = row["Input Text List"]
-            for j, input_text in enumerate(input_text_lists):
-                suffix = "- Prompt" if j % 2 == 0 else "- Answer "
+        for sample_number, conversation in enumerate(conversations_to_display):
+            if conversation["systems"][0] != "":
                 df_transposed.loc[i] = [
                     sample_number,
-                    f"Input Text {suffix}",
-                    input_text,
+                    "System",
+                    conversation["systems"][0],
                 ]
                 i += 1
-            df_transposed.loc[i] = [sample_number, "Target Text", row["Target Text"]]
-            i += 1
+            for prompt, answer in zip(conversation["prompts"], conversation["answers"]):
+                df_transposed.loc[i] = [
+                    sample_number,
+                    "Prompt",
+                    prompt,
+                ]
+                i += 1
+                df_transposed.loc[i] = [
+                    sample_number,
+                    "Answer",
+                    answer,
+                ]
+                i += 1
 
         df_transposed["Content"] = df_transposed["Content"].apply(
             format_for_markdown_visualization
@@ -132,7 +145,7 @@ class Plots:
 
     @classmethod
     def plot_validation_predictions(
-            cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
+        cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
     ) -> PlotData:
         assert mode in ["validation"]
         input_text_lists, target_texts = cls.get_chained_conversations(
@@ -143,8 +156,8 @@ class Plots:
             predicted_texts = val_outputs["predicted_text"]
         else:
             predicted_texts = [
-                                  "No predictions are generated for the selected metric"
-                              ] * len(target_texts)
+                "No predictions are generated for the selected metric"
+            ] * len(target_texts)
 
         df = pd.DataFrame(
             {

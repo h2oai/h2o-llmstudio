@@ -8,11 +8,13 @@ from typing import List, Optional
 
 import pandas as pd
 from h2o_wave import Q, ui
-from h2o_wave.types import ImageCard, MarkupCard, StatListItem, Tab
+from h2o_wave.types import FormCard, ImageCard, MarkupCard, StatListItem, Tab
 
 from llm_studio.app_utils.config import default_cfg
 from llm_studio.app_utils.db import Dataset
+from llm_studio.app_utils.sections.common import clean_dashboard
 from llm_studio.app_utils.sections.experiment import experiment_start
+from llm_studio.app_utils.sections.histogram_card import HistogramCard
 from llm_studio.app_utils.utils import (
     add_model_type,
     azure_download,
@@ -37,6 +39,9 @@ from llm_studio.app_utils.utils import (
     s3_file_options,
 )
 from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df
+from llm_studio.src.datasets.conversation_chain_handler import (
+    get_full_conversation_chains,
+)
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,
@@ -48,8 +53,6 @@ from llm_studio.src.utils.data_utils import (
     read_dataframe_drop_missing_labels,
     sanity_check,
 )
-
-from .common import clean_dashboard
 
 logger = logging.getLogger(__name__)
 
@@ -69,13 +72,13 @@ def file_extension_is_compatible(q):
 
 
 async def dataset_import(
-        q: Q,
-        step: int,
-        edit: Optional[bool] = False,
-        error: Optional[str] = "",
-        warning: Optional[str] = "",
-        info: Optional[str] = "",
-        allow_merge: bool = True,
+    q: Q,
+    step: int,
+    edit: Optional[bool] = False,
+    error: Optional[str] = "",
+    warning: Optional[str] = "",
+    info: Optional[str] = "",
+    allow_merge: bool = True,
 ) -> None:
     """Display dataset import cards.
 
@@ -121,8 +124,8 @@ async def dataset_import(
         ]
 
         if (
-                q.client["dataset/import/source"] is None
-                or q.client["dataset/import/source"] == "S3"
+            q.client["dataset/import/source"] is None
+            or q.client["dataset/import/source"] == "S3"
         ):
             if q.client["dataset/import/s3_bucket"] is None:
                 q.client["dataset/import/s3_bucket"] = q.client[
@@ -196,8 +199,8 @@ async def dataset_import(
             ]
 
         elif (
-                q.client["dataset/import/source"] is None
-                or q.client["dataset/import/source"] == "Azure"
+            q.client["dataset/import/source"] is None
+            or q.client["dataset/import/source"] == "Azure"
         ):
             if q.client["dataset/import/azure_conn_string"] is None:
                 q.client["dataset/import/azure_conn_string"] = q.client[
@@ -476,8 +479,8 @@ async def dataset_import(
 
             # set default value of problem type if no match to category
             if (
-                    q.client["dataset/import/cfg_category"]
-                    not in q.client["dataset/import/cfg_file"]
+                q.client["dataset/import/cfg_category"]
+                not in q.client["dataset/import/cfg_file"]
             ):
                 q.client["dataset/import/cfg_file"] = get_problem_types(
                     category=q.client["dataset/import/cfg_category"]
@@ -545,7 +548,7 @@ async def dataset_import(
         original_name = q.client["dataset/import/original_name"]  # used in edit mode
         valid_dataset_name = get_unique_dataset_name(q, dataset_name)
         if valid_dataset_name != dataset_name and not (
-                q.client["dataset/import/edit"] and dataset_name == original_name
+            q.client["dataset/import/edit"] and dataset_name == original_name
         ):
             err = f"Dataset <strong>{dataset_name}</strong> already exists"
             q.client["dataset/import/name"] = valid_dataset_name
@@ -818,8 +821,8 @@ async def dataset_merge(q: Q, step, error=""):
 
 
 async def dataset_list_table(
-        q: Q,
-        show_experiment_datasets: bool = True,
+    q: Q,
+    show_experiment_datasets: bool = True,
 ) -> None:
     """Pepare dataset list form card
 
@@ -931,7 +934,7 @@ async def dataset_newexperiment(q: Q, dataset_id: int):
 
 
 async def dataset_edit(
-        q: Q, dataset_id: int, error: str = "", warning: str = "", allow_merge: bool = True
+    q: Q, dataset_id: int, error: str = "", warning: str = "", allow_merge: bool = True
 ):
     """Edit selected dataset.
 
@@ -1054,8 +1057,8 @@ async def dataset_display(q: Q) -> None:
     dataset = cfg.dataset.__dict__
 
     if (
-            q.client["dataset/display/tab"] is None
-            or q.args["dataset/display/data"] is not None
+        q.client["dataset/display/tab"] is None
+        or q.args["dataset/display/data"] is not None
     ):
         q.client["dataset/display/tab"] = "dataset/display/data"
 
@@ -1211,22 +1214,24 @@ async def show_summary_tab(dataset_id, q):
 async def show_statistics_tab(dataset, cfg, q):
     df_train = read_dataframe(dataset["train_dataframe"])
 
-    (
-        input_text_lists,
-        target_texts,
-    ) = cfg.logging.plots_class.get_chained_conversations(
-        df=df_train, cfg=cfg, limit_chained_samples=True
-    )
+    conversations = get_full_conversation_chains(df=df_train, cfg=cfg)
+    number_of_prompts = [len(conversation["prompts"]) for conversation in conversations]
+    prompts = [
+        prompt for conversation in conversations for prompt in conversation["prompts"]
+    ]
+    answers = [
+        answer for conversation in conversations for answer in conversation["answers"]
+    ]
+
+    text_length_prompt = [len(prompt.split(" ")) for prompt in prompts]
+    answers_length = [len(answer.split(" ")) for answer in answers]
 
     df_stats = pd.DataFrame(
-        {"input_text_list": input_text_lists, "target_text": target_texts}
-    )
-    df_stats["number_of_prompts"] = df_stats["input_text_list"].apply(len)
-    df_stats["text_length_prompt"] = df_stats["input_text_list"].apply(
-        lambda x: len("".join(x).split(" "))
-    )
-    df_stats["text_length_answer"] = df_stats["target_text"].apply(
-        lambda x: len(x.split(" "))
+        {
+            "number_of_prompts": number_of_prompts,
+            "text_length_prompt": text_length_prompt,
+            "text_length_answer": answers_length,
+        }
     )
 
     histogram_prompt = HistogramCard(
@@ -1250,7 +1255,7 @@ async def show_statistics_tab(dataset, cfg, q):
         histogram_parent_id = HistogramCard(
             column="number_of_prompts",
             title=f"Distribution of number of prompt-answer turns per conversation, "
-                  f" as indicated by {cfg.dataset.parent_id_column}",
+            f" as indicated by {cfg.dataset.parent_id_column}",
             histogram_box="third",
         )(q=q, df=df_stats)
         q.page["dataset/display/statistics/parent_id"] = histogram_parent_id

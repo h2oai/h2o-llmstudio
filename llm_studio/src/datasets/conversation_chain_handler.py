@@ -1,4 +1,5 @@
 import logging
+from typing import Dict, List
 
 import numpy as np
 
@@ -164,7 +165,7 @@ class ConversationChainHandler:
     def __len__(self):
         return len(self.conversation_chain_ids)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> Dict[str, List[str]]:
         """
         Gets a single conversation chain.
         The conversation may be:
@@ -186,3 +187,12 @@ class ConversationChainHandler:
             "answers": answers,
             "systems": systems,
         }
+
+
+def get_full_conversation_chains(df, cfg) -> List[Dict[str, List[str]]]:
+    limit_chained_samples = cfg.dataset.limit_chained_samples
+    cfg.dataset.limit_chained_samples = False
+    conversation_chain_handler = ConversationChainHandler(df, cfg)
+    cfg.dataset.limit_chained_samples = limit_chained_samples
+    conversations = [conversation for conversation in conversation_chain_handler]
+    return conversations
