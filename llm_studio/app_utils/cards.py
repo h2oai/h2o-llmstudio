@@ -262,11 +262,6 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                                 size="calc(0.5*(100vh - 220px))",
                                 direction=ui.ZoneDirection.ROW,
                             ),
-                            ui.zone(
-                                "fourth",
-                                size="calc(0.5*(100vh - 220px))",
-                                direction=ui.ZoneDirection.ROW,
-                            ),
                             ui.zone("footer", size="80px"),
                         ],
                     ),

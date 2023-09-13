@@ -7,9 +7,7 @@ from llm_studio.src.datasets.conversation_chain_handler import (
     get_full_conversation_chains,
 )
 from llm_studio.src.datasets.text_utils import get_tokenizer
-from llm_studio.src.utils.data_utils import (
-    read_dataframe_drop_missing_labels,
-)
+from llm_studio.src.utils.data_utils import read_dataframe_drop_missing_labels
 from llm_studio.src.utils.plot_utils import (
     PlotData,
     format_for_markdown_visualization,
@@ -92,19 +90,16 @@ class Plots:
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
 
         conversations = get_full_conversation_chains(df, cfg)
-        conversations = sorted(
-            conversations, key=lambda x: len(x["prompts"]), reverse=True
-        )
         max_conversation_length = max(
             [len(conversation["prompts"]) for conversation in conversations]
         )
 
         conversations_to_display = []
-        for conversation_lenght in range(1, max_conversation_length + 1):
+        for conversation_length in range(1, max_conversation_length + 1):
             conversations_to_display += [
                 conversation
                 for conversation in conversations
-                if len(conversation["prompts"]) == conversation_lenght
+                if len(conversation["prompts"]) == conversation_length
             ][:5]
 
         # Convert into a scrollable table by transposing the dataframe
@@ -148,6 +143,7 @@ class Plots:
         cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
     ) -> PlotData:
         assert mode in ["validation"]
+        # TODO!
         input_text_lists, target_texts = cls.get_chained_conversations(
             val_df, cfg, limit_chained_samples=False
         )
