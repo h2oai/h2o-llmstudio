@@ -89,49 +89,70 @@ class Plots:
 
         return PlotData(path, encoding="df")
 
-    @classmethod
     def plot_data(cls, cfg) -> PlotData:
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
-        df = df.iloc[sample_indices(len(df), Plots.NUM_TEXTS)]
+        input_text_lists, target_texts = cls.get_chained_conversations(df, cfg, True)
 
-        input_texts = get_texts(df, cfg, separator="")
-
-        if cfg.dataset.answer_column in df.columns:
-            target_texts = df[cfg.dataset.answer_column].values
-        else:
-            target_texts = ""
-
-        markup = ""
-        for input_text, target_text in zip(input_texts, target_texts):
-            markup += f"<p><strong>Input Text: </strong>{html.escape(input_text)}</p>\n"
-            markup += "\n"
-            markup += (
-                f"<p><strong>Target Text: </strong>{html.escape(target_text)}</p>\n"
-            )
-            markup += "\n"
-            markup += get_line_separator_html()
-        return PlotData(markup, encoding="html")
-
-    @classmethod
-    def plot_validation_predictions(
-        cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
-    ) -> PlotData:
-        assert mode in ["validation"]
-
-        input_texts = get_texts(val_df, cfg, separator="")
-        target_text = val_outputs["target_text"]
-        if "predicted_text" in val_outputs.keys():
-            predicted_text = val_outputs["predicted_text"]
-        else:
-            predicted_text = [
-                "No predictions are generated for the selected metric"
-            ] * len(target_text)
+        idxs = sample_indices(len(input_text_lists), Plots.NUM_TEXTS)
+        input_text_lists = [input_text_lists[i] for i in idxs]
+        target_texts = [target_texts[i] for i in idxs]
 
         df = pd.DataFrame(
             {
-                "Input Text": input_texts,
-                "Target Text": target_text,
-                "Predicted Text": predicted_text,
+                "Input Text List": input_text_lists,
+                "Target Text": target_texts,
+            }
+        )
+        # Convert into a scrollable table by transposing the dataframe
+        df_transposed = pd.DataFrame(columns=["Sample Number", "Field", "Content"])
+
+        i = 0
+        for sample_number, row in df.iterrows():
+            input_text_lists = row["Input Text List"]
+            for j, input_text in enumerate(input_text_lists):
+                suffix = "- Prompt" if j % 2 == 0 else "- Answer "
+                df_transposed.loc[i] = [
+                    sample_number,
+                    f"Input Text {suffix}",
+                    input_text,
+                ]
+                i += 1
+            df_transposed.loc[i] = [sample_number, "Target Text", row["Target Text"]]
+            i += 1
+
+        df_transposed["Content"] = df_transposed["Content"].apply(
+            format_for_markdown_visualization
+        )
+        path = os.path.join(
+            os.path.dirname(cfg.dataset.train_dataframe), "data_viz.parquet"
+        )
+        df_transposed.to_parquet(path)
+
+        return PlotData(path, encoding="df")
+
+    @classmethod
+    def plot_validation_predictions(
+            cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
+    ) -> PlotData:
+        assert mode in ["validation"]
+        input_text_lists, target_texts = cls.get_chained_conversations(
+            val_df, cfg, limit_chained_samples=False
+        )
+
+        if "predicted_text" in val_outputs.keys():
+            predicted_texts = val_outputs["predicted_text"]
+        else:
+            predicted_texts = [
+                                  "No predictions are generated for the selected metric"
+                              ] * len(target_texts)
+
+        df = pd.DataFrame(
+            {
+                "Input Text": [
+                    "\n".join(input_text_list) for input_text_list in input_text_lists
+                ],
+                "Target Text": target_texts,
+                "Predicted Text": predicted_texts,
             }
         )
         df["Input Text"] = df["Input Text"].apply(format_for_markdown_visualization)
@@ -151,3 +172,14 @@ class Plots:
         path = os.path.join(cfg.output_directory, f"{mode}_viz.parquet")
         df.to_parquet(path)
         return PlotData(data=path, encoding="df")
+
+    @staticmethod
+    def plot_empty(cfg, error="Not yet implemented.") -> PlotData:
+        """Plots an empty default plot.
+        Args:
+            cfg: config
+        Returns:
+            The default plot as `PlotData`.
+        """
+
+        return PlotData(f"<h2>{error}</h2>", encoding="html")
