@@ -69,13 +69,19 @@ black: pipenv
 
 .PHONY: test
 test: reports
-	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); $(PIPENV) run pytest -v -s --junitxml=reports/junit.xml \
+	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); \
+	$(PIPENV) run pytest -v --junitxml=reports/junit.xml \
+	--html=./reports/pytest.html \
+	--cov=llm_studio \
+	--cov-report term \
+	--cov-report html:./reports/coverage.html \
     -o log_cli=true -o log_level=INFO -o log_file=reports/tests.log \
     tests/* 2>&1 | tee reports/tests.log'
 
 .PHONY: wave
 wave:
 	HF_HUB_ENABLE_HF_TRANSFER=True \
+	H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
@@ -83,6 +89,7 @@ wave:
 
 .PHONY: llmstudio
 llmstudio:
+	H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \

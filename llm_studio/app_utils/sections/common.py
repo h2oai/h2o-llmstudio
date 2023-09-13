@@ -1,10 +1,11 @@
+import hashlib
 import logging
 from typing import List
 
 from h2o_wave import Q, ui
 
-from app_utils.cards import card_zones
-from app_utils.config import default_cfg
+from llm_studio.app_utils.cards import card_zones
+from llm_studio.app_utils.config import default_cfg
 
 logger = logging.getLogger(__name__)
 
@@ -84,13 +85,46 @@ async def meta(q: Q) -> None:
         q.page["meta"].theme = "light"
 
 
+def heap_analytics(
+    userid, user_properties=None, event_properties=None
+) -> ui.InlineScript:
+    script = (
+        "window.heap=window.heap||[],heap.load=function(e,t)"
+        "{window.heap.appid=e,window.heap."
+        'config=t=t||{};var r=document.createElement("script");'
+        'r.type="text/javascript",'
+        'r.async=!0,r.src="https://cdn.heapanalytics.com/js/heap-"+e+".js";'
+        'var a=document.getElementsByTagName("script")[0];'
+        "a.parentNode.insertBefore(r,a);"
+        "for(var n=function(e){return function(){heap.push([e]."
+        "concat(Array.prototype.slice.call(arguments,0)))}},"
+        'p=["addEventProperties","addUserProperties","clearEventProperties","identify",'
+        '"resetIdentity","removeEventProperty","setEventProperties","track",'
+        '"unsetEventProperty"],o=0;o<p.length;o++)heap[p[o]]=n(p[o])};'
+        'heap.load("1090178399");'
+    )
+
+    identity = hashlib.sha256(userid.encode()).hexdigest()
+    script += f"heap.identify('{identity}');"
+
+    if user_properties is not None:
+        script += f"heap.addUserProperties({user_properties})"
+
+    if event_properties is not None:
+        script += f"heap.addEventProperties({event_properties})"
+
+    return ui.inline_script(content=script)
+
+
 async def interface(q: Q) -> None:
     """Display interface cards."""
 
     await meta(q)
 
-    # just to avoid flickering
+    navigation_pages = ["Home", "Settings"]
+
     if q.client["init_interface"] is None:
+        # to avoid flickering
         q.page["header"] = ui.header_card(
             box="header",
             title=default_cfg.name,
@@ -98,9 +132,19 @@ async def interface(q: Q) -> None:
             subtitle=f"v{default_cfg.version}",
         )
 
-    navigation_pages = ["Home", "Settings"]
+        if q.app.heap_mode:
+            logger.info("Heap on")
+            q.page["meta"].script = heap_analytics(
+                userid=q.auth.subject,
+                event_properties=(
+                    f"{{version: '{q.app.version}'" + f", product: '{q.app.name}'}}"
+                ),
+            )
+            # execute the heap inline script once in the initialization
+            await q.page.save()
+        else:
+            logger.info("Heap off")
 
-    if q.client["init_interface"] is None:
         q.page["nav_bar"] = ui.nav_card(
             box="nav",
             items=[
@@ -195,3 +239,27 @@ async def info_dialog(q: Q, title: str, message: str):
         blocking=True,
     )
     q.client["keep_meta"] = True
+
+
+async def heap_redact(q: Q) -> None:
+    if q.app.heap_mode:
+        # Send the page to the browser, so the following js can be applied
+        await q.page.save()
+
+        # replace dataset names with ****
+        q.page["meta"].script = ui.inline_script(
+            """
+document.querySelectorAll('div[data-automation-key="name"]').forEach(a => {
+  a.setAttribute('data-heap-redact-text', '')
+})
+
+document.querySelector('div[data-test="datasets_table"] \
+.ms-ScrollablePane--contentContainer').addEventListener('scroll', () => {
+  window.setTimeout(() => {{
+    document.querySelectorAll('div[data-automation-key="name"]').forEach(a => {
+      a.setAttribute('data-heap-redact-text', '')
+    })
+  }}, 100)
+})
+    """
+        )

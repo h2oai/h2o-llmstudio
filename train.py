@@ -788,7 +788,8 @@ def run(cfg: Any) -> None:
     # Prepare model
     with torch.device(cfg.environment._device):
         model = cfg.architecture.model_class(cfg)
-        check_disk_space(model, cfg.output_directory)
+        if cfg.environment._local_rank == 0:
+            check_disk_space(model, cfg.output_directory)
 
         # load model weights
         if cfg.architecture.pretrained_weights != "":

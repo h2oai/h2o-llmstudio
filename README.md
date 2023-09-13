@@ -1,5 +1,5 @@
-<p align="center"><img src="app_utils/static/llm-studio-logo-light.png#gh-dark-mode-only"></p>
-<p align="center"><img src="app_utils/static/llm-studio-logo.png#gh-light-mode-only"></p>
+<p align="center"><img src="llm_studio/app_utils/static/llm-studio-logo-light.png#gh-dark-mode-only"></p>
+<p align="center"><img src="llm_studio/app_utils/static/llm-studio-logo.png#gh-light-mode-only"></p>
 
 <h3 align="center">
     <p>Welcome to H2O LLM Studio, a framework and no-code GUI designed for<br />
@@ -17,6 +17,7 @@
 - [Setup](#setup)
   - [Recommended Install](#recommended-install)
   - [Using requirements.txt](#using-requirementstxt)
+  - [Installing custom packages](#installing-custom-packages)
 - [Run H2O LLM Studio GUI](#run-h2o-llm-studio-gui)
 - [Run H2O LLM Studio GUI using Docker from a nightly build](#run-h2o-llm-studio-gui-using-docker-from-a-nightly-build)
 - [Run H2O LLM Studio GUI by building your own Docker image](#run-h2o-llm-studio-gui-by-building-your-own-docker-image)
@@ -53,6 +54,7 @@ Using CLI for fine-tuning LLMs:
 
 ## What's New
 
+- [PR 364](https://github.com/h2oai/h2o-llmstudio/pull/364) User secrets are now handled more securely and flexible. Support for handling secrets using the 'keyring' library was added. User settings are tried to be migrated automatically.
 - [PR 328](https://github.com/h2oai/h2o-llmstudio/pull/328) RLHF is now a separate problem type. Note that starting a new RLHF experiment from an old experiment that used RLHF is no longer supported. To continue from a previous experiment, please start a new experiment and enter the settings from the previous experiment manually. 
 - [PR 308](https://github.com/h2oai/h2o-llmstudio/pull/308) Sequence to sequence models have been added as a new problem type.
 - [PR 152](https://github.com/h2oai/h2o-llmstudio/pull/152) Add RLHF functionality for fine-tuning LLMs.
@@ -65,7 +67,7 @@ Please note that due to current rapid development we cannot guarantee full backw
 
 H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
 
-For more information about installation prerequisites, see the [Set up H2O LLM Studio](https://docs.h2o.ai/h2o-llmstudio/get-started/set-up-llm-studio#prerequisites) guide in the documentation. 
+For more information about installation prerequisites, see the [Set up H2O LLM Studio](https://docs.h2o.ai/h2o-llmstudio/get-started/set-up-llm-studio#prerequisites) guide in the documentation.
 
 ### Recommended Install
 
@@ -110,6 +112,18 @@ If you wish to use conda or another virtual environment, you can also install th
 pip install -r requirements.txt
 ```
 
+### Installing custom packages
+
+If you need to install additional Python packages into your environment, you can do so using pip after activating your virtual environment via ```make shell```. For example, to install flash-attention, you would use the following commands:
+
+```bash
+make shell
+pip install flash-attn --no-build-isolation
+pip install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
+```
+
+Alternatively, you can also directly install via ```pipenv install package_name```.
+
 ## Run H2O LLM Studio GUI
 
 You can start H2O LLM Studio using the following command:
@@ -124,6 +138,7 @@ Navigate to <http://localhost:10101/> (we recommend using Chrome) to access H2O 
 If you are running H2O LLM Studio with a custom environment other than Pipenv, you need to start the app as follows:
 
 ```bash
+H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 H2O_WAVE_NO_LOG=true \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
@@ -197,17 +212,32 @@ python prompt.py -e {experiment_name}
 where `experiment_name` is the output folder of the experiment you want to chat with (see configuration).
 The interactive chat will also work with model that were finetuned using the UI.
 
+To publish the model to Hugging Face, use the following command:
+
+```bash
+make shell 
+
+python publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_key} -u {user_id} -m {model_name} -s {safe_serialization}
+```
+
+`path_to_experiment` is the output folder of the experiment.
+`device` is the target device for running the model, either 'cpu' or 'cuda:0'. Default is 'cuda:0'.
+`api_key` is the Hugging Face API Key. If user logged in, it can be omitted.
+`user_id` is the Hugging Face user ID. If user logged in, it can be omitted.
+`model_name` is the name of the model to be published on Hugging Face. It can be omitted.
+`safe_serialization` is a flag indicating whether safe serialization should be used. Default is True.
+
 ## Data format and example data
 
 For details on the data format required when importing your data or example data that you can use to try out H2O LLM Studio, see [Data format](https://docs.h2o.ai/h2o-llmstudio/guide/datasets/data-connectors-format#data-format) in the H2O LLM Studio documentation. 
 
 ## Training your model
 
-With H2O LLM Studio, training your large language model is easy and intuitive. First, upload your dataset and then start training your model. Start by [creating an experiment](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/create-an-experiment). You can then [monitor and manage your experiment](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/view-an-experiment), [compare experiments](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/compare-experiments), or [push the model to Hugging Face](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/export-trained-model) to share it with the community. 
+With H2O LLM Studio, training your large language model is easy and intuitive. First, upload your dataset and then start training your model. Start by [creating an experiment](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/create-an-experiment). You can then [monitor and manage your experiment](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/view-an-experiment), [compare experiments](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/compare-experiments), or [push the model to Hugging Face](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/export-trained-model) to share it with the community.
 
 ## Example: Run on OASST data via CLI
 
-As an example, you can run an experiment on the OASST data via CLI. For instructions, see [Run an experiment on the OASST data]([https://docs.h2o.ai/h2o-llmstudio/guide/experiments/create-an-experiment#run-an-experiment-on-the-oasst-data-via-cli]) guide in the H2O LLM Studio documentation. 
+As an example, you can run an experiment on the OASST data via CLI. For instructions, see [Run an experiment on the OASST data](https://docs.h2o.ai/h2o-llmstudio/guide/experiments/create-an-experiment#run-an-experiment-on-the-oasst-data-via-cli) guide in the H2O LLM Studio documentation.
 
 ## Model checkpoints
 
@@ -218,6 +248,7 @@ All open-source datasets and models are posted on [H2O.ai's Hugging Face page](h
 Detailed documentation and frequently asked questions (FAQs) for H2O LLM Studio can be found at <https://docs.h2o.ai/h2o-llmstudio/>. If you wish to contribute to the docs, navigate to the `/documentation` folder of this repo and refer to the [README.md](documentation/README.md) for more information.
 
 ## Contributing
+
 We are happy to accept contributions to the H2O LLM Studio project. Please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
 
 ## License
