@@ -1212,7 +1212,7 @@ async def show_summary_tab(dataset_id, q):
 async def show_statistics_tab(dataset, cfg, q):
     df_train = read_dataframe(dataset["train_dataframe"])
 
-    conversations = get_conversation_chains(df=df_train, cfg=cfg)
+    conversations = get_conversation_chains(df=df_train, cfg=cfg, limit_chained_samples=True)
     number_of_prompts = [len(conversation["prompts"]) for conversation in conversations]
     prompts = [
         prompt for conversation in conversations for prompt in conversation["prompts"]

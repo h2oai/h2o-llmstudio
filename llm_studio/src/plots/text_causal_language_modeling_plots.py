@@ -87,7 +87,7 @@ class Plots:
     def plot_data(cls, cfg) -> PlotData:
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
 
-        conversations = get_conversation_chains(df, cfg)
+        conversations = get_conversation_chains(df, cfg, limit_chained_samples=True)
         max_conversation_length = max(
             [len(conversation["prompts"]) for conversation in conversations]
         )
@@ -152,7 +152,8 @@ class Plots:
             prompts = conversation["prompts"]
             answers = conversation["answers"]
             # exclude last answer
-            answers[-1] = ""
+            ans
+            wers[-1] = ""
             for prompt, answer in zip(prompts, answers):
                 input_text += prompt + answer
             input_texts += [input_text]
