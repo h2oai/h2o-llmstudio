@@ -11,6 +11,10 @@ def histogram_card(
     histogram_box="first",
     title="Text Length (split by whitespace)",
 ):
+    assert " " not in x_axis_description, (
+        "x_axis_description in histogram card must not contain spaces, "
+        "as the card would not be rendered."
+    )
     df = pd.DataFrame(x, columns=[x_axis_description])
 
     df["count"] = 1

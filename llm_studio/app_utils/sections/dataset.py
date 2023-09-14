@@ -14,7 +14,7 @@ from llm_studio.app_utils.config import default_cfg
 from llm_studio.app_utils.db import Dataset
 from llm_studio.app_utils.sections.common import clean_dashboard
 from llm_studio.app_utils.sections.experiment import experiment_start
-from llm_studio.app_utils.sections.histogram_card import HistogramCard, histogram_card
+from llm_studio.app_utils.sections.histogram_card import histogram_card
 from llm_studio.app_utils.utils import (
     add_model_type,
     azure_download,
@@ -1215,67 +1215,57 @@ async def show_statistics_tab(dataset, cfg, q):
     conversations = get_conversation_chains(
         df=df_train, cfg=cfg, limit_chained_samples=True
     )
-    number_of_prompts = [len(conversation["prompts"]) for conversation in conversations]
-    prompts = [
-        prompt for conversation in conversations for prompt in conversation["prompts"]
-    ]
-    answers = [
-        answer for conversation in conversations for answer in conversation["answers"]
-    ]
 
-    text_length_prompt = [len(prompt.split(" ")) for prompt in prompts]
-    text_length_answer = [len(answer.split(" ")) for answer in answers]
-    text_length_complete_conversations = [
-        sum(
-            [
-                len(prompt.split(" ")) + len(answer.split(" "))
-                for prompt, answer in zip(
-                    conversation["prompts"], conversation["answers"]
-                )
-            ]
+    for chat_type in ["prompts", "answers"]:
+        text_lengths = [
+            [len(text.split(" ")) for text in conversation[chat_type]]
+            for conversation in conversations
+        ]
+        text_lengths = [item for sublist in text_lengths for item in sublist]
+        q.page[f"dataset/display/statistics/{chat_type}_histogram"] = histogram_card(
+            x=text_lengths,
+            x_axis_description=f"text_length_{chat_type.capitalize()}",
+            title=f"Text Length Distribution for {chat_type.capitalize()} (split by whitespace)",
+            histogram_box="first",
         )
-        for conversation in conversations
-    ]
+        q.client.delete_cards.add(f"dataset/display/statistics/{chat_type}_histogram")
 
-    histogram_prompt = histogram_card(
-        x=text_length_prompt,
-        x_axis_description="Text Length Prompt",
-        title="Text Length Distribution for each Prompt (split by whitespace)",
-        histogram_box="first",
-    )
+    input_texts = []
+    for conversation in conversations:
+        input_text = conversation["systems"][0]
+        prompts = conversation["prompts"]
+        answers = conversation["answers"]
+        for prompt, answer in zip(prompts, answers):
+            input_text += prompt + answer
+        input_texts += [input_text]
 
-    q.page["dataset/display/statistics/prompt"] = histogram_prompt
-    q.client.delete_cards.add("dataset/display/statistics/prompt")
+    text_length_complete_conversations = [len(text.split(" ")) for text in input_texts]
 
-    histogram_answer = histogram_card(
-        x=text_length_answer,
-        x_axis_description="text_length_answer",
-        title="Text Length Distribution for each Answer (split by whitespace)",
-        histogram_box="first",
-    )
-    q.page["dataset/display/statistics/answer"] = histogram_answer
-    q.client.delete_cards.add("dataset/display/statistics/answer")
-
-    histogram_answer = histogram_card(
+    q.page["dataset/display/statistics/full_conversation_histogram"] = histogram_card(
         x=text_length_complete_conversations,
         x_axis_description="text_length_complete_conversations",
         title="Text Length Distribution for complete "
         "conversations (split by whitespace)",
         histogram_box="second",
     )
-    q.page["dataset/display/statistics/full_conversation"] = histogram_answer
-    q.client.delete_cards.add("dataset/display/statistics/full_conversation")
+    q.client.delete_cards.add("dataset/display/statistics/full_conversation_histogram")
 
     if cfg.dataset.parent_id_column != "None":
-        histogram_parent_id = histogram_card(
+        number_of_prompts = [
+            len(conversation["prompts"]) for conversation in conversations
+        ]
+        q.page[
+            "dataset/display/statistics/parent_id_length_histogram"
+        ] = histogram_card(
             x=number_of_prompts,
             x_axis_description="number_of_prompts",
             title=f"Distribution of number of prompt-answer turns per conversation, "
             f" as indicated by {cfg.dataset.parent_id_column}",
             histogram_box="second",
         )
-        q.page["dataset/display/statistics/parent_id"] = histogram_parent_id
-        q.client.delete_cards.add("dataset/display/statistics/parent_id")
+        q.client.delete_cards.add(
+            "dataset/display/statistics/parent_id_length_histogram"
+        )
 
     stats = get_frame_stats(read_dataframe(dataset["train_dataframe"]))
     if stats is None:
