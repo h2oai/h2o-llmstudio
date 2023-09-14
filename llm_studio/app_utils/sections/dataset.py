@@ -14,7 +14,7 @@ from llm_studio.app_utils.config import default_cfg
 from llm_studio.app_utils.db import Dataset
 from llm_studio.app_utils.sections.common import clean_dashboard
 from llm_studio.app_utils.sections.experiment import experiment_start
-from llm_studio.app_utils.sections.histogram_card import HistogramCard
+from llm_studio.app_utils.sections.histogram_card import HistogramCard, histogram_card
 from llm_studio.app_utils.utils import (
     add_model_type,
     azure_download,
@@ -1212,7 +1212,9 @@ async def show_summary_tab(dataset_id, q):
 async def show_statistics_tab(dataset, cfg, q):
     df_train = read_dataframe(dataset["train_dataframe"])
 
-    conversations = get_conversation_chains(df=df_train, cfg=cfg, limit_chained_samples=True)
+    conversations = get_conversation_chains(
+        df=df_train, cfg=cfg, limit_chained_samples=True
+    )
     number_of_prompts = [len(conversation["prompts"]) for conversation in conversations]
     prompts = [
         prompt for conversation in conversations for prompt in conversation["prompts"]
@@ -1235,58 +1237,43 @@ async def show_statistics_tab(dataset, cfg, q):
         for conversation in conversations
     ]
 
-    histogram_prompt = HistogramCard(
-        column="text_length_prompt",
+    histogram_prompt = histogram_card(
+        x=text_length_prompt,
+        x_axis_description="Text Length Prompt",
         title="Text Length Distribution for each Prompt (split by whitespace)",
         histogram_box="first",
-    )(
-        q=q,
-        df=pd.DataFrame(
-            {
-                "text_length_prompt": text_length_prompt,
-            }
-        ),
     )
 
     q.page["dataset/display/statistics/prompt"] = histogram_prompt
     q.client.delete_cards.add("dataset/display/statistics/prompt")
 
-    histogram_answer = HistogramCard(
-        column="text_length_answer",
+    histogram_answer = histogram_card(
+        x=text_length_answer,
+        x_axis_description="text_length_answer",
         title="Text Length Distribution for each Answer (split by whitespace)",
         histogram_box="first",
-    )(
-        q=q,
-        df=pd.DataFrame(
-            {
-                "text_length_answer": text_length_answer,
-            }
-        ),
     )
     q.page["dataset/display/statistics/answer"] = histogram_answer
     q.client.delete_cards.add("dataset/display/statistics/answer")
 
-    histogram_answer = HistogramCard(
-        column="text_length_complete_conversations",
+    histogram_answer = histogram_card(
+        x=text_length_complete_conversations,
+        x_axis_description="text_length_complete_conversations",
         title="Text Length Distribution for complete "
         "conversations (split by whitespace)",
         histogram_box="second",
-    )(
-        q=q,
-        df=pd.DataFrame(
-            {"text_length_complete_conversations": text_length_complete_conversations}
-        ),
     )
     q.page["dataset/display/statistics/full_conversation"] = histogram_answer
     q.client.delete_cards.add("dataset/display/statistics/full_conversation")
 
     if cfg.dataset.parent_id_column != "None":
-        histogram_parent_id = HistogramCard(
-            column="number_of_prompts",
+        histogram_parent_id = histogram_card(
+            x=number_of_prompts,
+            x_axis_description="number_of_prompts",
             title=f"Distribution of number of prompt-answer turns per conversation, "
             f" as indicated by {cfg.dataset.parent_id_column}",
             histogram_box="second",
-        )(q=q, df=pd.DataFrame({"number_of_prompts": number_of_prompts}))
+        )
         q.page["dataset/display/statistics/parent_id"] = histogram_parent_id
         q.client.delete_cards.add("dataset/display/statistics/parent_id")
 
