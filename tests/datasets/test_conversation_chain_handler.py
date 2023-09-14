@@ -257,7 +257,7 @@ def test_conversation_chain_handler_filters_parent_ids(df_with_nan, cfg):
         assert handler_1.conversation_chain_ids == handler_2.conversation_chain_ids
 
 
-@pytest.skip("slow test due to downloading oasst")
+@pytest.mark.skip("slow test due to downloading oasst")
 def test_oasst_conversation_chain_handler(tmp_path):
     """
     Test conversation chain handler on default OASST dataset.
