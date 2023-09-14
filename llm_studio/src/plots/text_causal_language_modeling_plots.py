@@ -152,8 +152,7 @@ class Plots:
             prompts = conversation["prompts"]
             answers = conversation["answers"]
             # exclude last answer
-            ans
-            wers[-1] = ""
+            answers[-1] = ""
             for prompt, answer in zip(prompts, answers):
                 input_text += prompt + answer
             input_texts += [input_text]
