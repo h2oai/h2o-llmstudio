@@ -42,10 +42,11 @@ def load_user_settings_and_secrets(q: Q):
     _load_user_settings(q)
 
 
-def load_default_user_settings(q: Q):
+def load_default_user_settings(q: Q, clear_secrets=True):
     for key in default_cfg.user_settings:
         q.client[key] = default_cfg.user_settings[key]
-        _clear_secrets(q, key)
+        if clear_secrets:
+            _clear_secrets(q, key)
 
 
 class NoSaver:
@@ -229,7 +230,9 @@ def _load_user_settings(q: Q):
             q.client[key] = user_settings.get(key, default_cfg.user_settings[key])
     else:
         logger.info("No user settings found. Using default settings.")
-        load_default_user_settings(q)
+        # User may have deleted the user settings file. We load the default settings.
+        # Secrets may still be stored in keyring or env file.
+        load_default_user_settings(q, clear_secrets=False)
 
 
 async def _save_secrets(q: Q):
