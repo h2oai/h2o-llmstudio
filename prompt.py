@@ -140,7 +140,7 @@ if __name__ == "__main__":
             ]
             output["predicted_text"] = np.array(predicted_text)
 
-            output = cfg.dataset.dataset_class.clean_output(output, [prompt], cfg)
+            output = cfg.dataset.dataset_class.clean_output(output, cfg)
 
             output = output["predicted_text"][0]
 
