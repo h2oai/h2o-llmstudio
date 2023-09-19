@@ -165,7 +165,7 @@ class ConversationChainHandler:
     def __len__(self):
         return len(self.conversation_chain_ids)
 
-    def __getitem__(self, idx) -> Dict[str, List[str]]:
+    def __getitem__(self, idx):
         """
         Gets a single conversation chain.
         The conversation may be:

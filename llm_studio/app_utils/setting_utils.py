@@ -42,10 +42,11 @@ def load_user_settings_and_secrets(q: Q):
     _load_user_settings(q)
 
 
-def load_default_user_settings(q: Q):
+def load_default_user_settings(q: Q, clear_secrets=True):
     for key in default_cfg.user_settings:
         q.client[key] = default_cfg.user_settings[key]
-        _clear_secrets(q, key)
+        if clear_secrets:
+            _clear_secrets(q, key)
 
 
 class NoSaver:
@@ -227,6 +228,11 @@ def _load_user_settings(q: Q):
             user_settings = yaml.load(f, Loader=yaml.FullLoader)
         for key in USER_SETTING_KEYS:
             q.client[key] = user_settings.get(key, default_cfg.user_settings[key])
+    else:
+        logger.info("No user settings found. Using default settings.")
+        # User may have deleted the user settings file. We load the default settings.
+        # Secrets may still be stored in keyring or env file.
+        load_default_user_settings(q, clear_secrets=False)
 
 
 async def _save_secrets(q: Q):
@@ -278,6 +284,7 @@ def _load_secrets(q: Q):
             q.client[key] = secrets_handler.load(key)
         except Exception:
             logger.error(f"Could not load password {key} from {secret_name}")
+            q.client[key] = ""
 
 
 def _get_secrets_handler(q: Q):
