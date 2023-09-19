@@ -1225,7 +1225,8 @@ async def show_statistics_tab(dataset, cfg, q):
         q.page[f"dataset/display/statistics/{chat_type}_histogram"] = histogram_card(
             x=text_lengths,
             x_axis_description=f"text_length_{chat_type.capitalize()}",
-            title=f"Text Length Distribution for {chat_type.capitalize()} (split by whitespace)",
+            title=f"Text Length Distribution for {chat_type.capitalize()}"
+            f" (split by whitespace)",
             histogram_box="first",
         )
         q.client.delete_cards.add(f"dataset/display/statistics/{chat_type}_histogram")
