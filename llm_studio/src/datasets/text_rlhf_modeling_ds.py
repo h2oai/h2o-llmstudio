@@ -42,21 +42,15 @@ class CustomDataset(CausalLMCustomDataset):
         answer_encodings[-1] = torch.empty(0)
         return system_encoding, prompt_encodings, answer_encodings
 
-    def postprocess_batch_predictions(
-        self, cfg: Any, output: Dict, force_transform: bool = False
-    ) -> Dict:
-        if cfg.prediction.metric == "Perplexity" and not force_transform:
-            # we still need the predicted answer for the reward model during training
-            # force that with force_transform=True in the train loop
-            return output
+    def postprocess_batch_predictions(self, output: Dict) -> Dict:
+        if "predicted_answer_ids" in output.keys():
+            predicted_text = [
+                self.tokenizer.decode(ids, skip_special_tokens=True).strip()
+                for ids in output["predicted_answer_ids"]
+            ]
 
-        predicted_text = [
-            self.tokenizer.decode(ids, skip_special_tokens=True).strip()
-            for ids in output["predicted_answer_ids"]
-        ]
-
-        output["predicted_text"] = np.array(predicted_text)
-        output["predicted_answer_ids"] = output["predicted_answer_ids"].detach()
+            output["predicted_text"] = np.array(predicted_text)
+            output["predicted_answer_ids"] = output["predicted_answer_ids"].detach()
         return output
 
     def augment_data(self, encodings):
