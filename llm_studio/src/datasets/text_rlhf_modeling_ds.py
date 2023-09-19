@@ -20,6 +20,9 @@ class CustomDataset(CausalLMCustomDataset):
         assert (
             cfg.dataset.limit_chained_samples is False
         ), "RLHF is not compatible with limit_chained_samples."
+        assert (
+            cfg.dataset.mask_prompt_labels is True
+        ), "RLHF is not compatible with mask_prompt_labels."
         super().__init__(df, cfg, mode)
 
     def __getitem__(self, idx: int) -> Dict:
