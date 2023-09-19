@@ -188,14 +188,3 @@ class Plots:
         path = os.path.join(cfg.output_directory, f"{mode}_viz.parquet")
         df.to_parquet(path)
         return PlotData(data=path, encoding="df")
-
-    @staticmethod
-    def plot_empty(cfg, error="Not yet implemented.") -> PlotData:
-        """Plots an empty default plot.
-        Args:
-            cfg: config
-        Returns:
-            The default plot as `PlotData`.
-        """
-
-        return PlotData(f"<h2>{error}</h2>", encoding="html")

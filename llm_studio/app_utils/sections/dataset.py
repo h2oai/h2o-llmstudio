@@ -51,6 +51,7 @@ from llm_studio.src.utils.data_utils import (
     read_dataframe_drop_missing_labels,
     sanity_check,
 )
+from llm_studio.src.utils.plot_utils import PlotData
 
 logger = logging.getLogger(__name__)
 
@@ -1155,9 +1156,7 @@ async def show_visualization_tab(cfg, q):
         plot = cfg.logging.plots_class.plot_data(cfg)
     except Exception as error:
         logger.error(f"Error while plotting data preview: {error}", exc_info=True)
-        plot = cfg.logging.plots_class.plot_empty(
-            cfg, error="Error while plotting data."
-        )
+        plot = PlotData(f"<h2>Error while plotting data.</h2>", encoding="html")
     card: ImageCard | MarkupCard | FormCard
     if plot.encoding == "image":
         card = ui.image_card(box="first", title="", type="png", image=plot.data)
