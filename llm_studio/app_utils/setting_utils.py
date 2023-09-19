@@ -227,6 +227,9 @@ def _load_user_settings(q: Q):
             user_settings = yaml.load(f, Loader=yaml.FullLoader)
         for key in USER_SETTING_KEYS:
             q.client[key] = user_settings.get(key, default_cfg.user_settings[key])
+    else:
+        logger.info("No user settings found. Using default settings.")
+        load_default_user_settings(q)
 
 
 async def _save_secrets(q: Q):
