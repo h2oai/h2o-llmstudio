@@ -281,6 +281,7 @@ def _load_secrets(q: Q):
             q.client[key] = secrets_handler.load(key)
         except Exception:
             logger.error(f"Could not load password {key} from {secret_name}")
+            q.client[key] = ""
 
 
 def _get_secrets_handler(q: Q):
