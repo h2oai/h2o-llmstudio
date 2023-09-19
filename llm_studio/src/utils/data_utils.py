@@ -128,7 +128,10 @@ def get_fill_columns(cfg: Any) -> List[str]:
 
 
 def read_dataframe_drop_missing_labels(path: str, cfg: Any) -> pd.DataFrame:
-    input_cols = list(cfg.dataset.dataset_class.get_input_columns(cfg))
+    if isinstance(cfg.dataset.prompt_column, tuple):
+        input_cols = list(cfg.dataset.prompt_column)
+    else:
+        input_cols = [cfg.dataset.prompt_column]
     non_missing_columns = input_cols + [cfg.dataset.answer_column]
     verbose = cfg.environment._local_rank == 0
     fill_columns = get_fill_columns(cfg)
