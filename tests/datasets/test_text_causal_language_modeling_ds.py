@@ -40,9 +40,9 @@ def test_clean_output():
     cfg = mock.MagicMock()
     cfg.tokenizer._stop_words = ["<stop>", "<stop2>", "<stop3>"]
 
-    predicted_text_clean = CustomDataset.clean_output(
-        output=output, prompts=None, cfg=cfg
-    )["predicted_text"]
+    predicted_text_clean = CustomDataset.clean_output(output=output, cfg=cfg)[
+        "predicted_text"
+    ]
     assert predicted_text_clean == [
         "This is a test",
         "This is a test",
@@ -56,11 +56,13 @@ def test_clean_output():
 def test_sanity_check_raises_error():
     mock_config = MagicMock()
     mock_config.dataset.parent_id_column = "parent_id"
+    mock_config.dataset.answer_column = "answer"
 
     df_1 = pd.DataFrame(
         {
             "id": [1, 2, 3, 4],
             "parent_id": [2, None, 4, 1],
+            "answer": ["a", "b", "c", "d"],
             "other_data": ["a", "b", "c", "d"],
         }
     )
@@ -70,6 +72,7 @@ def test_sanity_check_raises_error():
         {
             "id": [1, 2, 3, 4],
             "parent_id": [None, None, None, None],
+            "answer": ["a", "b", "c", "d"],
             "other_data": ["a", "b", "c", "d"],
         }
     )
@@ -79,6 +82,7 @@ def test_sanity_check_raises_error():
         {
             "id": [1, 2, 3, 4],
             "parent_id": [1, 2, 3, 4],
+            "answer": ["a", "b", "c", "d"],
             "other_data": ["a", "b", "c", "d"],
         }
     )
@@ -133,60 +137,6 @@ def test_init(mock_auto_tokenizer):
 
     assert dataset.df.equals(df)
     assert dataset.mode == "train"
-    assert all(dataset.indices == np.array([0, 1, 2]))
-    assert dataset.answers == ["4", "5", "6"]
-
-
-def test_get_parent_ids(mock_auto_tokenizer):
-    df = pd.DataFrame(
-        {
-            "prompt": ["prompt 1", "prompt 2", "prompt 3"],
-            "answer": ["answer 1", "answer 2", "answer 3"],
-            "parent_id": [None, 0, 1],
-            "id": [0, 1, 2],
-        }
-    )
-
-    cfg = mock.MagicMock()
-    cfg.dataset.prompt_column = "prompt"
-    cfg.dataset.answer_column = "answer"
-    cfg.dataset.parent_id_column = "parent_id"
-    cfg.dataset.text_system_start = "System:"
-    cfg.dataset.text_prompt_start = "Prompt:"
-    cfg.dataset.text_answer_separator = "Answer:"
-
-    dataset = CustomDataset(df, cfg)
-
-    assert dataset.get_parent_ids(0) == []
-    assert dataset.get_parent_ids(1) == [0]
-    assert dataset.get_parent_ids(2) == [0, 1]
-
-
-def test_loop_fails(mock_auto_tokenizer):
-    df = pd.DataFrame(
-        {
-            "prompt": ["prompt 1", "prompt 2", "prompt 3"],
-            "answer": ["answer 1", "answer 2", "answer 3"],
-            "parent_id": [0, 1, 2],
-            "id": [1, 2, 0],
-        }
-    )
-
-    cfg = mock.MagicMock()
-    cfg.dataset.prompt_column = "prompt"
-    cfg.dataset.answer_column = "answer"
-    cfg.dataset.parent_id_column = "parent_id"
-    cfg.dataset.text_system_start = "System:"
-    cfg.dataset.text_prompt_start = "Prompt:"
-    cfg.dataset.text_answer_separator = "Answer:"
-
-    dataset = CustomDataset(df, cfg)
-    with pytest.raises(
-        ValueError,
-        match="Parent chain of sample with idx 2 exceeds max loop count. "
-        "Please ensure that parent chain is not circular.",
-    ):
-        dataset.get_parent_ids(2)
 
 
 def test_getitem():
@@ -222,19 +172,15 @@ def test_getitem():
 
     result = dataset[0]
     assert isinstance(result, dict)
-    assert set(result.keys()) == set(
-        [
-            "labels",
-            "input_ids",
-            "attention_mask",
-            "prompt_input_ids",
-            "prompt_attention_mask",
-            "answer_input_ids",
-            "answer_attention_mask",
-        ]
-    )
-
-    dataset.tokenizer.convert_ids_to_tokens(result["input_ids"])
+    assert set(result.keys()) == {
+        "labels",
+        "input_ids",
+        "attention_mask",
+        "prompt_input_ids",
+        "prompt_attention_mask",
+        "answer_input_ids",
+        "answer_attention_mask",
+    }
 
     assert (
         dataset.tokenizer.decode(result["input_ids"], skip_special_tokens=True)
@@ -278,3 +224,74 @@ def test_getitem():
 
     assert result["input_ids"].shape == (513,)
     assert result["prompt_input_ids"].shape == (513,)
+
+    assert dataset.get_chained_prompt_text_list(0) == [
+        "system 1prompt 1",
+        "answer 1",
+        "prompt 2",
+        "answer 2",
+        "prompt 3",
+    ]
+
+
+def test_getitem_no_chaining():
+    df = pd.DataFrame(
+        {
+            "prompt": ["prompt 1", "prompt 2", "prompt 3"],
+            "answer": ["answer 1", "answer 2", "answer 3"],
+            "parent_id": [None, 0, 1],
+            "system": ["system 1", "system 2", "system 3"],
+            "id": [0, 1, 2],
+        }
+    )
+
+    cfg = ConfigProblemBase(
+        dataset=ConfigNLPCausalLMDataset(
+            prompt_column=("prompt",),
+            answer_column="answer",
+            parent_id_column="None",
+            system_column="system",
+            text_system_start="System:",
+            text_prompt_start="Prompt:",
+            text_answer_separator="Answer:",
+            add_eos_token_to_answer=True,
+        ),
+        tokenizer=ConfigNLPCausalLMTokenizer(max_length=513),
+    )
+
+    cfg.llm_backbone = "EleutherAI/pythia-2.8b-deduped"
+
+    dataset = CustomDataset(df, cfg)
+    assert len(dataset) == 3
+
+    for i in range(3):
+        result = dataset[i]
+        assert isinstance(result, dict)
+        assert set(result.keys()) == {
+            "labels",
+            "input_ids",
+            "attention_mask",
+            "prompt_input_ids",
+            "prompt_attention_mask",
+            "answer_input_ids",
+            "answer_attention_mask",
+        }
+
+        assert (
+            dataset.tokenizer.decode(result["input_ids"], skip_special_tokens=True)
+            == f"System:system {i+1}"
+            f"Prompt:prompt {i+1}"
+            f"Answer:answer {i+1}"
+        )
+
+        assert (
+            dataset.tokenizer.decode(
+                result["prompt_input_ids"], skip_special_tokens=True
+            )
+            == f"System:system {i+1}"
+            f"Prompt:prompt {i+1}"
+            "Answer:"
+        )
+        assert dataset.get_chained_prompt_text_list(i) == [
+            f"system {i+1}prompt {i+1}",
+        ]

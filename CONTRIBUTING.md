@@ -48,8 +48,8 @@ run `make test`.
 
 Please make sure your pull request fulfills the following checklist:
 
-☐ The PR title should provide a clear summary of your contribution.<br>
-☐ Link the related issue (e.g., closes #123) in your PR description.<br>
-☐ If your contribution is still a work in progress, change the PR to draft mode.<br>
-☐ Ensure that the existing tests pass by running `make test`.<br>
-☐ Make sure `make style` passes to maintain consistent code style.<br>
+☐ The PR title should provide a clear summary of your contribution.  
+☐ Link the related issue (e.g., closes #123) in your PR description.  
+☐ If your contribution is still a work in progress, change the PR to draft mode.  
+☐ Ensure that the existing tests pass by running `make test`.  
+☐ Make sure `make style` passes to maintain consistent code style.  
