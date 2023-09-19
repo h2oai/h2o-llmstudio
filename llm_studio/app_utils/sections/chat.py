@@ -244,7 +244,7 @@ async def chat_update(q: Q) -> None:
 
     def text_cleaner(text: str) -> str:
         return cfg.dataset.dataset_class.clean_output(
-            output={"predicted_text": np.array([text])}, prompts=[full_prompt], cfg=cfg
+            output={"predicted_text": np.array([text])}, cfg=cfg
         )["predicted_text"][0]
 
     if cfg.prediction.num_beams == 1:
