@@ -584,11 +584,11 @@ async def dataset_import(
                     name="experiment/display/table",
                     markdown_cells=list(df.columns),
                     searchables=list(df.columns),
-                    downloadable=True,
-                    resettable=True,
+                    downloadable=False,
+                    resettable=False,
                     min_widths=min_widths,
                     height="calc(100vh - 245px)",
-                    max_char_length=50_000,
+                    max_char_length=5_000,
                     cell_overflow="tooltip",
                 )
             else:
@@ -1156,7 +1156,7 @@ async def show_visualization_tab(cfg, q):
         plot = cfg.logging.plots_class.plot_data(cfg)
     except Exception as error:
         logger.error(f"Error while plotting data preview: {error}", exc_info=True)
-        plot = PlotData(f"<h2>Error while plotting data.</h2>", encoding="html")
+        plot = PlotData("<h2>Error while plotting data.</h2>", encoding="html")
     card: ImageCard | MarkupCard | FormCard
     if plot.encoding == "image":
         card = ui.image_card(box="first", title="", type="png", image=plot.data)

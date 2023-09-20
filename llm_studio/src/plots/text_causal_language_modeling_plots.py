@@ -88,8 +88,11 @@ class Plots:
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
 
         conversations = get_conversation_chains(df, cfg, limit_chained_samples=True)
-        max_conversation_length = max(
-            [len(conversation["prompts"]) for conversation in conversations]
+
+        # Limit to max 15 prompt-conversation-answer rounds
+        # This yields to max 5 * sum_{i=1}^{15} i = 600 rows in the DataFrame
+        max_conversation_length = min(
+            max([len(conversation["prompts"]) for conversation in conversations]), 15
         )
 
         conversations_to_display = []
@@ -178,10 +181,22 @@ class Plots:
         )
 
         if val_outputs.get("metrics") is not None:
-            df[f"Metric ({cfg.prediction.metric})"] = val_outputs["metrics"]
-            df[f"Metric ({cfg.prediction.metric})"] = df[
-                f"Metric ({cfg.prediction.metric})"
-            ].round(decimals=3)
+            metric_column_name = f"Metric ({cfg.prediction.metric})"
+            df[metric_column_name] = val_outputs["metrics"]
+            df[metric_column_name] = df[metric_column_name].round(decimals=3)
+            if len(df) > 900:
+                df.sort_values(by=metric_column_name, inplace=True)
+                df = pd.concat(
+                    [
+                        df.iloc[:300],
+                        df.iloc[300:-300].sample(n=300, random_state=42),
+                        df.iloc[-300:],
+                    ]
+                ).reset_index(drop=True)
+
+        elif len(df) > 900:
+            df = df.sample(n=900, random_state=42).reset_index(drop=True)
+
         if val_outputs.get("explanations") is not None:
             df["Explanation"] = val_outputs["explanations"]
 
