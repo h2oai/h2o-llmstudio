@@ -8,6 +8,7 @@ import torch
 from llm_studio.src.datasets.text_causal_language_modeling_ds import (
     CustomDataset as CausalLMCustomDataset,
 )
+from llm_studio.src.datasets.text_utils import TEXT_SEPARATOR
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class CustomDataset(CausalLMCustomDataset):
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
         sample = super().__getitem__(idx)
-        sample["reward_model_prompt_text"] = "<|endoftext|>".join(
+        sample["reward_model_prompt_text"] = TEXT_SEPARATOR.join(
             self.get_chained_prompt_text_list(idx)
         )
         return sample

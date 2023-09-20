@@ -9,7 +9,7 @@ import torch
 from torch.utils.data import Dataset
 
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
-from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.datasets.text_utils import TEXT_SEPARATOR, get_tokenizer
 
 logger = logging.getLogger(__name__)
 
@@ -457,18 +457,17 @@ class CustomDataset(Dataset):
         return [system_encoding, prompt_encoding, answer_encoding]
 
     def get_chained_prompt_text_list(self, idx) -> List[str]:
-        text_separator = "TEXT_SEPARATOR"
         text_dict = self.conversation_chain_handler[idx]
         chat_history = "".join(
             [
-                prompt + text_separator + answer + text_separator
+                prompt + TEXT_SEPARATOR + answer + TEXT_SEPARATOR
                 for prompt, answer in zip(
                     text_dict["prompts"][:-1], text_dict["answers"][:-1]
                 )
             ]
         )
         prompt_text = text_dict["systems"][0] + chat_history + text_dict["prompts"][-1]
-        return prompt_text.split(text_separator)
+        return prompt_text.split(TEXT_SEPARATOR)
 
     @staticmethod
     def pad_tokens(
