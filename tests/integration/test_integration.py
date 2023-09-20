@@ -43,7 +43,14 @@ def get_experiment_status(path: str) -> str:
         "test_rlhf_language_modeling_oasst_cfg",
     ],
 )
-def test_oasst_training(tmp_path, config_name):
+@pytest.mark.parametrize(
+    "metric",
+    [
+        "Perplexity",
+        "BLEU",
+    ],
+)
+def test_oasst_training(tmp_path, config_name, metric):
     """
     Test training on OASST dataset.
 
@@ -63,6 +70,9 @@ def test_oasst_training(tmp_path, config_name):
     # set paths and save in tmp folder
     cfg["dataset"]["train_dataframe"] = train_path
     cfg["output_directory"] = os.path.join(tmp_path, "output")
+
+    # set metric
+    cfg["prediction"]["metric"] = metric
 
     modifed_config_path = os.path.join(tmp_path, "cfg.yaml")
     with open(modifed_config_path, "w") as fp:

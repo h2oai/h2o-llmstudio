@@ -528,7 +528,7 @@ def run_train_rlhf(
                     .detach()
                 )
                 output_dict = train_dataloader.dataset.postprocess_batch_predictions(
-                    cfg=cfg, output=output_dict
+                    output=output_dict
                 )
 
                 logger.debug("Evaluation: Score from reward model")
