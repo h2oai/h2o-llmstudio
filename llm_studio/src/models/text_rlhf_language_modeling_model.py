@@ -118,7 +118,7 @@ class Model(nn.Module):
             output_hidden_states=True,
         )
 
-        if self.cfg.prediction.metric == "Perplexity":
+        if self.cfg.prediction.metric == "Perplexity" and not self.training:
             outputs["perplexity"] = self.perplexity(output.logits, batch["labels"])
 
         if self.training:

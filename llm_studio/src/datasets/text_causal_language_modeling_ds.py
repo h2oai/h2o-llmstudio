@@ -227,17 +227,15 @@ class CustomDataset(Dataset):
 
         return None
 
-    def postprocess_batch_predictions(self, cfg: Any, output: Dict) -> Dict:
-        if cfg.prediction.metric == "Perplexity":
-            return output
+    def postprocess_batch_predictions(self, output: Dict) -> Dict:
+        if "predicted_answer_ids" in output.keys():
+            predicted_text = [
+                self.tokenizer.decode(ids, skip_special_tokens=True).strip()
+                for ids in output["predicted_answer_ids"]
+            ]
 
-        predicted_text = [
-            self.tokenizer.decode(ids, skip_special_tokens=True).strip()
-            for ids in output["predicted_answer_ids"]
-        ]
-        output["predicted_text"] = np.array(predicted_text)
-
-        del output["predicted_answer_ids"]
+            output["predicted_text"] = np.array(predicted_text)
+            del output["predicted_answer_ids"]
         return output
 
     @staticmethod
