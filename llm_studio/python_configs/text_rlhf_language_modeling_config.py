@@ -108,10 +108,10 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
 
         self._order.insert(
             "rollout_steps",
+            "offload_reward_model",
             "adaptive_kl_control",
             "full_kl_penalty",
             "advantages_gamma",
-            "offload_reward_model",
             "kl_horizon",
             "ppo_generate_temperature",
             "kl_target",
@@ -163,9 +163,12 @@ class ConfigRLHFLMPrediction(ConfigNLPCausalLMPrediction):
 
 @dataclass
 class ConfigRLHFLMEnvironment(ConfigNLPCausalLMEnvironment):
+    compile_model: bool = False
+
     def __post_init__(self):
         super().__post_init__()
         self._visibility["use_fsdp"] = -1
+        self._visibility["compile_model"] = -1
 
 
 @dataclass
@@ -184,7 +187,9 @@ class ConfigProblemBase(DefaultConfigProblemBase):
         default_factory=ConfigRLHFLMArchitecture
     )
     training: ConfigRLHFLMTraining = field(default_factory=ConfigRLHFLMTraining)
-    augmentation: ConfigNLPAugmentation = field(default_factory=ConfigNLPAugmentation)
+    augmentation: ConfigRLHFLMAugmentation = field(
+        default_factory=ConfigRLHFLMAugmentation
+    )
     prediction: ConfigRLHFLMPrediction = field(default_factory=ConfigRLHFLMPrediction)
     environment: ConfigRLHFLMEnvironment = field(
         default_factory=ConfigRLHFLMEnvironment
