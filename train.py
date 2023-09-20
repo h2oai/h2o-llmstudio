@@ -237,6 +237,8 @@ def run_train(
 
         log_update_steps = max(epoch_steps // 20, 1)
         evaluation_step = max(int(epoch_steps * cfg.training.evaluation_epochs), 1)
+        logger.info(f"Evaluation step: {evaluation_step}")
+
         for itr, data in enumerate(tr_it):
             cfg.environment._curr_step += (
                 cfg.training.batch_size * cfg.environment._world_size
@@ -500,11 +502,18 @@ def run_train_rlhf(
 
         log_update_steps = max(epoch_steps // 20, 1)
         evaluation_step = max(int(epoch_steps * cfg.training.evaluation_epochs), 1)
+
         # Round up to the nearest multiple of cfg.training.rollout_steps
+        assert cfg.training.rollout_steps <= epoch_steps, (
+            f"Rollout steps {cfg.training.rollout_steps} must be less than the total "
+            f"training steps in one epoch {epoch_steps}"
+        )
         evaluation_step = (
             (evaluation_step + cfg.training.rollout_steps - 1)
             // cfg.training.rollout_steps
         ) * cfg.training.rollout_steps
+
+        logger.info(f"Evaluation step: {evaluation_step}")
 
         query_tensors = []
         response_tensors = []
