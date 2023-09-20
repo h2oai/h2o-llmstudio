@@ -427,7 +427,11 @@ class PPOTrainer(PyTorchModelHubMixin):
             self.cfg.training.ppo_batch_size
             > self.cfg.training.batch_size * self.cfg.training.rollout_steps
         ):
-            raise ValueError("ppo_batch_size must not be larger than the rollout")
+            raise ValueError(
+                f"ppo_batch_size ({self.cfg.training.ppo_batch_size}) "
+                "must not be larger than the rollout "
+                f"({self.cfg.training.batch_size * self.cfg.training.rollout_steps})"
+            )
 
         for _ in range(self.cfg.training.ppo_epochs):
             for batch in mini_batch_dataloader:
