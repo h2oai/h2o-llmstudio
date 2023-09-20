@@ -24,7 +24,7 @@ def get_texts(df, cfg, separator=None):
             df[column] = df[column].astype(str)
 
         if separator is None:
-            separator = getattr(cfg, "_tokenizer_sep_token", "<SEPARATOR>")
+            separator = getattr(cfg, "_tokenizer_sep_token", TEXT_SEPARATOR)
 
         join_str = f" {separator} "
         texts = df[columns].astype(str)
