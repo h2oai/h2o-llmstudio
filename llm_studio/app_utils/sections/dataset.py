@@ -1287,7 +1287,7 @@ async def show_statistics_tab(dataset, cfg, q):
                 name="dataset/display/statistics/table",
                 sortables=list(stats.columns),
                 min_widths=widths,
-                height="calc(100vh - 265px)",
+                height="265px",
             )
         ]
     q.page["dataset/display/statistics"] = ui.form_card(
