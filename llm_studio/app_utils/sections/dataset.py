@@ -1051,13 +1051,9 @@ async def dataset_display(q: Q) -> None:
         q.client["dataset/display/id"]
     ]
     dataset: Dataset = q.client.app_db.get_dataset(dataset_id)
-    config_file = dataset.config_file
-    cfg = load_config_yaml(config_file)
-
-    has_train_df = cfg.dataset.train_dataframe != "None"
-
-    dataset_dict = cfg.dataset.__dict__
-    dataset_dict["config_file"] = config_file
+    config_filename = dataset.config_file
+    cfg = load_config_yaml(config_filename)
+    dataset_filename = cfg.dataset.train_dataframe
 
     if (
         q.client["dataset/display/tab"] is None
@@ -1076,23 +1072,14 @@ async def dataset_display(q: Q) -> None:
 
     await clean_dashboard(q, mode=q.client["dataset/display/tab"])
 
-    data_string = "Train" if has_train_df else "Test"
-
     items: List[Tab] = [
-        ui.tab(name="dataset/display/data", label=f"Sample {data_string} Data"),
+        ui.tab(name="dataset/display/data", label="Sample Train Data"),
         ui.tab(
-            name="dataset/display/statistics", label=f"{data_string} Data Statistics"
+            name="dataset/display/visualization", label="Sample Train Visualization"
         ),
+        ui.tab(name="dataset/display/statistics", label="Train Data Statistics"),
         ui.tab(name="dataset/display/summary", label="Summary"),
     ]
-
-    if has_train_df:
-        items.insert(
-            1,
-            ui.tab(
-                name="dataset/display/visualization", label="Sample Train Visualization"
-            ),
-        )
 
     q.page["dataset/display/tab"] = ui.tab_card(
         box="nav2",
@@ -1103,16 +1090,18 @@ async def dataset_display(q: Q) -> None:
     q.client.delete_cards.add("dataset/display/tab")
 
     if q.client["dataset/display/tab"] == "dataset/display/data":
-        await show_data_tab(cfg, dataset_dict, q)
+        await show_data_tab(q=q, cfg=cfg, filename=dataset_filename)
 
     elif q.client["dataset/display/tab"] == "dataset/display/visualization":
-        await show_visualization_tab(cfg, q)
+        await show_visualization_tab(q, cfg)
 
     elif q.client["dataset/display/tab"] == "dataset/display/statistics":
-        await show_statistics_tab(dataset_dict, cfg, q)
+        await show_statistics_tab(
+            q, dataset_filename=dataset_filename, config_filename=config_filename
+        )
 
     elif q.client["dataset/display/tab"] == "dataset/display/summary":
-        await show_summary_tab(dataset_id, q)
+        await show_summary_tab(q, dataset_id)
 
     q.page["dataset/display/footer"] = ui.form_card(
         box="footer",
@@ -1134,11 +1123,9 @@ async def dataset_display(q: Q) -> None:
     q.client.delete_cards.add("dataset/display/footer")
 
 
-async def show_data_tab(cfg, dataset_dict, q):
+async def show_data_tab(q, cfg, filename: str):
     fill_columns = get_fill_columns(cfg)
-    df = read_dataframe(
-        dataset_dict["train_dataframe"], n_rows=200, fill_columns=fill_columns
-    )
+    df = read_dataframe(filename, n_rows=200, fill_columns=fill_columns)
     q.page["dataset/display/data"] = ui.form_card(
         box="first",
         items=[
@@ -1155,7 +1142,7 @@ async def show_data_tab(cfg, dataset_dict, q):
     q.client.delete_cards.add("dataset/display/data")
 
 
-async def show_visualization_tab(cfg, q):
+async def show_visualization_tab(q, cfg):
     try:
         plot = cfg.logging.plots_class.plot_data(cfg)
     except Exception as error:
@@ -1195,7 +1182,7 @@ async def show_visualization_tab(cfg, q):
     q.client.delete_cards.add("dataset/display/visualization")
 
 
-async def show_summary_tab(dataset_id, q):
+async def show_summary_tab(q, dataset_id):
     dataset_df = get_datasets(q)
     dataset_df = dataset_df[dataset_df.id == dataset_id]
     stat_list_items: List[StatListItem] = []
@@ -1212,11 +1199,9 @@ async def show_summary_tab(dataset_id, q):
     q.client.delete_cards.add("dataset/display/summary")
 
 
-async def show_statistics_tab(dataset_dict, cfg, q):
-    cfg_hash = hashlib.md5(open(dataset_dict["config_file"], "rb").read()).hexdigest()
-    stats_dict = compute_dataset_statistics(
-        dataset_dict["train_dataframe"], dataset_dict["config_file"], cfg_hash
-    )
+async def show_statistics_tab(q, dataset_filename, config_filename):
+    cfg_hash = hashlib.md5(open(config_filename, "rb").read()).hexdigest()
+    stats_dict = compute_dataset_statistics(dataset_filename, config_filename, cfg_hash)
 
     for chat_type in ["prompts", "answers"]:
         q.page[f"dataset/display/statistics/{chat_type}_histogram"] = histogram_card(
@@ -1237,14 +1222,13 @@ async def show_statistics_tab(dataset_dict, cfg, q):
     )
     q.client.delete_cards.add("dataset/display/statistics/full_conversation_histogram")
 
-    if cfg.dataset.parent_id_column != "None":
+    if len(set(stats_dict["number_of_prompts"])) > 1:
         q.page[
             "dataset/display/statistics/parent_id_length_histogram"
         ] = histogram_card(
             x=stats_dict["number_of_prompts"],
             x_axis_description="number_of_prompts",
-            title=f"Distribution of number of prompt-answer turns per conversation, "
-            f" as indicated by {cfg.dataset.parent_id_column}",
+            title="Distribution of number of prompt-answer turns per conversation.",
             histogram_box="second",
         )
         q.client.delete_cards.add(
