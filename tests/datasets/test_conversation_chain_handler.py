@@ -1,3 +1,4 @@
+import time
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -300,3 +301,32 @@ def test_oasst_conversation_chain_handler(tmp_path):
     assert sample["prompts"] == prompts
     assert sample["answers"] == answers
     assert sample["systems"] == systems
+
+
+@pytest.mark.skip("slow test due to downloading oasst")
+def test_oasst_conversation_chain_handler_is_fast(tmp_path):
+    df_oasst = prepare_default_dataset(tmp_path)
+    cfg = mock.MagicMock()
+    cfg.dataset.prompt_column = "instruction"
+    cfg.dataset.answer_column = "output"
+    cfg.dataset.parent_id_column = "parent_id"
+    cfg.dataset.system_column = "None"
+    cfg.dataset.limit_chained_samples = True
+    dfs = []
+    for i in range(50):
+        df = df_oasst.copy()
+        df["parent_id"] = df["parent_id"].apply(
+            lambda x: x + str(i) if x is not None else x
+        )
+        df["id"] = df["id"].apply(lambda x: x + str(i))
+        dfs.append(df)
+
+    df = pd.concat(dfs).reset_index(drop=True)
+
+    assert len(df) > 400_000
+
+    t_0 = time.time()
+    conversation_chain_handler = ConversationChainHandler(df, cfg)
+    _ = [conversation for conversation in conversation_chain_handler]
+    t_1 = time.time()
+    assert t_1 - t_0 < 10  # shouldn't take longer than ~5 seconds
