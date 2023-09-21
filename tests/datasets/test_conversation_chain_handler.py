@@ -305,7 +305,7 @@ def test_oasst_conversation_chain_handler(tmp_path):
     assert sample["systems"] == systems
 
 
-#@pytest.mark.skip("slow test due to downloading oasst")
+@pytest.mark.skip("slow test due to downloading oasst")
 def test_oasst_conversation_chain_handler_is_fast(tmp_path):
     df_oasst = prepare_default_dataset(tmp_path)
     cfg = mock.MagicMock()
