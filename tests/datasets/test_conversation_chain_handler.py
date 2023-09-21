@@ -8,7 +8,6 @@ import pytest
 from llm_studio.app_utils.utils import prepare_default_dataset
 from llm_studio.src.datasets.conversation_chain_handler import (
     ConversationChainHandler,
-    get_conversation_chains,
 )
 
 
@@ -329,6 +328,7 @@ def test_oasst_conversation_chain_handler_is_fast(tmp_path):
     assert len(df) > 400_000
 
     t_0 = time.time()
-    get_conversation_chains(df, cfg)
+    conversation_chain_handler = ConversationChainHandler(df, cfg)
+    _ = [conversation for conversation in conversation_chain_handler]
     t_1 = time.time()
     assert t_1 - t_0 < 10  # shouldn't tkae longer than ~5 seconds
