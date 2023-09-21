@@ -1,3 +1,4 @@
+import hashlib
 import os
 from typing import Any, Dict
 
@@ -85,6 +86,26 @@ class Plots:
 
     @classmethod
     def plot_data(cls, cfg) -> PlotData:
+        """
+        Plots the data in a scrollable table.
+        We limit the number of rows to max 600 to avoid rendering issues in Wave.
+        As the data visualization is instantiated on every page load, we cache the
+        data visualization in a parquet file.
+        """
+        config_id = (
+            str(cfg.dataset.train_dataframe)
+            + str(cfg.dataset.system_column)
+            + str(cfg.dataset.prompt_column)
+            + str(cfg.dataset.answer_column)
+        )
+        config_hash = hashlib.md5(config_id.encode()).hexdigest()
+        path = os.path.join(
+            os.path.dirname(cfg.dataset.train_dataframe),
+            f"{config_hash}_data_viz.parquet",
+        )
+        if os.path.exists(path):
+            return PlotData(path, encoding="df")
+
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
 
         conversations = get_conversation_chains(df, cfg, limit_chained_samples=True)
@@ -132,9 +153,7 @@ class Plots:
         df_transposed["Content"] = df_transposed["Content"].apply(
             format_for_markdown_visualization
         )
-        path = os.path.join(
-            os.path.dirname(cfg.dataset.train_dataframe), "data_viz.parquet"
-        )
+
         df_transposed.to_parquet(path)
 
         return PlotData(path, encoding="df")
