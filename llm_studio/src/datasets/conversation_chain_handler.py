@@ -1,4 +1,5 @@
 import logging
+from typing import Dict, List
 
 import numpy as np
 
@@ -100,7 +101,8 @@ class ConversationChainHandler:
         sample_ids = df["id"].astype(df[cfg.dataset.parent_id_column].dtype).tolist()
         parent_ids = df[cfg.dataset.parent_id_column].tolist()
         # Some datasets may include parent ids that are not in the dataset.
-        parent_ids = [idx if idx in sample_ids else "None" for idx in parent_ids]
+        sample_ids_set = set(sample_ids)
+        parent_ids = [idx if idx in sample_ids_set else "None" for idx in parent_ids]
 
         id2parent_id = {
             idx: parent_id
@@ -113,8 +115,9 @@ class ConversationChainHandler:
         }
         if cfg.dataset.limit_chained_samples:
             # end id == id is not a parent id of another conversation id
+            valid_parent_ids = set(id2parent_id.values())
             conversation_end_ids = [
-                idx for idx in sample_ids if idx not in id2parent_id.values()
+                idx for idx in sample_ids if idx not in valid_parent_ids
             ]
         else:
             conversation_end_ids = sample_ids
@@ -186,3 +189,14 @@ class ConversationChainHandler:
             "answers": answers,
             "systems": systems,
         }
+
+
+def get_conversation_chains(
+    df, cfg, limit_chained_samples=True
+) -> List[Dict[str, List[str]]]:
+    orig_limit_chained_samples = cfg.dataset.limit_chained_samples
+    cfg.dataset.limit_chained_samples = limit_chained_samples
+    conversation_chain_handler = ConversationChainHandler(df, cfg)
+    cfg.dataset.limit_chained_samples = orig_limit_chained_samples
+    conversations = [conversation for conversation in conversation_chain_handler]
+    return conversations
