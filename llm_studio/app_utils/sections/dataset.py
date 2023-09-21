@@ -1267,6 +1267,16 @@ async def show_statistics_tab(q, dataset_filename, config_filename):
 
 @functools.lru_cache()
 def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str):
+    """
+    Compute various statistics for a dataset.
+    - text length distribution for prompts and answers
+    - text length distribution for complete conversations
+    - distribution of number of prompt-answer turns per conversation
+    - statistics for non text features
+
+    We use LRU caching to avoid recomputing the statistics for the same dataset.
+    Thus, cfg_hash is used as a function argument to identify the dataset.
+    """
     df_train = read_dataframe(dataset_path)
     cfg = load_config_yaml(cfg_path)
     conversations = get_conversation_chains(
