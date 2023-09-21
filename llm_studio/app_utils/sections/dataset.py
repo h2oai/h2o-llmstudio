@@ -1,3 +1,5 @@
+import functools
+import hashlib
 import logging
 import os
 import re
@@ -1048,12 +1050,14 @@ async def dataset_display(q: Q) -> None:
     dataset_id = q.client["dataset/list/df_datasets"]["id"].iloc[
         q.client["dataset/display/id"]
     ]
-    dataset = q.client.app_db.get_dataset(dataset_id)
-    cfg = load_config_yaml(dataset.config_file)
+    dataset: Dataset = q.client.app_db.get_dataset(dataset_id)
+    config_file = dataset.config_file
+    cfg = load_config_yaml(config_file)
 
     has_train_df = cfg.dataset.train_dataframe != "None"
 
-    dataset = cfg.dataset.__dict__
+    dataset_dict = cfg.dataset.__dict__
+    dataset_dict["config_file"] = config_file
 
     if (
         q.client["dataset/display/tab"] is None
@@ -1099,13 +1103,13 @@ async def dataset_display(q: Q) -> None:
     q.client.delete_cards.add("dataset/display/tab")
 
     if q.client["dataset/display/tab"] == "dataset/display/data":
-        await show_data_tab(cfg, dataset, q)
+        await show_data_tab(cfg, dataset_dict, q)
 
     elif q.client["dataset/display/tab"] == "dataset/display/visualization":
         await show_visualization_tab(cfg, q)
 
     elif q.client["dataset/display/tab"] == "dataset/display/statistics":
-        await show_statistics_tab(dataset, cfg, q)
+        await show_statistics_tab(dataset_dict, cfg, q)
 
     elif q.client["dataset/display/tab"] == "dataset/display/summary":
         await show_summary_tab(dataset_id, q)
@@ -1130,10 +1134,10 @@ async def dataset_display(q: Q) -> None:
     q.client.delete_cards.add("dataset/display/footer")
 
 
-async def show_data_tab(cfg, dataset, q):
+async def show_data_tab(cfg, dataset_dict, q):
     fill_columns = get_fill_columns(cfg)
     df = read_dataframe(
-        dataset["train_dataframe"], n_rows=200, fill_columns=fill_columns
+        dataset_dict["train_dataframe"], n_rows=200, fill_columns=fill_columns
     )
     q.page["dataset/display/data"] = ui.form_card(
         box="first",
@@ -1208,21 +1212,15 @@ async def show_summary_tab(dataset_id, q):
     q.client.delete_cards.add("dataset/display/summary")
 
 
-async def show_statistics_tab(dataset, cfg, q):
-    df_train = read_dataframe(dataset["train_dataframe"])
-
-    conversations = get_conversation_chains(
-        df=df_train, cfg=cfg, limit_chained_samples=True
+async def show_statistics_tab(dataset_dict, cfg, q):
+    cfg_hash = hashlib.md5(open(dataset_dict["config_file"], "rb").read()).hexdigest()
+    stats_dict = compute_dataset_statistics(
+        dataset_dict["train_dataframe"], dataset_dict["config_file"], cfg_hash
     )
 
     for chat_type in ["prompts", "answers"]:
-        text_lengths = [
-            [len(text.split(" ")) for text in conversation[chat_type]]
-            for conversation in conversations
-        ]
-        text_lengths = [item for sublist in text_lengths for item in sublist]
         q.page[f"dataset/display/statistics/{chat_type}_histogram"] = histogram_card(
-            x=text_lengths,
+            x=stats_dict[chat_type],
             x_axis_description=f"text_length_{chat_type.capitalize()}",
             title=f"Text Length Distribution for {chat_type.capitalize()}"
             f" (split by whitespace)",
@@ -1230,19 +1228,8 @@ async def show_statistics_tab(dataset, cfg, q):
         )
         q.client.delete_cards.add(f"dataset/display/statistics/{chat_type}_histogram")
 
-    input_texts = []
-    for conversation in conversations:
-        input_text = conversation["systems"][0]
-        prompts = conversation["prompts"]
-        answers = conversation["answers"]
-        for prompt, answer in zip(prompts, answers):
-            input_text += prompt + answer
-        input_texts += [input_text]
-
-    text_length_complete_conversations = [len(text.split(" ")) for text in input_texts]
-
     q.page["dataset/display/statistics/full_conversation_histogram"] = histogram_card(
-        x=text_length_complete_conversations,
+        x=stats_dict["complete_conversations"],
         x_axis_description="text_length_complete_conversations",
         title="Text Length Distribution for complete "
         "conversations (split by whitespace)",
@@ -1251,13 +1238,10 @@ async def show_statistics_tab(dataset, cfg, q):
     q.client.delete_cards.add("dataset/display/statistics/full_conversation_histogram")
 
     if cfg.dataset.parent_id_column != "None":
-        number_of_prompts = [
-            len(conversation["prompts"]) for conversation in conversations
-        ]
         q.page[
             "dataset/display/statistics/parent_id_length_histogram"
         ] = histogram_card(
-            x=number_of_prompts,
+            x=stats_dict["number_of_prompts"],
             x_axis_description="number_of_prompts",
             title=f"Distribution of number of prompt-answer turns per conversation, "
             f" as indicated by {cfg.dataset.parent_id_column}",
@@ -1267,8 +1251,8 @@ async def show_statistics_tab(dataset, cfg, q):
             "dataset/display/statistics/parent_id_length_histogram"
         )
 
-    stats = get_frame_stats(read_dataframe(dataset["train_dataframe"]))
-    if stats is None:
+    df_stats = stats_dict["df_stats"]
+    if df_stats is None:
         component_items = [
             ui.text(
                 "Dataset does not contain numerical or text features. "
@@ -1276,16 +1260,16 @@ async def show_statistics_tab(dataset, cfg, q):
             )
         ]
     else:
-        if stats.shape[1] > 5:  # mixed text and numeric
-            widths = {col: "77" for col in stats}
+        if df_stats.shape[1] > 5:  # mixed text and numeric
+            widths = {col: "77" for col in df_stats}
         else:  # only text features
             widths = None
         component_items = [
             ui_table_from_df(
                 q=q,
-                df=stats,
+                df=df_stats,
                 name="dataset/display/statistics/table",
-                sortables=list(stats.columns),
+                sortables=list(df_stats.columns),
                 min_widths=widths,
                 height="265px",
             )
@@ -1295,6 +1279,39 @@ async def show_statistics_tab(dataset, cfg, q):
         items=component_items,
     )
     q.client.delete_cards.add("dataset/display/statistics")
+
+
+@functools.lru_cache()
+def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str):
+    df_train = read_dataframe(dataset_path)
+    cfg = load_config_yaml(cfg_path)
+    conversations = get_conversation_chains(
+        df=df_train, cfg=cfg, limit_chained_samples=True
+    )
+    stats_dict = {}
+    for chat_type in ["prompts", "answers"]:
+        text_lengths = [
+            [len(text.split(" ")) for text in conversation[chat_type]]
+            for conversation in conversations
+        ]
+        text_lengths = [item for sublist in text_lengths for item in sublist]
+        stats_dict[chat_type] = text_lengths
+    input_texts = []
+    for conversation in conversations:
+        input_text = conversation["systems"][0]
+        prompts = conversation["prompts"]
+        answers = conversation["answers"]
+        for prompt, answer in zip(prompts, answers):
+            input_text += prompt + answer
+        input_texts += [input_text]
+    stats_dict["complete_conversations"] = [
+        len(text.split(" ")) for text in input_texts
+    ]
+    stats_dict["number_of_prompts"] = [
+        len(conversation["prompts"]) for conversation in conversations
+    ]
+    stats_dict["df_stats"] = get_frame_stats(df_train)
+    return stats_dict
 
 
 async def dataset_import_uploaded_file(q: Q):
