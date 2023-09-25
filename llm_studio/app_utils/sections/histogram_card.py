@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import pandas as pd
 from h2o_wave import data, ui
@@ -15,54 +17,30 @@ def histogram_card(
         "x_axis_description in histogram card must not contain spaces, "
         "as the card would not be rendered."
     )
-    df = pd.DataFrame(x, columns=[x_axis_description])
-
-    df["count"] = 1
-    df_agg = (
-        df.groupby([x_axis_description])
-        .sum()
-        .reset_index()
-        .sort_values(by=x_axis_description)[[x_axis_description, "count"]]
-    )
-    df_agg["count"] = df_agg["count"]
-    first_quantile = np.quantile(df_agg[x_axis_description], a)
-    last_quantile = np.quantile(df_agg[x_axis_description], b)
-
-    df_first = df_agg.loc[df_agg[x_axis_description] <= first_quantile].copy()
-
-    df_first["data_type"] = f"first {int(a * 100)}% quantile"
-
-    df_last = df_agg.loc[df_agg[x_axis_description] >= last_quantile].copy()
-    df_last["data_type"] = f"last {100 - int(b * 100)}% quantile"
-
-    df_agg["data_type"] = f"{int(a * 100)}%-{int(b * 100)}% quantile"
-
-    # need to have an overlap between (df_first, df_agg) and (df_agg, df_last)
+    df_quantile = compute_quantiles(x, a, b)
+    # insert overlap between (df_first, df_agg) and (df_agg, df_last)
     # otherwise graphics gets unfilled gaps
-    df_agg = pd.concat(
-        [
-            df_first,
-            df_agg.loc[
-                max(0, len(df_first) - 1) : min(
-                    len(df_agg), (len(df_agg) - len(df_last))
-                )
-            ],
-            df_last,
-        ]
-    )
+    #TODO!
+    df_quantile = pd.concat(
+        [df_quantile[:1], df_quantile, df_quantile[-1:]]
+    ).reset_index(drop=True)
+
+    df_quantile = df_quantile.rename(columns={"length": x_axis_description})
 
     card = ui.plot_card(
         box=histogram_box,
         title=title,
         data=data(
-            fields=df_agg.columns.tolist(), rows=df_agg.values.tolist(), pack=True
+            fields=df_quantile.columns.tolist(),
+            rows=df_quantile.values.tolist(),
+            pack=True,
         ),
         plot=ui.plot(
             marks=[
                 ui.mark(
                     type="area",
                     x=f"={x_axis_description}",
-                    x_title=f"Total samples: {len(df)}",
+                    x_title=f"Total samples: {len(x)}",
                     y="=count",
                     y_title="Count",
                     color="=data_type",
@@ -72,3 +50,54 @@ def histogram_card(
         ),
     )
     return card
+
+
+def compute_quantiles(x: List[int], a: float, b: float):
+    """
+    Compute the quantiles based on the input list x.
+
+    Returns a dataframe with the following columns:
+    - length: length of the text
+    - count: number of texts with this length
+    - data_type: quantile type
+     (first (a * 100)% quantile, (a * 100)%-(100 * (1 - b))% quantile,
+      last (100 * (1 - b))% quantile)
+
+     Note that quantiles are overlapping on the edges.
+    """
+    if not x:
+        raise ValueError("Input list x is empty")
+
+    if not 0 <= a <= b <= 1:
+        raise ValueError(
+            "Values of a and b must be in [0, 1] and a should be less than or equal to b"
+        )
+
+    x_axis_description = "length"
+    df = pd.DataFrame(x, columns=[x_axis_description])
+    df["count"] = 1
+    df_quantile = (
+        df.groupby([x_axis_description])
+        .sum()
+        .reset_index()
+        .sort_values(by=x_axis_description)[[x_axis_description, "count"]]
+    )
+    first_quantile = np.quantile(df_quantile[x_axis_description], a)
+    last_quantile = np.quantile(df_quantile[x_axis_description], b)
+    df_first = df_quantile.loc[df_quantile[x_axis_description] < first_quantile].copy()
+    df_first["data_type"] = f"first {int(a * 100)}% quantile"
+    df_last = df_quantile.loc[df_quantile[x_axis_description] > last_quantile].copy()
+    df_last["data_type"] = f"last {100 - int(b * 100)}% quantile"
+    df_quantile["data_type"] = f"{int(a * 100)}%-{int(b * 100)}% quantile"
+    df_quantile = pd.concat(
+        [
+            df_first,
+            df_quantile.loc[
+                max(0, len(df_first)) : min(
+                    len(df_quantile), (len(df_quantile) - len(df_last) - 1)
+                )
+            ],
+            df_last,
+        ]
+    )
+    return df_quantile
