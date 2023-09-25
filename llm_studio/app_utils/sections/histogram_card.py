@@ -17,7 +17,7 @@ def histogram_card(
         "x_axis_description in histogram card must not contain spaces, "
         "as the card would not be rendered."
     )
-    df_quantile = compute_quantiles(x, a, b)
+    df_quantile = compute_quantile_df(x, a, b)
     df_quantile = df_quantile.rename(columns={"length": x_axis_description})
     card = ui.plot_card(
         box=histogram_box,
@@ -44,7 +44,7 @@ def histogram_card(
     return card
 
 
-def compute_quantiles(x: List[int], a: float, b: float):
+def compute_quantile_df(x: List[int], a: float, b: float):
     """
     Compute the quantiles based on the input list x.
 

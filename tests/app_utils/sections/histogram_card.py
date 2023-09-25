@@ -1,49 +1,31 @@
-import pandas as pd
+import random
 
-from llm_studio.app_utils.sections.histogram_card import compute_quantiles
+from llm_studio.app_utils.sections.histogram_card import compute_quantile_df
 
 
-def test_compute_histogram_df():
-    # Define inputs & expected output
-    x = [1] * 4 + [2] * 3 + [3] * 3 + [4] * 3 + [5] * 3
-    a = 0.25
-    b = 0.75
-    expected_output = pd.DataFrame(
-        {
-            "length": [1, 2, 3, 4, 5],
-            "count": [4, 3, 3, 3, 3],
-            "data_type": [
-                "first 25% quantile",
-                "25%-75% quantile",
-                "25%-75% quantile",
-                "last 25% quantile",
-                "last 25% quantile",
-            ],
-        }
-    )
+def test_quantiles_are_computed_correctly():
+    for _ in range(5):
+        data = random.sample(range(1, 100_000), 10_000)
+        a = round(random.uniform(0, 1), 2)
+        b = round(random.uniform(a, 1), 2)
+        a, b = min(a, b), max(a, b)
 
-    # Call function & compute output
-    df_quantile = compute_quantiles(x, a, b)
+        df_quantile = compute_quantile_df(data, a, b)
 
-    assert df_quantile["count"].sum() == len(x)
-    assert df_quantile["data_type"].nunique() == 3
+        first = df_quantile[
+            df_quantile["data_type"] == f"first {int(a * 100)}% quantile"
+        ]
+        last = df_quantile[
+            df_quantile["data_type"] == f"last {100 - int(b * 100)}% quantile"
+        ]
+        sorted_data = sorted(data)
+        # use -1 and +1 to account for rounding errors
+        expected_first_quantile_range = sorted_data[
+            int(len(sorted_data) * a) - 1 : int(len(sorted_data) * a) + 1
+        ]
+        expected_last_quantile_range = sorted_data[
+            -int(len(sorted_data) * (1 - b)) - 1 : -int(len(sorted_data) * (1 - b)) + 1
+        ]
 
-    assert (
-        df_quantile.loc[df_quantile["data_type"] == "first 25% quantile", "count"].sum()
-        == 7
-    )
-    assert (
-        df_quantile.loc[df_quantile["data_type"] == "25%-75% quantile", "count"].sum()
-        == 3
-    )
-    assert (
-        df_quantile.loc[df_quantile["data_type"] == "last 25% quantile", "count"].sum()
-        == 6
-    )
-
-    x_2 = [
-        [number] * count
-        for number, count in zip(df_quantile["length"], df_quantile["count"])
-    ]
-    x_2 = [item for sublist in x_2 for item in sublist]
-    assert sorted(x) == x_2
+        assert first.iloc[-1][0] in expected_first_quantile_range
+        assert last.iloc[0][0] in expected_last_quantile_range
