@@ -28,10 +28,22 @@ def test_compute_histogram_df():
     assert df_quantile["count"].sum() == len(x)
     assert df_quantile["data_type"].nunique() == 3
 
-    assert df_quantile.loc[df_quantile["data_type"] == "first 25% quantile", "count"].sum() == 7
-    assert df_quantile.loc[df_quantile["data_type"] == "25%-75% quantile", "count"].sum() == 3
-    assert df_quantile.loc[df_quantile["data_type"] == "last 25% quantile", "count"].sum() == 6
+    assert (
+        df_quantile.loc[df_quantile["data_type"] == "first 25% quantile", "count"].sum()
+        == 7
+    )
+    assert (
+        df_quantile.loc[df_quantile["data_type"] == "25%-75% quantile", "count"].sum()
+        == 3
+    )
+    assert (
+        df_quantile.loc[df_quantile["data_type"] == "last 25% quantile", "count"].sum()
+        == 6
+    )
 
-    x_2 = [[number] * count for number, count in zip(df_quantile["length"], df_quantile["count"])]
+    x_2 = [
+        [number] * count
+        for number, count in zip(df_quantile["length"], df_quantile["count"])
+    ]
     x_2 = [item for sublist in x_2 for item in sublist]
     assert sorted(x) == x_2

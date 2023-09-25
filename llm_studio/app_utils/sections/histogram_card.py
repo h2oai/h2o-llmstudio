@@ -18,15 +18,7 @@ def histogram_card(
         "as the card would not be rendered."
     )
     df_quantile = compute_quantiles(x, a, b)
-    # insert overlap between (df_first, df_agg) and (df_agg, df_last)
-    # otherwise graphics gets unfilled gaps
-    #TODO!
-    df_quantile = pd.concat(
-        [df_quantile[:1], df_quantile, df_quantile[-1:]]
-    ).reset_index(drop=True)
-
     df_quantile = df_quantile.rename(columns={"length": x_axis_description})
-
     card = ui.plot_card(
         box=histogram_box,
         title=title,
@@ -84,9 +76,9 @@ def compute_quantiles(x: List[int], a: float, b: float):
     )
     first_quantile = np.quantile(df_quantile[x_axis_description], a)
     last_quantile = np.quantile(df_quantile[x_axis_description], b)
-    df_first = df_quantile.loc[df_quantile[x_axis_description] < first_quantile].copy()
+    df_first = df_quantile.loc[df_quantile[x_axis_description] <= first_quantile].copy()
     df_first["data_type"] = f"first {int(a * 100)}% quantile"
-    df_last = df_quantile.loc[df_quantile[x_axis_description] > last_quantile].copy()
+    df_last = df_quantile.loc[df_quantile[x_axis_description] >= last_quantile].copy()
     df_last["data_type"] = f"last {100 - int(b * 100)}% quantile"
     df_quantile["data_type"] = f"{int(a * 100)}%-{int(b * 100)}% quantile"
     df_quantile = pd.concat(
