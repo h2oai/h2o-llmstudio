@@ -83,14 +83,14 @@ def compute_quantile_df(x: List[int], a: float, b: float):
     df_last = df_quantile.loc[df_quantile[x_axis_description] >= last_quantile].copy()
     df_last["data_type"] = f"last {100 - int(b * 100)}% quantile"
     df_quantile["data_type"] = f"{int(a * 100)}%-{int(b * 100)}% quantile"
+    middle_quantile_min = max(0, len(df_first) - 1)
+    middle_quantile_max = (
+        min(len(df_quantile), (len(df_quantile) - len(df_last) - 1)) + 1
+    )
     df_quantile = pd.concat(
         [
             df_first,
-            df_quantile.loc[
-                max(0, len(df_first)) : min(
-                    len(df_quantile), (len(df_quantile) - len(df_last) - 1)
-                )
-            ],
+            df_quantile.loc[middle_quantile_min:middle_quantile_max],
             df_last,
         ]
     )
