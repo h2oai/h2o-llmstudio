@@ -1,11 +1,13 @@
 import random
 
+import numpy as np
+
 from llm_studio.app_utils.sections.histogram_card import compute_quantile_df
 
 
 def test_quantiles_are_computed_correctly():
     for _ in range(5):
-        data = random.sample(range(1, 100_000), 10_000)
+        data = np.random.random_integers(0, 1000, 100_000).tolist()
         a = round(random.uniform(0, 1), 2)
         b = round(random.uniform(a, 1), 2)
         a, b = min(a, b), max(a, b)

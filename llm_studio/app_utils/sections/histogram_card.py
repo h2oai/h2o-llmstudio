@@ -74,8 +74,10 @@ def compute_quantile_df(x: List[int], a: float, b: float):
         .reset_index()
         .sort_values(by=x_axis_description)[[x_axis_description, "count"]]
     )
-    first_quantile = np.quantile(df_quantile[x_axis_description], a)
-    last_quantile = np.quantile(df_quantile[x_axis_description], b)
+    sorted_data = sorted(x)
+    first_quantile = sorted_data[int(len(sorted_data) * a)]
+    last_quantile = sorted_data[-int(len(sorted_data) * (1 - b))]
+
     df_first = df_quantile.loc[df_quantile[x_axis_description] <= first_quantile].copy()
     df_first["data_type"] = f"first {int(a * 100)}% quantile"
     df_last = df_quantile.loc[df_quantile[x_axis_description] >= last_quantile].copy()
