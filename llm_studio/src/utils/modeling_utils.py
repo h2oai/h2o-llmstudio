@@ -98,24 +98,26 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
 
     if cfg.environment.use_deepspeed:
         if path is not None:
-            # gather model params from all ranks
-            # if hasattr(cfg.training, "lora") and cfg.training.lora:
-            #     model.backbone.save_pretrained(path)
-            model.save_checkpoint(os.path.join(path, "ds_checkpoint"))
-            if cfg.environment._local_rank == 0:
-                # load to cpu
-                state_dict = get_fp32_state_dict_from_zero_checkpoint(
-                    os.path.join(path, "ds_checkpoint")
+            # gather model params from all ranks when using Deepspeed
+            if not model.save_16bit_model(path, "checkpoint.pth"):
+                logger.warning(
+                    "deepspeed.save_16bit_model didn't save the model, since"
+                    " stage3_gather_16bit_weights_on_model_save=False."
+                    " Saving the full checkpoint instead"
                 )
-                # save as normal checkpoint that can be loaded by `load_state_dict`
-                checkpoint = {"model": state_dict}
-                torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
-                shutil.rmtree(os.path.join(path, "ds_checkpoint"))
+                model.save_checkpoint(os.path.join(path, "ds_checkpoint"))
+                if cfg.environment._local_rank == 0:
+                    # load to cpu
+                    state_dict = get_fp32_state_dict_from_zero_checkpoint(
+                        os.path.join(path, "ds_checkpoint")
+                    )
+                    # save as normal checkpoint that can be loaded by `load_state_dict`
+                    checkpoint = {"model": state_dict}
+                    torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
+                    shutil.rmtree(os.path.join(path, "ds_checkpoint"))
     else:
         if cfg.environment._local_rank == 0:
             model = unwrap_model(model)
-            # if hasattr(cfg.training, "lora") and cfg.training.lora:
-            #     model.backbone.save_pretrained(path)
             checkpoint = {"model": model.state_dict()}
             if path is not None:
                 torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
@@ -193,7 +195,9 @@ def load_checkpoint(
     if weights_path is None:
         weights_path = cfg.architecture.pretrained_weights
 
-    model_weights = torch.load(weights_path, map_location="cpu")["model"]
+    model_weights = torch.load(weights_path, map_location="cpu")
+    if "model" in model_weights.keys():
+        model_weights = model_weights["model"]
 
     model = load_model_weights(model, model_weights, strict, cfg)
 
@@ -224,6 +228,7 @@ def get_ds_config(cfg: Any):
             # zero3
             "stage3_prefetch_bucket_size": cfg.environment.deepspeed_stage3_prefetch_bucket_size,  # noqa: E501
             "stage3_param_persistence_threshold": cfg.environment.deepspeed_stage3_param_persistence_threshold,  # noqa: E501
+            "stage3_gather_16bit_weights_on_model_save": True,
             # zero3 offload cpu
             # "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,  # noqa: E501
             # "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,  # noqa: E501
