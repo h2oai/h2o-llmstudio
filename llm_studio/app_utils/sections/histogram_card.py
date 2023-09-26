@@ -1,6 +1,5 @@
 from typing import List
 
-import numpy as np
 import pandas as pd
 from h2o_wave import data, ui
 
@@ -62,7 +61,8 @@ def compute_quantile_df(x: List[int], a: float, b: float):
 
     if not 0 <= a <= b <= 1:
         raise ValueError(
-            "Values of a and b must be in [0, 1] and a should be less than or equal to b"
+            "Values of a and b must be in [0, 1] "
+            "and a should be less than or equal to b"
         )
 
     x_axis_description = "length"
