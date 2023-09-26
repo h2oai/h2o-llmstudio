@@ -518,12 +518,23 @@ def run_inference(
 
         batch = cfg.dataset.dataset_class.batch_to_device(data, cfg.environment._device)
 
-        with autocast(enabled=cfg.environment.mixed_precision):
-            output = model.forward(batch)
+        if cfg.environment.use_deepspeed:
             if cfg.prediction.metric != "Perplexity":
+                output = {}
                 output["predicted_answer_ids"] = (
-                    unwrap_model(model).generate(batch, cfg).detach().cpu()
+                    model.module.generate(batch, cfg).detach().cpu()
                 )
+            else:
+                output = model.forward(batch)
+        else:
+            with autocast(enabled=cfg.environment.mixed_precision):
+                if cfg.prediction.metric != "Perplexity":
+                    output = {}
+                    output["predicted_answer_ids"] = (
+                        unwrap_model(model).generate(batch, cfg).detach().cpu()
+                    )
+                else:
+                    output = model.forward(batch)
         if contains_nan(output) and cfg.environment.mixed_precision:
             raise LLMModelException(
                 "NaN caught during mixed precision inference. "
