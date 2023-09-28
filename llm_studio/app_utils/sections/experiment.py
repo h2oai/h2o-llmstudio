@@ -44,6 +44,7 @@ from llm_studio.app_utils.utils import (
     start_experiment,
 )
 from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
+from llm_studio.python_configs.cfg_checks import check_cfg_for_conflicts
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
@@ -536,16 +537,6 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
 
     start_experiment(cfg=cfg, q=q, pre=pre)
     return list_current_experiments
-
-
-def check_cfg_for_conflicts(cfg):
-    cfg_issues = {}
-    if len(cfg.environment.gpus) == 0:
-        title = "No GPU selected."
-        text = "Please select at least one GPU to start the experiment!"
-        cfg_issues = {"title": title, "text": text}
-
-    return cfg_issues
 
 
 def get_experiment_table(
