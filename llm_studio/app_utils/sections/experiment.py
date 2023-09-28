@@ -515,14 +515,15 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
         logger.error(q.client["experiment_halt_reason"])
         return list_current_experiments
 
-    if len(cfg.environment.gpus) == 0:
+    cfg_issues = check_cfg_for_conflicts(cfg)
+    if cfg_issues:
         q.page["meta"].dialog = ui.dialog(
-            title="No GPU selected.",
-            name="no_gpu_selected_dialog",
+            title=cfg_issues["title"],
+            name="cfg_issue_dialog",
             items=[
-                ui.text("Please select at least one GPU to start the experiment!"),
+                ui.text(cfg_issues["text"]),
                 ui.button(
-                    name="experiment/start/no_gpu_selected_dialog/ok",
+                    name="experiment/start/cfg_issue/ok",
                     label="OK",
                     primary=True,
                 ),
@@ -535,6 +536,16 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
 
     start_experiment(cfg=cfg, q=q, pre=pre)
     return list_current_experiments
+
+
+def check_cfg_for_conflicts(cfg):
+    cfg_issues = {}
+    if len(cfg.environment.gpus) == 0:
+        title = "No GPU selected."
+        text = "Please select at least one GPU to start the experiment!"
+        cfg_issues = {"title": title, "text": text}
+
+    return cfg_issues
 
 
 def get_experiment_table(
