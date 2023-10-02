@@ -1,3 +1,4 @@
+import os
 import random
 import unittest
 from unittest.mock import MagicMock
@@ -5,6 +6,7 @@ from unittest.mock import MagicMock
 import pandas as pd
 import pytest
 
+from llm_studio.app_utils.utils import prepare_default_dataset
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
 from llm_studio.src.utils.data_utils import load_train_valid_data
 
@@ -79,3 +81,31 @@ def test_get_data_automatic_split(
         i for i in groups if not train_ids.isdisjoint(i) and not val_ids.isdisjoint(i)
     ]
     assert len(shared_groups) == 0
+
+
+@pytest.mark.skip("slow test due to downloading oasst")
+def test_oasst_data_automatic_split(tmp_path):
+    prepare_default_dataset(tmp_path)
+
+    cfg_mock = MagicMock()
+    for file in os.listdir(tmp_path):
+        if file.endswith(".pq"):
+            cfg_mock.dataset.train_dataframe = os.path.join(tmp_path, file)
+
+            cfg_mock.dataset.system_column = "None"
+            cfg_mock.dataset.prompt_column = ("instruction",)
+            cfg_mock.dataset.answer_column = "output"
+            cfg_mock.dataset.parent_id_column = "parent_id"
+
+            cfg_mock.dataset.validation_strategy = "automatic"
+
+            for validation_size in [0.01, 0.1, 0.2, 0.3, 0.4, 0.5]:
+                cfg_mock.dataset.validation_size = validation_size
+
+                train_df, val_df = load_train_valid_data(cfg_mock)
+                assert set(train_df["parent_id"].dropna().values).isdisjoint(
+                    set(val_df["id"].dropna().values)
+                )
+                assert set(val_df["parent_id"].dropna().values).isdisjoint(
+                    set(train_df["id"].dropna().values)
+                )

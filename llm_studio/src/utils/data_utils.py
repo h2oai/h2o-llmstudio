@@ -3,6 +3,7 @@ import math
 import os
 from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Union, no_type_check
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
@@ -237,6 +238,14 @@ def get_data(cfg: Any) -> Tuple[pd.DataFrame, pd.DataFrame]:
     return train_df.reset_index(drop=True), val_df.reset_index(drop=True)
 
 
+def merge_on_common_items(lst):
+    G = nx.Graph()
+    for sublst in lst:
+        for item in sublst:
+            G.add_edge(sublst[0], item)
+    return [list(c) for c in nx.connected_components(G)]
+
+
 def load_train_valid_data(cfg) -> Tuple[pd.DataFrame, pd.DataFrame]:
     if cfg.dataset.validation_strategy == "custom":
         if cfg.dataset.validation_dataframe == "None":
@@ -255,14 +264,20 @@ def load_train_valid_data(cfg) -> Tuple[pd.DataFrame, pd.DataFrame]:
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
         if cfg.dataset.parent_id_column != "None" and "id" in df.columns:
             # split based on conversation_chain_ids
-            # this ensures that all samples from the same conversation are in the same fold
+            # this ensures that all samples from the
+            # same conversation are in the same fold
             limit_chained_samples = cfg.dataset.limit_chained_samples
             cfg.dataset.limit_chained_samples = True
             conversation_chain_ids = ConversationChainHandler(
                 df=df, cfg=cfg
             ).conversation_chain_ids
             cfg.dataset.limit_chained_samples = limit_chained_samples
-
+            # Some conversations may have the same parent id, e.g. for OASST
+            # 6aa548c6-65ad-4531-9411-76173ae060a3 and
+            # 2a164c2a-4f0e-45aa-8990-e7dd3b51c06b
+            # have the same parent a8df94e3-cfc7-4736-9587-0ec943d0fec3
+            # We need to merge those into a single group
+            conversation_chain_ids = merge_on_common_items(conversation_chain_ids)
             conversation_chain_labels = [
                 i
                 for i, conversation_chain_id in enumerate(conversation_chain_ids)
