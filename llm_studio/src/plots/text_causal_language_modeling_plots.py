@@ -165,6 +165,11 @@ class Plots:
         conversations = get_conversation_chains(
             val_df, cfg, limit_chained_samples=cfg.dataset.limit_chained_samples
         )
+        prompt_column_name = (
+            cfg.dataset.prompt_column
+            if len(cfg.dataset.prompt_column) > 1
+            else cfg.dataset.prompt_column[0]
+        )
 
         target_texts = [conversation["answers"][-1] for conversation in conversations]
 
@@ -176,7 +181,12 @@ class Plots:
             # exclude last answer
             answers[-1] = ""
             for prompt, answer in zip(prompts, answers):
-                input_text += prompt + answer
+                input_text += (
+                    f" **{prompt_column_name}:** "
+                    f"{prompt} "
+                    f"**{cfg.dataset.answer_column}:** "
+                    f"{answer}"
+                )
             input_texts += [input_text]
 
         if "predicted_text" in val_outputs.keys():
@@ -186,14 +196,20 @@ class Plots:
                 "No predictions are generated for the selected metric"
             ] * len(target_texts)
 
+        input_text_column_name = (
+            "Input Text (tokenization max length setting "
+            "may truncate the input text during training/inference)"
+        )
         df = pd.DataFrame(
             {
-                "Input Text": input_texts,
+                input_text_column_name: input_texts,
                 "Target Text": target_texts,
                 "Predicted Text": predicted_texts,
             }
         )
-        df["Input Text"] = df["Input Text"].apply(format_for_markdown_visualization)
+        df[input_text_column_name] = df[input_text_column_name].apply(
+            format_for_markdown_visualization
+        )
         df["Target Text"] = df["Target Text"].apply(format_for_markdown_visualization)
         df["Predicted Text"] = df["Predicted Text"].apply(
             format_for_markdown_visualization
