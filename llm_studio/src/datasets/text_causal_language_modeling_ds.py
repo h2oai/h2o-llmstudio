@@ -308,10 +308,9 @@ class CustomDataset(Dataset):
                 "NO ANSWER GENERATED. "
                 "ONLY LAST ANSWER OF A CONVERSATION IS PREDICTED."
             )
-            df.iloc[end_conversation_ids, f"pred_{cfg.dataset.answer_column}"] = output[
+            df.loc[end_conversation_ids, f"pred_{cfg.dataset.answer_column}"] = output[
                 "predicted_text"
             ]
-
         return output, df
 
     @classmethod
