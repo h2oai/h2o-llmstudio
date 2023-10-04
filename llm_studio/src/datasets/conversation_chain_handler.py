@@ -190,7 +190,7 @@ class ConversationChainHandler:
             "systems": systems,
         }
 
-    def get_end_conversation_ids(self):
+    def get_conversation_end_ids(self):
         """
         Gets the end conversation IDs for each conversation chain.
         """
