@@ -298,8 +298,6 @@ class CustomDataset(Dataset):
         if "predicted_text" in output.keys():
             output["predicted_text"] = np.array(output["predicted_text"])
 
-        self.conversation_chain_handler.get_conversation_end_ids()
-
         if isinstance(cfg.dataset.prompt_column, tuple):
             for col in cfg.dataset.prompt_column:
                 output[col] = df.loc[end_conversation_ids, col].values
