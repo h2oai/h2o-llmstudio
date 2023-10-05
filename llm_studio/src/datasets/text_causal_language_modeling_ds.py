@@ -290,18 +290,30 @@ class CustomDataset(Dataset):
 
         output.pop("target_text", None)
 
+        # in case limit_chained_samples is True, only last answer is predicted
+        end_conversation_ids = (
+            self.conversation_chain_handler.get_conversation_end_ids()
+        )
+
         if "predicted_text" in output.keys():
             output["predicted_text"] = np.array(output["predicted_text"])
 
         if isinstance(cfg.dataset.prompt_column, tuple):
             for col in cfg.dataset.prompt_column:
-                output[col] = df[col].values
+                output[col] = df.loc[end_conversation_ids, col].values
         else:
-            output[cfg.dataset.prompt_column] = df[cfg.dataset.prompt_column].values
+            output[cfg.dataset.prompt_column] = df.loc[
+                end_conversation_ids, cfg.dataset.prompt_column
+            ].values
 
         if "predicted_text" in output.keys():
-            df[f"pred_{cfg.dataset.answer_column}"] = output["predicted_text"]
-
+            df[f"pred_{cfg.dataset.answer_column}"] = (
+                "NO ANSWER GENERATED. "
+                "ONLY LAST ANSWER OF A CONVERSATION IS PREDICTED."
+            )
+            df.loc[end_conversation_ids, f"pred_{cfg.dataset.answer_column}"] = output[
+                "predicted_text"
+            ]
         return output, df
 
     @classmethod
