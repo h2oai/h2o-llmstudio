@@ -8,6 +8,9 @@ from transformers import AutoTokenizer
 logger = logging.getLogger(__name__)
 
 
+TEXT_SEPARATOR = "<TEXT_SEPARATOR>"
+
+
 def get_texts(df, cfg, separator=None):
     if isinstance(cfg.dataset.prompt_column, str):
         # single column dataset
@@ -21,7 +24,7 @@ def get_texts(df, cfg, separator=None):
             df[column] = df[column].astype(str)
 
         if separator is None:
-            separator = getattr(cfg, "_tokenizer_sep_token", "<SEPARATOR>")
+            separator = getattr(cfg, "_tokenizer_sep_token", TEXT_SEPARATOR)
 
         join_str = f" {separator} "
         texts = df[columns].astype(str)

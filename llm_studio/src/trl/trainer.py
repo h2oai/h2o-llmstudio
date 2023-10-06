@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
 import time
 import warnings
 from collections.abc import Mapping
@@ -65,11 +66,14 @@ def stack_dicts(stats_dicts):
     return results
 
 
-def logprobs_from_logits(logits, labels):
+def logprobs_from_logits(logits, labels, gather=True):
     """
     See: https://github.com/pytorch/pytorch/issues/563#issuecomment-330103591
     """
     logp = F.log_softmax(logits, dim=2)
+
+    if not gather:
+        return logp
     logpy = torch.gather(logp, 2, labels.unsqueeze(2)).squeeze(-1)
     return logpy
 
@@ -88,7 +92,15 @@ def masked_var(values, mask, unbiased=True):
     centered_values = values - mean
     variance = masked_mean(centered_values**2, mask)
     if unbiased:
-        bessel_correction = mask.sum() / (mask.sum() - 1)
+        mask_sum = mask.sum()
+        if mask_sum == 0:
+            raise ValueError(
+                "The sum of the mask is zero, which can happen when `mini_batch_size=1`"
+                "; try increase the `mini_batch_size` or `gradient_accumulation_steps`"
+            )
+        # note that if mask_sum == 1, then there is a division by zero issue
+        # to avoid it you just need to use a larger minibatch_size
+        bessel_correction = mask_sum / (mask_sum - 1)
         variance = variance * bessel_correction
     return variance
 
@@ -224,6 +236,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
         self.scaler = scaler
+        self.num_updates = 0
 
         self.kl_ctl: AdaptiveKLController | FixedKLController
         if self.cfg.training.adaptive_kl_control:
@@ -238,7 +251,6 @@ class PPOTrainer(PyTorchModelHubMixin):
 
     def _step_safety_checker(
         self,
-        batch_size: int,
         queries: List[torch.LongTensor],
         responses: List[torch.LongTensor],
         scores: List[torch.Tensor],
@@ -248,8 +260,6 @@ class PPOTrainer(PyTorchModelHubMixin):
         device.
 
         Args:
-            batch_size (int):
-                Batch size from the config file.
             queries (List[`torch.LongTensor`]):
                 List of tensors containing the encoded queries of shape (`query_length`)
             responses (List[`torch.LongTensor`]):
@@ -271,9 +281,12 @@ class PPOTrainer(PyTorchModelHubMixin):
                 raise ValueError(
                     f"Elements in {name} must be tensors - got {type(tensor_list[0])}"
                 )
-            if batch_size is not None and len(tensor_list) != batch_size:
+            if self.cfg.training.batch_size is not None and len(tensor_list) != (
+                self.cfg.training.batch_size * self.cfg.training.rollout_steps
+            ):
                 raise ValueError(
-                    f"Batch size ({batch_size}) does not match number of examples"
+                    f"Batch size ({self.cfg.training.batch_size}) does not match "
+                    "number of examples"
                     f" - but got {len(tensor_list)} for: {name}"
                 )
 
@@ -315,10 +328,9 @@ class PPOTrainer(PyTorchModelHubMixin):
         Returns:
             `dict[str, Any]`: A summary of the training statistics
         """
-        bs = self.cfg.training.batch_size
 
         queries, responses, scores = self._step_safety_checker(
-            bs, queries, responses, scores
+            queries, responses, scores
         )
 
         timing = dict()
@@ -331,25 +343,49 @@ class PPOTrainer(PyTorchModelHubMixin):
         model_inputs_names = list(model_inputs.keys())
 
         with torch.no_grad():
-            all_logprobs, _, values, masks = self.batched_forward_pass(
-                self.model, queries, responses, model_inputs
+            all_logprobs, logits_or_none, values, masks = self.batched_forward_pass(
+                self.model,
+                queries,
+                responses,
+                model_inputs,
+                return_logits=self.cfg.training.full_kl_penalty,
             )
             with unwrap_model(self.model).backbone.disable_adapter():
-                ref_logprobs, _, _, _ = self.batched_forward_pass(
+                ref_logprobs, ref_logits_or_none, _, _ = self.batched_forward_pass(
                     self.model,
                     queries,
                     responses,
                     model_inputs,
+                    return_logits=self.cfg.training.full_kl_penalty,
                     return_values=False,
                 )
 
         timing["time/ppo/forward_pass"] = time.time() - t
 
-        t = time.time()
-        rewards, non_score_reward = self.compute_rewards(
-            scores, all_logprobs, ref_logprobs, masks
-        )
-        timing["time/ppo/compute_rewards"] = time.time() - t
+        with torch.no_grad():
+            t = time.time()
+            if self.cfg.training.full_kl_penalty:
+                active_full_logprobs = logprobs_from_logits(
+                    logits_or_none, None, gather=False
+                )
+                ref_full_logprobs = logprobs_from_logits(
+                    ref_logits_or_none, None, gather=False
+                )
+
+                rewards, non_score_reward = self.compute_rewards(
+                    scores, active_full_logprobs, ref_full_logprobs, masks
+                )
+            else:
+                rewards, non_score_reward = self.compute_rewards(
+                    scores, all_logprobs, ref_logprobs, masks
+                )
+            timing["time/ppo/compute_rewards"] = time.time() - t
+
+            t = time.time()
+            values, advantages, returns = self.compute_advantages(
+                values, rewards, masks
+            )
+            timing["time/ppo/compute_advantages"] = time.time() - t
 
         # upcast to float32 to avoid dataset issues
         mini_batch_dict = {
@@ -357,8 +393,9 @@ class PPOTrainer(PyTorchModelHubMixin):
             "responses": responses,
             "logprobs": all_logprobs.to(torch.float32),
             "values": values.to(torch.float32),
-            "rewards": rewards,
             "masks": masks,
+            "advantages": advantages,
+            "returns": returns,
         }
 
         def collator(data: List[Dict[str, torch.Tensor]]):
@@ -385,39 +422,39 @@ class PPOTrainer(PyTorchModelHubMixin):
 
         t = time.time()
         all_stats = []
-        num_updates = 0
 
         if (
-            self.cfg.training.ppo_epochs * self.cfg.training.grad_accumulation
-        ) % self.cfg.training.ppo_batch_size != 0:
+            self.cfg.training.ppo_batch_size
+            > self.cfg.training.batch_size * self.cfg.training.rollout_steps
+        ):
             raise ValueError(
-                "ppo_epochs * grad_accumulation must be multiply of ppo_batch_size"
+                f"ppo_batch_size ({self.cfg.training.ppo_batch_size}) "
+                "must not be larger than the rollout "
+                f"({self.cfg.training.batch_size * self.cfg.training.rollout_steps})"
             )
-
-        if self.cfg.training.ppo_batch_size > self.cfg.training.batch_size:
-            raise ValueError("ppo_batch_size must not be larger than the batch_size")
 
         for _ in range(self.cfg.training.ppo_epochs):
             for batch in mini_batch_dataloader:
-                num_updates += 1
+                self.num_updates += 1
 
                 model_inputs = {k: batch[k] for k in model_inputs_names}
                 logprobs, logits, vpreds, _ = self.batched_forward_pass(
-                    self.model,
-                    batch["queries"],
-                    batch["responses"],
-                    model_inputs,
+                    model=self.model,
+                    queries=batch["queries"],
+                    responses=batch["responses"],
+                    model_inputs=model_inputs,
                     return_logits=True,
                 )
 
                 loss_p, loss_v, train_stats = self.loss(
-                    batch["logprobs"],
-                    batch["values"],
-                    batch["rewards"],
-                    logits,
-                    vpreds,
-                    logprobs,
-                    batch["masks"],
+                    old_logprobs=batch["logprobs"],
+                    values=batch["values"],
+                    logits=logits,
+                    vpreds=vpreds,
+                    logprobs=logprobs,
+                    mask=batch["masks"],
+                    advantages=batch["advantages"],
+                    returns=batch["returns"],
                 )
                 loss = loss_p + loss_v
 
@@ -431,7 +468,7 @@ class PPOTrainer(PyTorchModelHubMixin):
                 # Backward pass
                 if self.cfg.environment.mixed_precision:
                     self.scaler.scale(loss).backward()
-                    if num_updates % self.cfg.training.grad_accumulation == 0:
+                    if self.num_updates % self.cfg.training.grad_accumulation == 0:
                         if self.cfg.training.gradient_clip > 0:
                             self.scaler.unscale_(self.optimizer)
                             torch.nn.utils.clip_grad_norm_(
@@ -442,7 +479,7 @@ class PPOTrainer(PyTorchModelHubMixin):
                         self.optimizer.zero_grad(set_to_none=True)
                 else:
                     loss.backward()
-                    if num_updates % self.cfg.training.grad_accumulation == 0:
+                    if self.num_updates % self.cfg.training.grad_accumulation == 0:
                         if self.cfg.training.gradient_clip > 0:
                             torch.nn.utils.clip_grad_norm_(
                                 self.model.parameters(), self.cfg.training.gradient_clip
@@ -556,7 +593,7 @@ class PPOTrainer(PyTorchModelHubMixin):
         all_masks = []
         all_values = []
 
-        for i in range(int(bs / ppo_bs)):
+        for i in range(math.ceil(bs / ppo_bs)):
             model_inputs_batch = {
                 key: value[i * ppo_bs : (i + 1) * ppo_bs]
                 for key, value in model_inputs.items()
@@ -581,17 +618,11 @@ class PPOTrainer(PyTorchModelHubMixin):
             masks = torch.zeros_like(attention_mask)
             masks[:, :-1] = attention_mask[:, 1:]
 
-            for j in range(ppo_bs):
+            for j in range(len(query_batch)):
                 start = len(query_batch[j]) - 1
                 if attention_mask[j, 0] == 0:  # offset left padding
                     start += attention_mask[j, :].nonzero()[0]
                 end = start + len(response_batch[j])
-
-                if len(logprobs[j, start:end]) < 2:
-                    raise ValueError(
-                        "Responses are too short. Make sure they are at least 2"
-                        " tokens long."
-                    )
 
                 masks[j, :start] = 0
                 masks[j, end:] = 0
@@ -640,7 +671,7 @@ class PPOTrainer(PyTorchModelHubMixin):
             scores, logprobs, ref_logprobs, masks
         ):
             # compute KL penalty (from difference in logprobs)
-            kl = logprob - ref_logprob
+            kl = self._kl_penalty(logprob, ref_logprob)
             non_score_reward = -self.kl_ctl.value * kl
             non_score_rewards.append(non_score_reward)
             reward = non_score_reward.clone()
@@ -651,15 +682,62 @@ class PPOTrainer(PyTorchModelHubMixin):
             rewards.append(reward)
         return torch.stack(rewards), torch.stack(non_score_rewards)
 
+    def _kl_penalty(
+        self, logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor
+    ) -> torch.FloatTensor:
+        if self.cfg.training.full_kl_penalty:
+            # Flip is required due to this issue?
+            # https://github.com/pytorch/pytorch/issues/57459
+            return F.kl_div(
+                ref_logprob, logprob, log_target=True, reduction="none"
+            ).sum(-1)
+        else:
+            return logprob - ref_logprob
+
+    def compute_advantages(
+        self: torch.FloatTensor,
+        values: torch.FloatTensor,
+        rewards: torch.FloatTensor,
+        mask: torch.FloatTensor,
+    ):
+        lastgaelam = 0
+        advantages_reversed = []
+        gen_len = rewards.shape[-1]
+
+        values = values * mask
+        rewards = rewards * mask
+
+        for t in reversed(range(gen_len)):
+            nextvalues = values[:, t + 1] if t < gen_len - 1 else 0.0
+            delta = (
+                rewards[:, t]
+                + self.cfg.training.advantages_gamma * nextvalues
+                - values[:, t]
+            )
+            lastgaelam = (
+                delta
+                + self.cfg.training.advantages_gamma
+                * self.cfg.training.advantages_lambda
+                * lastgaelam
+            )
+            advantages_reversed.append(lastgaelam)
+        advantages = torch.stack(advantages_reversed[::-1]).transpose(0, 1)
+
+        returns = advantages + values
+        advantages = masked_whiten(advantages, mask)
+        advantages = advantages.detach()
+        return values, advantages, returns
+
     def loss(
         self,
         old_logprobs: torch.FloatTensor,
         values: torch.FloatTensor,
-        rewards: torch.FloatTensor,
         logits: torch.FloatTensor,
         vpreds: torch.FloatTensor,
         logprobs: torch.FloatTensor,
         mask: torch.LongTensor,
+        advantages: torch.FloatTensor,
+        returns: torch.FloatTensor,
     ):
         """
         Calculate policy and value losses.
@@ -679,32 +757,6 @@ class PPOTrainer(PyTorchModelHubMixin):
             logprobs (`torch.FloatTensor`):
                 Log probabilities of the model, shape (`batch_size`, `response_length`)
         """
-        lastgaelam = torch.tensor(0.0)
-        advantages_reversed: List[torch.Tensor] = []
-        gen_len = rewards.shape[-1]
-
-        values = values * mask
-        rewards = rewards * mask
-
-        for t in reversed(range(gen_len)):
-            nextvalues = values[:, t + 1] if t < gen_len - 1 else torch.tensor(0.0)
-            delta: torch.Tensor = (
-                rewards[:, t]
-                + torch.tensor(self.cfg.training.advantages_gamma) * nextvalues
-                - values[:, t]
-            )
-            lastgaelam = (
-                delta
-                + torch.tensor(self.cfg.training.advantages_gamma)
-                * torch.tensor(self.cfg.training.advantages_lambda)
-                * lastgaelam
-            )
-            advantages_reversed.append(lastgaelam)
-        advantages = torch.stack(advantages_reversed[::-1]).transpose(0, 1)
-
-        returns = advantages + values
-        advantages = masked_whiten(advantages, mask)
-        advantages = advantages.detach()
 
         vpredclipped = clip_by_value(
             vpreds,
