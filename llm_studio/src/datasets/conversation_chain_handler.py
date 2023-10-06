@@ -190,6 +190,14 @@ class ConversationChainHandler:
             "systems": systems,
         }
 
+    def get_conversation_end_ids(self):
+        """
+        Gets the end conversation IDs for each conversation chain.
+        """
+        return [
+            conversation_chain[-1] for conversation_chain in self.conversation_chain_ids
+        ]
+
 
 def get_conversation_chains(
     df, cfg, limit_chained_samples=True
