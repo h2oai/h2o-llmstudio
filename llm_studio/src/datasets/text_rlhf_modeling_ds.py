@@ -8,6 +8,7 @@ import torch
 from llm_studio.src.datasets.text_causal_language_modeling_ds import (
     CustomDataset as CausalLMCustomDataset,
 )
+from llm_studio.src.datasets.text_utils import TEXT_SEPARATOR
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +18,18 @@ class CustomDataset(CausalLMCustomDataset):
         assert (
             cfg.dataset.system_column == "None"
         ), "RLHF is not compatible with system column."
+        assert (
+            cfg.dataset.limit_chained_samples is False
+        ), "RLHF is not compatible with limit_chained_samples."
+        assert (
+            cfg.dataset.mask_prompt_labels is True
+        ), "RLHF is not compatible with mask_prompt_labels."
         super().__init__(df, cfg, mode)
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
         sample = super().__getitem__(idx)
-        sample["reward_model_prompt_text"] = "<|endoftext|>".join(
+        sample["reward_model_prompt_text"] = TEXT_SEPARATOR.join(
             self.get_chained_prompt_text_list(idx)
         )
         return sample

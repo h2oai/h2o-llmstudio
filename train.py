@@ -237,6 +237,8 @@ def run_train(
 
         log_update_steps = max(epoch_steps // 20, 1)
         evaluation_step = max(int(epoch_steps * cfg.training.evaluation_epochs), 1)
+        logger.info(f"Evaluation step: {evaluation_step}")
+
         for itr, data in enumerate(tr_it):
             cfg.environment._curr_step += (
                 cfg.training.batch_size * cfg.environment._world_size
@@ -500,6 +502,25 @@ def run_train_rlhf(
 
         log_update_steps = max(epoch_steps // 20, 1)
         evaluation_step = max(int(epoch_steps * cfg.training.evaluation_epochs), 1)
+
+        logger.info(f"Target evaluation step: {evaluation_step}")
+
+        # Round up to the nearest multiple of cfg.training.rollout_steps
+        assert cfg.training.rollout_steps <= epoch_steps, (
+            f"Rollout steps ({cfg.training.rollout_steps}) must be less than the total "
+            f"training steps in one epoch ({epoch_steps})"
+        )
+        evaluation_step = (
+            (evaluation_step + cfg.training.rollout_steps - 1)
+            // cfg.training.rollout_steps
+        ) * cfg.training.rollout_steps
+
+        logger.info(f"Actual evaluation step: {evaluation_step}")
+
+        query_tensors = []
+        response_tensors = []
+        rewards = []
+
         for itr, data in enumerate(tr_it):
             cfg.environment._curr_step += (
                 cfg.training.batch_size * cfg.environment._world_size
@@ -575,50 +596,66 @@ def run_train_rlhf(
             del output_dict
             del batch
 
-            output_dict = ppo_trainer.step(query_tensor, response_tensor, reward)
-            del query_tensor, response_tensor, reward, scores
+            query_tensors += query_tensor
+            response_tensors += response_tensor
+            rewards += reward
 
-            loss = output_dict["ppo/loss/total"]
-            losses.append(loss)
+            if cfg.environment._distributed:
+                torch.cuda.synchronize(device=cfg.environment._local_rank)
+                torch.distributed.barrier()
 
-            if cfg.environment._local_rank == 0:
-                for key in output_dict.keys():
-                    if isinstance(output_dict[key], (float, int)) or (
-                        isinstance(output_dict[key], np.ndarray)
-                        and output_dict[key].size == 1
-                    ):
-                        if np.isfinite(output_dict[key]):
-                            cfg.logging._logger.log(
-                                "train",
-                                key,
-                                output_dict[key],
-                                step=cfg.environment._curr_step,
-                            )
-                cfg.logging._logger.log(
-                    "train", "loss", losses[-1], step=cfg.environment._curr_step
-                )
-                cfg.logging._logger.log(
-                    "meta",
-                    "lr",
-                    optimizer.param_groups[0]["lr"],
-                    step=cfg.environment._curr_step,
-                )
-                if cfg.training.differential_learning_rate_layers:
+            if (itr + 1) % cfg.training.rollout_steps == 0:
+                output_dict = ppo_trainer.step(query_tensors, response_tensors, rewards)
+                del query_tensors, response_tensors, rewards, scores
+
+                query_tensors = []
+                response_tensors = []
+                rewards = []
+
+                loss = output_dict["ppo/loss/total"]
+                losses.append(loss)
+
+                if cfg.environment._local_rank == 0:
+                    for key in output_dict.keys():
+                        if isinstance(output_dict[key], (float, int)) or (
+                            isinstance(output_dict[key], np.ndarray)
+                            and output_dict[key].size == 1
+                        ):
+                            if np.isfinite(output_dict[key]):
+                                cfg.logging._logger.log(
+                                    "train",
+                                    key,
+                                    output_dict[key],
+                                    step=cfg.environment._curr_step,
+                                )
+                    cfg.logging._logger.log(
+                        "train", "loss", losses[-1], step=cfg.environment._curr_step
+                    )
                     cfg.logging._logger.log(
                         "meta",
-                        "lr_diff",
-                        optimizer.param_groups[2]["lr"],
+                        "lr",
+                        optimizer.param_groups[0]["lr"],
+                        step=cfg.environment._curr_step,
+                    )
+                    if cfg.training.differential_learning_rate_layers:
+                        cfg.logging._logger.log(
+                            "meta",
+                            "lr_diff",
+                            optimizer.param_groups[2]["lr"],
+                            step=cfg.environment._curr_step,
+                        )
+
+                    cfg.logging._logger.log(
+                        "internal",
+                        "current_step",
+                        cfg.environment._curr_step,
                         step=cfg.environment._curr_step,
                     )
 
-                cfg.logging._logger.log(
-                    "internal",
-                    "current_step",
-                    cfg.environment._curr_step,
-                    step=cfg.environment._curr_step,
-                )
+                    del output_dict
 
-                # Show logs each 5% of the epoch (only if doing per epoch evaluation)
+            if cfg.environment._local_rank == 0:
+                # Show logs each 5% of the epoch (only if doing per epoch eval)
                 if (itr + 1) % log_update_steps == 0 or itr == epoch_steps - 1:
                     progress_bar.set_description(
                         f"train loss: {np.mean(losses[-10:]):.2f}", refresh=False
@@ -628,7 +665,9 @@ def run_train_rlhf(
                     else:
                         progress_bar.update(epoch_steps % log_update_steps)
 
-                del output_dict
+            if cfg.environment._distributed:
+                torch.cuda.synchronize(device=cfg.environment._local_rank)
+                torch.distributed.barrier()
 
             # Validation loop
             if (itr + 1) % evaluation_step == 0:
