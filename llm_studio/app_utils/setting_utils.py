@@ -281,7 +281,7 @@ def _load_secrets(q: Q):
     secret_name, secrets_handler = _get_secrets_handler(q)
     for key in SECRET_KEYS:
         try:
-            q.client[key] = secrets_handler.load(key) or ""
+            q.client[key] = secrets_handler.load(key) or default_cfg.user_settings[key]
         except Exception:
             logger.error(f"Could not load password {key} from {secret_name}")
             q.client[key] = ""
