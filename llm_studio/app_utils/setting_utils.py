@@ -101,7 +101,7 @@ class KeyRingSaver(NoSaver):
 
     def delete(self, name: str):
         try:
-            keyring.delete_password(self.namespace, name)
+            keyring.delete_password(self.namespace, name) or ""
         except (KeyringLocked, PasswordDeleteError):
             pass
         except Exception as e:
@@ -128,13 +128,13 @@ class EnvFileSaver(NoSaver):
         with open(self.filename, "w") as f:
             yaml.safe_dump(data, f)
 
-    def load(self, name: str):
+    def load(self, name: str) -> str:
         if not os.path.exists(self.filename):
-            return None
+            return ""
 
         with open(self.filename, "r") as f:
             data = yaml.safe_load(f)
-            return data.get(name, None)
+            return data.get(name, "")
 
     def delete(self, name: str):
         if os.path.exists(self.filename):
@@ -281,7 +281,7 @@ def _load_secrets(q: Q):
     secret_name, secrets_handler = _get_secrets_handler(q)
     for key in SECRET_KEYS:
         try:
-            q.client[key] = secrets_handler.load(key)
+            q.client[key] = secrets_handler.load(key) or ""
         except Exception:
             logger.error(f"Could not load password {key} from {secret_name}")
             q.client[key] = ""
