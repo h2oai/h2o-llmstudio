@@ -76,8 +76,8 @@ class NoSaver:
     def save(self, name: str, password: str):
         pass
 
-    def load(self, name: str):
-        pass
+    def load(self, name: str) -> str:
+        return ""
 
     def delete(self, name: str):
         pass
@@ -96,12 +96,12 @@ class KeyRingSaver(NoSaver):
     def save(self, name: str, password: str):
         keyring.set_password(self.namespace, name, password)
 
-    def load(self, name: str):
-        return keyring.get_password(self.namespace, name)
+    def load(self, name: str) -> str:
+        return keyring.get_password(self.namespace, name) or ""  # type: ignore
 
     def delete(self, name: str):
         try:
-            keyring.delete_password(self.namespace, name) or ""
+            keyring.delete_password(self.namespace, name)
         except (KeyringLocked, PasswordDeleteError):
             pass
         except Exception as e:
