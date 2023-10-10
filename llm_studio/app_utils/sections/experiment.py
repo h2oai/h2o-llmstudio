@@ -44,7 +44,10 @@ from llm_studio.app_utils.utils import (
     start_experiment,
 )
 from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
-from llm_studio.python_configs.cfg_checks import check_cfg_for_conflicts
+from llm_studio.python_configs.cfg_checks import (
+    check_config_for_consistency,
+    check_for_common_errors,
+)
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
@@ -500,31 +503,22 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
     cfg = parse_ui_elements(cfg=cfg, q=q, pre=f"{pre}/cfg/")
     cfg.experiment_name = cfg.experiment_name.replace("/", "-")
 
-    stats = os.statvfs(".")
-    available_size = stats.f_frsize * stats.f_bavail
-
-    # flag whether to list current experiments after this function
-    list_current_experiments = True
-    if available_size < default_cfg.min_experiment_disk_space:
-        entity = "Experiment" if pre == "experiment/start" else "Prediction"
-        q.client["experiment_halt_reason"] = (
-            f"Not enough disk space. Available space is {get_size_str(available_size)}."
-            f" Required space is "
-            f"{get_size_str(default_cfg.min_experiment_disk_space)}. "
-            f"{entity} has not started."
+    experiment_started = True
+    errors = check_config_for_consistency(cfg)
+    if errors["title"]:
+        title = (
+            errors["title"][0]
+            if len(errors["title"]) == 1
+            else "The following configuration mismatches were found:"
         )
-        logger.error(q.client["experiment_halt_reason"])
-        return list_current_experiments
-
-    cfg_issues = check_cfg_for_conflicts(cfg)
-    if cfg_issues:
+        delimiter = "-" * 80 + " "
         q.page["meta"].dialog = ui.dialog(
-            title=cfg_issues["title"],
-            name="cfg_issue_dialog",
+            title=title,
+            name="experiment/start/error/dialog",
             items=[
-                ui.text(cfg_issues["text"]),
+                ui.text(delimiter.join(errors["message"])),
                 ui.button(
-                    name="experiment/start/cfg_issue/ok",
+                    name="experiment/start/error/ok",
                     label="OK",
                     primary=True,
                 ),
@@ -533,10 +527,10 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
         )
         q.client["keep_meta"] = True
         await q.page.save()
-        return not list_current_experiments
+        return not experiment_started
 
     start_experiment(cfg=cfg, q=q, pre=pre)
-    return list_current_experiments
+    return experiment_started
 
 
 def get_experiment_table(
