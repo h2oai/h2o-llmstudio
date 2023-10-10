@@ -268,9 +268,9 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
 @dataclass
 class ConfigNLPAugmentation(DefaultConfig):
     nlp_augmentations_class: Any = BaseNLPAug
-    token_mask_probability: float = 0
-    skip_parent_probability: float = 0
-    random_parent_probability: float = 0
+    token_mask_probability: float = 0.0
+    skip_parent_probability: float = 0.0
+    random_parent_probability: float = 0.0
 
     def __post_init__(self):
         super().__post_init__()

@@ -122,6 +122,21 @@ def convert_cfg_base_to_nested_dictionary(cfg: DefaultConfigProblemBase) -> dict
     return grouped_cfg_dict
 
 
+def convert_nested_dictionary_to_cfg_base(
+    cfg_dict: Dict[str, Any]
+) -> DefaultConfigProblemBase:
+    """
+    Inverse operation of convert_cfg_base_to_nested_dictionary
+    """
+    problem_type = cfg_dict["problem_type"]
+    module_name = f"llm_studio.python_configs.{problem_type}_config"
+    try:
+        module = importlib.import_module(module_name)
+    except ModuleNotFoundError:
+        raise NotImplementedError(f"Problem Type {problem_type} not implemented")
+    return module.ConfigProblemBase.from_dict(cfg_dict)
+
+
 def get_parent_element(cfg):
     if hasattr(cfg, "_parent_experiment") and cfg._parent_experiment != "":
         key = "Parent Experiment"
@@ -199,11 +214,4 @@ def load_config_yaml(path: str):
     """
     with open(path, "r") as fp:
         cfg_dict = yaml.load(fp, Loader=yaml.FullLoader)
-
-    problem_type = cfg_dict["problem_type"]
-    module_name = f"llm_studio.python_configs.{problem_type}_config"
-    try:
-        module = importlib.import_module(module_name)
-    except ModuleNotFoundError:
-        raise NotImplementedError(f"Problem Type {problem_type} not implemented")
-    return module.ConfigProblemBase.from_dict(cfg_dict)
+    return convert_nested_dictionary_to_cfg_base(cfg_dict)

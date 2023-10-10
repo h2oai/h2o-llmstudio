@@ -1,3 +1,5 @@
+import functools
+import hashlib
 import logging
 import os
 import re
@@ -6,12 +8,15 @@ import time
 import traceback
 from typing import List, Optional
 
+import pandas as pd
 from h2o_wave import Q, ui
-from h2o_wave.types import ImageCard, MarkupCard, StatListItem, Tab
+from h2o_wave.types import FormCard, ImageCard, MarkupCard, StatListItem, Tab
 
 from llm_studio.app_utils.config import default_cfg
 from llm_studio.app_utils.db import Dataset
+from llm_studio.app_utils.sections.common import clean_dashboard
 from llm_studio.app_utils.sections.experiment import experiment_start
+from llm_studio.app_utils.sections.histogram_card import histogram_card
 from llm_studio.app_utils.utils import (
     add_model_type,
     azure_download,
@@ -36,6 +41,7 @@ from llm_studio.app_utils.utils import (
     s3_file_options,
 )
 from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df
+from llm_studio.src.datasets.conversation_chain_handler import get_conversation_chains
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,
@@ -47,8 +53,7 @@ from llm_studio.src.utils.data_utils import (
     read_dataframe_drop_missing_labels,
     sanity_check,
 )
-
-from .common import clean_dashboard
+from llm_studio.src.utils.plot_utils import PlotData
 
 logger = logging.getLogger(__name__)
 
@@ -571,6 +576,23 @@ async def dataset_import(
                 plot_item = ui.image(title="", type="png", image=plot.data)
             elif plot.encoding == "html":
                 plot_item = ui.markup(content=plot.data)
+            elif plot.encoding == "df":
+                df = pd.read_parquet(plot.data)
+                df = df.iloc[:2000]
+                min_widths = {"Content": "800"}
+                plot_item = ui_table_from_df(
+                    q=q,
+                    df=df,
+                    name="experiment/display/table",
+                    markdown_cells=list(df.columns),
+                    searchables=list(df.columns),
+                    downloadable=False,
+                    resettable=False,
+                    min_widths=min_widths,
+                    height="calc(100vh - 245px)",
+                    max_char_length=5_000,
+                    cell_overflow="tooltip",
+                )
             else:
                 raise ValueError(f"Unknown plot encoding `{plot.encoding}`")
 
@@ -1028,12 +1050,10 @@ async def dataset_display(q: Q) -> None:
     dataset_id = q.client["dataset/list/df_datasets"]["id"].iloc[
         q.client["dataset/display/id"]
     ]
-    dataset = q.client.app_db.get_dataset(dataset_id)
-    cfg = load_config_yaml(dataset.config_file)
-
-    has_train_df = cfg.dataset.train_dataframe != "None"
-
-    dataset = cfg.dataset.__dict__
+    dataset: Dataset = q.client.app_db.get_dataset(dataset_id)
+    config_filename = dataset.config_file
+    cfg = load_config_yaml(config_filename)
+    dataset_filename = cfg.dataset.train_dataframe
 
     if (
         q.client["dataset/display/tab"] is None
@@ -1052,23 +1072,14 @@ async def dataset_display(q: Q) -> None:
 
     await clean_dashboard(q, mode=q.client["dataset/display/tab"])
 
-    data_string = "Train" if has_train_df else "Test"
-
     items: List[Tab] = [
-        ui.tab(name="dataset/display/data", label=f"Sample {data_string} Data"),
+        ui.tab(name="dataset/display/data", label="Sample Train Data"),
         ui.tab(
-            name="dataset/display/statistics", label=f"{data_string} Data Statistics"
+            name="dataset/display/visualization", label="Sample Train Visualization"
         ),
+        ui.tab(name="dataset/display/statistics", label="Train Data Statistics"),
         ui.tab(name="dataset/display/summary", label="Summary"),
     ]
-
-    if has_train_df:
-        items.insert(
-            1,
-            ui.tab(
-                name="dataset/display/visualization", label="Sample Train Visualization"
-            ),
-        )
 
     q.page["dataset/display/tab"] = ui.tab_card(
         box="nav2",
@@ -1079,94 +1090,18 @@ async def dataset_display(q: Q) -> None:
     q.client.delete_cards.add("dataset/display/tab")
 
     if q.client["dataset/display/tab"] == "dataset/display/data":
-        fill_columns = get_fill_columns(cfg)
-        df = read_dataframe(
-            dataset["train_dataframe"], n_rows=200, fill_columns=fill_columns
-        )
-
-        q.page["dataset/display/data"] = ui.form_card(
-            box="first",
-            items=[
-                ui_table_from_df(
-                    q=q,
-                    df=df,
-                    name="dataset/display/data/table",
-                    sortables=list(df.columns),
-                    height="calc(100vh - 265px)",
-                    cell_overflow="wrap",
-                )
-            ],
-        )
-        q.client.delete_cards.add("dataset/display/data")
+        await show_data_tab(q=q, cfg=cfg, filename=dataset_filename)
 
     elif q.client["dataset/display/tab"] == "dataset/display/visualization":
-        try:
-            plot = cfg.logging.plots_class.plot_data(cfg)
-        except Exception as error:
-            logger.error(f"Error while plotting data preview: {error}", exc_info=True)
-            plot = cfg.logging.plots_class.plot_empty(
-                cfg, error="Error while plotting data."
-            )
-
-        card: ImageCard | MarkupCard
-        if plot.encoding == "image":
-            card = ui.image_card(box="first", title="", type="png", image=plot.data)
-        elif plot.encoding == "html":
-            card = ui.markup_card(box="first", title="", content=plot.data)
-        else:
-            raise ValueError(f"Unknown plot encoding `{plot.encoding}`")
-
-        q.page["dataset/display/visualization"] = card
-        q.client.delete_cards.add("dataset/display/visualization")
+        await show_visualization_tab(q, cfg)
 
     elif q.client["dataset/display/tab"] == "dataset/display/statistics":
-        stats = get_frame_stats(read_dataframe(dataset["train_dataframe"]))
-        if stats is None:
-            component_items = [
-                ui.text(
-                    "Dataset does not contain numerical or text features. "
-                    "No statistics available."
-                )
-            ]
-        else:
-            if stats.shape[1] > 5:  # mixed text and numeric
-                widths = {col: "77" for col in stats}
-            else:  # only text features
-                widths = None
-            component_items = [
-                ui_table_from_df(
-                    q=q,
-                    df=stats,
-                    name="dataset/display/statistics/table",
-                    sortables=list(stats.columns),
-                    min_widths=widths,
-                    height="calc(100vh - 265px)",
-                )
-            ]
-        q.page["dataset/display/statistics"] = ui.form_card(
-            box="first", items=component_items
+        await show_statistics_tab(
+            q, dataset_filename=dataset_filename, config_filename=config_filename
         )
-        q.client.delete_cards.add("dataset/display/statistics")
 
     elif q.client["dataset/display/tab"] == "dataset/display/summary":
-        dataset_df = get_datasets(q)
-        dataset_df = dataset_df[dataset_df.id == dataset_id]
-
-        stat_list_items: List[StatListItem] = []
-
-        for col in dataset_df.columns:
-            if col in ["id", "config_file", "path", "process_id", "status"]:
-                continue
-            v = dataset_df[col].values[0]
-            t: StatListItem = ui.stat_list_item(label=make_label(col), value=str(v))
-
-            stat_list_items.append(t)
-
-        q.page["dataset/display/summary"] = ui.stat_list_card(
-            box="first", items=stat_list_items, title=""
-        )
-
-        q.client.delete_cards.add("dataset/display/summary")
+        await show_summary_tab(q, dataset_id)
 
     q.page["dataset/display/footer"] = ui.form_card(
         box="footer",
@@ -1186,6 +1121,191 @@ async def dataset_display(q: Q) -> None:
         ],
     )
     q.client.delete_cards.add("dataset/display/footer")
+
+
+async def show_data_tab(q, cfg, filename: str):
+    fill_columns = get_fill_columns(cfg)
+    df = read_dataframe(filename, n_rows=200, fill_columns=fill_columns)
+    q.page["dataset/display/data"] = ui.form_card(
+        box="first",
+        items=[
+            ui_table_from_df(
+                q=q,
+                df=df,
+                name="dataset/display/data/table",
+                sortables=list(df.columns),
+                height="calc(100vh - 265px)",
+                cell_overflow="wrap",
+            )
+        ],
+    )
+    q.client.delete_cards.add("dataset/display/data")
+
+
+async def show_visualization_tab(q, cfg):
+    try:
+        plot = cfg.logging.plots_class.plot_data(cfg)
+    except Exception as error:
+        logger.error(f"Error while plotting data preview: {error}", exc_info=True)
+        plot = PlotData("<h2>Error while plotting data.</h2>", encoding="html")
+    card: ImageCard | MarkupCard | FormCard
+    if plot.encoding == "image":
+        card = ui.image_card(box="first", title="", type="png", image=plot.data)
+    elif plot.encoding == "html":
+        card = ui.markup_card(box="first", title="", content=plot.data)
+    elif plot.encoding == "df":
+        df = pd.read_parquet(plot.data)
+        df = df.iloc[:2000]
+        min_widths = {"Content": "800"}
+        card = ui.form_card(
+            box="first",
+            items=[
+                ui_table_from_df(
+                    q=q,
+                    df=df,
+                    name="dataset/display/visualization/table",
+                    markdown_cells=list(df.columns),
+                    searchables=list(df.columns),
+                    downloadable=True,
+                    resettable=True,
+                    min_widths=min_widths,
+                    height="calc(100vh - 245px)",
+                    max_char_length=50_000,
+                    cell_overflow="tooltip",
+                )
+            ],
+        )
+
+    else:
+        raise ValueError(f"Unknown plot encoding `{plot.encoding}`")
+    q.page["dataset/display/visualization"] = card
+    q.client.delete_cards.add("dataset/display/visualization")
+
+
+async def show_summary_tab(q, dataset_id):
+    dataset_df = get_datasets(q)
+    dataset_df = dataset_df[dataset_df.id == dataset_id]
+    stat_list_items: List[StatListItem] = []
+    for col in dataset_df.columns:
+        if col in ["id", "config_file", "path", "process_id", "status"]:
+            continue
+        v = dataset_df[col].values[0]
+        t: StatListItem = ui.stat_list_item(label=make_label(col), value=str(v))
+
+        stat_list_items.append(t)
+    q.page["dataset/display/summary"] = ui.stat_list_card(
+        box="first", items=stat_list_items, title=""
+    )
+    q.client.delete_cards.add("dataset/display/summary")
+
+
+async def show_statistics_tab(q, dataset_filename, config_filename):
+    cfg_hash = hashlib.md5(open(config_filename, "rb").read()).hexdigest()
+    stats_dict = compute_dataset_statistics(dataset_filename, config_filename, cfg_hash)
+
+    for chat_type in ["prompts", "answers"]:
+        q.page[f"dataset/display/statistics/{chat_type}_histogram"] = histogram_card(
+            x=stats_dict[chat_type],
+            x_axis_description=f"text_length_{chat_type.capitalize()}",
+            title=f"Text Length Distribution for {chat_type.capitalize()}"
+            f" (split by whitespace)",
+            histogram_box="first",
+        )
+        q.client.delete_cards.add(f"dataset/display/statistics/{chat_type}_histogram")
+
+    q.page["dataset/display/statistics/full_conversation_histogram"] = histogram_card(
+        x=stats_dict["complete_conversations"],
+        x_axis_description="text_length_complete_conversations",
+        title="Text Length Distribution for complete "
+        "conversations (split by whitespace)",
+        histogram_box="second",
+    )
+    q.client.delete_cards.add("dataset/display/statistics/full_conversation_histogram")
+
+    if len(set(stats_dict["number_of_prompts"])) > 1:
+        q.page[
+            "dataset/display/statistics/parent_id_length_histogram"
+        ] = histogram_card(
+            x=stats_dict["number_of_prompts"],
+            x_axis_description="number_of_prompts",
+            title="Distribution of number of prompt-answer turns per conversation.",
+            histogram_box="second",
+        )
+        q.client.delete_cards.add(
+            "dataset/display/statistics/parent_id_length_histogram"
+        )
+
+    df_stats = stats_dict["df_stats"]
+    if df_stats is None:
+        component_items = [
+            ui.text(
+                "Dataset does not contain numerical or text features. "
+                "No statistics available."
+            )
+        ]
+    else:
+        if df_stats.shape[1] > 5:  # mixed text and numeric
+            widths = {col: "77" for col in df_stats}
+        else:  # only text features
+            widths = None
+        component_items = [
+            ui_table_from_df(
+                q=q,
+                df=df_stats,
+                name="dataset/display/statistics/table",
+                sortables=list(df_stats.columns),
+                min_widths=widths,
+                height="265px",
+            )
+        ]
+    q.page["dataset/display/statistics"] = ui.form_card(
+        box="third",
+        items=component_items,
+    )
+    q.client.delete_cards.add("dataset/display/statistics")
+
+
+@functools.lru_cache()
+def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str):
+    """
+    Compute various statistics for a dataset.
+    - text length distribution for prompts and answers
+    - text length distribution for complete conversations
+    - distribution of number of prompt-answer turns per conversation
+    - statistics for non text features
+
+    We use LRU caching to avoid recomputing the statistics for the same dataset.
+    Thus, cfg_hash is used as a function argument to identify the dataset.
+    """
+    df_train = read_dataframe(dataset_path)
+    cfg = load_config_yaml(cfg_path)
+    conversations = get_conversation_chains(
+        df=df_train, cfg=cfg, limit_chained_samples=True
+    )
+    stats_dict = {}
+    for chat_type in ["prompts", "answers"]:
+        text_lengths = [
+            [len(text.split(" ")) for text in conversation[chat_type]]
+            for conversation in conversations
+        ]
+        text_lengths = [item for sublist in text_lengths for item in sublist]
+        stats_dict[chat_type] = text_lengths
+    input_texts = []
+    for conversation in conversations:
+        input_text = conversation["systems"][0]
+        prompts = conversation["prompts"]
+        answers = conversation["answers"]
+        for prompt, answer in zip(prompts, answers):
+            input_text += prompt + answer
+        input_texts += [input_text]
+    stats_dict["complete_conversations"] = [
+        len(text.split(" ")) for text in input_texts
+    ]
+    stats_dict["number_of_prompts"] = [
+        len(conversation["prompts"]) for conversation in conversations
+    ]
+    stats_dict["df_stats"] = get_frame_stats(df_train)
+    return stats_dict
 
 
 async def dataset_import_uploaded_file(q: Q):

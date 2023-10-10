@@ -8,7 +8,7 @@ import torch
 from llm_studio.src.datasets.text_causal_language_modeling_ds import (
     CustomDataset as CausalLMCustomDataset,
 )
-from llm_studio.src.datasets.text_utils import get_texts
+from llm_studio.src.datasets.text_utils import TEXT_SEPARATOR
 
 logger = logging.getLogger(__name__)
 
@@ -18,50 +18,47 @@ class CustomDataset(CausalLMCustomDataset):
         assert (
             cfg.dataset.system_column == "None"
         ), "RLHF is not compatible with system column."
+        assert (
+            cfg.dataset.limit_chained_samples is False
+        ), "RLHF is not compatible with limit_chained_samples."
+        assert (
+            cfg.dataset.mask_prompt_labels is True
+        ), "RLHF is not compatible with mask_prompt_labels."
         super().__init__(df, cfg, mode)
-        self.raw_prompts = get_texts(df, self.cfg, separator="")
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
         sample = super().__getitem__(idx)
-        idx = self.indices[idx]
-        sample["reward_model_prompt_text"] = self.get_reward_model_prompt_text(idx)
+        sample["reward_model_prompt_text"] = TEXT_SEPARATOR.join(
+            self.get_chained_prompt_text_list(idx)
+        )
         return sample
 
-    def get_labels(self, encodings):
+    def get_labels(self, prompt_encodings, answer_encodings):
         if self.mode == "train":  # no labels required for RLHF during training
             return dict()
         else:
-            return super().get_labels(encodings)
+            return super().get_labels(prompt_encodings, answer_encodings)
 
-    def get_encodings(self, idx):
-        encodings, system_encoding = super().get_encodings(idx)
+    def get_encodings(self, input_text_dict):
+        system_encoding, prompt_encodings, answer_encodings = super().get_encodings(
+            input_text_dict
+        )
         # remove last ground truth answer,
         # as RLHF will generate the answer from the prompt
-        encodings[-1][-1] = torch.empty(0)
-        return encodings, system_encoding
+        answer_encodings[-1] = torch.empty(0)
+        return system_encoding, prompt_encodings, answer_encodings
 
-    def get_reward_model_prompt_text(self, idx):
-        return (
-            "".join(
-                [
-                    self.raw_prompts[int(parent_idx)]
-                    + "<|endoftext|>"
-                    + self.answers[int(parent_idx)]
-                    + "<|endoftext|>"
-                    for parent_idx in self.get_parent_ids(idx)
-                ]
-            )
-            + self.raw_prompts[idx]
-        )
+    def postprocess_batch_predictions(self, output: Dict) -> Dict:
+        if "predicted_answer_ids" in output.keys():
+            predicted_text = [
+                self.tokenizer.decode(ids, skip_special_tokens=True).strip()
+                for ids in output["predicted_answer_ids"]
+            ]
 
-    def postprocess_batch_predictions(self, cfg: Any, output: Dict) -> Dict:
-        if cfg.prediction.metric == "Perplexity":
-            return output
-        predicted_text = [
-            self.tokenizer.decode(ids, skip_special_tokens=True).strip()
-            for ids in output["predicted_answer_ids"]
-        ]
-        output["predicted_text"] = np.array(predicted_text)
-        output["predicted_answer_ids"] = output["predicted_answer_ids"].detach()
+            output["predicted_text"] = np.array(predicted_text)
+            output["predicted_answer_ids"] = output["predicted_answer_ids"].detach()
         return output
+
+    def augment_data(self, encodings):
+        return encodings

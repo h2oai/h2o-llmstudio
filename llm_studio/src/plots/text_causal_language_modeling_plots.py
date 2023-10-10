@@ -1,25 +1,20 @@
-import html
+import hashlib
 import os
 from typing import Any, Dict
 
 import pandas as pd
 
-from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
-from llm_studio.src.utils.data_utils import (
-    read_dataframe_drop_missing_labels,
-    sample_indices,
-)
+from llm_studio.src.datasets.conversation_chain_handler import get_conversation_chains
+from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.utils.data_utils import read_dataframe_drop_missing_labels
 from llm_studio.src.utils.plot_utils import (
     PlotData,
     format_for_markdown_visualization,
-    get_line_separator_html,
     list_to_markdown_representation,
 )
 
 
 class Plots:
-    NUM_TEXTS: int = 20
-
     @classmethod
     def plot_batch(cls, batch, cfg) -> PlotData:
         tokenizer = get_tokenizer(cfg)
@@ -91,47 +86,112 @@ class Plots:
 
     @classmethod
     def plot_data(cls, cfg) -> PlotData:
+        """
+        Plots the data in a scrollable table.
+        We limit the number of rows to max 600 to avoid rendering issues in Wave.
+        As the data visualization is instantiated on every page load, we cache the
+        data visualization in a parquet file.
+        """
+        config_id = (
+            str(cfg.dataset.train_dataframe)
+            + str(cfg.dataset.system_column)
+            + str(cfg.dataset.prompt_column)
+            + str(cfg.dataset.answer_column)
+            + str(cfg.dataset.parent_id_column)
+        )
+        config_hash = hashlib.md5(config_id.encode()).hexdigest()
+        path = os.path.join(
+            os.path.dirname(cfg.dataset.train_dataframe),
+            f"__meta_info__{config_hash}_data_viz.parquet",
+        )
+        if os.path.exists(path):
+            return PlotData(path, encoding="df")
+
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
-        df = df.iloc[sample_indices(len(df), Plots.NUM_TEXTS)]
 
-        input_texts = get_texts(df, cfg, separator="")
+        conversations = get_conversation_chains(df, cfg, limit_chained_samples=True)
 
-        if cfg.dataset.answer_column in df.columns:
-            target_texts = df[cfg.dataset.answer_column].values
-        else:
-            target_texts = ""
+        # Limit to max 15 prompt-conversation-answer rounds
+        # This yields to max 5 * sum_{i=1}^{15} i = 600 rows in the DataFrame
+        max_conversation_length = min(
+            max([len(conversation["prompts"]) for conversation in conversations]), 15
+        )
 
-        markup = ""
-        for input_text, target_text in zip(input_texts, target_texts):
-            markup += f"<p><strong>Input Text: </strong>{html.escape(input_text)}</p>\n"
-            markup += "\n"
-            markup += (
-                f"<p><strong>Target Text: </strong>{html.escape(target_text)}</p>\n"
-            )
-            markup += "\n"
-            markup += get_line_separator_html()
-        return PlotData(markup, encoding="html")
+        conversations_to_display = []
+        for conversation_length in range(1, max_conversation_length + 1):
+            conversations_to_display += [
+                conversation
+                for conversation in conversations
+                if len(conversation["prompts"]) == conversation_length
+            ][:5]
+
+        # Convert into a scrollable table by transposing the dataframe
+        df_transposed = pd.DataFrame(columns=["Sample Number", "Field", "Content"])
+
+        i = 0
+        for sample_number, conversation in enumerate(conversations_to_display):
+            if conversation["systems"][0] != "":
+                df_transposed.loc[i] = [
+                    sample_number,
+                    "System",
+                    conversation["systems"][0],
+                ]
+                i += 1
+            for prompt, answer in zip(conversation["prompts"], conversation["answers"]):
+                df_transposed.loc[i] = [
+                    sample_number,
+                    "Prompt",
+                    prompt,
+                ]
+                i += 1
+                df_transposed.loc[i] = [
+                    sample_number,
+                    "Answer",
+                    answer,
+                ]
+                i += 1
+
+        df_transposed["Content"] = df_transposed["Content"].apply(
+            format_for_markdown_visualization
+        )
+
+        df_transposed.to_parquet(path)
+
+        return PlotData(path, encoding="df")
 
     @classmethod
     def plot_validation_predictions(
         cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
     ) -> PlotData:
-        assert mode in ["validation"]
+        conversations = get_conversation_chains(
+            val_df, cfg, limit_chained_samples=cfg.dataset.limit_chained_samples
+        )
 
-        input_texts = get_texts(val_df, cfg, separator="")
-        target_text = val_outputs["target_text"]
+        target_texts = [conversation["answers"][-1] for conversation in conversations]
+
+        input_texts = []
+        for conversation in conversations:
+            input_text = conversation["systems"][0]
+            prompts = conversation["prompts"]
+            answers = conversation["answers"]
+            # exclude last answer
+            answers[-1] = ""
+            for prompt, answer in zip(prompts, answers):
+                input_text += prompt + answer
+            input_texts += [input_text]
+
         if "predicted_text" in val_outputs.keys():
-            predicted_text = val_outputs["predicted_text"]
+            predicted_texts = val_outputs["predicted_text"]
         else:
-            predicted_text = [
+            predicted_texts = [
                 "No predictions are generated for the selected metric"
-            ] * len(target_text)
+            ] * len(target_texts)
 
         df = pd.DataFrame(
             {
                 "Input Text": input_texts,
-                "Target Text": target_text,
-                "Predicted Text": predicted_text,
+                "Target Text": target_texts,
+                "Predicted Text": predicted_texts,
             }
         )
         df["Input Text"] = df["Input Text"].apply(format_for_markdown_visualization)
@@ -141,10 +201,22 @@ class Plots:
         )
 
         if val_outputs.get("metrics") is not None:
-            df[f"Metric ({cfg.prediction.metric})"] = val_outputs["metrics"]
-            df[f"Metric ({cfg.prediction.metric})"] = df[
-                f"Metric ({cfg.prediction.metric})"
-            ].round(decimals=3)
+            metric_column_name = f"Metric ({cfg.prediction.metric})"
+            df[metric_column_name] = val_outputs["metrics"]
+            df[metric_column_name] = df[metric_column_name].round(decimals=3)
+            if len(df) > 900:
+                df.sort_values(by=metric_column_name, inplace=True)
+                df = pd.concat(
+                    [
+                        df.iloc[:300],
+                        df.iloc[300:-300].sample(n=300, random_state=42),
+                        df.iloc[-300:],
+                    ]
+                ).reset_index(drop=True)
+
+        elif len(df) > 900:
+            df = df.sample(n=900, random_state=42).reset_index(drop=True)
+
         if val_outputs.get("explanations") is not None:
             df["Explanation"] = val_outputs["explanations"]
 

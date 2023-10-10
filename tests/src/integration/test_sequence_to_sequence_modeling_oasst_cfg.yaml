@@ -1,5 +1,5 @@
 architecture:
-    backbone_dtype: int4
+    backbone_dtype: bfloat16
     force_embedding_gradients: false
     gradient_checkpointing: true
     intermediate_dropout: 0.0
@@ -27,9 +27,9 @@ dataset:
     prompt_column:
     - instruction
     system_column: None
-    text_answer_separator: <|answer|>
-    text_prompt_start: <|prompt|>
-    text_system_start: <|system|>
+    text_answer_separator: ''
+    text_prompt_start: ''
+    text_system_start: ''
     train_dataframe: /tmp/train_full.pq
     validation_dataframe: None
     validation_size: 0.01
@@ -40,45 +40,41 @@ environment:
     gpus:
     - '0'
     huggingface_branch: main
-    mixed_precision: true
+    mixed_precision: false
     number_of_workers: 8
     seed: -1
     trust_remote_code: true
     use_fsdp: false
-experiment_name: test-rlhf-language-modeling-oasst
-llm_backbone: facebook/opt-125m
+experiment_name: test-sequence-to-sequence-modeling-oasst
+llm_backbone: t5-small
 logging:
     logger: None
     neptune_project: test_org/test_project
 output_directory: /tmp/output
 prediction:
     batch_size_inference: 0
-    do_sample: true
-    max_length_inference: 32
-    metric: BLEU
+    do_sample: false
+    max_length_inference: 256
+    metric: Perplexity
     metric_gpt_model: gpt-3.5-turbo-0301
-    min_length_inference: 1
+    min_length_inference: 2
     num_beams: 1
     num_history: 4
-    repetition_penalty: 1.0
+    repetition_penalty: 1.2
     stop_tokens: ''
     temperature: 0.3
     top_k: 0
     top_p: 1.0
-problem_type: text_rlhf_language_modeling
-reward_model: OpenAssistant/reward-model-deberta-v3-large-v2
+problem_type: text_sequence_to_sequence_modeling
 tokenizer:
     add_prefix_space: false
     add_prompt_answer_tokens: false
-    max_length: 128
-    max_length_answer: 64
-    max_length_prompt: 64
+    max_length: 512
+    max_length_answer: 256
+    max_length_prompt: 256
     padding_quantile: 1.0
     use_fast: true
 training:
-    adaptive_kl_control: true
-    advantages_gamma: 0.99
-    advantages_lambda: 0.95
     batch_size: 2
     differential_learning_rate: 1.0e-05
     differential_learning_rate_layers: []
@@ -88,25 +84,15 @@ training:
     evaluation_epochs: 1.0
     grad_accumulation: 1
     gradient_clip: 0.0
-    initial_kl_coefficient: 0.2
-    kl_horizon: 10000
-    kl_target: 6.0
     learning_rate: 0.0001
     lora: true
     lora_alpha: 16
     lora_dropout: 0.05
     lora_r: 4
     lora_target_modules: ''
-    loss_function: RLHF
-    offload_reward_model: false
+    loss_function: TokenAveragedCrossEntropy
     optimizer: AdamW
-    ppo_batch_size: 1
-    ppo_clip_policy: 0.2
-    ppo_clip_value: 0.2
-    ppo_epochs: 4
-    ppo_generate_temperature: 1.0
     save_best_checkpoint: false
-    scaling_factor_value_loss: 0.1
     schedule: Cosine
     train_validation_data: false
     warmup_epochs: 0.0

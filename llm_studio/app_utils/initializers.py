@@ -6,21 +6,20 @@ from tempfile import NamedTemporaryFile
 from bokeh.resources import Resources as BokehResources
 from h2o_wave import Q
 
+from llm_studio.app_utils.config import default_cfg
+from llm_studio.app_utils.db import Database, Dataset
 from llm_studio.app_utils.sections.common import interface
-from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
-
-from .config import default_cfg
-from .db import Database, Dataset
-from .utils import (
+from llm_studio.app_utils.setting_utils import load_user_settings_and_secrets
+from llm_studio.app_utils.utils import (
     get_data_dir,
     get_database_dir,
     get_download_dir,
     get_output_dir,
     get_user_db_path,
     get_user_name,
-    load_user_settings,
     prepare_default_dataset,
 )
+from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +96,7 @@ async def initialize_client(q: Q) -> None:
 
         import_data(q)
 
-        load_user_settings(q)
+        load_user_settings_and_secrets(q)
 
         await interface(q)
 

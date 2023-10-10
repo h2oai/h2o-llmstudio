@@ -7,7 +7,6 @@ import json
 import logging
 import math
 import os
-import pickle
 import random
 import re
 import shutil
@@ -1842,42 +1841,6 @@ def check_valid_upload_content(upload_path: str) -> Tuple[bool, str]:
         os.remove(upload_path)
 
     return valid, error
-
-
-def load_user_settings(q: Q, force_defaults: bool = False):
-    # get settings from settings pickle if it exists or set default values
-    if os.path.isfile(get_usersettings_path(q)) and not force_defaults:
-        logger.info("Reading settings")
-        with open(get_usersettings_path(q), "rb") as f:
-            user_settings = pickle.load(f)
-            for key in default_cfg.user_settings:
-                q.client[key] = user_settings.get(key, default_cfg.user_settings[key])
-    else:
-        logger.info("Using default settings")
-        for key in default_cfg.user_settings:
-            q.client[key] = default_cfg.user_settings[key]
-
-
-def save_user_settings(q: Q):
-    # Hacky way to get a dict of q.client key/value pairs
-    user_settings = {}
-    for key in default_cfg.user_settings:
-        user_settings.update({key: q.client[key]})
-
-    # force dataset connector updated when the user decides to click on save
-    q.client["dataset/import/s3_bucket"] = q.client["default_aws_bucket_name"]
-    q.client["dataset/import/s3_access_key"] = q.client["default_aws_access_key"]
-    q.client["dataset/import/s3_secret_key"] = q.client["default_aws_secret_key"]
-
-    q.client["dataset/import/azure_conn_string"] = q.client["default_azure_conn_string"]
-    q.client["dataset/import/azure_container"] = q.client["default_azure_container"]
-
-    q.client["dataset/import/kaggle_access_key"] = q.client["default_kaggle_username"]
-    q.client["dataset/import/kaggle_secret_key"] = q.client["default_kaggle_secret_key"]
-
-    with open(get_usersettings_path(q), "wb") as f:
-        # slightly obfuscate to binary pickle file
-        pickle.dump(user_settings, f)
 
 
 def flatten_dict(d: collections.abc.MutableMapping) -> dict:
