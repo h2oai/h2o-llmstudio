@@ -184,9 +184,9 @@ class Plots:
             for prompt, answer in zip(prompts, answers):
                 input_text += (
                     f" **{prompt_column_name}:** "
-                    f"{prompt} "
+                    f"{prompt}\n\n"
                     f"**{cfg.dataset.answer_column}:** "
-                    f"{answer}"
+                    f"{answer}\n\n"
                 )
             input_texts += [input_text]
 
