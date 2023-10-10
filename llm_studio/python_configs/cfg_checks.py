@@ -73,6 +73,33 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             "Please ensure that you have enough disk space before "
             "starting the experiment. "
         ]
+
+    # see create_nlp_backbone
+    if (
+        cfg.architecture.backbone_dtype in ["int4", "int8"]
+        and not cfg.architecture.pretrained
+    ):
+        errors["title"] += ["Quantization without pretrained weights."]
+        errors["message"] += [
+            "Quantization is only supported for pretrained models. "
+            "Please enable pretrained model or disable quantization. "
+        ]
+
+    if not cfg.training.lora and cfg.architecture.backbone_dtype != "float32":
+        if cfg.environment.mixed_precision:
+            errors["title"] += ["Mixed precision disabled."]
+            errors["message"] += [
+                "Mixed precision is disabled as dtype is not set to float32. "
+                "Please enable mixed precision or set dtype to float32. "
+            ]
+        if cfg.architecture.backbone_dtype != "bfloat16":
+            errors["title"] += ["Pure float16 or int8 training."]
+            errors["message"] += [
+                "Pure float16 or int8 training will "
+                "likely lead to unstable training without adapters. "
+                "Please use adapters or set dtype to float32. "
+            ]
+
     return errors
 
 
@@ -118,6 +145,32 @@ def check_text_rlhf_language_modeling_config(
     cfg: text_rlhf_language_modeling_config.ConfigProblemBase,
 ) -> dict:
     errors: Dict[str, List] = {"title": [], "message": []}
+    if not cfg.training.lora:
+        errors["title"] += ["LoRA must be True for RLHF"]
+        errors["message"] += [
+            "LoRA must be True for RLHF. "
+            "Please set LoRA to True or change the problem type. "
+        ]
+
+    # see CustomDataset for RLHF
+    if cfg.dataset.system_column != "None":
+        errors["title"] += ["RLHF is not compatible with system column."]
+        errors["message"] += [
+            "RLHF is not compatible with system column. "
+            "Please set system column to None or change the problem type. "
+        ]
+    if cfg.dataset.limit_chained_samples:
+        errors["title"] += ["RLHF is not compatible with limit_chained_samples."]
+        errors["message"] += [
+            "RLHF is not compatible with limit_chained_samples. "
+            "Please set limit_chained_samples to False or change the problem type. "
+        ]
+    if not cfg.dataset.mask_prompt_labels:
+        errors["title"] += ["RLHF is not compatible with mask_prompt_labels."]
+        errors["message"] += [
+            "RLHF is not compatible with mask_prompt_labels. "
+            "Please set mask_prompt_labels to True or change the problem type. "
+        ]
     return errors
 
 
