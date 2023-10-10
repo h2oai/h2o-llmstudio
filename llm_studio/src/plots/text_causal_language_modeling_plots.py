@@ -97,6 +97,7 @@ class Plots:
             + str(cfg.dataset.system_column)
             + str(cfg.dataset.prompt_column)
             + str(cfg.dataset.answer_column)
+            + str(cfg.dataset.parent_id_column)
         )
         config_hash = hashlib.md5(config_id.encode()).hexdigest()
         path = os.path.join(

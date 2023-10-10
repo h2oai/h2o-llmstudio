@@ -9,7 +9,7 @@ import torch
 from torch.utils.data import Dataset
 
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
-from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.datasets.text_utils import TEXT_SEPARATOR, get_tokenizer
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ class CustomDataset(Dataset):
         # make sure system encoding is always prepended if max_length exceeded
         if sample["input_ids"][0] != self.tokenizer.pad_token_id:
             sample["input_ids"][: len(system_encoding)] = system_encoding
-            if self.cfg.dataset.mask_prompt_labels:
+            if self.cfg.dataset.mask_prompt_labels and "labels" in sample.keys():
                 sample["labels"][: len(system_encoding)] = -100
         if sample["prompt_input_ids"][0] != self.tokenizer.pad_token_id:
             sample["prompt_input_ids"][: len(system_encoding)] = system_encoding
@@ -290,18 +290,30 @@ class CustomDataset(Dataset):
 
         output.pop("target_text", None)
 
+        # in case limit_chained_samples is True, only last answer is predicted
+        end_conversation_ids = (
+            self.conversation_chain_handler.get_conversation_end_ids()
+        )
+
         if "predicted_text" in output.keys():
             output["predicted_text"] = np.array(output["predicted_text"])
 
         if isinstance(cfg.dataset.prompt_column, tuple):
             for col in cfg.dataset.prompt_column:
-                output[col] = df[col].values
+                output[col] = df.loc[end_conversation_ids, col].values
         else:
-            output[cfg.dataset.prompt_column] = df[cfg.dataset.prompt_column].values
+            output[cfg.dataset.prompt_column] = df.loc[
+                end_conversation_ids, cfg.dataset.prompt_column
+            ].values
 
         if "predicted_text" in output.keys():
-            df[f"pred_{cfg.dataset.answer_column}"] = output["predicted_text"]
-
+            df[f"pred_{cfg.dataset.answer_column}"] = (
+                "NO ANSWER GENERATED. "
+                "ONLY LAST ANSWER OF A CONVERSATION IS PREDICTED."
+            )
+            df.loc[end_conversation_ids, f"pred_{cfg.dataset.answer_column}"] = output[
+                "predicted_text"
+            ]
         return output, df
 
     @classmethod
@@ -457,18 +469,17 @@ class CustomDataset(Dataset):
         return [system_encoding, prompt_encoding, answer_encoding]
 
     def get_chained_prompt_text_list(self, idx) -> List[str]:
-        text_separator = "TEXT_SEPARATOR"
         text_dict = self.conversation_chain_handler[idx]
         chat_history = "".join(
             [
-                prompt + text_separator + answer + text_separator
+                prompt + TEXT_SEPARATOR + answer + TEXT_SEPARATOR
                 for prompt, answer in zip(
                     text_dict["prompts"][:-1], text_dict["answers"][:-1]
                 )
             ]
         )
         prompt_text = text_dict["systems"][0] + chat_history + text_dict["prompts"][-1]
-        return prompt_text.split(text_separator)
+        return prompt_text.split(TEXT_SEPARATOR)
 
     @staticmethod
     def pad_tokens(

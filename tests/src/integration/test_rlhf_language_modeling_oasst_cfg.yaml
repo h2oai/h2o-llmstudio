@@ -105,6 +105,7 @@ training:
     ppo_clip_value: 0.2
     ppo_epochs: 4
     ppo_generate_temperature: 1.0
+    rollout_steps: 8
     save_best_checkpoint: false
     scaling_factor_value_loss: 0.1
     schedule: Cosine
