@@ -510,6 +510,8 @@ def run_train_rlhf(
             f"Rollout steps ({cfg.training.rollout_steps}) must be less than the total "
             f"training steps in one epoch ({epoch_steps})"
         )
+
+        # Round up to the next multiple of rollout steps
         evaluation_step = (
             (evaluation_step + cfg.training.rollout_steps - 1)
             // cfg.training.rollout_steps
@@ -670,7 +672,7 @@ def run_train_rlhf(
                 torch.distributed.barrier()
 
             # Validation loop
-            if (itr + 1) % evaluation_step == 0:
+            if ((itr + 1) % evaluation_step == 0) or (itr == epoch_steps - 1):
                 if cfg.training.evaluation_epochs == 1:
                     progress_bar.close()
 
