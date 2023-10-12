@@ -62,7 +62,7 @@ def test_oasst_training(tmp_path, config_name, metric):
     train_path = os.path.join(tmp_path, "train_full.pq")
 
     config_path = (
-        Path.cwd() / "tests" / "integration" / f"{config_name}.yaml"
+        Path.cwd() / "tests" / "src" / "integration" / f"{config_name}.yaml"
     ).resolve()
     with open(config_path, "r") as fp:
         cfg = yaml.load(fp, Loader=yaml.FullLoader)
