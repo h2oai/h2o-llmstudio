@@ -102,7 +102,7 @@ class Plots:
         config_hash = hashlib.md5(config_id.encode()).hexdigest()
         path = os.path.join(
             os.path.dirname(cfg.dataset.train_dataframe),
-            f"{config_hash}_data_viz.parquet",
+            f"__meta_info__{config_hash}_data_viz.parquet",
         )
         if os.path.exists(path):
             return PlotData(path, encoding="df")
