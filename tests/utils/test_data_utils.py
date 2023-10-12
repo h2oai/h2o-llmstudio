@@ -85,7 +85,6 @@ def test_get_data_automatic_split(
 
 
 def test_oasst_data_automatic_split(tmp_path: pathlib.Path):
-    tmp_path = tmp_path.absolute()
     prepare_default_dataset(tmp_path)
     assert len(os.listdir(tmp_path)) > 0, tmp_path
     cfg_mock = MagicMock()
