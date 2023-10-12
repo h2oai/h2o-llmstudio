@@ -83,10 +83,9 @@ def test_get_data_automatic_split(
     assert len(shared_groups) == 0
 
 
-@pytest.mark.skip("slow test due to downloading oasst")
 def test_oasst_data_automatic_split(tmp_path):
     prepare_default_dataset(tmp_path)
-
+    assert len(os.listdir(tmp_path)) > 0
     cfg_mock = MagicMock()
     for file in os.listdir(tmp_path):
         if file.endswith(".pq"):
@@ -99,7 +98,7 @@ def test_oasst_data_automatic_split(tmp_path):
 
             cfg_mock.dataset.validation_strategy = "automatic"
 
-            for validation_size in [0.01, 0.1, 0.2, 0.3, 0.4, 0.5]:
+            for validation_size in [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]:
                 cfg_mock.dataset.validation_size = validation_size
 
                 train_df, val_df = load_train_valid_data(cfg_mock)
@@ -108,4 +107,7 @@ def test_oasst_data_automatic_split(tmp_path):
                 )
                 assert set(val_df["parent_id"].dropna().values).isdisjoint(
                     set(train_df["id"].dropna().values)
+                )
+                assert (len(val_df) / (len(train_df) + len(val_df))) == pytest.approx(
+                    validation_size, 0.05
                 )
