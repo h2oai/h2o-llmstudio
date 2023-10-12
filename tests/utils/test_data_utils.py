@@ -85,7 +85,7 @@ def test_get_data_automatic_split(
 
 def test_oasst_data_automatic_split(tmp_path):
     prepare_default_dataset(tmp_path)
-    assert len(os.listdir(tmp_path)) > 0
+    assert len(os.listdir(tmp_path)) > 0, tmp_path
     cfg_mock = MagicMock()
     for file in os.listdir(tmp_path):
         if file.endswith(".pq"):
