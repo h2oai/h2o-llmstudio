@@ -206,5 +206,8 @@ def get_conversation_chains(
     cfg.dataset.limit_chained_samples = limit_chained_samples
     conversation_chain_handler = ConversationChainHandler(df, cfg)
     cfg.dataset.limit_chained_samples = orig_limit_chained_samples
-    conversations = [conversation for conversation in conversation_chain_handler]
+    conversations = [
+        conversation
+        for conversation in conversation_chain_handler  # type: ignore[attr-defined]
+    ]
     return conversations
