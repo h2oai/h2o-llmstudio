@@ -31,6 +31,9 @@ class CustomDataset(Dataset):
         self.tokenizer = get_tokenizer(self.cfg)
         self.conversation_chain_handler = ConversationChainHandler(self.df, cfg)
 
+        if cfg.type == "causal_classification":
+            self.answers_int = df[cfg.dataset.answer_column].astype(int).values.tolist()
+
     def __len__(self) -> int:
         return len(self.conversation_chain_handler)
 
@@ -107,6 +110,10 @@ class CustomDataset(Dataset):
                 sample["labels"][: len(system_encoding)] = -100
         if sample["prompt_input_ids"][0] != self.tokenizer.pad_token_id:
             sample["prompt_input_ids"][: len(system_encoding)] = system_encoding
+
+        if self.cfg.type == "causal_classification":
+            sample["class_label"] = self.answers_int[idx]
+
         return sample
 
     @staticmethod
@@ -254,7 +261,10 @@ class CustomDataset(Dataset):
         return output
 
     def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
-        if not cfg.prediction.metric == "Perplexity":
+        if (
+            not cfg.prediction.metric == "Perplexity"
+            and not cfg.type == "causal_classification"
+        ):
             output = self.clean_output(output, cfg)
 
         output["target_text"] = self.conversation_chain_handler.answers
@@ -297,6 +307,9 @@ class CustomDataset(Dataset):
 
         if "predicted_text" in output.keys():
             output["predicted_text"] = np.array(output["predicted_text"])
+
+        if "logits" in output.keys():
+            output["logits"] = np.array(output["logits"].float())
 
         if isinstance(cfg.dataset.prompt_column, tuple):
             for col in cfg.dataset.prompt_column:

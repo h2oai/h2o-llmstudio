@@ -419,7 +419,10 @@ def run_inference(
 
         with autocast(enabled=cfg.environment.mixed_precision):
             output = model.forward(batch)
-            if cfg.prediction.metric != "Perplexity":
+            if (
+                cfg.prediction.metric != "Perplexity"
+                and cfg.type != "causal_classification"
+            ):
                 output["predicted_answer_ids"] = (
                     unwrap_model(model).generate(batch, cfg).detach().cpu()
                 )

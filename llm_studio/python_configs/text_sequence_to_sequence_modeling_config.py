@@ -42,7 +42,6 @@ class ConfigNLPSeq2SeqDataset(ConfigNLPCausalLMDataset):
 
         self._visibility["limit_chained_samples"] = -1
         self._visibility["mask_prompt_labels"] = -1
-        self._visibility["dataset_class"] = -1
 
 
 @dataclass
@@ -75,6 +74,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
     llm_backbone: str = "t5-small"
+    type: str = "seq2seq"
 
     dataset: ConfigNLPSeq2SeqDataset = field(default_factory=ConfigNLPSeq2SeqDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
