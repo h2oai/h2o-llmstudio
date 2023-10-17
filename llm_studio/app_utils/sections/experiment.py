@@ -44,10 +44,7 @@ from llm_studio.app_utils.utils import (
     start_experiment,
 )
 from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
-from llm_studio.python_configs.cfg_checks import (
-    check_config_for_consistency,
-    check_for_common_errors,
-)
+from llm_studio.python_configs.cfg_checks import check_config_for_errors
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
@@ -62,7 +59,6 @@ from llm_studio.src.utils.export_utils import (
     get_logs_path,
     get_model_path,
     get_predictions_path,
-    get_size_str,
     save_logs,
     save_prediction_outputs,
 )
@@ -504,7 +500,7 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
     cfg.experiment_name = cfg.experiment_name.replace("/", "-")
 
     experiment_started = True
-    errors = check_config_for_consistency(cfg)
+    errors = check_config_for_errors(cfg)
     if errors["title"]:
         title = (
             errors["title"][0]
