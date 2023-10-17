@@ -60,7 +60,7 @@ class ConfigNLPCausalClassificationDataset(ConfigNLPCausalLMDataset):
 @dataclass
 class ConfigNLPCausalClassificationTraining(ConfigNLPCausalLMTraining):
     loss_class: Any = text_causal_classification_modeling_losses.Losses
-    loss_function: str = "CrossEntropyLoss"
+    loss_function: str = "BinaryCrossEntropyLoss"
 
     learning_rate: float = 0.0001
     differential_learning_rate_layers: Tuple[str, ...] = ("classification_head",)
@@ -101,7 +101,7 @@ class ConfigNLPCausalClassificationArchitecture(ConfigNLPCausalLMArchitecture):
 @dataclass
 class ConfigNLPCausalClassificationPrediction(ConfigNLPCausalLMPrediction):
     metric_class: Any = text_causal_classification_modeling_metrics.Metrics
-    metric: str = "Accuracy"
+    metric: str = "AUC"
 
     def __post_init__(self):
         super().__post_init__()
