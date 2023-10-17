@@ -100,7 +100,10 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
         torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
 
     if cfg.type == "causal_classification":
-        torch.save(checkpoint['model']["classification_head.weight"], os.path.join(path, "classification_head.pth"))
+        torch.save(
+            checkpoint["model"]["classification_head.weight"],
+            os.path.join(path, "classification_head.pth"),
+        )
 
 
 def load_model_weights(

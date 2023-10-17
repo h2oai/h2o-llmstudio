@@ -116,8 +116,6 @@ def publish_model_to_hugging_face(
     # push tokenizer to hub
     tokenizer.push_to_hub(repo_id=repo_id, private=True)
 
-    
-
     # push model card to hub
     card = get_model_card(cfg, model, repo_id)
     card.push_to_hub(

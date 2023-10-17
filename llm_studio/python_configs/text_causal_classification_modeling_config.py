@@ -131,6 +131,7 @@ class ConfigNLPCausalClassificationEnvironment(ConfigNLPCausalLMEnvironment):
     def __post_init__(self):
         super().__post_init__()
 
+
 @dataclass
 class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
