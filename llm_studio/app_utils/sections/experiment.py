@@ -507,12 +507,12 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
             if len(errors["title"]) == 1
             else "The following configuration mismatches were found:"
         )
-        delimiter = "-" * 80 + " "
+        error_text = [ui.text(message) for message in errors["message"]]
         q.page["meta"].dialog = ui.dialog(
             title=title,
             name="experiment/start/error/dialog",
-            items=[
-                ui.text(delimiter.join(errors["message"])),
+            items=error_text
+            + [
                 ui.button(
                     name="experiment/start/error/ok",
                     label="OK",
