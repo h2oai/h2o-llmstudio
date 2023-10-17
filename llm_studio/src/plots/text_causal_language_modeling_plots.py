@@ -114,7 +114,7 @@ class Plots:
         # Limit to max 15 prompt-conversation-answer rounds
         # This yields to max 5 * sum_{i=1}^{15} i = 600 rows in the DataFrame
         max_conversation_length = min(
-            max([len(conversation["prompts"]) for conversation in conversations] + [1]),
+            max([len(conversation["prompts"]) for conversation in conversations]),
             15,
         )
 
