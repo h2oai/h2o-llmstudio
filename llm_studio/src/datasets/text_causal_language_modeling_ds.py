@@ -287,7 +287,6 @@ class CustomDataset(Dataset):
             for key, value in output.items()
             if key not in ["loss", "target", "losses"]
         }
-
         output.pop("target_text", None)
 
         # in case limit_chained_samples is True, only last answer is predicted

@@ -3,14 +3,16 @@ import math
 import os
 from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Union, no_type_check
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 import torch
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GroupShuffleSplit, train_test_split
 from torch import distributed as dist
 from torch.utils.data import DataLoader, Sampler, SequentialSampler
 
+from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
 from llm_studio.src.utils.exceptions import LLMDataException
 from llm_studio.src.utils.utils import set_seed
 
@@ -215,26 +217,7 @@ def get_data(cfg: Any) -> Tuple[pd.DataFrame, pd.DataFrame]:
         Train and validation DataFrames
     """
 
-    if cfg.dataset.validation_strategy == "custom":
-        if cfg.dataset.validation_dataframe == "None":
-            raise LLMDataException(
-                "No validation dataframe provided. "
-                "Please provide a validation dataframe or "
-                "choose a different validation strategy."
-            )
-        train_df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
-        val_df = read_dataframe_drop_missing_labels(
-            cfg.dataset.validation_dataframe, cfg
-        )
-    elif cfg.dataset.validation_strategy == "automatic":
-        if cfg.environment._local_rank == 0:
-            logger.info("Setting up automatic validation split...")
-        df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
-        train_df, val_df = train_test_split(
-            df, test_size=cfg.dataset.validation_size, random_state=1337
-        )
-    else:
-        raise LLMDataException("No valid validation strategy provided.")
+    train_df, val_df = load_train_valid_data(cfg)
 
     if cfg.dataset.data_sample < 1.0:
         if "Train" in cfg.dataset.data_sample_choice:
@@ -253,6 +236,80 @@ def get_data(cfg: Any) -> Tuple[pd.DataFrame, pd.DataFrame]:
     )
 
     return train_df.reset_index(drop=True), val_df.reset_index(drop=True)
+
+
+def merge_on_common_items(lst):
+    G = nx.Graph()
+    for sublst in lst:
+        for item in sublst:
+            G.add_edge(sublst[0], item)
+    return [list(c) for c in nx.connected_components(G)]
+
+
+def load_train_valid_data(cfg) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    if cfg.dataset.validation_strategy == "custom":
+        if cfg.dataset.validation_dataframe == "None":
+            raise LLMDataException(
+                "No validation dataframe provided. "
+                "Please provide a validation dataframe or "
+                "choose a different validation strategy."
+            )
+        train_df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
+        val_df = read_dataframe_drop_missing_labels(
+            cfg.dataset.validation_dataframe, cfg
+        )
+    elif cfg.dataset.validation_strategy == "automatic":
+        if cfg.environment._local_rank == 0:
+            logger.info("Setting up automatic validation split...")
+        df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
+        if cfg.dataset.parent_id_column != "None" and "id" in df.columns:
+            # split based on conversation_chain_ids
+            # this ensures that all samples from the
+            # same conversation are in the same fold
+            limit_chained_samples = cfg.dataset.limit_chained_samples
+            cfg.dataset.limit_chained_samples = True
+            conversation_chain_ids = ConversationChainHandler(
+                df=df, cfg=cfg
+            ).conversation_chain_ids
+            cfg.dataset.limit_chained_samples = limit_chained_samples
+            # Some conversations may have the same parent id, e.g. for OASST
+            # 6aa548c6-65ad-4531-9411-76173ae060a3 and
+            # 2a164c2a-4f0e-45aa-8990-e7dd3b51c06b
+            # have the same parent a8df94e3-cfc7-4736-9587-0ec943d0fec3
+            # We need to merge those into a single group
+            conversation_chain_ids = merge_on_common_items(conversation_chain_ids)
+            conversation_chain_labels = [
+                i
+                for i, conversation_chain_id in enumerate(conversation_chain_ids)
+                for _ in conversation_chain_id
+            ]
+            group_shuffle_split = GroupShuffleSplit(
+                test_size=cfg.dataset.validation_size, n_splits=1, random_state=1337
+            )
+            train_idx, val_idx = next(
+                group_shuffle_split.split(df, groups=conversation_chain_labels)
+            )
+            # flatten conversation_chain_ids
+            flattened_conversation_chain_ids = np.array(
+                [
+                    idx
+                    for conversation_chain_id in conversation_chain_ids
+                    for idx in conversation_chain_id
+                ]
+            )
+            train_df = df.iloc[flattened_conversation_chain_ids[train_idx]].reset_index(
+                drop=True
+            )
+            val_df = df.iloc[flattened_conversation_chain_ids[val_idx]].reset_index(
+                drop=True
+            )
+        else:
+            train_df, val_df = train_test_split(
+                df, test_size=cfg.dataset.validation_size, random_state=1337
+            )
+    else:
+        raise LLMDataException("No valid validation strategy provided.")
+    return train_df, val_df
 
 
 def worker_init_fn(worker_id: int) -> None:
