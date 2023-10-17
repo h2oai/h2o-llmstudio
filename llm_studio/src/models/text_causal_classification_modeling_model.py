@@ -35,7 +35,7 @@ class Model(nn.Module):
         if cfg.training.lora:
             self.backbone = prepare_lora(cfg, self.backbone)
 
-        self.head = nn.Linear(
+        self.classification_head = nn.Linear(
             self.backbone_config.vocab_size, cfg.dataset.num_classes, bias=False
         )
 
@@ -79,7 +79,7 @@ class Model(nn.Module):
             attention_mask=batch["prompt_attention_mask"],
         )
 
-        output.logits = self.head(output[0][:, -1].float())
+        output.logits = self.classification_head(output[0][:, -1].float())
 
         if "labels" in batch:
             loss = self.loss_fn(

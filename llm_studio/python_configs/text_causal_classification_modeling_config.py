@@ -122,6 +122,16 @@ class ConfigNLPCausalClassificationPrediction(ConfigNLPCausalLMPrediction):
 
 
 @dataclass
+class ConfigNLPCausalClassificationEnvironment(ConfigNLPCausalLMEnvironment):
+    _model_card_template: str = "text_causal_classification_model_card_template.md"
+    _summary_card_template: str = (
+        "text_causal_classification_experiment_summary_card_template.md"
+    )
+
+    def __post_init__(self):
+        super().__post_init__()
+
+@dataclass
 class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
@@ -145,8 +155,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     prediction: ConfigNLPCausalClassificationPrediction = field(
         default_factory=ConfigNLPCausalClassificationPrediction
     )
-    environment: ConfigNLPCausalLMEnvironment = field(
-        default_factory=ConfigNLPCausalLMEnvironment
+    environment: ConfigNLPCausalClassificationEnvironment = field(
+        default_factory=ConfigNLPCausalClassificationEnvironment
     )
     logging: ConfigNLPCausalLMLogging = field(default_factory=ConfigNLPCausalLMLogging)
 
