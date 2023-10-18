@@ -493,7 +493,8 @@ def update_backbone_config(config: Any, cfg: Any):
         and cfg.architecture.intermediate_dropout > 0
     ):
         raise logger.warning(
-            "Model config does not have dropout attributes. Ignoring this setting."
+            "Model config does not have dropout attributes. "
+            "Ignoring Intermediate Dropout setting."
         )
 
     tokenizer = get_tokenizer(cfg)
