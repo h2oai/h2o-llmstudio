@@ -69,7 +69,7 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             f"{get_size_str(default_cfg.min_experiment_disk_space)}. "
             "Experiment has not started. "
             "Please ensure that you have enough disk space before "
-            "starting the experiment. "
+            "starting the experiment."
         ]
 
     # see create_nlp_backbone
@@ -80,22 +80,22 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
         errors["title"] += ["Quantization without pretrained weights."]
         errors["message"] += [
             "Quantization is only supported for pretrained models. "
-            "Please enable pretrained model or disable quantization. "
+            "Please enable pretrained model or disable quantization."
         ]
 
     if not cfg.training.lora and cfg.architecture.backbone_dtype != "float32":
         if cfg.environment.mixed_precision:
             errors["title"] += ["Mixed precision disabled."]
             errors["message"] += [
-                "Mixed precision is disabled as dtype is not set to float32. "
-                "Please enable mixed precision or set dtype to float32. "
+                "When not using LORA, please ensure that mixed precision is disabled "
+                "or set dtype to float32."
             ]
         if cfg.architecture.backbone_dtype != "bfloat16":
             errors["title"] += ["Pure float16 or int8 training."]
             errors["message"] += [
-                "Pure float16 or int8 training will "
-                "likely lead to unstable training without adapters. "
-                "Please use adapters or set dtype to float32. "
+                "When not using LORA, pure float16 or int8 training will "
+                "likely lead to unstable training. "
+                "Please use LORA or set dtype to float32."
             ]
 
     return errors
