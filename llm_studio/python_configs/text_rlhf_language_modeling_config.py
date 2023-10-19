@@ -178,7 +178,6 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     _parent_experiment: str = ""
     llm_backbone: str = "h2oai/h2ogpt-4096-llama2-7b-chat"
     reward_model: str = "OpenAssistant/reward-model-deberta-v3-large-v2"
-    type: str = "rlhf"
 
     dataset: ConfigRLHFLMDataset = field(default_factory=ConfigRLHFLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(

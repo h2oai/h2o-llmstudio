@@ -16,20 +16,9 @@ def accuracy_score(
     val_df: pd.DataFrame,
     raw_results: bool = False,
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
-    if cfg.dataset.num_classes == 1:
-        logits = results["logits"]
-        logits = np.array((logits > 0.0)).astype(int).reshape(-1)
-        target_text = np.array([int(text) for text in results["target_text"]])
-        correct_predictions = (logits == target_text).sum()
-        total_predictions = len(logits)
-        return correct_predictions / total_predictions
-    else:
-        logits = results["logits"]
-        logits = np.array(torch.argmax(logits, dim=1)).astype(int).reshape(-1)
-        target_text = np.array([int(text) for text in results["target_text"]])
-        correct_predictions = (logits == target_text).sum()
-        total_predictions = len(logits)
-        return correct_predictions / total_predictions
+    predicted_text = np.array([int(text) for text in results["predicted_text"]])
+    target_text = np.array([int(text) for text in results["target_text"]])
+    return (predicted_text == target_text).astype("float")
 
 
 def auc_score(

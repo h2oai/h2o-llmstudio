@@ -125,7 +125,7 @@ def publish_model_to_hugging_face(
     api = huggingface_hub.HfApi()
 
     # push classification head to hub
-    if cfg.type == "causal_classification":
+    if cfg.problem_type == "text_causal_classification_modeling":
         api.upload_file(
             path_or_fileobj=f"{path_to_experiment}/classification_head.pth",
             path_in_repo="classification_head.pth",

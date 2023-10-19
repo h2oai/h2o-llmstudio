@@ -74,7 +74,6 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
     llm_backbone: str = "t5-small"
-    type: str = "seq2seq"
 
     dataset: ConfigNLPSeq2SeqDataset = field(default_factory=ConfigNLPSeq2SeqDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(

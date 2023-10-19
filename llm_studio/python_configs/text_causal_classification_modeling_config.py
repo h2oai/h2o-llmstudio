@@ -138,7 +138,6 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
     llm_backbone: str = "h2oai/h2ogpt-4096-llama2-7b"
-    type: str = "causal_classification"
 
     dataset: ConfigNLPCausalClassificationDataset = field(
         default_factory=ConfigNLPCausalClassificationDataset
