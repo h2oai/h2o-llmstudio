@@ -85,17 +85,19 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
 
     if not cfg.training.lora and cfg.architecture.backbone_dtype != "float32":
         if cfg.environment.mixed_precision:
-            errors["title"] += ["Mixed precision disabled."]
+            errors["title"] += ["Mixed precision not supported."]
             errors["message"] += [
-                "When not using LORA, please ensure that mixed precision is disabled "
-                "or set dtype to float32."
+                "When not using LORA, "
+                "mixed precision training will likely lead to unstable training. "
+                "Please ensure that mixed precision is disabled "
+                "or set Backbone Dtype to float32."
             ]
         if cfg.architecture.backbone_dtype != "bfloat16":
             errors["title"] += ["Pure float16 or int8 training."]
             errors["message"] += [
-                "When not using LORA, pure float16 or int8 training will "
+                f"When not using LORA, {cfg.architecture.backbone_dtype} training will "
                 "likely lead to unstable training. "
-                "Please use LORA or set dtype to float32."
+                "Please use LORA or set Backbone Dtype to float32."
             ]
 
     return errors

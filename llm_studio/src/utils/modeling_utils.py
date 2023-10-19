@@ -492,10 +492,11 @@ def update_backbone_config(config: Any, cfg: Any):
         and not hasattr(config, "attention_probs_dropout_prob")
         and cfg.architecture.intermediate_dropout > 0
     ):
-        raise logger.warning(
+        logger.warning(
             "Model config does not have dropout attributes. "
-            "Ignoring Intermediate Dropout setting."
+            f"Ignoring Intermediate Dropout = {cfg.architecture.intermediate_dropout}."
         )
+        cfg.architecture.intermediate_dropout = 0
 
     tokenizer = get_tokenizer(cfg)
 
