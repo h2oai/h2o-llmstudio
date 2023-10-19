@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import torch
 from numpy.typing import NDArray
 from sklearn.metrics import roc_auc_score
 
