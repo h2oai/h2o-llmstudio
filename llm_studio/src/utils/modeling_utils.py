@@ -19,7 +19,6 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
     MixedPrecision,
 )
 from torch.nn.parallel import DistributedDataParallel
-from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
 from transformers import (
     AutoConfig,
@@ -296,7 +295,7 @@ def wrap_model_distributed(
                 val_dataloader.dataset,
                 num_replicas=cfg.environment._world_size,
                 rank=cfg.environment._local_rank,
-            )
+            ),
         )
     else:
         find_unused_parameters = cfg.environment.find_unused_parameters
