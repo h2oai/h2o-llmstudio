@@ -972,9 +972,7 @@ def run(cfg: Any) -> None:
         save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
     if cfg.environment._local_rank == 0:
-
         save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
-
         save_prediction_outputs(cfg.experiment_name, experiment_path)
 
         flag_path = os.path.join(cfg.output_directory, "flags.json")
