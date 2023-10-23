@@ -99,6 +99,12 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
     if path is not None:
         torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
 
+    if cfg.problem_type == "text_causal_classification_modeling":
+        torch.save(
+            checkpoint["model"]["classification_head.weight"],
+            os.path.join(path, "classification_head.pth"),
+        )
+
 
 def load_model_weights(
     model: torch.nn.Module, model_weights: Dict, strict: bool, cfg: Any
@@ -419,7 +425,10 @@ def run_inference(
 
         with autocast(enabled=cfg.environment.mixed_precision):
             output = model.forward(batch)
-            if cfg.prediction.metric != "Perplexity":
+            if (
+                cfg.prediction.metric != "Perplexity"
+                and cfg.problem_type != "text_causal_classification_modeling"
+            ):
                 output["predicted_answer_ids"] = (
                     unwrap_model(model).generate(batch, cfg).detach().cpu()
                 )
