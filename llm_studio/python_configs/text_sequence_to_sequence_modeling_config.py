@@ -42,7 +42,6 @@ class ConfigNLPSeq2SeqDataset(ConfigNLPCausalLMDataset):
 
         self._visibility["limit_chained_samples"] = -1
         self._visibility["mask_prompt_labels"] = -1
-        self._visibility["dataset_class"] = -1
 
 
 @dataclass
