@@ -114,36 +114,41 @@ def start_process(
     env = {**os.environ, **env_vars}
 
     if num_gpus == 0:
-        p = subprocess.Popen(
-            [
-                "python",
+        cmd = [
+            "python",
+            "train_wave.py",
+            "-Y",
+            config_name,
+        ]
+    # Do not delete for debug purposes
+    # elif num_gpus == 1:
+    #     cmd = [
+    #         "env",
+    #         f"CUDA_VISIBLE_DEVICES={','.join(gpu_list)}",
+    #         "python",
+    #         "-u",
+    #         "train_wave.py",
+    #         "-P",
+    #         config_name,
+    #     ]
+    else:
+        free_port = find_free_port()
+        if cfg.environment.use_deepspeed:
+            logger.info("Starting deepspeed...")
+            cmd = [
+                "env",
+                "deepspeed",
+                "--include",
+                f"localhost:{','.join(gpu_list)}",
+                "--master_port",
+                f"{str(free_port)}",
                 "train_wave.py",
                 "-Y",
                 config_name,
-                "-Q",
-                ",".join([str(x) for x in process_queue]),
-            ],
-            env=env,
-        )
-    # Do not delete for debug purposes
-    # elif num_gpus == 1:
-    #     p = subprocess.Popen(
-    #         [
-    #             "env",
-    #             f"CUDA_VISIBLE_DEVICES={','.join(gpu_list)}",
-    #             "python",
-    #             "-u",
-    #             "train_wave.py",
-    #             "-P",
-    #             config_name,
-    #             "-Q",
-    #             ",".join([str(x) for x in process_queue]),
-    #         ]
-    #     )
-    else:
-        free_port = find_free_port()
-        p = subprocess.Popen(
-            [
+            ]
+        else:
+            logger.info("Starting torchrun...")
+            cmd = [
                 "env",
                 f"CUDA_VISIBLE_DEVICES={','.join(gpu_list)}",
                 "torchrun",
@@ -152,11 +157,17 @@ def start_process(
                 "train_wave.py",
                 "-Y",
                 config_name,
-                "-Q",
-                ",".join([str(x) for x in process_queue]),
-            ],
-            env=env,
-        )
+            ]
+
+    if len(process_queue) > 0:
+        cmd.append("-Q")
+        cmd.append(",".join([str(x) for x in process_queue]))
+
+    p = subprocess.Popen(
+        cmd,
+        env=env,
+    )
+
     logger.info(f"Percentage of RAM memory used: {psutil.virtual_memory().percent}")
 
     return p
