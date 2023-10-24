@@ -98,7 +98,7 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
     if cfg.environment.use_deepspeed:
         if path is not None:
             # gather model params from all ranks
-            model.save_checkpoint(os.path.join(path, "ds_checkpoint"))
+            model.save_checkpoint(os.path.join(path, "ds_checkpoint"))  # type: ignore[operator] # noqa: E501
             if cfg.environment._local_rank == 0:
                 # load to cpu
                 state_dict = get_fp32_state_dict_from_zero_checkpoint(
