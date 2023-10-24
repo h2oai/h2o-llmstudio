@@ -296,7 +296,7 @@ def run_train(
                     optimizer.zero_grad(set_to_none=True)
             else:
                 if cfg.environment.use_deepspeed:
-                    model.backward(loss)
+                    model.backward(loss)  # type: ignore[operator]
                 else:
                     loss.backward()
                 if itr % cfg.training.grad_accumulation == 0:
