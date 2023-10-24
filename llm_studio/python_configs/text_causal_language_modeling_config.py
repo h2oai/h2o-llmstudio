@@ -1,7 +1,7 @@
 import multiprocessing
 import os
 from dataclasses import dataclass, field
-from typing import Any, Tuple
+from typing import Any, Dict, List, Tuple
 
 import torch
 
@@ -292,7 +292,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
 
     do_sample: bool = False
     num_beams: int = 1
-    temperature: float = 0.3
+    temperature: float = 0.0
     repetition_penalty: float = 1.2
     stop_tokens: str = ""
     top_k: int = 0
@@ -488,3 +488,12 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             ),
             allow_custom=True,
         )
+
+    def check(self) -> Dict[str, List]:
+        errors: Dict[str, List] = {"title": [], "message": []}
+        if self.prediction.temperature > 0 and not self.prediction.do_sample:
+            errors["title"] += ["Do sample needs to be enabled for temperature > 0"]
+            errors["message"] += [
+                "Please enable do sample if you want to use temperature > 0."
+            ]
+        return errors
