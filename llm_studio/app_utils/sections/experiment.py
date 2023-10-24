@@ -1408,7 +1408,7 @@ async def charts_tab(q, charts_list, legend_labels):
                         ]
                     )
                     color = "=type"
-                    fields = ["step", "type", k2]
+                    fields = ["step", "type", "value"]
 
                 elif len(charts_list) > 1:
                     rows.extend(
