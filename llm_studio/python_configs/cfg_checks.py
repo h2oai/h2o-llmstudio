@@ -123,7 +123,7 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             + " Please set backbone type to float16 or bfloat16 for using deepspeed."
         )
     if cfg.environment.use_deepspeed and len(cfg.environment.gpus) < 2:
-        errors["title"] += ["Deepspeed does not support single GPU"]
+        errors["title"] += ["Deepspeed not supported for single GPU."]
         errors["message"] += [
             "Deepspeed does not support single GPU training. "
             "Please select more than one GPU or disable deepspeed."
