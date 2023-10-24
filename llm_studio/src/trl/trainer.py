@@ -684,7 +684,7 @@ class PPOTrainer(PyTorchModelHubMixin):
 
     def _kl_penalty(
         self, logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor
-    ) -> torch.FloatTensor:
+    ) -> torch.Tensor:
         if self.cfg.training.full_kl_penalty:
             # Flip is required due to this issue?
             # https://github.com/pytorch/pytorch/issues/57459
@@ -695,7 +695,7 @@ class PPOTrainer(PyTorchModelHubMixin):
             return logprob - ref_logprob
 
     def compute_advantages(
-        self: torch.FloatTensor,
+        self,
         values: torch.FloatTensor,
         rewards: torch.FloatTensor,
         mask: torch.FloatTensor,
@@ -721,7 +721,7 @@ class PPOTrainer(PyTorchModelHubMixin):
                 * lastgaelam
             )
             advantages_reversed.append(lastgaelam)
-        advantages = torch.stack(advantages_reversed[::-1]).transpose(0, 1)
+        advantages = torch.stack(advantages_reversed[::-1]).transpose()  # type: ignore
 
         returns = advantages + values
         advantages = masked_whiten(advantages, mask)

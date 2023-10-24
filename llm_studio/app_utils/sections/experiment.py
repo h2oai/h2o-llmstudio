@@ -44,6 +44,7 @@ from llm_studio.app_utils.utils import (
     start_experiment,
 )
 from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
+from llm_studio.python_configs.cfg_checks import check_config_for_errors
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
@@ -58,7 +59,6 @@ from llm_studio.src.utils.export_utils import (
     get_logs_path,
     get_model_path,
     get_predictions_path,
-    get_size_str,
     save_logs,
     save_prediction_outputs,
 )
@@ -499,30 +499,22 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
     cfg = parse_ui_elements(cfg=cfg, q=q, pre=f"{pre}/cfg/")
     cfg.experiment_name = cfg.experiment_name.replace("/", "-")
 
-    stats = os.statvfs(".")
-    available_size = stats.f_frsize * stats.f_bavail
-
-    # flag whether to list current experiments after this function
-    list_current_experiments = True
-    if available_size < default_cfg.min_experiment_disk_space:
-        entity = "Experiment" if pre == "experiment/start" else "Prediction"
-        q.client["experiment_halt_reason"] = (
-            f"Not enough disk space. Available space is {get_size_str(available_size)}."
-            f" Required space is "
-            f"{get_size_str(default_cfg.min_experiment_disk_space)}. "
-            f"{entity} has not started."
+    experiment_started = True
+    errors = check_config_for_errors(cfg)
+    if errors["title"]:
+        title = (
+            errors["title"][0]
+            if len(errors["title"]) == 1
+            else "The following configuration mismatches were found:"
         )
-        logger.error(q.client["experiment_halt_reason"])
-        return list_current_experiments
-
-    if len(cfg.environment.gpus) == 0:
+        error_text = [ui.text(message) for message in errors["message"]]
         q.page["meta"].dialog = ui.dialog(
-            title="No GPU selected.",
-            name="no_gpu_selected_dialog",
-            items=[
-                ui.text("Please select at least one GPU to start the experiment!"),
+            title=title,
+            name="experiment/start/error/dialog",
+            items=error_text
+            + [
                 ui.button(
-                    name="experiment/start/no_gpu_selected_dialog/ok",
+                    name="experiment/start/error/ok",
                     label="OK",
                     primary=True,
                 ),
@@ -531,10 +523,10 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
         )
         q.client["keep_meta"] = True
         await q.page.save()
-        return not list_current_experiments
+        return not experiment_started
 
     start_experiment(cfg=cfg, q=q, pre=pre)
-    return list_current_experiments
+    return experiment_started
 
 
 def get_experiment_table(
@@ -1416,7 +1408,7 @@ async def charts_tab(q, charts_list, legend_labels):
                         ]
                     )
                     color = "=type"
-                    fields = ["step", "type", k2]
+                    fields = ["step", "type", "value"]
 
                 elif len(charts_list) > 1:
                     rows.extend(
@@ -1680,7 +1672,9 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         num_running_queued = len(
             experiments[experiments["status"].isin(["queued", "running"])]
         )
-        if num_running_queued > 0:
+        experiment_path = q.client["experiment/display/experiment_path"]
+        cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
+        if num_running_queued > 0 or cfg.environment.use_deepspeed:
             default_device = "cpu"
 
         try:
