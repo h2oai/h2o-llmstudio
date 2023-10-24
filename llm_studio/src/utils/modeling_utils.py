@@ -591,8 +591,20 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
 
 
 def update_backbone_config(config: Any, cfg: Any):
-    config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
-    config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
+    if hasattr(config, "hidden_dropout_prob"):
+        config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
+    if hasattr(config, "attention_probs_dropout_prob"):
+        config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
+    if (
+        not hasattr(config, "hidden_dropout_prob")
+        and not hasattr(config, "attention_probs_dropout_prob")
+        and cfg.architecture.intermediate_dropout > 0
+    ):
+        logger.warning(
+            "Model config does not have dropout attributes. "
+            f"Ignoring Intermediate Dropout = {cfg.architecture.intermediate_dropout}."
+        )
+        cfg.architecture.intermediate_dropout = 0
 
     tokenizer = get_tokenizer(cfg)
 
