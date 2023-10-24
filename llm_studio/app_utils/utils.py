@@ -212,7 +212,7 @@ def s3_session(aws_access_key: str, aws_secret_key: str) -> Any:
     return s3
 
 
-def filter_valid_files(files):
+def filter_valid_files(files) -> List[str]:
     valid_files = [
         file
         for file in files
@@ -435,11 +435,9 @@ def azure_file_options(conn_string: str, container: str) -> List[str]:
         )
 
         files = file_system_client.get_paths(path=folder)
-        files = next(files.by_page())
-        files = [x.name for x in files]
-
-        files = filter_valid_files(files)
-        return files
+        files = next(files.by_page())  # type: ignore[arg-type]
+        files = [x.name for x in files]  # type: ignore[assignment]
+        return filter_valid_files(files)
 
     except Exception as e:
         logger.warning(f"Can't load Azure datasets list: {e}")
@@ -519,7 +517,10 @@ async def azure_download(
             seen_so_far += len(block)
 
             await download_progress(
-                q, "Azure Datalake file download in progress", seen_so_far, len(blocks)
+                q,
+                "Azure Datalake file download in progress",
+                seen_so_far,
+                len(blocks),  # type: ignore[arg-type]
             )
 
     extract_if_zip(file, azure_path)

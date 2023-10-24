@@ -122,8 +122,19 @@ def publish_model_to_hugging_face(
         repo_id=repo_id, repo_type="model", commit_message="Upload model card"
     )
 
-    # push config to hub
     api = huggingface_hub.HfApi()
+
+    # push classification head to hub
+    if cfg.problem_type == "text_causal_classification_modeling":
+        api.upload_file(
+            path_or_fileobj=f"{path_to_experiment}/classification_head.pth",
+            path_in_repo="classification_head.pth",
+            repo_id=repo_id,
+            repo_type="model",
+            commit_message="Upload classification_head.pth",
+        )
+
+    # push config to hub
     api.upload_file(
         path_or_fileobj=os.path.join(path_to_experiment, "cfg.yaml"),
         path_in_repo="cfg.yaml",
