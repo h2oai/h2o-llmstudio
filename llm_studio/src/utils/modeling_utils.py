@@ -688,6 +688,11 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
 
     if cfg.architecture.pretrained:
+        if cfg.environment._local_rank == 0:
+            logger.info(
+                "Initializing model with pretrained weights. "
+                "Model will be downloaded if not cached. This may take a while."
+            )
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
             revision=cfg.environment.huggingface_branch,

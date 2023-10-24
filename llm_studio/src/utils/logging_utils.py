@@ -5,6 +5,8 @@ import os
 import re
 from typing import Any, Optional
 
+from transformers import logging as transformers_logging
+
 from llm_studio.src.utils.plot_utils import PlotData
 
 logger = logging.getLogger(__name__)
@@ -33,6 +35,9 @@ def initialize_logging(cfg: Optional[Any] = None, actual_logger=None):
     console_handler.setFormatter(formatter)
     console_handler.addFilter(IgnorePatchRequestsFilter())
     actual_logger.addHandler(console_handler)
+
+    transformers_logging.set_verbosity_info()
+    transformers_logging.enable_propagation()
 
     if cfg is not None:
         logs_dir = f"{cfg.output_directory}/"
