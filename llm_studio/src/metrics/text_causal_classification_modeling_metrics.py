@@ -4,7 +4,8 @@ from typing import Any, Dict, List, Tuple, Union
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
-from sklearn.metrics import roc_auc_score
+from scipy.special import softmax
+from sklearn.metrics import roc_auc_score, log_loss
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +27,25 @@ def auc_score(
     val_df: pd.DataFrame,
     raw_results: bool = False,
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
-    logits = results["logits"]
+    logits = np.array(results["logits"])
     target_text = np.array([int(text) for text in results["target_text"]])
     if cfg.dataset.num_classes > 1:
         target_text = np.eye(cfg.dataset.num_classes)[target_text]
     return roc_auc_score(target_text, logits, multi_class="ovr")
+
+
+def logloss_score(
+    cfg: Any,
+    results: Dict,
+    val_df: pd.DataFrame,
+    raw_results: bool = False,
+) -> Union[NDArray, Tuple[NDArray, List[str]]]:
+    logits = np.array(results["logits"])
+    target_text = np.array([int(text) for text in results["target_text"]])
+    if cfg.dataset.num_classes > 1:
+        target_text = np.eye(cfg.dataset.num_classes)[target_text]
+        logits = softmax(logits, axis=1)
+    return log_loss(target_text, logits, eps=1e-7)
 
 
 class Metrics:
@@ -47,6 +62,7 @@ class Metrics:
     _metrics = {
         "AUC": (auc_score, "max", "mean"),
         "Accuracy": (accuracy_score, "max", "mean"),
+        "LogLoss": (logloss_score, "max", "mean"),
     }
 
     @classmethod
