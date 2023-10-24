@@ -360,9 +360,7 @@ def run_train(
                     checkpoint_path = cfg.output_directory
                     if cfg.environment._local_rank == 0:
                         logger.info(
-                            f"Saving last model checkpoint: "
-                            f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
-                            f"{val_metric:.5} to {checkpoint_path}"
+                            f"Saving last model checkpoint to {checkpoint_path}"
                         )
                     save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
