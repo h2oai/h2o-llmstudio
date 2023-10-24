@@ -100,4 +100,32 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
                 "Please use LORA or set Backbone Dtype to float32."
             ]
 
+    # deepspeed related checks
+    if cfg.environment.use_deepspeed and cfg.environment.use_fsdp:
+        errors["title"] += ["Deepspeed and FSDP cannot be used at the same time."]
+        errors["message"] += [
+            "Deepspeed and FSDP are mutually exclusive. "
+            "We recommend to disable FSDP which will be deprecated."
+        ]
+    if cfg.environment.use_deepspeed and cfg.architecture.backbone_dtype in [
+        "int8",
+        "int4",
+    ]:
+        errors["title"] += ["Deepspeed does not support quantization."]
+        errors["message"] += [
+            "Deepspeed do not support backbone type "
+            f"{cfg.architecture.backbone_dtype}. "
+            "Please set backbone type to float16 or bfloat16 for using deepspeed."
+        ]
+
+        raise ValueError(
+            f"Deepspeed do not support backbone type {cfg.architecture.backbone_dtype}."
+            + " Please set backbone type to float16 or bfloat16 for using deepspeed."
+        )
+    if cfg.environment.use_deepspeed and len(cfg.environment.gpus) < 2:
+        errors["title"] += ["Deepspeed does not support single GPU"]
+        errors["message"] += [
+            "Deepspeed does not support single GPU training. "
+            "Please select more than one GPU or disable deepspeed."
+        ]
     return errors

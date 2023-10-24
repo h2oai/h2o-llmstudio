@@ -281,7 +281,11 @@ class CustomDataset(Dataset):
                 preds = np.array((preds > 0.0)).astype(int).astype(str).reshape(-1)
             else:
                 preds = output["logits"]
-                preds = np.array(torch.argmax(preds, dim=1)).astype(str).reshape(-1)
+                preds = (
+                    np.array(torch.argmax(preds, dim=1))  # type: ignore[arg-type]
+                    .astype(str)
+                    .reshape(-1)
+                )
             output["predicted_text"] = preds
         elif not cfg.prediction.metric == "Perplexity":
             output = self.clean_output(output, cfg)
