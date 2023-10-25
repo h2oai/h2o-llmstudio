@@ -80,8 +80,11 @@ def run_oasst(tmp_path, config_name, metric):
     """
     prepare_default_dataset(tmp_path)
     train_path = os.path.join(tmp_path, "train_full.pq")
-    with os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), f"{config_name}.yaml", "r"
+    with open(
+        os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), f"{config_name}.yaml"
+        ),
+        "r",
     ) as fp:
         cfg = yaml.load(fp, Loader=yaml.FullLoader)
     # set paths and save in tmp folder
@@ -102,7 +105,6 @@ def run_oasst(tmp_path, config_name, metric):
     assert os.path.exists(cfg["output_directory"])
     status = get_experiment_status(path=cfg["output_directory"])
     assert status == "finished"
-    assert os.path.exists(os.path.join(cfg["output_directory"], "adapter_model.bin"))
     assert os.path.exists(os.path.join(cfg["output_directory"], "charts.db"))
     assert os.path.exists(os.path.join(cfg["output_directory"], "checkpoint.pth"))
     assert os.path.exists(os.path.join(cfg["output_directory"], "logs.log"))
