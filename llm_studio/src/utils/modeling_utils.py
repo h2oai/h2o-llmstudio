@@ -115,7 +115,10 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
             if path is not None:
                 torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
 
-    if cfg.environment._local_rank == 0 and cfg.problem_type == "text_causal_classification_modeling":
+    if (
+        cfg.environment._local_rank == 0
+        and cfg.problem_type == "text_causal_classification_modeling"
+    ):
         torch.save(
             checkpoint["model"]["classification_head.weight"],
             os.path.join(path, "classification_head.pth"),
