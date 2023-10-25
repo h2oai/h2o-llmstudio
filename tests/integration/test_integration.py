@@ -54,7 +54,7 @@ def test_oasst_training_gpu(tmp_path, config_name, metric):
     run_oasst(tmp_path, config_name, metric)
 
 
-#@has_no_gpus
+@has_no_gpus
 @pytest.mark.parametrize(
     "config_name",
     [
