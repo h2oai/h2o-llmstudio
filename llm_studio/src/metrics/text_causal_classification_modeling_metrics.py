@@ -62,7 +62,7 @@ class Metrics:
     _metrics = {
         "AUC": (auc_score, "max", "mean"),
         "Accuracy": (accuracy_score, "max", "mean"),
-        "LogLoss": (logloss_score, "max", "mean"),
+        "LogLoss": (logloss_score, "min", "mean"),
     }
 
     @classmethod
