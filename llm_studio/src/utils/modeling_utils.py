@@ -115,7 +115,10 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
             if path is not None:
                 torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
 
-    if cfg.problem_type == "text_causal_classification_modeling":
+    if (
+        cfg.environment._local_rank == 0
+        and cfg.problem_type == "text_causal_classification_modeling"
+    ):
         torch.save(
             checkpoint["model"]["classification_head.weight"],
             os.path.join(path, "classification_head.pth"),
@@ -515,7 +518,10 @@ def run_inference(
         batch = cfg.dataset.dataset_class.batch_to_device(data, cfg.environment._device)
 
         if cfg.environment.use_deepspeed:
-            if cfg.prediction.metric != "Perplexity":
+            if (
+                cfg.prediction.metric != "Perplexity"
+                and cfg.problem_type != "text_causal_classification_modeling"
+            ):
                 output = {}
                 output["predicted_answer_ids"] = (
                     model.module.generate(batch, cfg).detach().cpu()  # type: ignore
@@ -524,7 +530,10 @@ def run_inference(
                 output = model.forward(batch)
         else:
             with autocast(enabled=cfg.environment.mixed_precision):
-                if cfg.prediction.metric != "Perplexity":
+                if (
+                    cfg.prediction.metric != "Perplexity"
+                    and cfg.problem_type != "text_causal_classification_modeling"
+                ):
                     output = {}
                     output["predicted_answer_ids"] = (
                         unwrap_model(model).generate(batch, cfg).detach().cpu()
