@@ -2,17 +2,14 @@ name: Style
 
 on:
   push:
-    branches: [ main ]
+    branches: [ max/cpu_tests ]
   pull_request:
 
 jobs:
+  base:
+    uses: .github/workflows/setup-dev-workflow.yml
   style:
+    needs: base
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.10.11
-      - run: make setup-dev
       - run: make style
