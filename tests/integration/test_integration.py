@@ -87,7 +87,7 @@ def run_oasst(tmp_path, config_name, metric):
     cfg["output_directory"] = os.path.join(tmp_path, "output")
     # set metric
     cfg["prediction"]["metric"] = metric
-    modifed_config_path = os.path.join(tmp_path, "cfg.yaml")
+    modifed_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), f"{config_name}.yaml")
     with open(modifed_config_path, "w") as fp:
         yaml.dump(cfg, fp)
     cmd = [
