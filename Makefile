@@ -51,8 +51,7 @@ style: reports pipenv
 	-$(PIPENV) run flake8 | tee -a reports/flake8_errors.log
 	@if [ -s reports/flake8_errors.log ]; then exit 1; fi
 
-	-$(PIPENV) run mypy . --check-untyped-defs | tee -a reports/mypy.log || echo "mypy failed" >> reports/mypy_errors.log
-	@if [ -s reports/mypy_errors.log ]; then exit 1; fi
+	-$(PIPENV) run mypy . --check-untyped-defs | tee -a reports/mypy.log
 	@if ! grep -Eq "Success: no issues found in [0-9]+ source files" reports/mypy.log ; then exit 1; fi
 
 .PHONY: format
