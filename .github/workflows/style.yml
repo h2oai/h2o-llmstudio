@@ -10,7 +10,6 @@ jobs:
   base:
     uses: .github/workflows/setup-dev-workflow.yml
   style:
-    needs: base
     runs-on: ubuntu-latest
     steps:
       - run: make style
