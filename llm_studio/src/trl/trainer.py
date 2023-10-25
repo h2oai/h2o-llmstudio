@@ -721,8 +721,7 @@ class PPOTrainer(PyTorchModelHubMixin):
                 * lastgaelam
             )
             advantages_reversed.append(lastgaelam)
-        advantages = torch.stack(advantages_reversed[::-1]).transpose(0, 1)
-
+        advantages = torch.stack(advantages_reversed[::-1]).transpose(0, 1)  # type: ignore
         returns = advantages + values
         advantages = masked_whiten(advantages, mask)
         advantages = advantages.detach()
