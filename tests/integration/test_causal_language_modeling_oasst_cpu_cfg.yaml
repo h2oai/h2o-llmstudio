@@ -30,7 +30,7 @@ dataset:
   text_answer_separator: <|answer|>
   text_prompt_start: <|prompt|>
   text_system_start: <|system|>
-  train_dataframe: /tmp/pytest-of-max/pytest-1/test_oasst_training_cpu_BLEU_t0/train_full.pq
+  train_dataframe: /tmp/train_full.pq
   validation_dataframe: None
   validation_size: 0.1
   validation_strategy: automatic
@@ -50,7 +50,7 @@ llm_backbone: MaxJeblick/llama2-0b-unit-test
 logging:
   logger: None
   neptune_project: test_org/test_project
-output_directory: /tmp/pytest-of-max/pytest-1/test_oasst_training_cpu_BLEU_t0/output
+output_directory: /tmp/output
 prediction:
   batch_size_inference: 0
   do_sample: false
