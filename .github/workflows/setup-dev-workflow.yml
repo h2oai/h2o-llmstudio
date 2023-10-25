@@ -1,9 +1,7 @@
 name: Setup Dev Workflow
 
 on:
-  push:
-    branches: [ max/cpu_tests ]
-  pull_request:
+  workflow_call:
 
 jobs:
   setup-dev:

@@ -1,6 +1,7 @@
 name: Test
 
 on:
+  workflow_call:
   push:
     branches: [ max/cpu_tests ]
   pull_request:
