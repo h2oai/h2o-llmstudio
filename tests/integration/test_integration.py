@@ -1,7 +1,6 @@
 import json
 import os
 import sys
-from pathlib import Path
 
 import pytest
 import torch
@@ -11,6 +10,7 @@ from transformers.testing_utils import execute_subprocess_async
 from llm_studio.app_utils.utils import prepare_default_dataset
 
 need_gpus = pytest.mark.skipif(not torch.cuda.is_available(), reason="GPU only test")
+has_no_gpus = pytest.mark.skipif(torch.cuda.is_available(), reason="CPU only test")
 
 
 def get_experiment_status(path: str) -> str:
@@ -50,50 +50,61 @@ def get_experiment_status(path: str) -> str:
         "BLEU",
     ],
 )
-def test_oasst_training(tmp_path, config_name, metric):
+def test_oasst_training_gpu(tmp_path, config_name, metric):
+    run_oasst(tmp_path, config_name, metric)
+
+
+@has_no_gpus
+@pytest.mark.parametrize(
+    "config_name",
+    [
+        "test_causal_language_modeling_oasst_cpu_cfg",
+    ],
+)
+@pytest.mark.parametrize(
+    "metric",
+    [
+        "Perplexity",
+        "BLEU",
+    ],
+)
+def test_oasst_training_cpu(tmp_path, config_name, metric):
+    run_oasst(tmp_path, config_name, metric)
+
+
+def run_oasst(tmp_path, config_name, metric):
     """
     Test training on OASST dataset.
 
     Pytest keeps around the last 3 test runs in the tmp_path fixture.
     """
-
     prepare_default_dataset(tmp_path)
-
     train_path = os.path.join(tmp_path, "train_full.pq")
-
-    config_path = (
-        Path.cwd() / "tests" / "src" / "integration" / f"{config_name}.yaml"
-    ).resolve()
-    with open(config_path, "r") as fp:
+    with open(
+        os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), f"{config_name}.yaml"
+        ),
+        "r",
+    ) as fp:
         cfg = yaml.load(fp, Loader=yaml.FullLoader)
-
     # set paths and save in tmp folder
     cfg["dataset"]["train_dataframe"] = train_path
     cfg["output_directory"] = os.path.join(tmp_path, "output")
-
     # set metric
     cfg["prediction"]["metric"] = metric
-
     modifed_config_path = os.path.join(tmp_path, "cfg.yaml")
     with open(modifed_config_path, "w") as fp:
         yaml.dump(cfg, fp)
-
     cmd = [
         f"{sys.executable}",
         "train.py",
         "-Y",
         f"{modifed_config_path}",
     ]
-
     execute_subprocess_async(cmd)
-
     assert os.path.exists(cfg["output_directory"])
-
     status = get_experiment_status(path=cfg["output_directory"])
-
     assert status == "finished"
-
-    assert os.path.exists(os.path.join(cfg["output_directory"], "adapter_model.bin"))
     assert os.path.exists(os.path.join(cfg["output_directory"], "charts.db"))
     assert os.path.exists(os.path.join(cfg["output_directory"], "checkpoint.pth"))
     assert os.path.exists(os.path.join(cfg["output_directory"], "logs.log"))

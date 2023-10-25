@@ -795,7 +795,13 @@ def run(cfg: Any) -> None:
         )
     else:
         cfg.environment._local_rank = 0
-        cfg.environment._device = "cuda:0"
+        cfg.environment._device = (
+            "cuda:0"
+            if (torch.cuda.is_available() and len(cfg.environment.gpus) > 0)
+            else "cpu"
+        )
+        if cfg.environment._device == "cpu":
+            logger.warning("Training on CPU. This will be slow.")
 
     set_seed(cfg.environment._seed)
     if cfg.environment._local_rank == 0:
