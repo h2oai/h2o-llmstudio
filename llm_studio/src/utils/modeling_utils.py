@@ -95,8 +95,6 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
         Dictionary with all the keys to save
     """
 
-    print("oo", cfg.environment.use_deepspeed)
-
     if cfg.environment.use_deepspeed:
         if path is not None:
             # gather model params from all ranks
