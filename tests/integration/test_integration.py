@@ -80,14 +80,16 @@ def run_oasst(tmp_path, config_name, metric):
     """
     prepare_default_dataset(tmp_path)
     train_path = os.path.join(tmp_path, "train_full.pq")
-    with open(os.path.join(os.getcwd(), f"{config_name}.yaml"), "r") as fp:
+    with os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), f"{config_name}.yaml", "r"
+    ) as fp:
         cfg = yaml.load(fp, Loader=yaml.FullLoader)
     # set paths and save in tmp folder
     cfg["dataset"]["train_dataframe"] = train_path
     cfg["output_directory"] = os.path.join(tmp_path, "output")
     # set metric
     cfg["prediction"]["metric"] = metric
-    modifed_config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), f"{config_name}.yaml")
+    modifed_config_path = os.path.join(tmp_path, "cfg.yaml")
     with open(modifed_config_path, "w") as fp:
         yaml.dump(cfg, fp)
     cmd = [
