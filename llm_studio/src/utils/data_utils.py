@@ -134,14 +134,16 @@ def read_dataframe_drop_missing_labels(path: str, cfg: Any) -> pd.DataFrame:
         input_cols = list(cfg.dataset.prompt_column)
     else:
         input_cols = [cfg.dataset.prompt_column]
-    non_missing_columns = input_cols + [cfg.dataset.answer_column]
     verbose = cfg.environment._local_rank == 0
     fill_columns = get_fill_columns(cfg)
     df = read_dataframe(
         path,
-        non_missing_columns=non_missing_columns,
+        non_missing_columns=input_cols,
         verbose=verbose,
         fill_columns=fill_columns,
+    )
+    df[input_cols + [cfg.dataset.answer_column]] = (
+        df[input_cols + [cfg.dataset.answer_column]].fillna("").astype(str)
     )
     return df
 
@@ -202,7 +204,9 @@ def sample_data(cfg: Any, df: pd.DataFrame) -> pd.DataFrame:
         df = df[df["root_id"].isin(sampled_root_ids)].reset_index(drop=True)
         del df["root_id"]
     else:
-        df = df.sample(frac=cfg.dataset.data_sample, random_state=7331, replace=False)
+        # at least 10 observations
+        n = max(10, int(len(df) * cfg.dataset.data_sample))
+        df = df.sample(n=min(n, len(df)), random_state=7331, replace=False)
 
     return df
 
