@@ -56,11 +56,12 @@ def test_oasst_training_gpu(tmp_path, config_name, metric):
     run_oasst(tmp_path, config_name, metric)
 
 
-# @has_no_gpus
+@has_no_gpus
 @pytest.mark.parametrize(
     "config_name",
     [
         "test_causal_language_modeling_oasst_cpu_cfg",
+        "test_sequence_to_sequence_modeling_oasst_cpu_cfg",
         "test_rlhf_language_modeling_oasst_cpu_cfg",
     ],
 )
