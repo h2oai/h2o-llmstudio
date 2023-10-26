@@ -20,7 +20,7 @@ def get_size(x):
         return 2**31
 
 
-version = "1.1.0-dev"
+version = "1.0.1"
 
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
