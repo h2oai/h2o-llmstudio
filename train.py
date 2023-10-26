@@ -177,7 +177,7 @@ def run_train(
         Last train batch
     """
 
-    scaler: GradScaler | ShardedGradScaler | None = None
+    scaler: GradScaler | None = None
     if cfg.environment.mixed_precision:
         scaler = GradScaler()
 
