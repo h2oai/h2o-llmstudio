@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Dict, List
 
 import llm_studio.src.models.text_rlhf_language_modeling_model
 from llm_studio.python_configs.base import DefaultConfigProblemBase
@@ -233,3 +233,33 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             after="llm_backbone",
         )
         self._visibility["output_directory"] = -1
+
+    def check(self) -> Dict[str, List]:
+        errors: Dict[str, List] = {"title": [], "message": []}
+        if not self.training.lora:
+            errors["title"] += ["LoRA must be True for RLHF"]
+            errors["message"] += [
+                "LoRA must be True for RLHF. "
+                "Please set LoRA to True or change the problem type. "
+            ]
+
+        # see CustomDataset for RLHF
+        if self.dataset.system_column != "None":
+            errors["title"] += ["RLHF is not compatible with system column."]
+            errors["message"] += [
+                "RLHF is not compatible with system column. "
+                "Please set system column to None or change the problem type. "
+            ]
+        if self.dataset.limit_chained_samples:
+            errors["title"] += ["RLHF is not compatible with limit_chained_samples."]
+            errors["message"] += [
+                "RLHF is not compatible with limit_chained_samples. "
+                "Please set limit_chained_samples to False or change the problem type. "
+            ]
+        if not self.dataset.mask_prompt_labels:
+            errors["title"] += ["RLHF is not compatible with mask_prompt_labels."]
+            errors["message"] += [
+                "RLHF is not compatible with mask_prompt_labels. "
+                "Please set mask_prompt_labels to True or change the problem type. "
+            ]
+        return errors

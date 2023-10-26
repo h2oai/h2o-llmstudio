@@ -94,7 +94,7 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
     if cfg.environment.use_deepspeed:
         if path is not None:
             # gather model params from all ranks
-            model.save_checkpoint(os.path.join(path, "ds_checkpoint"))
+            model.save_checkpoint(os.path.join(path, "ds_checkpoint"))  # type: ignore[operator] # noqa: E501
             if cfg.environment._local_rank == 0:
                 # load to cpu
                 state_dict = get_fp32_state_dict_from_zero_checkpoint(
@@ -111,7 +111,10 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
             if path is not None:
                 torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
 
-    if cfg.problem_type == "text_causal_classification_modeling":
+    if (
+        cfg.environment._local_rank == 0
+        and cfg.problem_type == "text_causal_classification_modeling"
+    ):
         torch.save(
             checkpoint["model"]["classification_head.weight"],
             os.path.join(path, "classification_head.pth"),
@@ -490,16 +493,22 @@ def run_inference(
         batch = cfg.dataset.dataset_class.batch_to_device(data, cfg.environment._device)
 
         if cfg.environment.use_deepspeed:
-            if cfg.prediction.metric != "Perplexity":
+            if (
+                cfg.prediction.metric != "Perplexity"
+                and cfg.problem_type != "text_causal_classification_modeling"
+            ):
                 output = {}
                 output["predicted_answer_ids"] = (
-                    model.module.generate(batch, cfg).detach().cpu()
+                    model.module.generate(batch, cfg).detach().cpu()  # type: ignore
                 )
             else:
                 output = model.forward(batch)
         else:
             with autocast(enabled=cfg.environment.mixed_precision):
-                if cfg.prediction.metric != "Perplexity":
+                if (
+                    cfg.prediction.metric != "Perplexity"
+                    and cfg.problem_type != "text_causal_classification_modeling"
+                ):
                     output = {}
                     output["predicted_answer_ids"] = (
                         unwrap_model(model).generate(batch, cfg).detach().cpu()
@@ -566,8 +575,20 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
 
 
 def update_backbone_config(config: Any, cfg: Any):
-    config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
-    config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
+    if hasattr(config, "hidden_dropout_prob"):
+        config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
+    if hasattr(config, "attention_probs_dropout_prob"):
+        config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
+    if (
+        not hasattr(config, "hidden_dropout_prob")
+        and not hasattr(config, "attention_probs_dropout_prob")
+        and cfg.architecture.intermediate_dropout > 0
+    ):
+        logger.warning(
+            "Model config does not have dropout attributes. "
+            f"Ignoring Intermediate Dropout = {cfg.architecture.intermediate_dropout}."
+        )
+        cfg.architecture.intermediate_dropout = 0
 
     tokenizer = get_tokenizer(cfg)
 

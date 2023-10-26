@@ -28,7 +28,11 @@ def sacrebleu_score(
     for predicted_text, target_text in zip(
         results["predicted_text"], results["target_text"]
     ):
-        scores.append(metric.sentence_score(predicted_text, [target_text]).score)
+        if target_text == "":
+            score = 0.0
+        else:
+            score = metric.sentence_score(predicted_text, [target_text]).score
+        scores.append(score)
     return np.array(scores)
 
 
