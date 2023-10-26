@@ -1,7 +1,6 @@
 import json
 import os
 import sys
-from unittest import mock
 
 import numpy as np
 import pandas as pd
@@ -11,7 +10,6 @@ import yaml
 from transformers.testing_utils import execute_subprocess_async
 
 from llm_studio.app_utils.utils import prepare_default_dataset
-from llm_studio.src.models.text_reward_model import RewardModel
 
 need_gpus = pytest.mark.skipif(not torch.cuda.is_available(), reason="GPU only test")
 has_no_gpus = pytest.mark.skipif(torch.cuda.is_available(), reason="CPU only test")
