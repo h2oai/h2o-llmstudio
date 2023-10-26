@@ -129,7 +129,7 @@ class RewardModel(nn.Module):
     ):
         scores = []
         for prompt, answer in zip(prompts, answers):
-            if self.model_name == "OpenAssistant/reward-model-deberta-v3-large-v2":
+            if "deberta-v3" in self.model_name:
                 inputs = self.tokenizer(
                     " ".join(prompt.split(TEXT_SEPARATOR)),
                     answer,
@@ -156,6 +156,10 @@ class RewardModel(nn.Module):
                 inputs = self.tokenizer(
                     input_text, return_tensors="pt", max_length=2048
                 ).to(self.device)
+            else:
+                raise ValueError(
+                    f"Reward model {self.model_name} not supported for scoring."
+                )
 
             scores.append(self.model(**inputs).logits[0].cpu().detach().item())
             del inputs

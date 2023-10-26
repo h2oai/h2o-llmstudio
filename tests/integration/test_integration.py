@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+from unittest import mock
 
 import pytest
 import torch
@@ -8,6 +9,7 @@ import yaml
 from transformers.testing_utils import execute_subprocess_async
 
 from llm_studio.app_utils.utils import prepare_default_dataset
+from llm_studio.src.models.text_reward_model import RewardModel
 
 need_gpus = pytest.mark.skipif(not torch.cuda.is_available(), reason="GPU only test")
 has_no_gpus = pytest.mark.skipif(torch.cuda.is_available(), reason="CPU only test")
@@ -54,11 +56,12 @@ def test_oasst_training_gpu(tmp_path, config_name, metric):
     run_oasst(tmp_path, config_name, metric)
 
 
-@has_no_gpus
+# @has_no_gpus
 @pytest.mark.parametrize(
     "config_name",
     [
         "test_causal_language_modeling_oasst_cpu_cfg",
+        "test_rlhf_language_modeling_oasst_cpu_cfg",
     ],
 )
 @pytest.mark.parametrize(
