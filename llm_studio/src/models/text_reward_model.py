@@ -116,7 +116,7 @@ class RewardModel(nn.Module):
         self.device = cfg.environment._device
         self.model = AutoModelForSequenceClassification.from_pretrained(
             self.model_name,
-            torch_dtype=torch.float16,
+            torch_dtype=torch.float16 if len(cfg.environment.gpus) else torch.float32,
         ).to(self.device)
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.model_name, max_model_input_sizes=2048
