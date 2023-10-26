@@ -167,7 +167,6 @@ class ConfigRLHFLMEnvironment(ConfigNLPCausalLMEnvironment):
 
     def __post_init__(self):
         super().__post_init__()
-        self._visibility["use_fsdp"] = -1
         self._visibility["compile_model"] = -1
 
 

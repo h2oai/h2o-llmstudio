@@ -76,7 +76,6 @@ import PStopp from '../../tooltips/experiments/_top-p.mdx';
 import ESgpus from '../../tooltips/experiments/_gpus.mdx';
 import ESmixedprecision from '../../tooltips/experiments/_mixed-precision.mdx';
 import EScompilemodel from '../../tooltips/experiments/_compile-model.mdx';
-import ESusefsdp from '../../tooltips/experiments/_use-fsdp.mdx';
 import ESfindunusedparameters from '../../tooltips/experiments/_find-unused-parameters.mdx';
 import EStrustremotecode from '../../tooltips/experiments/_trust-remote-code.mdx';
 import ESnumofworkers from '../../tooltips/experiments/_number-of-workers.mdx';
@@ -429,10 +428,6 @@ The settings under each category are listed and described below.
 ### Compile model
 
 <EScompilemodel/>
-
-### Use FSDP
-
-<ESusefsdp/>
 
 ### Find unused parameters
 

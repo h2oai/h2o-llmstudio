@@ -31,7 +31,6 @@ environment:
     mixed_precision: true
     number_of_workers: 8
     seed: -1
-    use_fsdp: false
 experiment_name: test
 llm_backbone: EleutherAI/pythia-12b-deduped
 logging:

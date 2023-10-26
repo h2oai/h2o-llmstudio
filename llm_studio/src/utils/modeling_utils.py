@@ -14,10 +14,6 @@ from deepspeed.runtime.dataloader import DeepSpeedDataLoader
 from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
 from peft import LoraConfig, get_peft_model
 from torch.cuda.amp import autocast
-from torch.distributed.fsdp.fully_sharded_data_parallel import (
-    FullyShardedDataParallel,
-    MixedPrecision,
-)
 from torch.nn.parallel import DistributedDataParallel
 from tqdm import tqdm
 from transformers import (
@@ -261,28 +257,7 @@ def wrap_model_distributed(
     val_dataloader: torch.utils.data.DataLoader,
     cfg: Any,
 ):
-    if cfg.environment.use_fsdp:
-        auto_wrap_policy = None
-
-        mixed_precision_policy = None
-        dtype = None
-        if cfg.environment.mixed_precision:
-            dtype = torch.float16
-        if dtype is not None:
-            mixed_precision_policy = MixedPrecision(
-                param_dtype=dtype, reduce_dtype=dtype, buffer_dtype=dtype
-            )
-        model = FullyShardedDataParallel(
-            model,
-            # sharding_strategy=ShardingStrategy.SHARD_GRAD_OP,
-            # cpu_offload=CPUOffload(offload_params=True),
-            auto_wrap_policy=auto_wrap_policy,
-            mixed_precision=mixed_precision_policy,
-            device_id=cfg.environment._local_rank,
-            # use_orig_params=False
-            limit_all_gathers=True,
-        )
-    elif cfg.environment.use_deepspeed:
+    if cfg.environment.use_deepspeed:
         ds_config = get_ds_config(cfg)
         model, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
             model=model,
