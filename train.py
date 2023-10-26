@@ -566,7 +566,7 @@ def run_train_rlhf(
                     reward_model.to(cfg.environment._device)
                 context = (
                     autocast(enabled=cfg.environment.mixed_precision)
-                    if len(cfg.environment.gpus)
+                    if (torch.cuda.is_available() and len(cfg.environment.gpus) > 0)
                     else torch.no_grad()
                 )
                 with context:
