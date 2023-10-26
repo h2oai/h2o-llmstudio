@@ -3,6 +3,8 @@ import os
 import sys
 from unittest import mock
 
+import numpy as np
+import pandas as pd
 import pytest
 import torch
 import yaml
@@ -84,6 +86,12 @@ def run_oasst(tmp_path, config_name, metric):
     """
     prepare_default_dataset(tmp_path)
     train_path = os.path.join(tmp_path, "train_full.pq")
+    # create dummy labels for classification problem type, unused for other problem types
+    df = pd.read_parquet(train_path)
+    df["multiclass_label"] = np.random.choice(["1", "2", "3"], size=len(df))
+    df["binary_label"] = np.random.choice(["0", "1"], size=len(df))
+    df.to_parquet(train_path)
+
     with open(
         os.path.join(
             os.path.dirname(os.path.realpath(__file__)), f"{config_name}.yaml"
