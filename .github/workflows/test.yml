@@ -2,7 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [ max/more_integration_cpu_tests ]
+    branches: [ main ]
   pull_request:
 
 jobs:
