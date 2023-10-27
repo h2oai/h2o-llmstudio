@@ -78,27 +78,7 @@ class WaveChatStreamer(TextStreamer):
 
 
 async def chat_tab(q: Q, load_model=True):
-    # gpu id in UI is offset by 1 to be in sync with experiment UI
-    gpu_id = q.client["gpu_used_for_chat"] - 1
-    if gpu_is_blocked(q, gpu_id):
-        return
-
-    experiment_path = q.client["experiment/display/experiment_path"]
-    cfg: DefaultConfigProblemBase = load_config_yaml(
-        os.path.join(experiment_path, "cfg.yaml")
-    )
-    if cfg.problem_type == "text_causal_classification_modeling":
-        q.page["experiment/display/chat"] = ui.form_card(
-            box="first",
-            items=[
-                ui.text(
-                    "Chatbot is not available for text classification problems. "
-                    "Please select a text generation problem."
-                )
-            ],
-            title="",
-        )
-        q.client.delete_cards.add("experiment/display/chat")
+    if not await should_start_chat(q):
         return
 
     if load_model:
@@ -128,8 +108,9 @@ async def chat_tab(q: Q, load_model=True):
 
     if load_model:
         with set_env(HUGGINGFACE_TOKEN=q.client["default_huggingface_api_token"]):
+            gpu_id = q.client["gpu_used_for_chat"] - 1
             cfg, model, tokenizer = load_cfg_model_tokenizer(
-                experiment_path, device=f"cuda:{gpu_id}"
+                q.client["experiment/display/experiment_path"], device=f"cuda:{gpu_id}"
             )
         q.client["experiment/display/chat/cfg"] = cfg
         q.client["experiment/display/chat/model"] = model
@@ -179,6 +160,45 @@ async def chat_tab(q: Q, load_model=True):
     )
 
 
+async def should_start_chat(q: Q):
+    cfg: DefaultConfigProblemBase = load_config_yaml(
+        os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
+    )
+
+    if cfg.problem_type == "text_causal_classification_modeling":
+        q.page["experiment/display/chat"] = ui.form_card(
+            box="first",
+            items=[
+                ui.text(
+                    "Chatbot is not available for text classification problems. "
+                    "Please select a text generation problem."
+                )
+            ],
+            title="",
+        )
+        q.client.delete_cards.add("experiment/display/chat")
+        return False
+
+    # gpu id in UI is offset by 1 to be in sync with experiment UI
+    gpu_id = q.client["gpu_used_for_chat"] - 1
+    if gpu_is_blocked(q, gpu_id):
+        q.page["experiment/display/chat"] = ui.form_card(
+            box="first",
+            items=[
+                ui.text(
+                    f"""Chatbot is not available when GPU{q.client["gpu_used_for_chat"]}
+                        is blocked by another experiment.
+                        You can change "Gpu used for Chat" in the settings tab
+                        to use another GPU for the chatbot. """
+                )
+            ],
+            title="",
+        )
+        q.client.delete_cards.add("experiment/display/chat")
+        return False
+    return True
+
+
 def gpu_is_blocked(q, gpu_id):
     experiments = get_experiments(q=q)
     running_experiments = experiments[experiments.status.isin(["running"])]
@@ -190,22 +210,7 @@ def gpu_is_blocked(q, gpu_id):
             .to_list()
         ]
     )
-    if gpu_blocked:
-        q.page["experiment/display/chat"] = ui.form_card(
-            box="first",
-            items=[
-                ui.text(
-                    f"""Chatbot is not available when GPU{q.client["gpu_used_for_chat"]}
-                     is blocked by another experiment.
-                     You can change "Gpu used for Chat" in the settings tab
-                     to use another GPU for the chatbot. """
-                )
-            ],
-            title="",
-        )
-        q.client.delete_cards.add("experiment/display/chat")
-        return True
-    return False
+    return gpu_blocked
 
 
 @torch.inference_mode(mode=True)
