@@ -108,9 +108,6 @@ class CustomDataset(Dataset):
         if sample["prompt_input_ids"][0] != self.tokenizer.pad_token_id:
             sample["prompt_input_ids"][: len(system_encoding)] = system_encoding
 
-        if self.cfg.problem_type == "text_causal_classification_modeling":
-            sample["class_label"] = self.answers_int[idx]
-
         return sample
 
     @staticmethod

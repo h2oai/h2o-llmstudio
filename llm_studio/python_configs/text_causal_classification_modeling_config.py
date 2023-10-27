@@ -128,8 +128,11 @@ class ConfigNLPCausalClassificationEnvironment(ConfigNLPCausalLMEnvironment):
         super().__post_init__()
 
 
+@dataclass
 class ConfigNLPCausalClassificationLogging(ConfigNLPCausalLMLogging):
-    plots_class = llm_studio.src.plots.text_causal_classification_modeling_plots.Plots
+    plots_class: Any = (
+        llm_studio.src.plots.text_causal_classification_modeling_plots.Plots
+    )
 
 
 @dataclass

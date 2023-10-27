@@ -204,7 +204,10 @@ def create_batch_prediction_df(batch, tokenizer, ids_for_tokenized_text="input_i
     ]
     masks_list = [
         [label != -100 for label in labels]
-        for labels in batch.get("labels", batch[ids_for_tokenized_text]).detach().cpu().numpy()
+        for labels in batch.get("labels", batch[ids_for_tokenized_text])
+        .detach()
+        .cpu()
+        .numpy()
     ]
     df["Tokenized Text"] = [
         list_to_markdown_representation(

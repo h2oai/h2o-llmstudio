@@ -7,9 +7,7 @@ from llm_studio.src.plots.text_causal_language_modeling_plots import (
 from llm_studio.src.plots.text_causal_language_modeling_plots import (
     create_batch_prediction_df,
 )
-from llm_studio.src.utils.plot_utils import (
-    PlotData,
-)
+from llm_studio.src.utils.plot_utils import PlotData
 
 
 class Plots(TextCausalLanguageModelingPlots):

@@ -49,6 +49,7 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
 
     @classmethod
     def sanity_check(cls, df: pd.DataFrame, cfg: Any, mode: str = "train"):
+        # TODO: Dataset import in UI is currently using text_causal_language_modeling_ds
         # check if answer_column is of ints, only
         answers_non_int = [
             x for x in df[cfg.dataset.answer_column].values if not is_castable_to_int(x)
