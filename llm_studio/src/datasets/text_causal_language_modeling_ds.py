@@ -10,7 +10,6 @@ from torch.utils.data import Dataset
 
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
 from llm_studio.src.datasets.text_utils import TEXT_SEPARATOR, get_tokenizer
-from llm_studio.src.utils.exceptions import LLMDataException
 
 logger = logging.getLogger(__name__)
 
@@ -31,22 +30,6 @@ class CustomDataset(Dataset):
 
         self.tokenizer = get_tokenizer(self.cfg)
         self.conversation_chain_handler = ConversationChainHandler(self.df, cfg)
-
-        if cfg.problem_type == "text_causal_classification_modeling":
-            self.answers_int = df[cfg.dataset.answer_column].astype(int).values.tolist()
-            if (
-                cfg.dataset.num_classes > 1
-                and max(self.answers_int) >= cfg.dataset.num_classes
-            ):
-                raise LLMDataException(
-                    "Number of classes is smaller than max label "
-                    f"{max(self.answers_int)}. Please increase the setting accordingly."
-                )
-            elif cfg.dataset.num_classes == 1 and max(self.answers_int) > 1:
-                raise LLMDataException(
-                    "For binary classification, max label should be 1 but is "
-                    f"{max(self.answers_int)}."
-                )
 
     def __len__(self) -> int:
         return len(self.conversation_chain_handler)
@@ -275,19 +258,7 @@ class CustomDataset(Dataset):
         return output
 
     def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
-        if cfg.problem_type == "text_causal_classification_modeling":
-            if cfg.dataset.num_classes == 1:
-                preds = output["logits"]
-                preds = np.array((preds > 0.0)).astype(int).astype(str).reshape(-1)
-            else:
-                preds = output["logits"]
-                preds = (
-                    np.array(torch.argmax(preds, dim=1))  # type: ignore[arg-type]
-                    .astype(str)
-                    .reshape(-1)
-                )
-            output["predicted_text"] = preds
-        elif not cfg.prediction.metric == "Perplexity":
+        if not cfg.prediction.metric == "Perplexity":
             output = self.clean_output(output, cfg)
 
         output["target_text"] = self.conversation_chain_handler.answers

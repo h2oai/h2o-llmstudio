@@ -20,6 +20,7 @@ from llm_studio.app_utils.utils import (
     parse_ui_elements,
     set_env,
 )
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.models.text_causal_language_modeling_model import Model
 from llm_studio.src.utils.config_utils import load_config_yaml
@@ -82,6 +83,24 @@ async def chat_tab(q: Q, load_model=True):
     if gpu_is_blocked(q, gpu_id):
         return
 
+    experiment_path = q.client["experiment/display/experiment_path"]
+    cfg: DefaultConfigProblemBase = load_config_yaml(
+        os.path.join(experiment_path, "cfg.yaml")
+    )
+    if cfg.problem_type == "text_causal_classification_modeling":
+        q.page["experiment/display/chat"] = ui.form_card(
+            box="first",
+            items=[
+                ui.text(
+                    "Chatbot is not available for text classification problems. "
+                    "Please select a text generation problem."
+                )
+            ],
+            title="",
+        )
+        q.client.delete_cards.add("experiment/display/chat")
+        return
+
     if load_model:
         q.page["experiment/display/chat"] = ui.form_card(
             box="first",
@@ -110,7 +129,7 @@ async def chat_tab(q: Q, load_model=True):
     if load_model:
         with set_env(HUGGINGFACE_TOKEN=q.client["default_huggingface_api_token"]):
             cfg, model, tokenizer = load_cfg_model_tokenizer(
-                q.client["experiment/display/experiment_path"], device=f"cuda:{gpu_id}"
+                experiment_path, device=f"cuda:{gpu_id}"
             )
         q.client["experiment/display/chat/cfg"] = cfg
         q.client["experiment/display/chat/model"] = model

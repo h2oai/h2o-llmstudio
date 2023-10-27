@@ -1827,14 +1827,20 @@ def get_experiment_summary_code_card(cfg) -> str:
     )
 
     text = text.replace("{{trust_remote_code}}", str(cfg.environment.trust_remote_code))
-    text = text.replace("{{min_new_tokens}}", str(cfg.prediction.min_length_inference))
-    text = text.replace("{{max_new_tokens}}", str(cfg.prediction.max_length_inference))
-    text = text.replace("{{use_fast}}", str(cfg.tokenizer.use_fast))
-    text = text.replace("{{do_sample}}", str(cfg.prediction.do_sample))
-    text = text.replace("{{num_beams}}", str(cfg.prediction.num_beams))
-    text = text.replace("{{temperature}}", str(cfg.prediction.temperature))
-    text = text.replace(
-        "{{repetition_penalty}}", str(cfg.prediction.repetition_penalty)
-    )
+
+    if cfg.problem_type != "text_causal_classification_modeling":
+        text = text.replace(
+            "{{min_new_tokens}}", str(cfg.prediction.min_length_inference)
+        )
+        text = text.replace(
+            "{{max_new_tokens}}", str(cfg.prediction.max_length_inference)
+        )
+        text = text.replace("{{use_fast}}", str(cfg.tokenizer.use_fast))
+        text = text.replace("{{do_sample}}", str(cfg.prediction.do_sample))
+        text = text.replace("{{num_beams}}", str(cfg.prediction.num_beams))
+        text = text.replace("{{temperature}}", str(cfg.prediction.temperature))
+        text = text.replace(
+            "{{repetition_penalty}}", str(cfg.prediction.repetition_penalty)
+        )
 
     return text
