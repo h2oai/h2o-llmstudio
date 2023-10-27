@@ -15,7 +15,6 @@ from llm_studio.src.utils.plot_utils import (
 class Plots(TextCausalLanguageModelingPlots):
     @classmethod
     def plot_batch(cls, batch, cfg) -> PlotData:
-        raise AssertionError("This method should not be called.")
         tokenizer = get_tokenizer(cfg)
         df = create_batch_prediction_df(
             batch, tokenizer, ids_for_tokenized_text="prompt_input_ids"
