@@ -569,7 +569,7 @@ def run_train_rlhf(
                     if (torch.cuda.is_available() and len(cfg.environment.gpus) > 0)
                     else torch.no_grad()
                 )
-                with context:
+                with context:  # type: ignore[attr-defined]
                     scores = reward_model.get_score(
                         batch["reward_model_prompt_text"],
                         output_dict["predicted_text"],

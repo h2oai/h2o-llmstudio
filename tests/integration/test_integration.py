@@ -118,7 +118,8 @@ def run_oasst(tmp_path, config_name, metric):
     """
     prepare_default_dataset(tmp_path)
     train_path = os.path.join(tmp_path, "train_full.pq")
-    # create dummy labels for classification problem type, unused for other problem types
+    # create dummy labels for classification problem type,
+    # unused for other problem types
     df = pd.read_parquet(train_path)
     df["multiclass_label"] = np.random.choice(["0", "1", "2"], size=len(df))
     df["binary_label"] = np.random.choice(["0", "1"], size=len(df))
