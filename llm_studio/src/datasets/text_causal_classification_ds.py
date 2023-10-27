@@ -12,7 +12,8 @@ from llm_studio.src.utils.exceptions import LLMDataException
 
 class CustomDataset(TextCausalLanguageModelingCustomDataset):
     def __init__(self, df: pd.DataFrame, cfg: Any, mode: str = "train"):
-        super().__init__(df, cfg, mode)
+        super().__init__(df=df, cfg=cfg, mode=mode)
+        check_for_non_int_answers(cfg, df)
         self.answers_int = df[cfg.dataset.answer_column].astype(int).values.tolist()
         if 1 < cfg.dataset.num_classes <= max(self.answers_int):
             raise LLMDataException(
@@ -23,6 +24,10 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
             raise LLMDataException(
                 "For binary classification, max label should be 1 but is "
                 f"{max(self.answers_int)}."
+            )
+        if cfg.dataset.parent_id_column != "None":
+            raise LLMDataException(
+                "Parent ID column is not supported for classification datasets."
             )
 
     def __getitem__(self, idx: int) -> Dict:
@@ -50,15 +55,18 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
     @classmethod
     def sanity_check(cls, df: pd.DataFrame, cfg: Any, mode: str = "train"):
         # TODO: Dataset import in UI is currently using text_causal_language_modeling_ds
-        # check if answer_column is of ints, only
-        answers_non_int = [
-            x for x in df[cfg.dataset.answer_column].values if not is_castable_to_int(x)
-        ]
-        if len(answers_non_int) > 0:
-            raise LLMDataException(
-                f"Column {cfg.dataset.answer_column} is not of type int. "
-                f"Sample values: {answers_non_int[:5]}."
-            )
+        check_for_non_int_answers(cfg, df)
+
+
+def check_for_non_int_answers(cfg, df):
+    answers_non_int = [
+        x for x in df[cfg.dataset.answer_column].values if not is_castable_to_int(x)
+    ]
+    if len(answers_non_int) > 0:
+        raise LLMDataException(
+            f"Column {cfg.dataset.answer_column} contains non int items. "
+            f"Sample values: {answers_non_int[:5]}."
+        )
 
 
 def is_castable_to_int(s):
