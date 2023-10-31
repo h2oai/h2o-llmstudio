@@ -116,7 +116,9 @@ class RewardModel(nn.Module):
         self.device = cfg.environment._device
         self.model = AutoModelForSequenceClassification.from_pretrained(
             self.model_name,
-            torch_dtype=torch.float16,
+            torch_dtype=torch.float16
+            if (torch.cuda.is_available() and len(cfg.environment.gpus) > 0)
+            else torch.float32,
         ).to(self.device)
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.model_name, max_model_input_sizes=2048
@@ -129,7 +131,7 @@ class RewardModel(nn.Module):
     ):
         scores = []
         for prompt, answer in zip(prompts, answers):
-            if self.model_name == "OpenAssistant/reward-model-deberta-v3-large-v2":
+            if "deberta-v3" in self.model_name:
                 inputs = self.tokenizer(
                     " ".join(prompt.split(TEXT_SEPARATOR)),
                     answer,
@@ -156,6 +158,10 @@ class RewardModel(nn.Module):
                 inputs = self.tokenizer(
                     input_text, return_tensors="pt", max_length=2048
                 ).to(self.device)
+            else:
+                raise ValueError(
+                    f"Reward model {self.model_name} not supported for scoring."
+                )
 
             scores.append(self.model(**inputs).logits[0].cpu().detach().item())
             del inputs
