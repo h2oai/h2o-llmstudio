@@ -557,7 +557,12 @@ def run_train_rlhf(
                 # tokenize prompt & output internally
                 if cfg.training.offload_reward_model:
                     reward_model.to(cfg.environment._device)
-                with autocast(enabled=cfg.environment.mixed_precision):
+                context = (
+                    autocast(enabled=cfg.environment.mixed_precision)
+                    if (torch.cuda.is_available() and len(cfg.environment.gpus) > 0)
+                    else torch.no_grad()
+                )
+                with context:  # type: ignore[attr-defined]
                     scores = reward_model.get_score(
                         batch["reward_model_prompt_text"],
                         output_dict["predicted_text"],

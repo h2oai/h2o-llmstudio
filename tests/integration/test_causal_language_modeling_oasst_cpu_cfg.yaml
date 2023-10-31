@@ -40,7 +40,7 @@ environment:
   gpus:
   - ''
   huggingface_branch: main
-  mixed_precision: true
+  mixed_precision: false
   number_of_workers: 8
   seed: -1
   trust_remote_code: true
