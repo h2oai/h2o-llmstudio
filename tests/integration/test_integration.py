@@ -2,6 +2,8 @@ import json
 import os
 import sys
 
+import numpy as np
+import pandas as pd
 import pytest
 import torch
 import yaml
@@ -54,11 +56,47 @@ def test_oasst_training_gpu(tmp_path, config_name, metric):
     run_oasst(tmp_path, config_name, metric)
 
 
+@need_gpus
+@pytest.mark.parametrize(
+    "settings",
+    [
+        ["AUC", "test_causal_binary_classification_modeling_cfg"],
+        ["LogLoss", "test_causal_multiclass_classification_modeling_cfg"],
+    ],
+)
+def test_oasst_classification_training_gpu(tmp_path, settings):
+    metric, config_name = settings
+    run_oasst(
+        tmp_path,
+        config_name=config_name,
+        metric=metric,
+    )
+
+
+@has_no_gpus
+@pytest.mark.parametrize(
+    "settings",
+    [
+        ["AUC", "test_causal_binary_classification_modeling_cpu_cfg"],
+        ["LogLoss", "test_causal_multiclass_classification_modeling_cpu_cfg"],
+    ],
+)
+def test_oasst_classification_training_cpu(tmp_path, settings):
+    metric, config_name = settings
+    run_oasst(
+        tmp_path,
+        config_name=config_name,
+        metric=metric,
+    )
+
+
 @has_no_gpus
 @pytest.mark.parametrize(
     "config_name",
     [
         "test_causal_language_modeling_oasst_cpu_cfg",
+        "test_sequence_to_sequence_modeling_oasst_cpu_cfg",
+        "test_rlhf_language_modeling_oasst_cpu_cfg",
     ],
 )
 @pytest.mark.parametrize(
@@ -80,6 +118,13 @@ def run_oasst(tmp_path, config_name, metric):
     """
     prepare_default_dataset(tmp_path)
     train_path = os.path.join(tmp_path, "train_full.pq")
+    # create dummy labels for classification problem type,
+    # unused for other problem types
+    df = pd.read_parquet(train_path)
+    df["multiclass_label"] = np.random.choice(["0", "1", "2"], size=len(df))
+    df["binary_label"] = np.random.choice(["0", "1"], size=len(df))
+    df.to_parquet(train_path)
+
     with open(
         os.path.join(
             os.path.dirname(os.path.realpath(__file__)), f"{config_name}.yaml"
@@ -95,9 +140,14 @@ def run_oasst(tmp_path, config_name, metric):
     modifed_config_path = os.path.join(tmp_path, "cfg.yaml")
     with open(modifed_config_path, "w") as fp:
         yaml.dump(cfg, fp)
+
+    # llm studio root directory.
+    root_dir = os.path.abspath(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../")
+    )
     cmd = [
         f"{sys.executable}",
-        "train.py",
+        os.path.join(root_dir, "train.py"),
         "-Y",
         f"{modifed_config_path}",
     ]
