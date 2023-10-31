@@ -39,7 +39,6 @@ def test_load_config_yaml():
     assert cfg.environment.mixed_precision is True
     assert cfg.environment.number_of_workers == 8
     assert cfg.environment.seed == -1
-    assert cfg.environment.use_fsdp is False
 
     assert cfg.logging.logger == "None"
     assert cfg.logging.neptune_project == ""

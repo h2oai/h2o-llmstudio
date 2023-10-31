@@ -342,7 +342,6 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     mixed_precision: bool = True
 
     compile_model: bool = False
-    use_fsdp: bool = False
     use_deepspeed: bool = False
     deepspeed_reduce_bucket_size: int = int(1e6)
     deepspeed_stage3_prefetch_bucket_size: int = int(1e6)

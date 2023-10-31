@@ -54,9 +54,10 @@ Using CLI for fine-tuning LLMs:
 
 ## What's New
 
+- [PR 288](https://github.com/h2oai/h2o-llmstudio/pull/288) Introduced Deepspeed for sharded training allowing to train larger models on machines with multiple GPUs. Requires NVLink. This feature replaces FSDP and offers more flexibility. Deepspeed requires a system installation of cudatoolkit and we recommend using version 11.8. See [Recommended Install](#recommended-install).
 - [PR 449](https://github.com/h2oai/h2o-llmstudio/pull/449) New problem type for Causal Classification Modeling allows to train binary and multiclass models using LLMs.
 - [PR 364](https://github.com/h2oai/h2o-llmstudio/pull/364) User secrets are now handled more securely and flexible. Support for handling secrets using the 'keyring' library was added. User settings are tried to be migrated automatically.
-- [PR 328](https://github.com/h2oai/h2o-llmstudio/pull/328) RLHF is now a separate problem type. Note that starting a new RLHF experiment from an old experiment that used RLHF is no longer supported. To continue from a previous experiment, please start a new experiment and enter the settings from the previous experiment manually. 
+- [PR 328](https://github.com/h2oai/h2o-llmstudio/pull/328) RLHF is now a separate problem type. Note that starting a new RLHF experiment from an old experiment that used RLHF is no longer supported. To continue from a previous experiment, please start a new experiment and enter the settings from the previous experiment manually.
 - [PR 308](https://github.com/h2oai/h2o-llmstudio/pull/308) Sequence to sequence models have been added as a new problem type.
 - [PR 152](https://github.com/h2oai/h2o-llmstudio/pull/152) Add RLHF functionality for fine-tuning LLMs.
 - [PR 132](https://github.com/h2oai/h2o-llmstudio/pull/131) Add 4bit training that allows training of larger LLM backbones with less GPU memory. See [here](https://huggingface.co/blog/4bit-transformers-bitsandbytes) for a comprehensive summary of this method.
@@ -90,11 +91,19 @@ If deploying on a 'bare metal' machine running Ubuntu, one may need to install t
 ```bash
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
 sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
-wget https://developer.download.nvidia.com/compute/cuda/11.4.3/local_installers/cuda-repo-ubuntu2004-11-4-local_11.4.3-470.82.01-1_amd64.deb
-sudo dpkg -i cuda-repo-ubuntu2004-11-4-local_11.4.3-470.82.01-1_amd64.deb
-sudo apt-key add /var/cuda-repo-ubuntu2004-11-4-local/7fa2af80.pub
-sudo apt-get -y update
+wget https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda-repo-ubuntu2004-11-8-local_11.8.0-520.61.05-1_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu2004-11-8-local_11.8.0-520.61.05-1_amd64.deb
+sudo cp /var/cuda-repo-ubuntu2004-11-8-local/cuda-*-keyring.gpg /usr/share/keyrings/
+sudo apt-get update
 sudo apt-get -y install cuda
+```
+
+alternatively, one can install cudatoolkits in a cuda environmet:
+
+```bash
+conda create -n llmstudio python=3.10
+conda activate llmstudio
+conda install -c "nvidia/label/cuda-11.8.0" cuda-toolkit
 ```
 
 #### Create virtual environment (pipenv)
@@ -112,18 +121,6 @@ If you wish to use conda or another virtual environment, you can also install th
 ```bash
 pip install -r requirements.txt
 ```
-
-### Installing custom packages
-
-If you need to install additional Python packages into your environment, you can do so using pip after activating your virtual environment via ```make shell```. For example, to install flash-attention, you would use the following commands:
-
-```bash
-make shell
-pip install flash-attn --no-build-isolation
-pip install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
-```
-
-Alternatively, you can also directly install via ```pipenv install package_name```.
 
 ## Run H2O LLM Studio GUI
 

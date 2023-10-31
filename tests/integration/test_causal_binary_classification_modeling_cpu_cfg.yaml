@@ -49,7 +49,6 @@ environment:
     seed: -1
     trust_remote_code: true
     use_deepspeed: false
-    use_fsdp: false
 experiment_name: solid-spaniel
 llm_backbone: MaxJeblick/llama2-0b-unit-test
 logging:

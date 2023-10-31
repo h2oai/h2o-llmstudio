@@ -100,13 +100,6 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
                 "Please use LORA or set Backbone Dtype to float32."
             ]
 
-    # deepspeed related checks
-    if cfg.environment.use_deepspeed and cfg.environment.use_fsdp:
-        errors["title"] += ["Deepspeed and FSDP cannot be used at the same time."]
-        errors["message"] += [
-            "Deepspeed and FSDP are mutually exclusive. "
-            "We recommend to disable FSDP which will be deprecated."
-        ]
     if cfg.environment.use_deepspeed and cfg.architecture.backbone_dtype in [
         "int8",
         "int4",
