@@ -1638,6 +1638,7 @@ async def experiment_download_model(q: Q, error: str = ""):
             "config.json",
             "added_tokens.json",
             "model_card.md",
+            "classification_head.pth",
         ]
 
         for file in FILES_TO_PUSH:
