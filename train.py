@@ -20,7 +20,6 @@ import numpy as np
 import pandas as pd
 import torch
 from torch.cuda.amp import GradScaler, autocast
-from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers.deepspeed import HfDeepSpeedConfig
@@ -178,12 +177,9 @@ def run_train(
         Last train batch
     """
 
-    scaler: GradScaler | ShardedGradScaler | None = None
+    scaler: GradScaler | None = None
     if cfg.environment.mixed_precision:
-        if cfg.environment.use_fsdp:
-            scaler = ShardedGradScaler()
-        else:
-            scaler = GradScaler()
+        scaler = GradScaler()
 
     optimizer.zero_grad(set_to_none=True)
 
@@ -427,12 +423,9 @@ def run_train_rlhf(
         Last train batch
     """
 
-    scaler: GradScaler | ShardedGradScaler | None = None
+    scaler: GradScaler | None = None
     if cfg.environment.mixed_precision:
-        if cfg.environment.use_fsdp:
-            scaler = ShardedGradScaler()
-        else:
-            scaler = GradScaler()
+        scaler = GradScaler()
 
     optimizer.zero_grad(set_to_none=True)
 
@@ -753,8 +746,6 @@ def run(cfg: Any) -> None:
     else:
         cfg.environment._seed = cfg.environment.seed
 
-    if cfg.environment.use_deepspeed and cfg.environment.use_fsdp:
-        raise ValueError("Deepspeed and FSDP cannot be used at the same time.")
     if (
         cfg.architecture.backbone_dtype in ["int8", "int4"]
         and cfg.environment.use_deepspeed

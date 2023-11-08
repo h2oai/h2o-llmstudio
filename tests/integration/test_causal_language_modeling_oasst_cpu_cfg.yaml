@@ -44,7 +44,6 @@ environment:
   number_of_workers: 8
   seed: -1
   trust_remote_code: true
-  use_fsdp: false
 experiment_name: test-causal-language-modeling-oasst-cpu
 llm_backbone: MaxJeblick/llama2-0b-unit-test
 logging:

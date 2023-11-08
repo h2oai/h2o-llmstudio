@@ -44,7 +44,6 @@ environment:
     number_of_workers: 8
     seed: -1
     trust_remote_code: true
-    use_fsdp: false
 experiment_name: test-rlhf-language-modeling-oasst
 llm_backbone: facebook/opt-125m
 logging:
