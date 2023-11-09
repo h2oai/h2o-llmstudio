@@ -24,6 +24,7 @@ from llm_studio.app_utils.hugging_face_utils import (
 )
 from llm_studio.app_utils.sections.chat import chat_tab, load_cfg_model_tokenizer
 from llm_studio.app_utils.sections.common import clean_dashboard
+from llm_studio.app_utils.sections.predict_tab import predict_classification_tab
 from llm_studio.app_utils.utils import (
     add_model_type,
     flatten_dict,
@@ -868,6 +869,16 @@ def load_charts(experiment_path):
     return charts
 
 
+async def predict_tab(q: Q):
+    cfg = load_config_yaml(
+        os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
+    )
+    if cfg.problem_type == "text_causal_classification_modeling":
+        await predict_classification_tab(q)
+    else:
+        await chat_tab(q)
+
+
 async def experiment_display(q: Q) -> None:
     """Display a selected experiment."""
 
@@ -972,7 +983,7 @@ async def experiment_display(q: Q) -> None:
     elif q.client["experiment/display/tab"] in ["experiment/display/logs"]:
         await logs_tab(q)
     elif q.client["experiment/display/tab"] in ["experiment/display/chat"]:
-        await chat_tab(q)
+        await predict_tab(q)
 
     await q.page.save()
 

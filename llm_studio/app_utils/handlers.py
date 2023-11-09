@@ -33,6 +33,7 @@ from llm_studio.app_utils.sections.experiment import (
     experiment_stop,
 )
 from llm_studio.app_utils.sections.home import home
+from llm_studio.app_utils.sections.predict_tab import run_prediction
 from llm_studio.app_utils.sections.project import (
     current_experiment_compare,
     current_experiment_list_compare,
@@ -320,6 +321,9 @@ async def handle(q: Q) -> None:
 
         elif q.args["experiment/display/chat/chatbot"]:
             await chat_update(q)
+        elif q.args["experiment/display/predict/start"]:
+            await run_prediction(q)
+
         elif q.args["experiment/display/chat/clear_history"]:
             await chat_tab(q, load_model=False)
 
