@@ -1644,7 +1644,10 @@ async def experiment_download_model(q: Q):
             "added_tokens.json",
             "model_card.md",
         ]
-        FILES_TO_PUSH = set(FILES_TO_PUSH + tokenizer_files)
+        FILES_TO_PUSH = set(
+            FILES_TO_PUSH
+            + [os.path.split(tokenizer_file)[-1] for tokenizer_file in tokenizer_files]
+        )
 
         # Add tokenizer and config.json files, as well as potential classification head
         paths_added = []
