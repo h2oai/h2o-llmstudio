@@ -1622,7 +1622,8 @@ async def experiment_download_model(q: Q):
         model_save_time = time.time()
         model.backbone.save_pretrained(checkpoint_path)
         # See PreTrainedTokenizerBase.save_pretrained for documentation
-        # Safeguard against None return if tokenizer class is not inherited from PreTrainedTokenizerBase
+        # Safeguard against None return if tokenizer class is
+        # not inherited from PreTrainedTokenizerBase
         tokenizer_files = list(tokenizer.save_pretrained(checkpoint_path) or [])
 
         card = get_model_card(cfg, model, repo_id="<path_to_local_folder>")
@@ -1664,7 +1665,8 @@ async def experiment_download_model(q: Q):
             add_file_to_zip(zf=zf, path=path)
 
         # Add all files that were created after the model was saved.
-        # This is useful for potential changes/different naming conventions across different backbones.
+        # This is useful for potential changes/different
+        # naming conventions across different backbones.
         for file in os.listdir(checkpoint_path):
             file_path = os.path.join(checkpoint_path, file)
             if (
@@ -1675,7 +1677,8 @@ async def experiment_download_model(q: Q):
                 add_file_to_zip(zf=zf, path=file)
                 paths_added.append(file_path)
                 logger.info(
-                    f"Added {file_path} to zip file as it was created when saving the model state."
+                    f"Added {file_path} to zip file as it "
+                    "was created when saving the model state."
                 )
         zf.close()
 
