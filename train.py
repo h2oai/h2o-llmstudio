@@ -62,6 +62,7 @@ from llm_studio.src.utils.modeling_utils import (
     save_predictions,
     unwrap_model,
     wrap_model_distributed,
+    activate_neftune,
 )
 from llm_studio.src.utils.utils import kill_ddp_processes, set_environment, set_seed
 
@@ -176,6 +177,13 @@ def run_train(
         Validation metric
         Last train batch
     """
+    if (
+        hasattr(cfg.augmentation, "neftune_noise_alpha")
+        and cfg.augmentation.neftune_noise_alpha > 0
+    ):
+        # TODO May not work with deepspeed
+        # TODO: Don't think one needs to remove the forward hook after training, but need to check
+        activate_neftune(model.backbone, cfg.augmentation.neftune_noise_alpha)
 
     scaler: GradScaler | None = None
     if cfg.environment.mixed_precision:
