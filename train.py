@@ -183,6 +183,7 @@ def run_train(
     ):
         # TODO May not work with deepspeed
         # TODO: Don't think one needs to remove the forward hook after training, but need to check
+        #       see https://twitter.com/iliasmiraoui/status/1714416978109092218
         activate_neftune(model.backbone, cfg.augmentation.neftune_noise_alpha)
 
     scaler: GradScaler | None = None
