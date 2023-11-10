@@ -748,6 +748,7 @@ def activate_neftune(backbone, neftune_noise_alpha):
         embeddings = unwrap_model(backbone).get_input_embeddings()
 
     embeddings.neftune_noise_alpha = neftune_noise_alpha
+    embeddings.register_forward_hook(neftune_post_forward_hook)
 
 
 def neftune_post_forward_hook(module, input, output):
