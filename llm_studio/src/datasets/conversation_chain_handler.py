@@ -86,7 +86,12 @@ class ConversationChainHandler:
         if limit_chained_samples is True, df.iloc[13] will have no parent_id,
         i.e. it is the start of the conversation.
         """
-        if cfg.dataset.parent_id_column in ["None", None]:
+        if (
+            cfg.dataset.parent_id_column in ["None", None]
+            # Handle case where train Dataframe has conversation chains,
+            # but val Dataframe does not
+            or cfg.dataset.parent_id_column not in df.columns
+        ):
             # no parent id column, so each triplet (system_i, prompt_i, answer_i)
             # is a conversation chain
             return [[idx] for idx in range(len(df))]
