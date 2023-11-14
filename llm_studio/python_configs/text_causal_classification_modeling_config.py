@@ -190,31 +190,26 @@ class ConfigProblemBase(DefaultConfigProblemBase):
         )
 
     def check(self) -> Dict[str, List]:
+        errors: Dict[str, List] = {"title": [], "message": []}
+
         if self.training.loss_function == "CrossEntropyLoss":
             if self.dataset.num_classes == 1:
-                return {
-                    "title": ["CrossEntropyLoss requires num_classes > 1"],
-                    "message": [
-                        "CrossEntropyLoss requires num_classes > 1, "
-                        "but num_classes is set to 1."
-                    ],
-                }
+                errors["title"] += ["CrossEntropyLoss requires num_classes > 1"]
+                errors["message"] += [
+                    "CrossEntropyLoss requires num_classes > 1, "
+                    "but num_classes is set to 1."
+                ]
         elif self.training.loss_function == "BinaryCrossEntropyLoss":
             if self.dataset.num_classes != 1:
-                return {
-                    "title": ["BinaryCrossEntropyLoss requires num_classes == 1"],
-                    "message": [
-                        "BinaryCrossEntropyLoss requires num_classes == 1, "
-                        "but num_classes is set to {}.".format(self.dataset.num_classes)
-                    ],
-                }
+                errors["title"] += ["BinaryCrossEntropyLoss requires num_classes == 1"]
+                errors["message"] += [
+                    "BinaryCrossEntropyLoss requires num_classes == 1, "
+                    "but num_classes is set to {}.".format(self.dataset.num_classes)
+                ]
         if self.dataset.parent_id_column not in ["None", None]:
-            return {
-                "title": [
-                    "Parent ID column is not supported for classification datasets."
-                ],
-                "message": [
-                    "Parent ID column is not supported for classification datasets."
-                ],
-            }
-        return super().check()
+            errors["title"] += ["Parent ID column is not supported for classification"]
+            errors["message"] += [
+                "Parent ID column is not supported for classification datasets."
+            ]
+
+        return errors
