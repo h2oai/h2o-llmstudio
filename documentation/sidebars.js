@@ -34,6 +34,7 @@ module.exports = {
             "guide/experiments/view-an-experiment",
             "guide/experiments/compare-experiments",
             "guide/experiments/export-trained-model",
+            "guide/experiments/import-to-h2ogpt"
           ],
         },
       ],
