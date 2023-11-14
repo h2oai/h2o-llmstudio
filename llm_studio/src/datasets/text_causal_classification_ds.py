@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict
 
 import numpy as np
@@ -9,12 +10,15 @@ from llm_studio.src.datasets.text_causal_language_modeling_ds import (
 )
 from llm_studio.src.utils.exceptions import LLMDataException
 
+logger = logging.getLogger(__name__)
+
 
 class CustomDataset(TextCausalLanguageModelingCustomDataset):
     def __init__(self, df: pd.DataFrame, cfg: Any, mode: str = "train"):
         super().__init__(df=df, cfg=cfg, mode=mode)
         check_for_non_int_answers(cfg, df)
         self.answers_int = df[cfg.dataset.answer_column].astype(int).values.tolist()
+
         if 1 < cfg.dataset.num_classes <= max(self.answers_int):
             raise LLMDataException(
                 "Number of classes is smaller than max label "
@@ -25,6 +29,20 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
                 "For binary classification, max label should be 1 but is "
                 f"{max(self.answers_int)}."
             )
+        if min(self.answers_int) < 0:
+            raise LLMDataException(
+                "Labels should be non-negative but min label is "
+                f"{min(self.answers_int)}."
+            )
+        if (
+            min(self.answers_int) != 0
+            or max(self.answers_int) != len(set(self.answers_int)) - 1
+        ):
+            logger.warning(
+                "Labels should start at 0 and be continuous but are "
+                f"{sorted(set(self.answers_int))}."
+            )
+
         if cfg.dataset.parent_id_column != "None":
             raise LLMDataException(
                 "Parent ID column is not supported for classification datasets."

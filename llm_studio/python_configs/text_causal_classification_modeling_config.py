@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import Any, Tuple
+from typing import Any, Dict, List, Tuple
 
 import llm_studio.src.datasets.text_causal_classification_ds
 import llm_studio.src.plots.text_causal_classification_modeling_plots
@@ -188,3 +188,33 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             ),
             allow_custom=True,
         )
+
+    def check(self) -> Dict[str, List]:
+        if self.training.loss_function == "CrossEntropyLoss":
+            if self.dataset.num_classes == 1:
+                return {
+                    "title": ["CrossEntropyLoss requires num_classes > 1"],
+                    "message": [
+                        "CrossEntropyLoss requires num_classes > 1, "
+                        "but num_classes is set to 1."
+                    ],
+                }
+        elif self.training.loss_function == "BinaryCrossEntropyLoss":
+            if self.dataset.num_classes != 1:
+                return {
+                    "title": ["BinaryCrossEntropyLoss requires num_classes == 1"],
+                    "message": [
+                        "BinaryCrossEntropyLoss requires num_classes == 1, "
+                        "but num_classes is set to {}.".format(self.dataset.num_classes)
+                    ],
+                }
+        if self.dataset.parent_id_column not in ["None", None]:
+            return {
+                "title": [
+                    "Parent ID column is not supported for classification datasets."
+                ],
+                "message": [
+                    "Parent ID column is not supported for classification datasets."
+                ],
+            }
+        return super().check()
