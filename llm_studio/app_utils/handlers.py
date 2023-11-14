@@ -333,8 +333,6 @@ async def handle(q: Q) -> None:
             await dataset_import(q, step=3, edit=True)
         elif q.args["dataset/import/cfg/train_dataframe"]:
             await dataset_import(q, step=3)
-        elif q.args["dataset/import/cfg/validation_dataframe"]:
-            await dataset_import(q, step=3)
         elif q.args["dataset/import/4"]:
             await dataset_import(q, step=4)
         elif q.args["dataset/import/4/edit"]:
