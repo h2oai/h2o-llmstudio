@@ -732,7 +732,6 @@ def run(cfg: Any) -> None:
     Args:
         cfg: config object with all the hyperparameters
     """
-
     os.makedirs(cfg.output_directory, exist_ok=True)
 
     # Force evaluation if user trains 0 epochs
@@ -801,6 +800,7 @@ def run(cfg: Any) -> None:
 
     set_seed(cfg.environment._seed)
     if cfg.environment._local_rank == 0:
+        logger.info(f"Problem Type: {cfg.problem_type}")
         logger.info(f"Global random seed: {cfg.environment._seed}")
 
     cfg = set_environment(cfg)
