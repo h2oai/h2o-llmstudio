@@ -1,4 +1,4 @@
-# Performance Benchmarks of H2O LLM Studio
+# H2O LLM Studio performance
 
 Setting up and runnning H2O LLM Studio requires the following minimal [prerequisites](set-up-llm-studio.md#prerequisites). This page lists out the speed and performance metrics of H2O LLM Studio based on different hardware setups.
 
