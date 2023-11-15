@@ -18,70 +18,9 @@ class Plots:
     @classmethod
     def plot_batch(cls, batch, cfg) -> PlotData:
         tokenizer = get_tokenizer(cfg)
-
-        df = pd.DataFrame(
-            {
-                "Prompt Text": [
-                    tokenizer.decode(input_ids, skip_special_tokens=True)
-                    for input_ids in batch["prompt_input_ids"].detach().cpu().numpy()
-                ]
-            }
-        )
-        df["Prompt Text"] = df["Prompt Text"].apply(format_for_markdown_visualization)
-        if "labels" in batch.keys():
-            df["Answer Text"] = [
-                tokenizer.decode(
-                    [label for label in labels if label != -100],
-                    skip_special_tokens=True,
-                )
-                for labels in batch.get("labels", batch["input_ids"])
-                .detach()
-                .cpu()
-                .numpy()
-            ]
-        tokens_list = [
-            tokenizer.convert_ids_to_tokens(input_ids)
-            for input_ids in batch["input_ids"].detach().cpu().numpy()
-        ]
-        masks_list = [
-            [label != -100 for label in labels]
-            for labels in batch.get("labels", batch["input_ids"]).detach().cpu().numpy()
-        ]
-        df["Tokenized Text"] = [
-            list_to_markdown_representation(
-                tokens, masks, pad_token=tokenizer.pad_token, num_chars=100
-            )
-            for tokens, masks in zip(tokens_list, masks_list)
-        ]
-        # limit to 2000 rows, still renders fast in wave
-        df = df.iloc[:2000]
-
-        # Convert into a scrollable table by transposing the dataframe
-        df_transposed = pd.DataFrame(columns=["Sample Number", "Field", "Content"])
-        has_answer = "Answer Text" in df.columns
-
-        for i, row in df.iterrows():
-            offset = 2 + int(has_answer)
-            df_transposed.loc[i * offset] = [
-                i,
-                "Prompt Text",
-                row["Prompt Text"],
-            ]
-            if has_answer:
-                df_transposed.loc[i * offset + 1] = [
-                    i,
-                    "Answer Text",
-                    row["Answer Text"],
-                ]
-            df_transposed.loc[i * offset + 1 + int(has_answer)] = [
-                i,
-                "Tokenized Text",
-                row["Tokenized Text"],
-            ]
-
+        df = create_batch_prediction_df(batch, tokenizer)
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
-        df_transposed.to_parquet(path)
-
+        df.to_parquet(path)
         return PlotData(path, encoding="df")
 
     @classmethod
@@ -239,3 +178,64 @@ class Plots:
         path = os.path.join(cfg.output_directory, f"{mode}_viz.parquet")
         df.to_parquet(path)
         return PlotData(data=path, encoding="df")
+
+
+def create_batch_prediction_df(batch, tokenizer, ids_for_tokenized_text="input_ids"):
+    df = pd.DataFrame(
+        {
+            "Prompt Text": [
+                tokenizer.decode(input_ids, skip_special_tokens=True)
+                for input_ids in batch["prompt_input_ids"].detach().cpu().numpy()
+            ]
+        }
+    )
+    df["Prompt Text"] = df["Prompt Text"].apply(format_for_markdown_visualization)
+    if "labels" in batch.keys():
+        df["Answer Text"] = [
+            tokenizer.decode(
+                [label for label in labels if label != -100],
+                skip_special_tokens=True,
+            )
+            for labels in batch.get("labels", batch["input_ids"]).detach().cpu().numpy()
+        ]
+    tokens_list = [
+        tokenizer.convert_ids_to_tokens(input_ids)
+        for input_ids in batch[ids_for_tokenized_text].detach().cpu().numpy()
+    ]
+    masks_list = [
+        [label != -100 for label in labels]
+        for labels in batch.get("labels", batch[ids_for_tokenized_text])
+        .detach()
+        .cpu()
+        .numpy()
+    ]
+    df["Tokenized Text"] = [
+        list_to_markdown_representation(
+            tokens, masks, pad_token=tokenizer.pad_token, num_chars=100
+        )
+        for tokens, masks in zip(tokens_list, masks_list)
+    ]
+    # limit to 2000 rows, still renders fast in wave
+    df = df.iloc[:2000]
+    # Convert into a scrollable table by transposing the dataframe
+    df_transposed = pd.DataFrame(columns=["Sample Number", "Field", "Content"])
+    has_answer = "Answer Text" in df.columns
+    for i, row in df.iterrows():
+        offset = 2 + int(has_answer)
+        df_transposed.loc[i * offset] = [
+            i,
+            "Prompt Text",
+            row["Prompt Text"],
+        ]
+        if has_answer:
+            df_transposed.loc[i * offset + 1] = [
+                i,
+                "Answer Text",
+                row["Answer Text"],
+            ]
+        df_transposed.loc[i * offset + 1 + int(has_answer)] = [
+            i,
+            "Tokenized Text",
+            row["Tokenized Text"],
+        ]
+    return df_transposed

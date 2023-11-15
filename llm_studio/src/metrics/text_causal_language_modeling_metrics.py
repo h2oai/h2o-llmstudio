@@ -187,28 +187,4 @@ class Metrics:
         Returns:
             A class to build the Metrics
         """
-        return cls._metrics.get(name, "GPT")
-
-    @classmethod
-    def suitable_metrics(cls, cfg: Any, results: Dict, val_df: pd.DataFrame) -> Dict:
-        """Access to All Suitable Metrics. For some problem types (e.g. classification)
-        there might be metrics (e.g. Micro Averaged F1) that are only suitable in
-        specific cases (multiclass not binary). There might also be additional
-        metrics returned, which are not possible to select as validation metrics,
-        e.g. threshold dependant metrics
-
-        Returns:
-            A dictionary of all suitable metrics for current problem setup
-        """
-        return cls._metrics
-
-    @classmethod
-    def all_metrics(cls) -> Dict:
-        """Access to All Metrics. There might also be additional
-        metrics returned, which are not possible to select as validation metrics,
-        e.g. threshold dependant metrics
-
-        Returns:
-            A dictionary of all metrics (including not suitable metrics).
-        """
-        return cls._metrics
+        return cls._metrics.get(name, cls._metrics["BLEU"])
