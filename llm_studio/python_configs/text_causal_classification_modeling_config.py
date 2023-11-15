@@ -1,15 +1,16 @@
 import os
 from dataclasses import dataclass, field
-from typing import Any, Tuple
+from typing import Any, Dict, List, Tuple
 
-from llm_studio.python_configs.base import DefaultConfigProblemBase
+import llm_studio.src.datasets.text_causal_classification_ds
+import llm_studio.src.plots.text_causal_classification_modeling_plots
+from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPAugmentation,
     ConfigNLPCausalLMArchitecture,
     ConfigNLPCausalLMDataset,
     ConfigNLPCausalLMEnvironment,
     ConfigNLPCausalLMLogging,
-    ConfigNLPCausalLMPrediction,
     ConfigNLPCausalLMTokenizer,
     ConfigNLPCausalLMTraining,
 )
@@ -22,6 +23,9 @@ from llm_studio.src.utils.modeling_utils import generate_experiment_name
 
 @dataclass
 class ConfigNLPCausalClassificationDataset(ConfigNLPCausalLMDataset):
+    dataset_class: Any = (
+        llm_studio.src.datasets.text_causal_classification_ds.CustomDataset
+    )
     system_column: str = "None"
     prompt_column: Tuple[str, ...] = ("instruction", "input")
     answer_column: str = "label"
@@ -99,26 +103,18 @@ class ConfigNLPCausalClassificationArchitecture(ConfigNLPCausalLMArchitecture):
 
 
 @dataclass
-class ConfigNLPCausalClassificationPrediction(ConfigNLPCausalLMPrediction):
+class ConfigNLPCausalClassificationPrediction(DefaultConfig):
     metric_class: Any = text_causal_classification_modeling_metrics.Metrics
     metric: str = "AUC"
+    batch_size_inference: int = 0
 
     def __post_init__(self):
         super().__post_init__()
-        self._possible_values["metric"] = self.metric_class.names()
 
-        for k in [
-            "min_length_inference",
-            "max_length_inference",
-            "do_sample",
-            "num_beams",
-            "temperature",
-            "repetition_penalty",
-            "stop_tokens",
-            "top_k",
-            "top_p",
-        ]:
-            self._visibility[k] = -1
+        self._possible_values["metric"] = self.metric_class.names()
+        self._possible_values["batch_size_inference"] = (0, 512, 1)
+
+        self._visibility["metric_class"] = -1
 
 
 @dataclass
@@ -130,6 +126,13 @@ class ConfigNLPCausalClassificationEnvironment(ConfigNLPCausalLMEnvironment):
 
     def __post_init__(self):
         super().__post_init__()
+
+
+@dataclass
+class ConfigNLPCausalClassificationLogging(ConfigNLPCausalLMLogging):
+    plots_class: Any = (
+        llm_studio.src.plots.text_causal_classification_modeling_plots.Plots
+    )
 
 
 @dataclass
@@ -158,7 +161,9 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     environment: ConfigNLPCausalClassificationEnvironment = field(
         default_factory=ConfigNLPCausalClassificationEnvironment
     )
-    logging: ConfigNLPCausalLMLogging = field(default_factory=ConfigNLPCausalLMLogging)
+    logging: ConfigNLPCausalClassificationLogging = field(
+        default_factory=ConfigNLPCausalClassificationLogging
+    )
 
     def __post_init__(self):
         super().__post_init__()
@@ -183,3 +188,28 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             ),
             allow_custom=True,
         )
+
+    def check(self) -> Dict[str, List]:
+        errors: Dict[str, List] = {"title": [], "message": []}
+
+        if self.training.loss_function == "CrossEntropyLoss":
+            if self.dataset.num_classes == 1:
+                errors["title"] += ["CrossEntropyLoss requires num_classes > 1"]
+                errors["message"] += [
+                    "CrossEntropyLoss requires num_classes > 1, "
+                    "but num_classes is set to 1."
+                ]
+        elif self.training.loss_function == "BinaryCrossEntropyLoss":
+            if self.dataset.num_classes != 1:
+                errors["title"] += ["BinaryCrossEntropyLoss requires num_classes == 1"]
+                errors["message"] += [
+                    "BinaryCrossEntropyLoss requires num_classes == 1, "
+                    "but num_classes is set to {}.".format(self.dataset.num_classes)
+                ]
+        if self.dataset.parent_id_column not in ["None", None]:
+            errors["title"] += ["Parent ID column is not supported for classification"]
+            errors["message"] += [
+                "Parent ID column is not supported for classification datasets."
+            ]
+
+        return errors
