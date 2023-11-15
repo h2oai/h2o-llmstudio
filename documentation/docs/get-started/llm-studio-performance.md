@@ -10,7 +10,7 @@ The following metrics were measured.
 - **Train**: The amount of time it took to train the model in hours and minutes.
 - **Validation:** The amount of time it took to validate the mode in hours and minutes. 
 
-| Hardware setup | LLM backbone | Quantization | Train | Validation |
+| Hardware setup | LLM backbone | Quantization | Train (hh:mm:ss)| Validation (hh:mm:ss) |
 |---|---|---|---|---|
 | 8xA10G | h2oai/h2ogpt-4096-llama2-7b | bfloat16 | 11:35 | 3:32 |
 | 4xA10G | h2oai/h2ogpt-4096-llama2-7b | bfloat16 | 21:13 | 06:35 |
