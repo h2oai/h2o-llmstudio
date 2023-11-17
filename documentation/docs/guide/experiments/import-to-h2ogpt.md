@@ -41,3 +41,5 @@ You can use any of the following methods:
 
 :::info
 For more information, see the [h2oGPT documentation](https://github.com/h2oai/h2ogpt/blob/main/docs/FAQ.md#adding-models). 
+:::
+
