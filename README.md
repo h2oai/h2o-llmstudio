@@ -71,6 +71,8 @@ H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvi
 
 For more information about installation prerequisites, see the [Set up H2O LLM Studio](https://docs.h2o.ai/h2o-llmstudio/get-started/set-up-llm-studio#prerequisites) guide in the documentation.
 
+For a performance comparison of different GPUs, see the [H2O LLM Studio performance](https://h2oai.github.io/h2o-llmstudio/get-started/llm-studio-performance) guide in the documentation.
+
 ### Recommended Install
 
 The recommended way to install H2O LLM Studio is using pipenv with Python 3.10. To install Python 3.10 on Ubuntu 16.04+, execute the following commands:
@@ -114,12 +116,21 @@ The following command will create a virtual environment using pipenv and will in
 make setup
 ```
 
+If you are having troubles installing the flash_attn package, consider running
+
+```bash
+make setup-no-flash
+```
+
+instead. This will install the dependencies without the flash_attn package. Note that this will disable the use of Flash Attention 2 and model training will be slower and consume more memory.
+
 ### Using requirements.txt
 
 If you wish to use conda or another virtual environment, you can also install the dependencies using the requirements.txt file:
 
 ```bash
 pip install -r requirements.txt
+pip install flash-attn==2.3.3 --no-build-isolation  # optional for Flash Attention 2
 ```
 
 ## Run H2O LLM Studio GUI
