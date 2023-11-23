@@ -20,10 +20,16 @@ pipenv:
 .PHONY: setup
 setup: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
+	-$(PIPENV_PIP) install flash-attn==2.3.3 --no-build-isolation
 
 .PHONY: setup-dev
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
+	- $(PIPENV_PIP) install flash-attn==2.3.3 --no-build-isolation
+
+.PHONY: setup-no-flash
+setup-no-flash: pipenv
+	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
 
 .PHONY: export-requirements
 export-requirements: pipenv
