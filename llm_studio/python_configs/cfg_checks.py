@@ -110,11 +110,6 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             f"{cfg.architecture.backbone_dtype}. "
             "Please set backbone type to float16 or bfloat16 for using deepspeed."
         ]
-
-        raise ValueError(
-            f"Deepspeed do not support backbone type {cfg.architecture.backbone_dtype}."
-            + " Please set backbone type to float16 or bfloat16 for using deepspeed."
-        )
     if cfg.environment.use_deepspeed and len(cfg.environment.gpus) < 2:
         errors["title"] += ["Deepspeed not supported for single GPU."]
         errors["message"] += [
