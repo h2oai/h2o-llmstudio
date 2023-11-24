@@ -29,6 +29,7 @@ import ASintermediateDropout from '../../tooltips/experiments/_intermediate-drop
 import ASpretrainedWeights from '../../tooltips/experiments/_pretrained-weights.mdx';
 import TSoptimizer from '../../tooltips/experiments/_optimizer.mdx';
 import TSlearningRate from '../../tooltips/experiments/_learning-rate.mdx';
+import TSuseflashattention2 from '../../tooltips/experiments/_use-flash-attention-2.mdx';
 import TSbatchSize from '../../tooltips/experiments/_batch-size.mdx';
 import TSepochs from '../../tooltips/experiments/_epochs.mdx';
 import TSschedule from '../../tooltips/experiments/_schedule.mdx';
@@ -76,13 +77,11 @@ import PStopp from '../../tooltips/experiments/_top-p.mdx';
 import ESgpus from '../../tooltips/experiments/_gpus.mdx';
 import ESmixedprecision from '../../tooltips/experiments/_mixed-precision.mdx';
 import EScompilemodel from '../../tooltips/experiments/_compile-model.mdx';
-import ESusefsdp from '../../tooltips/experiments/_use-fsdp.mdx';
 import ESfindunusedparameters from '../../tooltips/experiments/_find-unused-parameters.mdx';
 import EStrustremotecode from '../../tooltips/experiments/_trust-remote-code.mdx';
 import ESnumofworkers from '../../tooltips/experiments/_number-of-workers.mdx';
 import ESseed from '../../tooltips/experiments/_seed.mdx';
 import LSlogger from '../../tooltips/experiments/_logger.mdx';
-import LSnumoftexts from '../../tooltips/experiments/_number-of-texts.mdx';
 
 # Experiment settings
 
@@ -232,6 +231,10 @@ The settings under each category are listed and described below.
 ### Learning rate
 
 <TSlearningRate/>
+
+### Use Flash Attention 2
+
+<TSuseflashattention2/>
 
 ### Batch size
 
@@ -430,10 +433,6 @@ The settings under each category are listed and described below.
 ### Compile model
 
 <EScompilemodel/>
-
-### Use FSDP
-
-<ESusefsdp/>
 
 ### Find unused parameters
 

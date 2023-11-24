@@ -45,6 +45,11 @@ Fine-tuning refers to the process of taking a pre-trained language model and fur
 
 Low-Rank Adapation (LoRa) involves modifying the pre-trained model by adjusting its weights and biases to better fit the new task. This adaptation is done in a way that preserves the pre-trained weights from the original dataset while also adjusting for the new task's specific requirements. This method of training or fine-turning models consumes less memory. By using low rank adaptation, the pre-trained model can be quickly adapted to new tasks, without requiring a large amount of new training data.
 
+## Quantization
+
+Quantization is a technique used to reduce the size and memory requirements of a large language model without sacrificing its accuracy. This is done by converting the floating-point numbers used to represent the model's parameters to lower-precision numbers, such as half-floats or bfloat16. Quantization can be used to make language models more accessible to users with limited computing resources. 
+
 ## 8-bit model training with a low memory footprint
 
 8-bit model training with a low memory footprint refers to a fine-tuning technique that reduces the memory requirements for training neural networks by using 8-bit integers instead of 32-bit floating-point numbers. This approach can significantly reduce the amount of memory needed to store the model's parameters and can make it possible to train larger models on hardware with limited memory capacity.
+

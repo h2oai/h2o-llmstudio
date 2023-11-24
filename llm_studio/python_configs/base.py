@@ -223,3 +223,14 @@ class DefaultConfigProblemBase(DefaultConfig):
                 init_args[field_name] = cfg_dict.get(field_name, field_obj.default)
 
         return cls(**init_args)
+
+    def check(self) -> Dict[str, List]:
+        """
+        Checks for errors (incompatible settings) for the specific problem type.
+        Returns:
+        A dictionary with two keys:
+        - "title": A list of error titles.
+        - "message": A list of error messages.
+        """
+        errors: Dict[str, List] = {"title": [], "message": []}
+        return errors

@@ -8,6 +8,9 @@ from transformers import AutoTokenizer
 logger = logging.getLogger(__name__)
 
 
+TEXT_SEPARATOR = "<TEXT_SEPARATOR>"
+
+
 def get_texts(df, cfg, separator=None):
     if isinstance(cfg.dataset.prompt_column, str):
         # single column dataset
@@ -21,7 +24,7 @@ def get_texts(df, cfg, separator=None):
             df[column] = df[column].astype(str)
 
         if separator is None:
-            separator = getattr(cfg, "_tokenizer_sep_token", "<SEPARATOR>")
+            separator = getattr(cfg, "_tokenizer_sep_token", TEXT_SEPARATOR)
 
         join_str = f" {separator} "
         texts = df[columns].astype(str)
@@ -82,10 +85,17 @@ def get_tokenizer(cfg: Any):
 
     cfg._tokenizer_eos_token = tokenizer.eos_token
 
+    if hasattr(cfg.prediction, "stop_tokens"):
+        set_stop_token_ids(cfg, tokenizer)
+    cfg.tokenizer._vocab_length = len(tokenizer)
+
+    return tokenizer
+
+
+def set_stop_token_ids(cfg, tokenizer):
     cfg.tokenizer._stop_words = list(
         filter(None, cfg.prediction.stop_tokens.split(","))
     )
-
     for stop_word in [
         cfg.dataset.text_system_start,
         cfg.dataset.text_prompt_start,
@@ -99,12 +109,9 @@ def get_tokenizer(cfg: Any):
         ):
             tokenizer.add_tokens([stop_word])
         cfg.tokenizer._stop_words.append(stop_word)
-
     cfg.tokenizer._stop_words = [
         stop_word for stop_word in cfg.tokenizer._stop_words if stop_word != ""
     ]
-    cfg.tokenizer._vocab_length = len(tokenizer)
-
     cfg.tokenizer._stop_words_ids = []
     for stop_word in set(cfg.tokenizer._stop_words):
         cfg.tokenizer._stop_words_ids.append(
@@ -114,5 +121,3 @@ def get_tokenizer(cfg: Any):
         )
     if cfg.environment._local_rank == 0:
         logger.info(f"Stop token ids: {cfg.tokenizer._stop_words_ids}")
-
-    return tokenizer

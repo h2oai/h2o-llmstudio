@@ -48,8 +48,20 @@ run `make test`.
 
 Please make sure your pull request fulfills the following checklist:
 
-☐ The PR title should provide a clear summary of your contribution.<br>
-☐ Link the related issue (e.g., closes #123) in your PR description.<br>
-☐ If your contribution is still a work in progress, change the PR to draft mode.<br>
-☐ Ensure that the existing tests pass by running `make test`.<br>
-☐ Make sure `make style` passes to maintain consistent code style.<br>
+☐ The PR title should provide a clear summary of your contribution.  
+☐ Link the related issue (e.g., closes #123) in your PR description.  
+☐ If your contribution is still a work in progress, change the PR to draft mode.  
+☐ Ensure that the existing tests pass by running `make test`.  
+☐ Make sure `make style` passes to maintain consistent code style.  
+
+## Installing custom packages
+
+If you need to install additional Python packages into the environment, you can do so using pip after activating your virtual environment via ```make shell```. For example, to install flash-attention, you would use the following commands:
+
+```bash
+make shell
+pip install flash-attn --no-build-isolation
+pip install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
+```
+
+For a PR, update the Pipfile and the Pipfile.lock via ```pipenv install package_name```.

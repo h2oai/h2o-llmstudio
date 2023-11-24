@@ -1,7 +1,7 @@
 import multiprocessing
 import os
 from dataclasses import dataclass, field
-from typing import Any, Tuple
+from typing import Any, Dict, List, Tuple
 
 import torch
 
@@ -137,6 +137,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     differential_learning_rate_layers: Tuple[str, ...] = ()
     differential_learning_rate: float = 0.00001
 
+    use_flash_attention_2: bool = False
     batch_size: int = 2
     drop_last_batch: bool = True
     epochs: int = 1
@@ -227,9 +228,9 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self._possible_values["max_length_prompt"] = (32, 8192, 32)
-        self._possible_values["max_length_answer"] = (32, 8192, 32)
-        self._possible_values["max_length"] = (32, 8192, 32)
+        self._possible_values["max_length_prompt"] = (32, 1024 * 16, 32)
+        self._possible_values["max_length_answer"] = (32, 1024 * 16, 32)
+        self._possible_values["max_length"] = (32, 1024 * 16, 32)
         self._possible_values["padding_quantile"] = (0, 1, 0.01)
         self._padding_side = "left"
 
@@ -268,9 +269,9 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
 @dataclass
 class ConfigNLPAugmentation(DefaultConfig):
     nlp_augmentations_class: Any = BaseNLPAug
-    token_mask_probability: float = 0
-    skip_parent_probability: float = 0
-    random_parent_probability: float = 0
+    token_mask_probability: float = 0.0
+    skip_parent_probability: float = 0.0
+    random_parent_probability: float = 0.0
 
     def __post_init__(self):
         super().__post_init__()
@@ -292,7 +293,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
 
     do_sample: bool = False
     num_beams: int = 1
-    temperature: float = 0.3
+    temperature: float = 0.0
     repetition_penalty: float = 1.2
     stop_tokens: str = ""
     top_k: int = 0
@@ -342,7 +343,13 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     mixed_precision: bool = True
 
     compile_model: bool = False
-    use_fsdp: bool = False
+    use_deepspeed: bool = False
+    deepspeed_reduce_bucket_size: int = int(1e6)
+    deepspeed_stage3_prefetch_bucket_size: int = int(1e6)
+    deepspeed_stage3_param_persistence_threshold: int = int(1e6)
+    #     deepspeed_offload_optimizer: bool = False
+    #     deepspeed_stage3_max_live_parameters: int = 1e9
+    #     deepspeed_stage3_max_reuse_distance: int = 1e9
 
     find_unused_parameters: bool = False
     trust_remote_code: bool = True
@@ -376,6 +383,37 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
         self._possible_values["number_of_workers"] = (1, multiprocessing.cpu_count(), 1)
         self._possible_values["seed"] = possible_values.Number(step=1, min=-1)
+        self._possible_values["deepspeed_reduce_bucket_size"] = possible_values.Number(
+            step=1, min=1e6
+        )
+        self._possible_values[
+            "deepspeed_stage3_prefetch_bucket_size"
+        ] = possible_values.Number(step=1, min=1e6)
+        self._possible_values[
+            "deepspeed_stage3_param_persistence_threshold"
+        ] = possible_values.Number(step=1, min=1e6)
+        self._possible_values[
+            "deepspeed_stage3_max_live_parameters"
+        ] = possible_values.Number(step=1, min=1e6)
+        self._possible_values[
+            "deepspeed_stage3_max_reuse_distance"
+        ] = possible_values.Number(step=1, min=1e6)
+        self._nesting.add(
+            [
+                "deepspeed_reduce_bucket_size",
+                "deepspeed_stage3_prefetch_bucket_size",
+                "deepspeed_stage3_param_persistence_threshold",
+                # "deepspeed_offload_optimizer",
+            ],
+            [Dependency(key="use_deepspeed", value=False, is_set=False)],
+        )
+        # self._nesting.add(
+        #     [
+        #         "deepspeed_stage3_max_live_parameters",
+        #         "deepspeed_stage3_max_reuse_distance",
+        #     ],
+        #     [Dependency(key="deepspeed_offload_optimizer", value=False, is_set=False)],  # noqa: E501
+        # )
 
 
 @dataclass
@@ -450,3 +488,12 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             ),
             allow_custom=True,
         )
+
+    def check(self) -> Dict[str, List]:
+        errors: Dict[str, List] = {"title": [], "message": []}
+        if self.prediction.temperature > 0 and not self.prediction.do_sample:
+            errors["title"] += ["Do sample needs to be enabled for temperature > 0"]
+            errors["message"] += [
+                "Please enable do sample if you want to use temperature > 0."
+            ]
+        return errors

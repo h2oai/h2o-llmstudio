@@ -7,15 +7,13 @@ from collections import OrderedDict
 from typing import Any, Dict
 
 import coolname
+import deepspeed
 import numpy as np
 import torch
+from deepspeed.runtime.dataloader import DeepSpeedDataLoader
+from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
 from peft import LoraConfig, get_peft_model
-from peft.utils import TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
 from torch.cuda.amp import autocast
-from torch.distributed.fsdp.fully_sharded_data_parallel import (
-    FullyShardedDataParallel,
-    MixedPrecision,
-)
 from torch.nn.parallel import DistributedDataParallel
 from tqdm import tqdm
 from transformers import (
@@ -32,6 +30,7 @@ from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
 from llm_studio.src.utils.data_utils import (
+    OrderedDistributedSampler,
     batch_padding,
     cat_batches,
     get_inference_batch_size,
@@ -52,7 +51,7 @@ def unwrap_model(model: torch.nn.Module):
     return model
 
 
-def check_disk_space(model: torch.nn.Module, path: str):
+def check_disk_space(model: torch.nn.Module, path: str, use_deepspeed: bool = False):
     total, used, free = shutil.disk_usage(path)
 
     model_size_in_bytes = 0
@@ -68,6 +67,8 @@ def check_disk_space(model: torch.nn.Module, path: str):
             model_size_in_bytes += param.numel() * 4
             logger.warning(f"Unsupported data type: {param.data.dtype}")
 
+    if use_deepspeed:
+        model_size_in_bytes *= 2  # need double space for converting deepspeed engine.
     if model_size_in_bytes * 1.03 < free:  # leave a 3% margin here.
         logger.info("Enough space available for saving model weights.")
     else:
@@ -90,15 +91,34 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
         Dictionary with all the keys to save
     """
 
-    model = unwrap_model(model)
+    if cfg.environment.use_deepspeed:
+        if path is not None:
+            # gather model params from all ranks
+            model.save_checkpoint(os.path.join(path, "ds_checkpoint"))  # type: ignore[operator] # noqa: E501
+            if cfg.environment._local_rank == 0:
+                # load to cpu
+                state_dict = get_fp32_state_dict_from_zero_checkpoint(
+                    os.path.join(path, "ds_checkpoint")
+                )
+                # save as normal checkpoint that can be loaded by `load_state_dict`
+                checkpoint = {"model": state_dict}
+                torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
+                shutil.rmtree(os.path.join(path, "ds_checkpoint"))
+    else:
+        if cfg.environment._local_rank == 0:
+            model = unwrap_model(model)
+            checkpoint = {"model": model.state_dict()}
+            if path is not None:
+                torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
 
-    if hasattr(cfg.training, "lora") and cfg.training.lora:
-        model.backbone.save_pretrained(path)
-
-    checkpoint = {"model": model.state_dict()}
-
-    if path is not None:
-        torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
+    if (
+        cfg.environment._local_rank == 0
+        and cfg.problem_type == "text_causal_classification_modeling"
+    ):
+        torch.save(
+            checkpoint["model"]["classification_head.weight"],
+            os.path.join(path, "classification_head.pth"),
+        )
 
 
 def load_model_weights(
@@ -184,27 +204,82 @@ def load_checkpoint(
         logger.info(f"Weights loaded from: {weights_path}")
 
 
-def wrap_model_distributed(model: torch.nn.Module, cfg: Any, fsdp: bool):
-    if fsdp:
-        auto_wrap_policy = None
+def get_ds_config(cfg: Any):
+    ds_config = {
+        "fp16": {
+            "enabled": True if cfg.architecture.backbone_dtype == "float16" else False,
+            "loss_scale_window": 100,
+        },
+        "bf16": {
+            "enabled": True if cfg.architecture.backbone_dtype == "bfloat16" else False,
+            "loss_scale_window": 100,
+        },
+        # https://www.deepspeed.ai/docs/config-json/#zero-optimizations-for-fp16-training
+        "zero_force_ds_cpu_optimizer": False,
+        "zero_optimization": {
+            "stage": 3,
+            "overlap_comm": True,
+            "contiguous_gradients": True,
+            "reduce_bucket_size": cfg.environment.deepspeed_reduce_bucket_size,
+            # zero3
+            "stage3_prefetch_bucket_size": cfg.environment.deepspeed_stage3_prefetch_bucket_size,  # noqa: E501
+            "stage3_param_persistence_threshold": cfg.environment.deepspeed_stage3_param_persistence_threshold,  # noqa: E501
+            # zero3 offload cpu
+            # "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,  # noqa: E501
+            # "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,  # noqa: E501
+            # zero++
+            # "reduce_scatter": True,
+            # "zero_quantized_weights": True,
+            # "zero_hpz_partition_size": 16,
+            # "zero_quantized_gradients": True,
+        },
+        "steps_per_print": 2000,
+        "train_micro_batch_size_per_gpu": cfg.training.batch_size,
+        "gradient_accumulation_steps": cfg.training.grad_accumulation,
+        "wall_clock_breakdown": False,
+    }
+    # TODO: Do not enable offload cpu for now.
+    # if cfg.environment.deepspeed_offload_optimizer:
+    #     ds_config["zero_optimization"]["offload_optimizer"] = {
+    #         "device": "cpu",
+    #         "pin_memory": True,
+    #     }
+    # TODO: RuntimeError: Tensors must be CUDA and dense
+    # if cfg.environment.deepspeed_offload_param:
+    #     ds_config["zero_optimization"]["offload_param"] =
+    #         {"device": "cpu", "pin_memory": True}
 
-        mixed_precision_policy = None
-        dtype = None
-        if cfg.environment.mixed_precision:
-            dtype = torch.float16
-        if dtype is not None:
-            mixed_precision_policy = MixedPrecision(
-                param_dtype=dtype, reduce_dtype=dtype, buffer_dtype=dtype
-            )
-        model = FullyShardedDataParallel(
-            model,
-            # sharding_strategy=ShardingStrategy.SHARD_GRAD_OP,
-            # cpu_offload=CPUOffload(offload_params=True),
-            auto_wrap_policy=auto_wrap_policy,
-            mixed_precision=mixed_precision_policy,
-            device_id=cfg.environment._local_rank,
-            # use_orig_params=False
-            limit_all_gathers=True,
+    return ds_config
+
+
+def wrap_model_distributed(
+    model: torch.nn.Module,
+    optimizer: torch.optim.Optimizer,
+    lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
+    train_dataloader: torch.utils.data.DataLoader,
+    val_dataloader: torch.utils.data.DataLoader,
+    cfg: Any,
+):
+    if cfg.environment.use_deepspeed:
+        ds_config = get_ds_config(cfg)
+        model, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
+            model=model,
+            optimizer=optimizer,
+            lr_scheduler=lr_scheduler,
+            training_data=train_dataloader.dataset,
+            config_params=ds_config,
+        )
+        val_dataloader = DeepSpeedDataLoader(
+            val_dataloader.dataset,
+            batch_size=val_dataloader.batch_size,
+            local_rank=cfg.environment._local_rank,
+            pin_memory=True,
+            tput_timer=None,
+            data_sampler=OrderedDistributedSampler(
+                val_dataloader.dataset,
+                num_replicas=cfg.environment._world_size,
+                rank=cfg.environment._local_rank,
+            ),
         )
     else:
         find_unused_parameters = cfg.environment.find_unused_parameters
@@ -216,7 +291,7 @@ def wrap_model_distributed(model: torch.nn.Module, cfg: Any, fsdp: bool):
             find_unused_parameters=find_unused_parameters,
         )
 
-    return model
+    return model, optimizer, train_dataloader, val_dataloader, lr_scheduler
 
 
 def get_optimizer(model: torch.nn.Module, cfg: Any) -> torch.optim.Optimizer:
@@ -229,7 +304,6 @@ def get_optimizer(model: torch.nn.Module, cfg: Any) -> torch.optim.Optimizer:
     Returns:
         Optimizer
     """
-
     no_decay = ["bias", "LayerNorm.weight"]
     differential_layers = cfg.training.differential_learning_rate_layers
     optimizer = Optimizers.get(cfg.training.optimizer)(
@@ -240,7 +314,7 @@ def get_optimizer(model: torch.nn.Module, cfg: Any) -> torch.optim.Optimizer:
                     for name, param in model.named_parameters()
                     if (not any(layer in name for layer in differential_layers))
                     and (not any(nd in name for nd in no_decay))
-                    # and param.requires_grad
+                    and param.requires_grad
                 ],
                 "lr": cfg.training.learning_rate,
                 "weight_decay": cfg.training.weight_decay,
@@ -251,7 +325,7 @@ def get_optimizer(model: torch.nn.Module, cfg: Any) -> torch.optim.Optimizer:
                     for name, param in model.named_parameters()
                     if (not any(layer in name for layer in differential_layers))
                     and (any(nd in name for nd in no_decay))
-                    # and param.requires_grad
+                    and param.requires_grad
                 ],
                 "lr": cfg.training.learning_rate,
                 "weight_decay": 0,
@@ -262,7 +336,7 @@ def get_optimizer(model: torch.nn.Module, cfg: Any) -> torch.optim.Optimizer:
                     for name, param in model.named_parameters()
                     if (any(layer in name for layer in differential_layers))
                     and (not any(nd in name for nd in no_decay))
-                    # and param.requires_grad
+                    and param.requires_grad
                 ],
                 "lr": cfg.training.differential_learning_rate,
                 "weight_decay": cfg.training.weight_decay,
@@ -273,7 +347,7 @@ def get_optimizer(model: torch.nn.Module, cfg: Any) -> torch.optim.Optimizer:
                     for name, param in model.named_parameters()
                     if (any(layer in name for layer in differential_layers))
                     and (any(nd in name for nd in no_decay))
-                    # and param.requires_grad
+                    and param.requires_grad
                 ],
                 "lr": cfg.training.differential_learning_rate,
                 "weight_decay": 0,
@@ -418,12 +492,29 @@ def run_inference(
 
         batch = cfg.dataset.dataset_class.batch_to_device(data, cfg.environment._device)
 
-        with autocast(enabled=cfg.environment.mixed_precision):
-            output = model.forward(batch)
-            if cfg.prediction.metric != "Perplexity":
+        if cfg.environment.use_deepspeed:
+            if (
+                cfg.prediction.metric != "Perplexity"
+                and cfg.problem_type != "text_causal_classification_modeling"
+            ):
+                output = {}
                 output["predicted_answer_ids"] = (
-                    unwrap_model(model).generate(batch, cfg).detach().cpu()
+                    model.module.generate(batch, cfg).detach().cpu()  # type: ignore
                 )
+            else:
+                output = model.forward(batch)
+        else:
+            with autocast(enabled=cfg.environment.mixed_precision):
+                if (
+                    cfg.prediction.metric != "Perplexity"
+                    and cfg.problem_type != "text_causal_classification_modeling"
+                ):
+                    output = {}
+                    output["predicted_answer_ids"] = (
+                        unwrap_model(model).generate(batch, cfg).detach().cpu()
+                    )
+                else:
+                    output = model.forward(batch)
         if contains_nan(output) and cfg.environment.mixed_precision:
             raise LLMModelException(
                 "NaN caught during mixed precision inference. "
@@ -432,9 +523,7 @@ def run_inference(
                 "gradient clipping may help to stabilize training."
             )
 
-        output = dataloader.dataset.postprocess_batch_predictions(
-            cfg=cfg, output=output
-        )
+        output = dataloader.dataset.postprocess_batch_predictions(output=output)
 
         if "predicted_answer_ids" in output.keys():
             del output["predicted_answer_ids"]
@@ -486,8 +575,20 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
 
 
 def update_backbone_config(config: Any, cfg: Any):
-    config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
-    config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
+    if hasattr(config, "hidden_dropout_prob"):
+        config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
+    if hasattr(config, "attention_probs_dropout_prob"):
+        config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
+    if (
+        not hasattr(config, "hidden_dropout_prob")
+        and not hasattr(config, "attention_probs_dropout_prob")
+        and cfg.architecture.intermediate_dropout > 0
+    ):
+        logger.warning(
+            "Model config does not have dropout attributes. "
+            f"Ignoring Intermediate Dropout = {cfg.architecture.intermediate_dropout}."
+        )
+        cfg.architecture.intermediate_dropout = 0
 
     tokenizer = get_tokenizer(cfg)
 
@@ -570,12 +671,28 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
 
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
 
+    if cfg.training.use_flash_attention_2:
+        try:
+            import flash_attn  # noqa: F401
+
+            use_flash_attention_2 = cfg.training.use_flash_attention_2
+            logger.info("Using Flash Attention 2.")
+        except ImportError:
+            use_flash_attention_2 = False
+            logger.warning(
+                "Flash Attention 2.0 is not available. "
+                "Please consider to run 'make setup' to install it."
+            )
+    else:
+        use_flash_attention_2 = False
+
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
             revision=cfg.environment.huggingface_branch,
             config=config,
             quantization_config=quantization_config,
+            use_flash_attention_2=use_flash_attention_2,
             **kwargs,
         )
     else:
@@ -709,20 +826,21 @@ def prepare_lora(cfg, backbone):
         if cfg.training.lora_target_modules
         else None
     )
-    if (
-        not target_modules
-        and backbone.config.model_type
-        not in TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING
-    ):
-        # extend LORA automatic target module mapping.
-        target_modules = {
-            "RefinedWebModel": [
-                "query_key_value",
-                "dense_h_to_4h",
-                "dense_4h_to_h",
-                "dense",
-            ],
-        }.get(backbone.config.model_type)
+
+    if target_modules is None:
+        target_modules = []
+        for name, module in backbone.named_modules():
+            if (
+                isinstance(module, (torch.nn.Linear, torch.nn.Conv1d))
+                and "head" not in name
+            ):
+                name = name.split(".")[-1]
+                if name not in target_modules:
+                    target_modules.append(name)
+
+    if cfg.environment._local_rank == 0:
+        logger.info(f"Lora module names: {target_modules}")
+
     lora_config = LoraConfig(
         r=cfg.training.lora_r,
         lora_alpha=cfg.training.lora_alpha,

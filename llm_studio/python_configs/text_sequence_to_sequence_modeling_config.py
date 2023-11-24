@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Dict, List
 
 from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.python_configs.text_causal_language_modeling_config import (
@@ -42,7 +42,6 @@ class ConfigNLPSeq2SeqDataset(ConfigNLPCausalLMDataset):
 
         self._visibility["limit_chained_samples"] = -1
         self._visibility["mask_prompt_labels"] = -1
-        self._visibility["dataset_class"] = -1
 
 
 @dataclass
@@ -112,3 +111,12 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             ),
             allow_custom=True,
         )
+
+    def check(self) -> Dict[str, List]:
+        errors: Dict[str, List] = {"title": [], "message": []}
+        if self.prediction.temperature > 0 and not self.prediction.do_sample:
+            errors["title"] += ["Do sample needs to be enabled for temperature > 0"]
+            errors["message"] += [
+                "Please enable do sample if you want to use temperature > 0."
+            ]
+        return errors

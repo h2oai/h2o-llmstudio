@@ -20,10 +20,16 @@ pipenv:
 .PHONY: setup
 setup: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
+	-$(PIPENV_PIP) install flash-attn==2.3.3 --no-build-isolation
 
 .PHONY: setup-dev
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
+	- $(PIPENV_PIP) install flash-attn==2.3.3 --no-build-isolation
+
+.PHONY: setup-no-flash
+setup-no-flash: pipenv
+	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
 
 .PHONY: export-requirements
 export-requirements: pipenv
@@ -51,8 +57,8 @@ style: reports pipenv
 	-$(PIPENV) run flake8 | tee -a reports/flake8_errors.log
 	@if [ -s reports/flake8_errors.log ]; then exit 1; fi
 
-	-$(PIPENV) run mypy . --check-untyped-defs | tee -a reports/mypy.log || echo "mypy failed" >> reports/mypy_errors.log
-	@if [ -s reports/mypy_errors.log ]; then exit 1; fi
+	-$(PIPENV) run mypy . --check-untyped-defs | tee -a reports/mypy.log
+	@if ! grep -Eq "Success: no issues found in [0-9]+ source files" reports/mypy.log ; then exit 1; fi
 
 .PHONY: format
 format: pipenv
@@ -69,13 +75,19 @@ black: pipenv
 
 .PHONY: test
 test: reports
-	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); $(PIPENV) run pytest -v -s --junitxml=reports/junit.xml \
+	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); \
+	$(PIPENV) run pytest -v --junitxml=reports/junit.xml \
+	--html=./reports/pytest.html \
+	--cov=llm_studio \
+	--cov-report term \
+	--cov-report html:./reports/coverage.html \
     -o log_cli=true -o log_level=INFO -o log_file=reports/tests.log \
     tests/* 2>&1 | tee reports/tests.log'
 
 .PHONY: wave
 wave:
 	HF_HUB_ENABLE_HF_TRANSFER=True \
+	H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
@@ -83,6 +95,7 @@ wave:
 
 .PHONY: llmstudio
 llmstudio:
+	H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \

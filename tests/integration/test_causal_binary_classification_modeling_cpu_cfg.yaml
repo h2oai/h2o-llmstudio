@@ -1,0 +1,93 @@
+architecture:
+    backbone_dtype: float32
+    force_embedding_gradients: false
+    gradient_checkpointing: true
+    intermediate_dropout: 0.0
+    pretrained: true
+    pretrained_weights: ''
+augmentation:
+    random_parent_probability: 0.0
+    skip_parent_probability: 0.0
+    token_mask_probability: 0.0
+dataset:
+    add_eos_token_to_answer: false
+    add_eos_token_to_prompt: false
+    add_eos_token_to_system: false
+    answer_column: binary_label
+    chatbot_author: H2O.ai
+    chatbot_name: h2oGPT
+    data_sample: 0.03
+    data_sample_choice:
+    - Train
+    - Validation
+    limit_chained_samples: false
+    mask_prompt_labels: true
+    num_classes: 1
+    parent_id_column: None
+    personalize: false
+    prompt_column:
+    - instruction
+    system_column: None
+    text_answer_separator: ''
+    text_prompt_start: ''
+    text_system_start: ''
+    train_dataframe: /tmp/train_full.pq
+    validation_dataframe: None
+    validation_size: 0.2
+    validation_strategy: automatic
+environment:
+    compile_model: false
+    deepspeed_reduce_bucket_size: 1000000
+    deepspeed_stage3_param_persistence_threshold: 1000000
+    deepspeed_stage3_prefetch_bucket_size: 1000000
+    find_unused_parameters: false
+    gpus:
+    - ''
+    huggingface_branch: main
+    mixed_precision: false
+    number_of_workers: 8
+    seed: -1
+    trust_remote_code: true
+    use_deepspeed: false
+experiment_name: solid-spaniel
+llm_backbone: MaxJeblick/llama2-0b-unit-test
+logging:
+    logger: None
+    neptune_project: ''
+output_directory: /tmp/output
+prediction:
+    batch_size_inference: 0
+    metric: AUC
+problem_type: text_causal_classification_modeling
+tokenizer:
+    add_prefix_space: false
+    add_prompt_answer_tokens: false
+    max_length: 32
+    max_length_answer: 16
+    max_length_prompt: 16
+    padding_quantile: 1.0
+    use_fast: true
+training:
+    batch_size: 6
+    differential_learning_rate: 1.0e-05
+    differential_learning_rate_layers:
+    - classification_head
+    drop_last_batch: true
+    epochs: 1
+    evaluate_before_training: false
+    evaluation_epochs: 1.0
+    grad_accumulation: 1
+    gradient_clip: 0.0
+    learning_rate: 0.0001
+    lora: true
+    lora_alpha: 16
+    lora_dropout: 0.05
+    lora_r: 4
+    lora_target_modules: ''
+    loss_function: BinaryCrossEntropyLoss
+    optimizer: AdamW
+    save_best_checkpoint: false
+    schedule: Cosine
+    train_validation_data: false
+    warmup_epochs: 0.0
+    weight_decay: 0.0

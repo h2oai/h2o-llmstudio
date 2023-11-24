@@ -15,13 +15,14 @@ import time
 from distutils import util
 from typing import Any, Callable, Dict, Tuple
 
+import deepspeed
 import numpy as np
 import pandas as pd
 import torch
 from torch.cuda.amp import GradScaler, autocast
-from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from transformers.deepspeed import HfDeepSpeedConfig
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.loggers import MainLogger
@@ -50,6 +51,7 @@ from llm_studio.src.utils.logging_utils import (
 )
 from llm_studio.src.utils.modeling_utils import (
     check_disk_space,
+    get_ds_config,
     get_number_of_validation_epochs,
     get_optimizer,
     get_scheduler,
@@ -151,6 +153,9 @@ def run_eval(
 def run_train(
     cfg: Any,
     model: torch.nn.Module,
+    optimizer,
+    scheduler,
+    epoch_steps,
     train_dataloader,
     val_dataloader,
     val_df: pd.DataFrame,
@@ -172,17 +177,9 @@ def run_train(
         Last train batch
     """
 
-    epoch_steps = len(train_dataloader)
-
-    optimizer = get_optimizer(model=model, cfg=cfg)
-    scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
-
-    scaler: GradScaler | ShardedGradScaler | None = None
+    scaler: GradScaler | None = None
     if cfg.environment.mixed_precision:
-        if cfg.environment.use_fsdp:
-            scaler = ShardedGradScaler()
-        else:
-            scaler = GradScaler()
+        scaler = GradScaler()
 
     optimizer.zero_grad(set_to_none=True)
 
@@ -216,8 +213,10 @@ def run_train(
         if cfg.environment._local_rank == 0:
             logger.info(f"Training Epoch: {epoch + 1} / {cfg.training.epochs}")
 
-        if cfg.environment._distributed and hasattr(
-            train_dataloader.sampler, "set_epoch"
+        if (
+            cfg.environment._distributed
+            and not cfg.environment.use_deepspeed
+            and hasattr(train_dataloader.sampler, "set_epoch")
         ):
             train_dataloader.sampler.set_epoch(epoch)  # type: ignore
 
@@ -237,6 +236,8 @@ def run_train(
 
         log_update_steps = max(epoch_steps // 20, 1)
         evaluation_step = max(int(epoch_steps * cfg.training.evaluation_epochs), 1)
+        logger.info(f"Evaluation step: {evaluation_step}")
+
         for itr, data in enumerate(tr_it):
             cfg.environment._curr_step += (
                 cfg.training.batch_size * cfg.environment._world_size
@@ -278,7 +279,7 @@ def run_train(
                 loss = loss / cfg.training.grad_accumulation
 
             # Backward pass
-            if cfg.environment.mixed_precision:
+            if cfg.environment.mixed_precision and not cfg.environment.use_deepspeed:
                 scaler.scale(loss).backward()  # type: ignore
                 if itr % cfg.training.grad_accumulation == 0:
                     if cfg.training.gradient_clip > 0:
@@ -290,7 +291,10 @@ def run_train(
                     scaler.update()
                     optimizer.zero_grad(set_to_none=True)
             else:
-                loss.backward()
+                if cfg.environment.use_deepspeed:
+                    model.backward(loss)  # type: ignore[operator]
+                else:
+                    loss.backward()
                 if itr % cfg.training.grad_accumulation == 0:
                     if cfg.training.gradient_clip > 0:
                         torch.nn.utils.clip_grad_norm_(
@@ -347,28 +351,30 @@ def run_train(
                 if cfg.training.evaluation_epochs == 1:
                     progress_bar.close()
 
+                # TODO: Move back after fixing slow generation of deepspeed.
+                if not cfg.training.save_best_checkpoint:
+                    checkpoint_path = cfg.output_directory
+                    if cfg.environment._local_rank == 0:
+                        logger.info(
+                            f"Saving last model checkpoint to {checkpoint_path}"
+                        )
+                    save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
+
                 val_loss, val_metric = run_eval(
                     cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
                 )
-                if cfg.environment._local_rank == 0:
-                    if cfg.training.save_best_checkpoint:
-                        if objective_op(val_metric, best_val_metric):
-                            checkpoint_path = cfg.output_directory
+
+                if cfg.training.save_best_checkpoint:
+                    if objective_op(val_metric, best_val_metric):
+                        checkpoint_path = cfg.output_directory
+                        if cfg.environment._local_rank == 0:
                             logger.info(
                                 f"Saving best model checkpoint: "
                                 f"val_{cfg.prediction.metric} {best_val_metric:.5} -> "
                                 f"{val_metric:.5} to {checkpoint_path}"
                             )
-                            save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
-                            best_val_metric = val_metric
-                    else:
-                        checkpoint_path = cfg.output_directory
-                        logger.info(
-                            f"Saving last model checkpoint: "
-                            f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
-                            f"{val_metric:.5} to {checkpoint_path}"
-                        )
                         save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
+                        best_val_metric = val_metric
 
                 model.train()
 
@@ -393,6 +399,9 @@ def run_train(
 def run_train_rlhf(
     cfg: Any,
     model: torch.nn.Module,
+    optimizer,
+    scheduler,
+    epoch_steps,
     train_dataloader,
     val_dataloader,
     val_df: pd.DataFrame,
@@ -414,17 +423,9 @@ def run_train_rlhf(
         Last train batch
     """
 
-    epoch_steps = len(train_dataloader)
-
-    optimizer = get_optimizer(model=model, cfg=cfg)
-    scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
-
-    scaler: GradScaler | ShardedGradScaler | None = None
+    scaler: GradScaler | None = None
     if cfg.environment.mixed_precision:
-        if cfg.environment.use_fsdp:
-            scaler = ShardedGradScaler()
-        else:
-            scaler = GradScaler()
+        scaler = GradScaler()
 
     optimizer.zero_grad(set_to_none=True)
 
@@ -500,6 +501,27 @@ def run_train_rlhf(
 
         log_update_steps = max(epoch_steps // 20, 1)
         evaluation_step = max(int(epoch_steps * cfg.training.evaluation_epochs), 1)
+
+        logger.info(f"Target evaluation step: {evaluation_step}")
+
+        # Round up to the nearest multiple of cfg.training.rollout_steps
+        assert cfg.training.rollout_steps <= epoch_steps, (
+            f"Rollout steps ({cfg.training.rollout_steps}) must be less than the total "
+            f"training steps in one epoch ({epoch_steps})"
+        )
+
+        # Round up to the next multiple of rollout steps
+        evaluation_step = (
+            (evaluation_step + cfg.training.rollout_steps - 1)
+            // cfg.training.rollout_steps
+        ) * cfg.training.rollout_steps
+
+        logger.info(f"Actual evaluation step: {evaluation_step}")
+
+        query_tensors = []
+        response_tensors = []
+        rewards = []
+
         for itr, data in enumerate(tr_it):
             cfg.environment._curr_step += (
                 cfg.training.batch_size * cfg.environment._world_size
@@ -528,18 +550,24 @@ def run_train_rlhf(
                     .detach()
                 )
                 output_dict = train_dataloader.dataset.postprocess_batch_predictions(
-                    cfg=cfg, output=output_dict
+                    output=output_dict
                 )
 
                 logger.debug("Evaluation: Score from reward model")
                 # tokenize prompt & output internally
                 if cfg.training.offload_reward_model:
                     reward_model.to(cfg.environment._device)
-                with autocast(enabled=cfg.environment.mixed_precision):
+                context = (
+                    autocast(enabled=cfg.environment.mixed_precision)
+                    if (torch.cuda.is_available() and len(cfg.environment.gpus) > 0)
+                    else torch.no_grad()
+                )
+                with context:  # type: ignore[attr-defined]
                     scores = reward_model.get_score(
                         batch["reward_model_prompt_text"],
                         output_dict["predicted_text"],
                     )
+
                 if cfg.training.offload_reward_model:
                     reward_model.to("cpu")
 
@@ -575,50 +603,66 @@ def run_train_rlhf(
             del output_dict
             del batch
 
-            output_dict = ppo_trainer.step(query_tensor, response_tensor, reward)
-            del query_tensor, response_tensor, reward, scores
+            query_tensors += query_tensor
+            response_tensors += response_tensor
+            rewards += reward
 
-            loss = output_dict["ppo/loss/total"]
-            losses.append(loss)
+            if cfg.environment._distributed:
+                torch.cuda.synchronize(device=cfg.environment._local_rank)
+                torch.distributed.barrier()
 
-            if cfg.environment._local_rank == 0:
-                for key in output_dict.keys():
-                    if isinstance(output_dict[key], (float, int)) or (
-                        isinstance(output_dict[key], np.ndarray)
-                        and output_dict[key].size == 1
-                    ):
-                        if np.isfinite(output_dict[key]):
-                            cfg.logging._logger.log(
-                                "train",
-                                key,
-                                output_dict[key],
-                                step=cfg.environment._curr_step,
-                            )
-                cfg.logging._logger.log(
-                    "train", "loss", losses[-1], step=cfg.environment._curr_step
-                )
-                cfg.logging._logger.log(
-                    "meta",
-                    "lr",
-                    optimizer.param_groups[0]["lr"],
-                    step=cfg.environment._curr_step,
-                )
-                if cfg.training.differential_learning_rate_layers:
+            if (itr + 1) % cfg.training.rollout_steps == 0:
+                output_dict = ppo_trainer.step(query_tensors, response_tensors, rewards)
+                del query_tensors, response_tensors, rewards, scores
+
+                query_tensors = []
+                response_tensors = []
+                rewards = []
+
+                loss = output_dict["ppo/loss/total"]
+                losses.append(loss)
+
+                if cfg.environment._local_rank == 0:
+                    for key in output_dict.keys():
+                        if isinstance(output_dict[key], (float, int)) or (
+                            isinstance(output_dict[key], np.ndarray)
+                            and output_dict[key].size == 1
+                        ):
+                            if np.isfinite(output_dict[key]):
+                                cfg.logging._logger.log(
+                                    "train",
+                                    key,
+                                    output_dict[key],
+                                    step=cfg.environment._curr_step,
+                                )
+                    cfg.logging._logger.log(
+                        "train", "loss", losses[-1], step=cfg.environment._curr_step
+                    )
                     cfg.logging._logger.log(
                         "meta",
-                        "lr_diff",
-                        optimizer.param_groups[2]["lr"],
+                        "lr",
+                        optimizer.param_groups[0]["lr"],
+                        step=cfg.environment._curr_step,
+                    )
+                    if cfg.training.differential_learning_rate_layers:
+                        cfg.logging._logger.log(
+                            "meta",
+                            "lr_diff",
+                            optimizer.param_groups[2]["lr"],
+                            step=cfg.environment._curr_step,
+                        )
+
+                    cfg.logging._logger.log(
+                        "internal",
+                        "current_step",
+                        cfg.environment._curr_step,
                         step=cfg.environment._curr_step,
                     )
 
-                cfg.logging._logger.log(
-                    "internal",
-                    "current_step",
-                    cfg.environment._curr_step,
-                    step=cfg.environment._curr_step,
-                )
+                    del output_dict
 
-                # Show logs each 5% of the epoch (only if doing per epoch evaluation)
+            if cfg.environment._local_rank == 0:
+                # Show logs each 5% of the epoch (only if doing per epoch eval)
                 if (itr + 1) % log_update_steps == 0 or itr == epoch_steps - 1:
                     progress_bar.set_description(
                         f"train loss: {np.mean(losses[-10:]):.2f}", refresh=False
@@ -628,35 +672,39 @@ def run_train_rlhf(
                     else:
                         progress_bar.update(epoch_steps % log_update_steps)
 
-                del output_dict
+            if cfg.environment._distributed:
+                torch.cuda.synchronize(device=cfg.environment._local_rank)
+                torch.distributed.barrier()
 
             # Validation loop
-            if (itr + 1) % evaluation_step == 0:
+            if ((itr + 1) % evaluation_step == 0) or (itr == epoch_steps - 1):
                 if cfg.training.evaluation_epochs == 1:
                     progress_bar.close()
 
                 val_loss, val_metric = run_eval(
                     cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
                 )
-                if cfg.environment._local_rank == 0:
-                    if cfg.training.save_best_checkpoint:
-                        if objective_op(val_metric, best_val_metric):
-                            checkpoint_path = cfg.output_directory
+
+                if cfg.training.save_best_checkpoint:
+                    if objective_op(val_metric, best_val_metric):
+                        checkpoint_path = cfg.output_directory
+                        if cfg.environment._local_rank == 0:
                             logger.info(
                                 f"Saving best model checkpoint: "
                                 f"val_{cfg.prediction.metric} {best_val_metric:.5} -> "
                                 f"{val_metric:.5} to {checkpoint_path}"
                             )
-                            save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
-                            best_val_metric = val_metric
-                    else:
-                        checkpoint_path = cfg.output_directory
+                        save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
+                        best_val_metric = val_metric
+                else:
+                    checkpoint_path = cfg.output_directory
+                    if cfg.environment._local_rank == 0:
                         logger.info(
                             f"Saving last model checkpoint: "
                             f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
                             f"{val_metric:.5} to {checkpoint_path}"
                         )
-                        save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
+                    save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
                 model.train()
 
@@ -684,7 +732,6 @@ def run(cfg: Any) -> None:
     Args:
         cfg: config object with all the hyperparameters
     """
-
     os.makedirs(cfg.output_directory, exist_ok=True)
 
     # Force evaluation if user trains 0 epochs
@@ -699,6 +746,15 @@ def run(cfg: Any) -> None:
     else:
         cfg.environment._seed = cfg.environment.seed
 
+    if (
+        cfg.architecture.backbone_dtype in ["int8", "int4"]
+        and cfg.environment.use_deepspeed
+    ):
+        raise ValueError(
+            f"Deepspeed do not support backbone type {cfg.architecture.backbone_dtype}."
+            + " Please set backbone type to float16 or bfloat16 for using deepspeed."
+        )
+
     # Prepare environment
     if "WORLD_SIZE" in os.environ:
         cfg.environment._distributed = int(os.environ["WORLD_SIZE"]) > 1
@@ -708,7 +764,10 @@ def run(cfg: Any) -> None:
     if cfg.environment._distributed:
         cfg.environment._local_rank = int(os.environ["LOCAL_RANK"])
         cfg.environment._device = "cuda:%d" % cfg.environment._local_rank
-        torch.distributed.init_process_group(backend="nccl", init_method="env://")
+        if cfg.environment.use_deepspeed:
+            deepspeed.init_distributed()
+        else:
+            torch.distributed.init_process_group(backend="nccl", init_method="env://")
         cfg.environment._cpu_comm = torch.distributed.new_group(backend="gloo")
 
         cfg.environment._world_size = torch.distributed.get_world_size()
@@ -731,10 +790,17 @@ def run(cfg: Any) -> None:
         )
     else:
         cfg.environment._local_rank = 0
-        cfg.environment._device = "cuda:0"
+        cfg.environment._device = (
+            "cuda:0"
+            if (torch.cuda.is_available() and len(cfg.environment.gpus) > 0)
+            else "cpu"
+        )
+        if cfg.environment._device == "cpu":
+            logger.warning("Training on CPU. This will be slow.")
 
     set_seed(cfg.environment._seed)
     if cfg.environment._local_rank == 0:
+        logger.info(f"Problem Type: {cfg.problem_type}")
         logger.info(f"Global random seed: {cfg.environment._seed}")
 
     cfg = set_environment(cfg)
@@ -785,16 +851,24 @@ def run(cfg: Any) -> None:
             * cfg.environment._world_size
         )
 
-    # Prepare model
+    # Prepare model and optimizer
+    if cfg.environment.use_deepspeed:
+        ds_config = get_ds_config(cfg)
+        # keep this object alive.
+        dschf = HfDeepSpeedConfig(ds_config)  # noqa: F841
     with torch.device(cfg.environment._device):
         model = cfg.architecture.model_class(cfg)
-        check_disk_space(model, cfg.output_directory)
+        check_disk_space(model, cfg.output_directory, cfg.environment.use_deepspeed)
 
         # load model weights
         if cfg.architecture.pretrained_weights != "":
             # Do not load strictly if continue training from the previous experiment
             load_checkpoint(cfg, model, strict=cfg.training.epochs == -1)
     model.to(cfg.environment._device)
+
+    epoch_steps = len(train_dataloader)
+    optimizer = get_optimizer(model=model, cfg=cfg)
+    scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
 
     if getattr(cfg.architecture, "force_embedding_gradients"):
         for module in model.modules():
@@ -804,13 +878,33 @@ def run(cfg: Any) -> None:
                     param.data = param.data.float()
 
     if cfg.environment._distributed:
-        model = wrap_model_distributed(model, cfg, cfg.environment.use_fsdp)
+        (
+            model,
+            optimizer,
+            train_dataloader,
+            val_dataloader,
+            scheduler,
+        ) = wrap_model_distributed(
+            model=model,
+            optimizer=optimizer,
+            lr_scheduler=scheduler,
+            train_dataloader=train_dataloader,
+            val_dataloader=val_dataloader,
+            cfg=cfg,
+        )
 
     if cfg.environment.compile_model:
-        if cfg.environment._distributed:
-            model.module.backbone = torch.compile(model.module.backbone)
+        # deepspeed do not support torch.compile
+        if cfg.environment.use_deepspeed:
+            logger.warning(
+                "Deepspeed is active, but it doesn't support torch.compile."
+                "Skipping compilation for this experiment."
+            )
         else:
-            model.backbone = torch.compile(model.backbone)
+            if cfg.environment._distributed:
+                model.module.backbone = torch.compile(model.module.backbone)
+            else:
+                model.backbone = torch.compile(model.backbone)
 
     # Force settings when saving best checkpoint
     if cfg.training.save_best_checkpoint:
@@ -854,6 +948,9 @@ def run(cfg: Any) -> None:
     val_loss, val_metric = train_function(
         cfg=cfg,
         model=model,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        epoch_steps=epoch_steps,
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
         val_df=val_df,
@@ -865,18 +962,17 @@ def run(cfg: Any) -> None:
 
     experiment_path = f"{cfg.output_directory}"
 
+    if cfg.training.epochs == 0:
+        checkpoint_path = cfg.output_directory
+        logger.info(
+            f"Saving last model checkpoint: "
+            f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
+            f"{val_metric:.5} to {checkpoint_path}"
+        )
+        save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
+
     if cfg.environment._local_rank == 0:
-        if cfg.training.epochs == 0:
-            checkpoint_path = cfg.output_directory
-            logger.info(
-                f"Saving last model checkpoint: "
-                f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
-                f"{val_metric:.5} to {checkpoint_path}"
-            )
-            save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
-
         save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
-
         save_prediction_outputs(cfg.experiment_name, experiment_path)
 
         flag_path = os.path.join(cfg.output_directory, "flags.json")

@@ -1,0 +1,98 @@
+architecture:
+    backbone_dtype: bfloat16
+    force_embedding_gradients: false
+    gradient_checkpointing: true
+    intermediate_dropout: 0.0
+    pretrained: true
+    pretrained_weights: ''
+augmentation:
+    random_parent_probability: 0.0
+    skip_parent_probability: 0.0
+    token_mask_probability: 0.0
+dataset:
+    add_eos_token_to_answer: true
+    add_eos_token_to_prompt: true
+    add_eos_token_to_system: true
+    answer_column: output
+    chatbot_author: H2O.ai
+    chatbot_name: h2oGPT
+    data_sample: 0.01
+    data_sample_choice:
+    - Train
+    - Validation
+    limit_chained_samples: false
+    mask_prompt_labels: true
+    parent_id_column: None
+    personalize: false
+    prompt_column:
+    - instruction
+    system_column: None
+    text_answer_separator: ''
+    text_prompt_start: ''
+    text_system_start: ''
+    train_dataframe: /tmp/train_full.pq
+    validation_dataframe: None
+    validation_size: 0.01
+    validation_strategy: automatic
+environment:
+    compile_model: false
+    find_unused_parameters: false
+    gpus:
+    - '0'
+    huggingface_branch: main
+    mixed_precision: false
+    number_of_workers: 8
+    seed: -1
+    trust_remote_code: true
+experiment_name: test-sequence-to-sequence-modeling-oasst
+llm_backbone: t5-small
+logging:
+    logger: None
+    neptune_project: test_org/test_project
+output_directory: /tmp/output
+prediction:
+    batch_size_inference: 0
+    do_sample: false
+    max_length_inference: 256
+    metric: Perplexity
+    metric_gpt_model: gpt-3.5-turbo-0301
+    min_length_inference: 2
+    num_beams: 1
+    num_history: 4
+    repetition_penalty: 1.2
+    stop_tokens: ''
+    temperature: 0.3
+    top_k: 0
+    top_p: 1.0
+problem_type: text_sequence_to_sequence_modeling
+tokenizer:
+    add_prefix_space: false
+    add_prompt_answer_tokens: false
+    max_length: 512
+    max_length_answer: 256
+    max_length_prompt: 256
+    padding_quantile: 1.0
+    use_fast: true
+training:
+    batch_size: 2
+    differential_learning_rate: 1.0e-05
+    differential_learning_rate_layers: []
+    drop_last_batch: true
+    epochs: 1
+    evaluate_before_training: false
+    evaluation_epochs: 1.0
+    grad_accumulation: 1
+    gradient_clip: 0.0
+    learning_rate: 0.0001
+    lora: true
+    lora_alpha: 16
+    lora_dropout: 0.05
+    lora_r: 4
+    lora_target_modules: ''
+    loss_function: TokenAveragedCrossEntropy
+    optimizer: AdamW
+    save_best_checkpoint: false
+    schedule: Cosine
+    train_validation_data: false
+    warmup_epochs: 0.0
+    weight_decay: 0.0
