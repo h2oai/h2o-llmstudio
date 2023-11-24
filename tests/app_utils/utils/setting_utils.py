@@ -1,7 +1,7 @@
 from unittest import mock
 
-from app_utils.config import default_cfg
-from app_utils.utils.setting_utils import (
+from llm_studio.app_utils.config import default_cfg
+from llm_studio.app_utils.setting_utils import (
     EnvFileSaver,
     KeyRingSaver,
     NoSaver,
