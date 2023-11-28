@@ -45,3 +45,31 @@ Encoders and decoders are vital parts of sequence-to-sequence models used in nat
 ##  Text generation
 
 Text generation is the process of creating written content, such as sentences or paragraphs, using machine learning or AI algorithms based on patterns learned from existing text data.
+
+## In-context learning
+
+In-context learning refers to the process where a machine learning model continuously improves and adapts by considering the context of new information within its existing knowledge, enhancing its accuracy and understanding over time.
+
+## Few-shot learning
+
+Few-shot learning refers to a machine learning technique where a model can learn from a very small amount of labeled data to generalize and make predictions accurately on new, unseen data.
+
+## Summarization
+
+Summarization is the process of condensing a larger piece of text into a shorter, coherent version while retaining its essential information.
+
+## Fine-tuning
+
+Fine-tuning refers to adjusting and optimizing a pre-trained machine learning model using specific data to enhance its performance for a particular task.
+
+## GPT
+
+GPT stands for "Generative Pre-trained Transformer," a type of language model that uses transformers to understand and generate human-like text based on vast amounts of training data.
+
+# GPU deployment
+
+GPU deployment is the utilization of graphics processing units (GPUs) to execute and accelerate the computations involved in deploying machine learning models, improving speed and efficiency in model inference or training.
+
+# Tokenization
+
+Tokenization is the process of breaking text into smaller units, typically words or phrases, to analyze or process them individually within a natural language processing system.
