@@ -24,6 +24,7 @@ from transformers import (
     StoppingCriteria,
     StoppingCriteriaList,
 )
+from transformers.pytorch_utils import Conv1D as Conv1DTransformer
 from transformers.utils import logging as transformers_logging
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
@@ -832,7 +833,9 @@ def prepare_lora(cfg, backbone):
         target_modules = []
         for name, module in backbone.named_modules():
             if (
-                isinstance(module, (torch.nn.Linear, torch.nn.Conv1d))
+                isinstance(
+                    module, (torch.nn.Linear, torch.nn.Conv1d, Conv1DTransformer)
+                )
                 and "head" not in name
             ):
                 name = name.split(".")[-1]
