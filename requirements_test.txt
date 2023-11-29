@@ -1,0 +1,9 @@
+pytest-bdd==6.1.1
+pytest==7.1.2
+pytest-cov==4.1.0
+pytest-dependency==0.5.1
+pytest-html==3.2.0
+pytest-playwright==0.3.0
+playwright==1.27.0
+http://h2o-public-test-data.s3.amazonaws.com/e2e-testing/hac_playwright-1.27.0-py3-none-any.whl
+python-dotenv==1.0.0

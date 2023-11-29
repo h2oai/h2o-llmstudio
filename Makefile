@@ -5,6 +5,7 @@ PIPENV ?= $(PYTHON) -m pipenv
 PIPENV_PYTHON = $(PIPENV) run python
 PIPENV_PIP = $(PIPENV_PYTHON) -m pip
 PWD = $(shell pwd)
+ENV_BIN=./venv/bin/
 
 ifeq ($(origin H2O_LLM_STUDIO_WORKDIR), environment)
     WORKDIR := $(H2O_LLM_STUDIO_WORKDIR)
@@ -24,6 +25,11 @@ setup: pipenv
 .PHONY: setup-dev
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
+
+setup-ui-test:
+	$(PYTHON) -m venv venv
+	$(ENV_BIN)pip install pip --upgrade
+	$(ENV_BIN)pip install -r requirements_test.txt
 
 .PHONY: export-requirements
 export-requirements: pipenv
@@ -77,6 +83,17 @@ test: reports
 	--cov-report html:./reports/coverage.html \
     -o log_cli=true -o log_level=INFO -o log_file=reports/tests.log \
     tests/* 2>&1 | tee reports/tests.log'
+
+.PHONY: test-ui
+test-ui: reports
+	$(ENV_BIN)python -m pytest -v --junitxml=reports/junit_ui.xml \
+	--html=./reports/pytest_ui.html \
+	tests/ui/test.py 2>&1 | tee reports/tests.log
+
+.PHONY: test-ui-local
+test-ui-local: 
+	$(ENV_BIN)python -m pytest -vvs --headed \
+	tests/ui/test.py 2>&1 | tee reports/tests.log
 
 .PHONY: wave
 wave:
