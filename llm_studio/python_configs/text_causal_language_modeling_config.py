@@ -317,7 +317,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
 
         self._possible_values["batch_size_inference"] = (0, 512, 1)
         self._possible_values["min_length_inference"] = (0, 1024, 1)
-        self._possible_values["max_length_inference"] = (1, 1024, 1)
+        self._possible_values["max_length_inference"] = (1, 4096, 1)
 
         self._possible_values["num_beams"] = (1, 4, 1)
         self._possible_values["temperature"] = (0, 10, 0.05)
@@ -472,18 +472,17 @@ class ConfigProblemBase(DefaultConfigProblemBase):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
-                "h2oai/h2ogpt-4096-llama2-70b",
-                "h2oai/h2ogpt-4096-llama2-70b-chat",
-                "h2oai/h2ogpt-4096-llama2-13b",
-                "h2oai/h2ogpt-4096-llama2-13b-chat",
                 "h2oai/h2ogpt-4096-llama2-7b",
                 "h2oai/h2ogpt-4096-llama2-7b-chat",
-                "tiiuae/falcon-40b",
+                "h2oai/h2ogpt-4096-llama2-13b",
+                "h2oai/h2ogpt-4096-llama2-13b-chat",
+                "h2oai/h2ogpt-4096-llama2-70b",
+                "h2oai/h2ogpt-4096-llama2-70b-chat",
                 "tiiuae/falcon-7b",
-                "openlm-research/open_llama_13b",
-                "openlm-research/open_llama_7b",
-                "openlm-research/open_llama_3b",
-                "EleutherAI/gpt-j-6B",
+                "tiiuae/falcon-40b",
+                "mistralai/Mistral-7B-v0.1",
+                "HuggingFaceH4/zephyr-7b-beta",
+                "stabilityai/stablelm-3b-4e1t",
                 "facebook/opt-125m",
             ),
             allow_custom=True,

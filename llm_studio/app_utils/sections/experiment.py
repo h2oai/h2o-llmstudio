@@ -49,6 +49,7 @@ from llm_studio.python_configs.cfg_checks import check_config_for_errors
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
+    NON_GENERATION_PROBLEM_TYPES,
     load_config_py,
     load_config_yaml,
     save_config_yaml,
@@ -1859,7 +1860,7 @@ def get_experiment_summary_code_card(cfg) -> str:
 
     text = text.replace("{{trust_remote_code}}", str(cfg.environment.trust_remote_code))
 
-    if cfg.problem_type != "text_causal_classification_modeling":
+    if cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES:
         text = text.replace(
             "{{min_new_tokens}}", str(cfg.prediction.min_length_inference)
         )

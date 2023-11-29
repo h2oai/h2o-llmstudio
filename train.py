@@ -964,11 +964,8 @@ def run(cfg: Any) -> None:
 
     if cfg.training.epochs == 0:
         checkpoint_path = cfg.output_directory
-        logger.info(
-            f"Saving last model checkpoint: "
-            f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
-            f"{val_metric:.5} to {checkpoint_path}"
-        )
+        if cfg.environment._local_rank == 0:
+            logger.info(f"Saving last model checkpoint to {checkpoint_path}")
         save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
     if cfg.environment._local_rank == 0:
