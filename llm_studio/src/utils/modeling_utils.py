@@ -30,6 +30,7 @@ from transformers.utils import logging as transformers_logging
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
+from llm_studio.src.utils.config_utils import NON_GENERATION_PROBLEM_TYPES
 from llm_studio.src.utils.data_utils import (
     OrderedDistributedSampler,
     batch_padding,
@@ -114,7 +115,7 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
 
     if (
         cfg.environment._local_rank == 0
-        and cfg.problem_type == "text_causal_classification_modeling"
+        and "classification_head.weight" in checkpoint["model"]
     ):
         torch.save(
             checkpoint["model"]["classification_head.weight"],
@@ -496,7 +497,7 @@ def run_inference(
         if cfg.environment.use_deepspeed:
             if (
                 cfg.prediction.metric != "Perplexity"
-                and cfg.problem_type != "text_causal_classification_modeling"
+                and cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES
             ):
                 output = {}
                 output["predicted_answer_ids"] = (
@@ -508,7 +509,7 @@ def run_inference(
             with autocast(enabled=cfg.environment.mixed_precision):
                 if (
                     cfg.prediction.metric != "Perplexity"
-                    and cfg.problem_type != "text_causal_classification_modeling"
+                    and cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES
                 ):
                     output = {}
                     output["predicted_answer_ids"] = (

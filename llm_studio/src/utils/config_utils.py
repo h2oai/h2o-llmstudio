@@ -215,3 +215,8 @@ def load_config_yaml(path: str):
     with open(path, "r") as fp:
         cfg_dict = yaml.load(fp, Loader=yaml.FullLoader)
     return convert_nested_dictionary_to_cfg_base(cfg_dict)
+
+
+# Note that importing ConfigProblemBase from the python_configs
+# and using cfg.problem_type below will not work because of circular imports
+NON_GENERATION_PROBLEM_TYPES = ["text_causal_classification_modeling"]

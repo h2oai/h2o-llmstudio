@@ -9,6 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from llm_studio.app_utils.sections.chat import load_cfg_model_tokenizer
 from llm_studio.app_utils.utils import hf_repo_friendly_name, save_hf_yaml, set_env
+from llm_studio.src.utils.config_utils import NON_GENERATION_PROBLEM_TYPES
 from llm_studio.src.utils.modeling_utils import check_disk_space
 
 
@@ -32,6 +33,27 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
         library_name="transformers",
         tags=["gpt", "llm", "large language model", "h2o-llmstudio"],
     )
+    cfg_kwargs = dict(
+        use_fast=cfg.tokenizer.use_fast,
+        text_prompt_start=cfg.dataset.text_prompt_start,
+        text_answer_separator=cfg.dataset.text_answer_separator,
+        trust_remote_code=cfg.environment.trust_remote_code,
+        end_of_sentence=cfg._tokenizer_eos_token
+        if cfg.dataset.add_eos_token_to_prompt
+        else "",
+    )
+    if cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES:
+        cfg_kwargs.update(
+            dict(
+                min_new_tokens=cfg.prediction.min_length_inference,
+                max_new_tokens=cfg.prediction.max_length_inference,
+                do_sample=cfg.prediction.do_sample,
+                num_beams=cfg.prediction.num_beams,
+                temperature=cfg.prediction.temperature,
+                repetition_penalty=cfg.prediction.repetition_penalty,
+            )
+        )
+
     card = huggingface_hub.ModelCard.from_template(
         card_data,
         template_path=os.path.join("model_cards", cfg.environment._model_card_template),
@@ -39,23 +61,11 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
         repo_id=repo_id,
         model_architecture=model.backbone.__repr__(),
         config=cfg.__repr__(),
-        use_fast=cfg.tokenizer.use_fast,
-        min_new_tokens=cfg.prediction.min_length_inference,
-        max_new_tokens=cfg.prediction.max_length_inference,
-        do_sample=cfg.prediction.do_sample,
-        num_beams=cfg.prediction.num_beams,
-        temperature=cfg.prediction.temperature,
-        repetition_penalty=cfg.prediction.repetition_penalty,
-        text_prompt_start=cfg.dataset.text_prompt_start,
-        text_answer_separator=cfg.dataset.text_answer_separator,
-        trust_remote_code=cfg.environment.trust_remote_code,
         transformers_version=transformers.__version__,
         einops_version=einops.__version__,
         accelerate_version=accelerate.__version__,
         torch_version=torch.__version__.split("+")[0],
-        end_of_sentence=cfg._tokenizer_eos_token
-        if cfg.dataset.add_eos_token_to_prompt
-        else "",
+        **cfg_kwargs,
     )
     return card
 
@@ -125,7 +135,7 @@ def publish_model_to_hugging_face(
     api = huggingface_hub.HfApi()
 
     # push classification head to hub
-    if cfg.problem_type == "text_causal_classification_modeling":
+    if os.path.isfile(f"{path_to_experiment}/classification_head.pth"):
         api.upload_file(
             path_or_fileobj=f"{path_to_experiment}/classification_head.pth",
             path_in_repo="classification_head.pth",
