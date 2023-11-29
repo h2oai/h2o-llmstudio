@@ -317,7 +317,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
 
         self._possible_values["batch_size_inference"] = (0, 512, 1)
         self._possible_values["min_length_inference"] = (0, 1024, 1)
-        self._possible_values["max_length_inference"] = (1, 1024, 1)
+        self._possible_values["max_length_inference"] = (1, 4096, 1)
 
         self._possible_values["num_beams"] = (1, 4, 1)
         self._possible_values["temperature"] = (0, 10, 0.05)
