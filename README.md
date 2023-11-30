@@ -180,7 +180,7 @@ Navigate to <http://localhost:10101/> (we recommend using Chrome) to access H2O 
 (Note other helpful docker commands are `docker ps` and `docker kill`.)
 
 ## Run H2O LLM Studio GUI by building your own Docker image
-
+bumb
 ```bash
 docker build -t h2o-llmstudio .
 docker run \
