@@ -264,13 +264,25 @@ def wrap_model_distributed(
 ):
     if cfg.environment.use_deepspeed:
         ds_config = get_ds_config(cfg)
-        model, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
-            model=model,
-            optimizer=optimizer,
-            lr_scheduler=lr_scheduler,
-            training_data=train_dataloader.dataset,
-            config_params=ds_config,
-        )
+        if not cfg.training.lora:
+            ds_engine, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
+                model=model.backbone,
+                optimizer=optimizer,
+                lr_scheduler=lr_scheduler,
+                training_data=train_dataloader.dataset,
+                config_params=ds_config,
+            )
+            model.backbone = ds_engine
+        else:
+            ds_engine, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
+                model=model.backbone.base_model.model,
+                optimizer=optimizer,
+                lr_scheduler=lr_scheduler,
+                training_data=train_dataloader.dataset,
+                config_params=ds_config,
+            )
+            model.backbone.base_model.model = ds_engine
+        model.init_deepspeed()
         val_dataloader = DeepSpeedDataLoader(
             val_dataloader.dataset,
             batch_size=val_dataloader.batch_size,
@@ -501,7 +513,7 @@ def run_inference(
             ):
                 output = {}
                 output["predicted_answer_ids"] = (
-                    model.module.generate(batch, cfg).detach().cpu()  # type: ignore
+                    model.generate(batch, cfg).detach().cpu()  # type: ignore
                 )
             else:
                 output = model.forward(batch)
