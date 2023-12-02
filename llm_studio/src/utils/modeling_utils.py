@@ -197,7 +197,14 @@ def load_checkpoint(
 
     model_weights = torch.load(weights_path, map_location="cpu")["model"]
 
-    model = load_model_weights(model, model_weights, strict, cfg)
+    if cfg.environment.use_deepspeed:
+        if cfg.training.lora:
+            model.backbone.base_model.model = \
+                load_model_weights(model.backbone.base_model.model, model_weights, strict, cfg)
+        else:
+            model.backbone = load_model_weights(model.backbone, model_weights, strict, cfg)
+    else:
+        model = load_model_weights(model, model_weights, strict, cfg)
 
     del model_weights
     gc.collect()
