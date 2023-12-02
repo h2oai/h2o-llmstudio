@@ -47,10 +47,12 @@ class Model(nn.Module):
         self.backward = self.backbone.backward
         self.save_checkpoint = self.backbone.save_checkpoint
         if self.cfg.training.lora:
-            self.backbone.base_model.model.config = \
+            self.backbone.base_model.model.config = (
                 self.backbone.base_model.model.module.config
-            self.backbone.base_model.model.generation_config = \
+            )
+            self.backbone.base_model.model.generation_config = (
                 self.backbone.base_model.model.module.generation_config
+            )
         else:
             self.backbone.config = self.backbone.module.config
             self.backbone.generation_config = self.backbone.module.generation_config

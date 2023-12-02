@@ -199,10 +199,13 @@ def load_checkpoint(
 
     if cfg.environment.use_deepspeed:
         if cfg.training.lora:
-            model.backbone.base_model.model = \
-                load_model_weights(model.backbone.base_model.model, model_weights, strict, cfg)
+            model.backbone.base_model.model = load_model_weights(
+                model.backbone.base_model.model, model_weights, strict, cfg
+            )
         else:
-            model.backbone = load_model_weights(model.backbone, model_weights, strict, cfg)
+            model.backbone = load_model_weights(
+                model.backbone, model_weights, strict, cfg
+            )
     else:
         model = load_model_weights(model, model_weights, strict, cfg)
 
