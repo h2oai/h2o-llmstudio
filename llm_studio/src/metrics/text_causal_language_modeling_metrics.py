@@ -61,26 +61,15 @@ def call_openai_api(template, model, deployment_id=None):
     )
     ret = response["choices"][0]["message"]["content"]
     try:
-        ret = ret.split("\n")
-        score = ret[0].lower().replace("score:", "").strip().split(",")[0].split(" ")[0]
-        score = float(score)
+        score = float(ret.split('SCORE:')[-1].split()[0])
     except ValueError:
         raise ValueError(f"Could not parse score from response: {ret}")
-    return score, " ".join(ret[1:]).strip()
+    return score, ret
 
 
-def rate_reply(question, reference_answer, assistant_answer, model, deployment_id=None):
-    # motivated by https://github.com/lm-sys/FastChat/tree/main/fastchat/eval
-    template = open("prompts/eval_template.txt", "r").read()
-
-    template = template.format(
-        question=question,
-        reference_answer=reference_answer,
-        assistant_answer=assistant_answer,
-    )
-
+def rate_reply(filled_eval_template, model, deployment_id=None):
     try:
-        return call_openai_api(template, model, deployment_id)
+        return call_openai_api(filled_eval_template, model, deployment_id)
     except Exception as e:
         logger.warning(f"Exception caught in api call: {e}")
         return 0.0, ""
@@ -92,32 +81,34 @@ def gpt_score(
     val_df: pd.DataFrame,
     raw_results: bool = False,
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
-    prompts = get_texts(val_df, cfg, separator="")
 
+    vdf = val_df.copy()
+    vdf["_PROMPT"] = get_texts(val_df, cfg, separator="")
+    vdf["_PREDICTED_TEXT"] = results["predicted_text"]
+    vdf["_TARGET_TEXT"] = results["target_text"]
+    
     if os.getenv("OPENAI_API_TYPE", "open_ai") == "azure":
         deployment_id = os.getenv("OPENAI_API_DEPLOYMENT_ID")
     else:
         deployment_id = None
 
     model = cfg.prediction.metric_gpt_model
+    template_name = cfg.prediction.metric_gpt_template
+
+    eval_template = open(f"prompts/{template_name}.txt", "r").read()
+    vdf["filled_eval_template"] = [eval_template.format(**row) for _, row in vdf.iterrows()]
 
     ret = Parallel(n_jobs=8, backend="multiprocessing")(
         delayed(rate_reply)(
-            prompt,
-            target_text,
-            predicted_text,
+            filled_eval_template,
             model,
             deployment_id=deployment_id,
         )
-        for prompt, predicted_text, target_text in tqdm(
-            zip(
-                prompts,
-                results["predicted_text"],
-                results["target_text"],
-            ),
+        for filled_eval_template in tqdm(
+            vdf["filled_eval_template"].values,
             file=TqdmToLogger(logger, level=logging.INFO),
-            desc=f"GPT eval {model}",
-            total=len(prompts),
+            desc=f"GPT eval {model} - {template_name}",
+            total=len(vdf),
         )
     )
     scores = [x[0] for x in ret]
