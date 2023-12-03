@@ -344,9 +344,9 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
     compile_model: bool = False
     use_deepspeed: bool = False
-    deepspeed_reduce_bucket_size: int = int(1e6)
-    deepspeed_stage3_prefetch_bucket_size: int = int(1e6)
-    deepspeed_stage3_param_persistence_threshold: int = int(1e6)
+    deepspeed_reduce_bucket_size: int = int(1e9)
+    deepspeed_stage3_prefetch_bucket_size: int = int(1e9)
+    deepspeed_stage3_param_persistence_threshold: int = int(1e9)
     #     deepspeed_offload_optimizer: bool = False
     #     deepspeed_stage3_max_live_parameters: int = 1e9
     #     deepspeed_stage3_max_reuse_distance: int = 1e9
