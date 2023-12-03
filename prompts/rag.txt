@@ -9,7 +9,7 @@ The assistant should answer the question based on the context. To make your task
 {question}
 
 [Start of Ground Truth Answer]
-{gt_answer}
+{_TARGET_TEXT}
 [End of Ground Truth Answer]
 
 [Task]
@@ -26,5 +26,5 @@ EXPLANATION: ...
 SCORE: ...
 
 [Start of Assistant Answer]
-{predicted_answer}
+{_PREDICTED_TEXT}
 [End of Assistant Answer]
