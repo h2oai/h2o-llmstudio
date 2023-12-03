@@ -61,7 +61,7 @@ def call_openai_api(template, model, deployment_id=None):
     )
     ret = response["choices"][0]["message"]["content"]
     try:
-        score = float(ret.split('SCORE:')[-1].split()[0])
+        score = float(ret.split("SCORE:")[-1].split()[0])
     except ValueError:
         raise ValueError(f"Could not parse score from response: {ret}")
     return score, ret
@@ -81,12 +81,11 @@ def gpt_score(
     val_df: pd.DataFrame,
     raw_results: bool = False,
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
-
     vdf = val_df.copy()
     vdf["_PROMPT"] = get_texts(val_df, cfg, separator="")
     vdf["_PREDICTED_TEXT"] = results["predicted_text"]
     vdf["_TARGET_TEXT"] = results["target_text"]
-    
+
     if os.getenv("OPENAI_API_TYPE", "open_ai") == "azure":
         deployment_id = os.getenv("OPENAI_API_DEPLOYMENT_ID")
     else:
@@ -96,7 +95,9 @@ def gpt_score(
     template_name = cfg.prediction.metric_gpt_template
 
     eval_template = open(f"prompts/{template_name}.txt", "r").read()
-    vdf["filled_eval_template"] = [eval_template.format(**row) for _, row in vdf.iterrows()]
+    vdf["filled_eval_template"] = [
+        eval_template.format(**row) for _, row in vdf.iterrows()
+    ]
 
     ret = Parallel(n_jobs=8, backend="multiprocessing")(
         delayed(rate_reply)(
