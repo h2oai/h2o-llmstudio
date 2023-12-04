@@ -53,14 +53,14 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
         self.tokenizer = get_tokenizer(self.cfg)
 
         with PatchedAttribute(
-            cfg.dataset, "answer_column", cfg.dataset.chosen_answer_column
+            cfg.dataset, "answer_column", cfg.dataset.chosen_response_column
         ):
             self.conversation_chain_handler_chosen = ConversationChainHandler(
                 self.df, cfg
             )
 
         with PatchedAttribute(
-            cfg.dataset, "answer_column", cfg.dataset.rejected_answer_column
+            cfg.dataset, "answer_column", cfg.dataset.rejected_response_column
         ):
             self.conversation_chain_handler_rejected = ConversationChainHandler(
                 self.df, cfg
