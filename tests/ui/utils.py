@@ -1,6 +1,7 @@
 from hac_playwright.main import keycloak_login, okta_login, okta_otp_local
 from hac_playwright.pages.base import BasePage
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
+import os
 
 
 def login(
@@ -54,13 +55,86 @@ class LLMStudioPage(BasePage):
     def open_app_settings(self):
         self.page.get_by_role("button", name="Settings").click()
 
-    def import_dataset_from_filesystem(self, filepath: str):
+    def import_dataset_from_filesystem(self, path: str, filename: str):
         self.page.get_by_role("button", name="Import dataset").click()
         self.page.locator('[data-test="dataset\\/import\\/source"]').get_by_text(
             "Upload"
         ).click()
         self.page.get_by_role("option", name="Local").click()
-        self.page.locator('[data-test="dataset\\/import\\/local_path"]').fill(filepath)
+        self.page.locator('[data-test="dataset\\/import\\/local_path"]').fill(path)
+        self.page.locator('[data-test="dataset\\/import\\/2"]').click()
+
+        # Dataset configuration
+        self.page.locator('[data-test="dataset\\/import\\/name"]').fill(filename)
+        self.page.locator('[data-test="dataset\\/import\\/4"]').click()
+
+        # Data Validity check
+        self.page.locator('[data-test="dataset\\/import\\/6"]').click()
+        # self.page.get_by_role("button", name="Continue").click()
+
+    def import_dataset_from_aws(
+        self, bucket: str, access_key: str, secret_key: str, dataset_name: str
+    ):
+        self.page.get_by_role("button", name="Import dataset").click()
+        self.page.locator('[data-test="dataset\\/import\\/source"]').get_by_text(
+            "AWS S3"
+        ).click()
+        self.page.locator('[data-test="dataset\\/import\\/s3_bucket"]').fill(bucket)
+        self.page.locator('[data-test="dataset\\/import\\/s3_access_key"]').fill(
+            access_key
+        )
+        self.page.locator('[data-test="dataset\\/import\\/s3_secret_key"]').fill(
+            secret_key
+        )
+        self.page.locator('[data-test="dataset\\/import\\/s3_filename"]').fill(
+            dataset_name
+        )
         self.page.get_by_role("button", name="Continue").click()
+
+    def import_dataset_from_azure(
+        self, connection: str, container: str, dataset_name: str
+    ):
+        self.page.get_by_role("button", name="Import dataset").click()
+        self.page.locator('[data-test="dataset\\/import\\/source"]').get_by_text(
+            "Azure Datalake"
+        ).click()
+        self.page.locator('[data-test="dataset\\/import\\/azure_conn_string"]').fill(
+            connection
+        )
+        self.page.locator('[data-test="dataset\\/import\\/azure_container"]').fill(
+            container
+        )
+        self.page.locator('[data-test="dataset\\/import\\/azure_filename"]').fill(
+            dataset_name
+        )
         self.page.get_by_role("button", name="Continue").click()
+
+    def import_dataset_from_kaggle(
+        self, kaggle_command: str, username: str, secret: str
+    ):
+        self.page.get_by_role("button", name="Import dataset").click()
+        self.page.locator('[data-test="dataset\\/import\\/source"]').get_by_text(
+            "Kaggle"
+        ).click()
+        self.page.locator('[data-test="dataset\\/import\\/kaggle_command"]').fill(
+            kaggle_command
+        )
+        self.page.locator('[data-test="dataset\\/import\\/kaggle_access_key"]').fill(
+            username
+        )
+        self.page.locator('[data-test="dataset\\/import\\/kaggle_secret_key"]').fill(
+            secret
+        )
         self.page.get_by_role("button", name="Continue").click()
+
+    def delete_dataset(self, dataset_name: str):
+        self.page.get_by_role("button", name="View datasets").click()
+        self.page.locator('[data-test="dataset\\/list\\/delete"]').click()
+        self.page.get_by_role("gridcell", name=dataset_name).click()
+        self.page.locator('[data-test="dataset\\/delete\\/dialog"]').click()
+        self.page.locator('[data-test="dataset\\/delete"]').click()
+
+    def assert_dataset_deletion(self, dataset_name: str):
+        dataset = self.page.get_by_role("button", name=dataset_name)
+        # Assert that the element not found
+        expect(dataset).not_to_be_visible()

@@ -1,6 +1,6 @@
 import logging
 from playwright.sync_api import Page
-from pytest_bdd import given, scenarios, then, when
+from pytest_bdd import given, parsers, scenarios, then, when
 
 from tests.ui.utils import LLMStudioPage, login, handle_terms_and_conditions_page
 
@@ -19,14 +19,30 @@ def login_to_llm_studio(logger: logging.Logger, page: Page, app_address: str):
     return LLMStudioPage(logger, page, app_address)
 
 
-@then("I should see the datasets")
-def view_datasets(llm_studio: LLMStudioPage):
+@then(parsers.parse("I should see the dataset {dataset_name}"))
+def view_datasets(llm_studio: LLMStudioPage, dataset_name: str):
     llm_studio.view_datasets()
-    llm_studio.assert_dataset_import("train_full")
+    llm_studio.assert_dataset_import(dataset_name)
 
 
-@then("I upload dataset using filesystem")
-def upload_dataset_using_filesystem(llm_studio: LLMStudioPage):
-    llm_studio.import_dataset_from_filesystem(
-        "/home/llmstudio/mount/data/user/oasst/train_full.pq"
-    )
+@when(parsers.parse("I upload dataset with path {filepath} and name {dataset_name}"))
+def upload_dataset_using_filesystem(
+    llm_studio: LLMStudioPage, filepath: str, dataset_name: str
+):
+    llm_studio.import_dataset_from_filesystem(filepath, dataset_name)
+
+
+@then("I see the home page")
+def view_home_page(llm_studio: LLMStudioPage):
+    llm_studio.open_home_page()
+
+
+@when(parsers.parse("I delete dataset {dataset_name}"))
+def delete_dataset(llm_studio: LLMStudioPage, dataset_name: str):
+    llm_studio.delete_dataset(dataset_name)
+
+
+@then(parsers.parse("I should not see the dataset {dataset_name}"))
+def view_datasets(llm_studio: LLMStudioPage, dataset_name: str):
+    llm_studio.view_datasets()
+    llm_studio.assert_dataset_deletion(dataset_name)
