@@ -2,8 +2,11 @@ import logging
 from typing import Any, Dict
 
 import pandas as pd
+import torch
 
 import llm_studio.src.datasets.text_causal_language_modeling_ds as text_causal_language_modeling_ds
+from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
+from llm_studio.src.datasets.text_utils import get_tokenizer
 
 logger = logging.getLogger(__name__)
 
@@ -14,19 +17,18 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
     The data is assumed to be in hierarchical form of the following format:
     Beginning of a chat-answer interaction (parent_id is not set):
         instruction                    What kind of noises did dinosaurs make?
-        output               Humans and dinosaurs didn’t live at the same t...
         id                                610e4ad5-09c4-4055-9ff4-948fe6b4f832
         parent_id                                                         None
-        chosen_response                                                   None
-        rejected_response                                                 None
+        chosen_response       Humans and dinosaurs didn’t live at the same t...
+        rejected_response     Humans and dinosaurs didn’t live at the same t...
     Within a chat-answer interaction (parent_id points for the previous prompt-answer sample):
         instruction                                               yes they did
         output               to guess, and that would probably require lots...
         id                                573e8d77-550a-4889-8ff4-1e8d8944897c
         parent_id                         610e4ad5-09c4-4055-9ff4-948fe6b4f832
-        chosen_response                                                   None
-        rejected_response                                                 None
-    Last question. Output should be empty, chosen and rejected responses should be given:
+        chosen_response      to guess, and that would probably require lots...
+        rejected_response    to guess, and that would probably require lots...
+    Last question. Chosen and rejected responses are different:
         instruction          Do have a phone number or email address for hi...
         output
         id                                e0edeaf1-166d-4683-8609-dcba6fafc520
@@ -40,30 +42,34 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
             cfg.dataset.limit_chained_samples
         ), "Need to enable limit_chained_samples for dpo training"
 
-        super().__init__(df=df, cfg=cfg, mode=mode)
-        self.chosen_answers = [
-            chosen_answer if chosen_answer else answer
-            for chosen_answer, answer in zip(
-                self.df[self.cfg.dataset.chosen_response_column].tolist(), self.answers
-            )
-        ]
+        self.cfg = cfg
+        self.mode = mode
+        self.df = df.copy()
+        self.tokenizer = get_tokenizer(self.cfg)
 
-        self.rejected_answers = [
-            rejected_answer if rejected_answer else answer
-            for rejected_answer, answer in zip(
-                self.df[self.cfg.dataset.rejected_response_column].tolist(),
-                self.answers,
-            )
-        ]
-        self.tmp_answers = self.answers
+        cfg.dataset.answer_column = cfg.dataset.chosen_response_column
+        self.conversation_chain_handler_chosen = ConversationChainHandler(self.df, cfg)
+        cfg.dataset.answer_column = cfg.dataset.rejected_response_column
+        self.conversation_chain_handler_rejected = ConversationChainHandler(
+            self.df, cfg
+        )
+
+        self.conversation_chain_handler = None
+
+    def __len__(self) -> int:
+        return len(self.conversation_chain_handler_chosen)
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
         sample = {}
-        for name, answer in zip(
-            ["chosen", "rejected"], [self.chosen_answers, self.rejected_answers]
+        for name, conversation_chain_handler in zip(
+            ["chosen", "rejected"],
+            [
+                self.conversation_chain_handler_chosen,
+                self.conversation_chain_handler_rejected,
+            ],
         ):
-            self.answers = answer
+            self.conversation_chain_handler = conversation_chain_handler
             sample.update(
                 {
                     f"{name}_{key}": value
@@ -72,10 +78,51 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
                     in ["input_ids", "attention_mask", "token_type_ids", "labels"]
                 }
             )
-        self.answers = self.tmp_answers
-        # TODO: Why this?
-        sample.update(super().__getitem__(idx))
+        self.conversation_chain_handler = self.conversation_chain_handler_chosen
+        sample.update(
+            {
+                key: value
+                for key, value in super().__getitem__(idx).items()
+                if key
+                in [
+                    "prompt_input_ids",
+                    "prompt_attention_mask",
+                    "prompt_token_type_ids",
+                ]
+            }
+        )
+
         return sample
 
-    # TODO: mask all answers except the last one
-    # TODO: Metric with chained samples -> Maybe also implement this as a separate metric
+    def get_labels(self, prompt_encodings, answer_encodings):
+        # all but the last answer should be masked
+        labels = torch.cat(
+            [
+                torch.cat(
+                    [
+                        torch.full_like(
+                            prompt_encoding,
+                            fill_value=-100,
+                        ),
+                        torch.full_like(
+                            answer_encoding,
+                            fill_value=-100,
+                        ),
+                    ]
+                )
+                for prompt_encoding, answer_encoding in zip(
+                    prompt_encodings, answer_encodings
+                )
+            ]
+        ).clone()
+        labels[-len(answer_encodings[-1]) :] = answer_encodings[-1]
+
+        if self.cfg.dataset.add_eos_token_to_answer:
+            # eos_token may be equal to pad_token. Add the label back manually.
+            labels[-1] = self.tokenizer.eos_token_id
+        if self.cfg.tokenizer.max_length < len(labels):
+            labels = labels[-self.cfg.tokenizer.max_length :]
+
+        sample = dict(labels=torch.full((self.cfg.tokenizer.max_length,), -100))
+        sample["labels"][-len(labels) :] = labels
+        return sample

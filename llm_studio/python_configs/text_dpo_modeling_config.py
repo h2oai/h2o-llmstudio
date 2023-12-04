@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import llm_studio.src.datasets.text_dpo_modeling_ds
-from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPAugmentation,
     ConfigNLPCausalLMArchitecture,
@@ -24,9 +24,7 @@ from llm_studio.src.utils.modeling_utils import generate_experiment_name
 
 @dataclass
 class ConfigNLPDPOLMDataset(ConfigNLPCausalLMDataset):
-    dataset_class: Any = (
-        llm_studio.src.datasets.text_dpo_language_modeling_ds.CustomDataset
-    )
+    dataset_class: Any = llm_studio.src.datasets.text_dpo_modeling_ds.CustomDataset
     # Always have full chat history. Chosen/Rejected prompt are only at the end of a conversation.
     limit_chained_samples: bool = True
     mask_prompt_labels: bool = True
@@ -38,6 +36,9 @@ class ConfigNLPDPOLMDataset(ConfigNLPCausalLMDataset):
         super().__post_init__()
         self._visibility["limit_chained_samples"] = -1
         self._visibility["mask_prompt_labels"] = -1
+        self._visibility["answer_column"] = -1
+
+        self.answer_column = self.chosen_response_column
 
         self._order.insert("chosen_response_column", after="answer_column")
         self._order.insert("rejected_response_column", after="chosen_response_column")
