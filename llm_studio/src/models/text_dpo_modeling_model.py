@@ -66,12 +66,7 @@ class Model(nn.Module):
     """
 
     def __init__(self, cfg: Any):
-        """
-        Args:
-            cfg: config with all the hyperparameters
-        """
-
-        super(Model, self).__init__()
+        super().__init__()
 
         self.cfg = cfg
         self.backbone, self.backbone_config = create_nlp_backbone(

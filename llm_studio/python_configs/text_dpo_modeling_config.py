@@ -37,7 +37,6 @@ class ConfigNLPDPOLMDataset(ConfigNLPCausalLMDataset):
         super().__post_init__()
         self._visibility["limit_chained_samples"] = -1
         self._visibility["mask_prompt_labels"] = -1
-        self._order.insert("answer_column", after="answer_column")
         self._order.insert("rejected_answer_column", after="answer_column")
 
 
