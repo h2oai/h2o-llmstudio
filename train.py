@@ -334,22 +334,14 @@ def run_train(
                     step=cfg.environment._curr_step,
                 )
 
-                # TODO refactor this
-                if cfg.training.loss_function == "DPOLoss":
-                    for key in ["chosen_rewards", "rejected_rewards"]:
+                for key in ["chosen_rewards", "rejected_rewards", "reward_margin"]:
+                    if key in output_dict:
                         cfg.logging._logger.log(
                             "train",
                             key,
                             output_dict[key].item(),
                             step=cfg.environment._curr_step,
                         )
-                    cfg.logging._logger.log(
-                        "train",
-                        "reward_margin",
-                        output_dict["chosen_rewards"].item()
-                        - output_dict["rejected_rewards"].item(),
-                        step=cfg.environment._curr_step,
-                    )
 
                 # Show logs each 5% of the epoch (only if doing per epoch evaluation)
                 if (itr + 1) % log_update_steps == 0 or itr == epoch_steps - 1:

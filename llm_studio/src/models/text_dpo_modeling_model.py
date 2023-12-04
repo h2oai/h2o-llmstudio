@@ -136,8 +136,11 @@ class Model(nn.Module):
             reference_rejected_logps=outputs["rejected_reference_logps"],
         )
         outputs["loss"] = loss
+
+        # These values will be logged to Neptune, if enabled, see train.py
         outputs["chosen_rewards"] = chosen_rewards
         outputs["rejected_rewards"] = rejected_rewards
+        outputs["reward_margin"] = chosen_rewards - rejected_rewards
 
         # enable cache again if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:
