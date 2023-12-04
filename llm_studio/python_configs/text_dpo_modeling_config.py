@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Dict, List
 
 import llm_studio.src.datasets.text_dpo_modeling_ds
 from llm_studio.python_configs.base import DefaultConfigProblemBase
@@ -121,3 +121,12 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             ),
             allow_custom=True,
         )
+
+    def check(self) -> Dict[str, List]:
+        errors: Dict[str, List] = {"title": [], "message": []}
+        if self.prediction.temperature > 0 and not self.prediction.do_sample:
+            errors["title"] += ["Do sample needs to be enabled for temperature > 0"]
+            errors["message"] += [
+                "Please enable do sample if you want to use temperature > 0."
+            ]
+        return errors

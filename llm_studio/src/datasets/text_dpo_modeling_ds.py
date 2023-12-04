@@ -103,10 +103,3 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
             f"Answer column {cfg.dataset.rejected_answer_column} not found in the "
             f"{mode} DataFrame."
         )
-        assert (
-            df.shape[0] == df[[cfg.dataset.rejected_answer_column]].dropna().shape[0]
-        ), (
-            f"The {mode} DataFrame"
-            f" column {cfg.dataset.rejected_answer_column}"
-            " contains missing values."
-        )
