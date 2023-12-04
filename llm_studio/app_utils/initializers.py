@@ -34,6 +34,13 @@ async def import_default_data(q: Q):
     try:
         if q.client.app_db.get_dataset(1) is None:
             logger.info("Downloading default dataset...")
+            q.page["meta"].dialog = ui.dialog(
+                title="Downloading default datasets",
+                blocking=True,
+                items=[ui.progress(label="Please be patient...")],
+            )
+            await q.page.save()
+
             dataset = prepare_oasst(q)
             q.client.app_db.add_dataset(dataset)
             dataset = prepare_oasst_hh_dpo(q)
@@ -136,12 +143,6 @@ async def initialize_client(q: Q) -> None:
         q.client["mode_curr"] = "full"
         load_user_settings_and_secrets(q)
         await interface(q)
-        q.page["meta"].dialog = ui.dialog(
-            title="Downloading default datasets",
-            blocking=True,
-            items=[ui.progress(label="Please be patient...")],
-        )
-        await q.page.save()
 
         await import_default_data(q)
         q.args[default_cfg.start_page] = True

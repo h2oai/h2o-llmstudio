@@ -6,11 +6,13 @@ import pandas as pd
 
 from llm_studio.src.datasets.conversation_chain_handler import get_conversation_chains
 from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.plots.text_causal_language_modeling_plots import (
+    create_batch_prediction_df,
+)
 from llm_studio.src.utils.data_utils import read_dataframe_drop_missing_labels
 from llm_studio.src.utils.plot_utils import (
     PlotData,
     format_for_markdown_visualization,
-    list_to_markdown_representation,
 )
 from llm_studio.src.utils.utils import PatchedAttribute
 
@@ -19,7 +21,9 @@ class Plots:
     @classmethod
     def plot_batch(cls, batch, cfg) -> PlotData:
         tokenizer = get_tokenizer(cfg)
-        df = create_batch_prediction_df(batch, tokenizer)
+        df = create_batch_prediction_df(
+            batch, tokenizer, ids_for_tokenized_text="chosen_input_ids"
+        )
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
         df.to_parquet(path)
         return PlotData(path, encoding="df")
@@ -140,19 +144,25 @@ class Plots:
     def plot_validation_predictions(
         cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
     ) -> PlotData:
-        conversations = get_conversation_chains(
-            val_df, cfg, limit_chained_samples=cfg.dataset.limit_chained_samples
-        )
+        with PatchedAttribute(
+            cfg.dataset, "answer_column", cfg.dataset.chosen_response_column
+        ):
+            conversations_chosen = get_conversation_chains(
+                val_df, cfg, limit_chained_samples=cfg.dataset.limit_chained_samples
+            )
+
         prompt_column_name = (
             cfg.dataset.prompt_column
             if len(cfg.dataset.prompt_column) > 1
             else cfg.dataset.prompt_column[0]
         )
 
-        target_texts = [conversation["answers"][-1] for conversation in conversations]
+        target_texts = [
+            conversation["answers"][-1] for conversation in conversations_chosen
+        ]
 
         input_texts = []
-        for conversation in conversations:
+        for conversation in conversations_chosen:
             input_text = conversation["systems"][0]
             prompts = conversation["prompts"]
             answers = conversation["answers"]
@@ -162,7 +172,7 @@ class Plots:
                 input_text += (
                     f" **{prompt_column_name}:** "
                     f"{prompt}\n\n"
-                    f"**{cfg.dataset.answer_column}:** "
+                    f"**Answer:** "
                     f"{answer}\n\n"
                 )
             input_texts += [input_text]
@@ -216,64 +226,3 @@ class Plots:
         path = os.path.join(cfg.output_directory, f"{mode}_viz.parquet")
         df.to_parquet(path)
         return PlotData(data=path, encoding="df")
-
-
-def create_batch_prediction_df(batch, tokenizer, ids_for_tokenized_text="input_ids"):
-    df = pd.DataFrame(
-        {
-            "Prompt Text": [
-                tokenizer.decode(input_ids, skip_special_tokens=True)
-                for input_ids in batch["prompt_input_ids"].detach().cpu().numpy()
-            ]
-        }
-    )
-    df["Prompt Text"] = df["Prompt Text"].apply(format_for_markdown_visualization)
-    if "labels" in batch.keys():
-        df["Answer Text"] = [
-            tokenizer.decode(
-                [label for label in labels if label != -100],
-                skip_special_tokens=True,
-            )
-            for labels in batch.get("labels", batch["input_ids"]).detach().cpu().numpy()
-        ]
-    tokens_list = [
-        tokenizer.convert_ids_to_tokens(input_ids)
-        for input_ids in batch[ids_for_tokenized_text].detach().cpu().numpy()
-    ]
-    masks_list = [
-        [label != -100 for label in labels]
-        for labels in batch.get("labels", batch[ids_for_tokenized_text])
-        .detach()
-        .cpu()
-        .numpy()
-    ]
-    df["Tokenized Text"] = [
-        list_to_markdown_representation(
-            tokens, masks, pad_token=tokenizer.pad_token, num_chars=100
-        )
-        for tokens, masks in zip(tokens_list, masks_list)
-    ]
-    # limit to 2000 rows, still renders fast in wave
-    df = df.iloc[:2000]
-    # Convert into a scrollable table by transposing the dataframe
-    df_transposed = pd.DataFrame(columns=["Sample Number", "Field", "Content"])
-    has_answer = "Answer Text" in df.columns
-    for i, row in df.iterrows():
-        offset = 2 + int(has_answer)
-        df_transposed.loc[i * offset] = [
-            i,
-            "Prompt Text",
-            row["Prompt Text"],
-        ]
-        if has_answer:
-            df_transposed.loc[i * offset + 1] = [
-                i,
-                "Answer Text",
-                row["Answer Text"],
-            ]
-        df_transposed.loc[i * offset + 1 + int(has_answer)] = [
-            i,
-            "Tokenized Text",
-            row["Tokenized Text"],
-        ]
-    return df_transposed

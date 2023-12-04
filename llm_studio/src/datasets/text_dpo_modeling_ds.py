@@ -155,7 +155,7 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
         self, cfg, df: pd.DataFrame, output: Dict
     ) -> Tuple[Dict, pd.DataFrame]:
         with PatchedAttribute(
-            cfg.dataset, "answer_column", cfg.dataset.chosen_answer_column
+            cfg.dataset, "answer_column", cfg.dataset.chosen_response_column
         ):
             with PatchedAttribute(
                 self,
@@ -182,8 +182,8 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
                 "Please ensure that some parent ids are empty."
             )
         for answer_column in [
-            cfg.dataset.chosen_answer_column,
-            cfg.dataset.rejected_answer_column,
+            cfg.dataset.chosen_response_column,
+            cfg.dataset.rejected_response_column,
         ]:
             assert answer_column in df.columns, (
                 f"Answer column {answer_column} not found in the " f"{mode} DataFrame."

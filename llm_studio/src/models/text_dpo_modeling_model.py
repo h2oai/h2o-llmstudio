@@ -127,7 +127,6 @@ class Model(nn.Module):
             policy_rejected_logps=outputs["rejected_logps"],
             reference_chosen_logps=outputs["chosen_reference_logps"],
             reference_rejected_logps=outputs["rejected_reference_logps"],
-            beta=self.cfg.training.beta,
         )
         outputs["loss"] = loss
         outputs["chosen_rewards"] = chosen_rewards
