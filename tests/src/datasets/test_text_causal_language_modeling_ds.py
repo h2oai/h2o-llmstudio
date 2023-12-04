@@ -5,7 +5,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from llm_studio.app_utils.utils import prepare_default_dataset
+from llm_studio.app_utils.default_datasets import (
+    prepare_default_dataset_causal_language_modeling,
+)
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMDataset,
     ConfigNLPCausalLMTokenizer,
@@ -15,7 +17,7 @@ from llm_studio.src.datasets.text_causal_language_modeling_ds import CustomDatas
 
 
 def test_prepare_default_dataset(tmp_path):
-    df = prepare_default_dataset(tmp_path)
+    df = prepare_default_dataset_causal_language_modeling(tmp_path)
     assert isinstance(df, pd.DataFrame)
     assert set(df.keys()) == set(
         ["instruction", "output", "id", "parent_id", "lang", "rank"]

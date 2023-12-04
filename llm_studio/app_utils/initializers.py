@@ -8,6 +8,10 @@ from h2o_wave import Q
 
 from llm_studio.app_utils.config import default_cfg
 from llm_studio.app_utils.db import Database, Dataset
+from llm_studio.app_utils.default_datasets import (
+    prepare_default_dataset_causal_language_modeling,
+    prepare_default_dataset_dpo_modeling,
+)
 from llm_studio.app_utils.sections.common import interface
 from llm_studio.app_utils.setting_utils import load_user_settings_and_secrets
 from llm_studio.app_utils.utils import (
@@ -17,57 +21,94 @@ from llm_studio.app_utils.utils import (
     get_output_dir,
     get_user_db_path,
     get_user_name,
-    prepare_default_dataset,
 )
 from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
 
 logger = logging.getLogger(__name__)
 
 
-def import_data(q: Q):
+def import_default_data(q: Q):
     """Imports default data"""
 
     try:
         if q.client.app_db.get_dataset(1) is None:
             logger.info("Downloading default dataset...")
-
-            path = f"{get_data_dir(q)}/oasst"
-
-            if os.path.exists(path):
-                shutil.rmtree(path)
-            os.makedirs(path, exist_ok=True)
-
-            df = prepare_default_dataset(path)
-
-            cfg = load_config_py(
-                config_path=os.path.join(
-                    "llm_studio/python_configs", default_cfg.cfg_file
-                ),
-                config_name="ConfigProblemBase",
-            )
-
-            cfg.dataset.train_dataframe = os.path.join(path, "train_full.pq")
-            cfg.dataset.prompt_column = ("instruction",)
-            cfg.dataset.answer_column = "output"
-            cfg.dataset.parent_id_column = "None"
-
-            cfg_path = os.path.join(path, f"{default_cfg.cfg_file}.yaml")
-
-            save_config_yaml(cfg_path, cfg)
-
-            dataset = Dataset(
-                id=1,
-                name="oasst",
-                path=path,
-                config_file=cfg_path,
-                train_rows=df.shape[0],
-            )
-
+            dataset = prepare_oasst(q)
             q.client.app_db.add_dataset(dataset)
+            dataset = prepare_oasst_hh_dpo(q)
+            q.client.app_db.add_dataset(dataset)
+
     except Exception as e:
         q.client.app_db._session.rollback()
         logger.warning(f"Could not download default dataset: {e}")
         pass
+
+
+def prepare_oasst(q: Q) -> Dataset:
+    path = f"{get_data_dir(q)}/oasst"
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path, exist_ok=True)
+    df = prepare_default_dataset_causal_language_modeling(path)
+    cfg = load_config_py(
+        config_path=os.path.join("llm_studio/python_configs", default_cfg.cfg_file),
+        config_name="ConfigProblemBase",
+    )
+    cfg.dataset.train_dataframe = os.path.join(path, "train_full.pq")
+    cfg.dataset.prompt_column = ("instruction",)
+    cfg.dataset.answer_column = "output"
+    cfg.dataset.parent_id_column = "None"
+    cfg_path = os.path.join(path, f"{default_cfg.cfg_file}.yaml")
+    save_config_yaml(cfg_path, cfg)
+    dataset = Dataset(
+        id=1,
+        name="oasst",
+        path=path,
+        config_file=cfg_path,
+        train_rows=df.shape[0],
+    )
+    return dataset
+
+
+def prepare_oasst_hh_dpo(q):
+    path = f"{get_data_dir(q)}/hh"
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path, exist_ok=True)
+    train_df = prepare_default_dataset_dpo_modeling("train")
+    train_df.to_parquet(os.path.join(path, "train.pq"), index=False)
+
+    valid_df = prepare_default_dataset_dpo_modeling("test")
+    valid_df.to_parquet(os.path.join(path, "valid.pq"), index=False)
+
+    from llm_studio.python_configs.text_dpo_modeling_config import ConfigNLPDPOLMDataset
+    from llm_studio.python_configs.text_dpo_modeling_config import (
+        ConfigProblemBase as ConfigProblemBaseDPO,
+    )
+
+    cfg: ConfigProblemBaseDPO = ConfigProblemBaseDPO(
+        dataset=ConfigNLPDPOLMDataset(
+            train_dataframe=os.path.join(path, "train.pq"),
+            validation_dataframe=os.path.join(path, "valid.pq"),
+            prompt_column=("instruction",),
+            answer_column="output",
+            parent_id_column="parent_id",
+            chosen_response_column="chosen_response",
+            rejected_response_column="rejected_response",
+        ),
+    )
+
+    cfg_path = os.path.join(path, "text_dpo_language_modeling_config.yaml")
+    save_config_yaml(cfg_path, cfg)
+    dataset = Dataset(
+        id=2,
+        name="hh_dpo",
+        path=path,
+        config_file=cfg_path,
+        train_rows=train_df.shape[0],
+        validation_rows=valid_df.shape[0],
+    )
+    return dataset
 
 
 async def initialize_client(q: Q) -> None:
@@ -94,7 +135,7 @@ async def initialize_client(q: Q) -> None:
 
         q.client["mode_curr"] = "full"
 
-        import_data(q)
+        import_default_data(q)
 
         load_user_settings_and_secrets(q)
 
