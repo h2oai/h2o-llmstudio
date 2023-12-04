@@ -54,8 +54,8 @@ class ConversationChainHandler:
         df,
         cfg,
     ):
-        # Do not set self.cfg = cfg, as ConversationChainHandler will be used with
-        # a temporary answer_column in DPO training
+        # Do not set self.cfg = cfg, as ConversationChainHandler
+        # will be used with PatchedAttribute context manager.
         self.conversation_chain_ids = self.get_conversation_chain_ids(cfg, df)
         self.prompts = get_texts(df, cfg, separator="")
         self.answers = self.get_answers(df, cfg)
@@ -127,8 +127,6 @@ class ConversationChainHandler:
         return conversation_chain_ids
 
     def get_answers(self, df, cfg):
-        # For subclassing, let this the only place
-        # where cfg.dataset.answer_column is used explicitly
         answer_column = cfg.dataset.answer_column
         if answer_column in df.columns:
             answers = df[answer_column].astype(str).tolist()

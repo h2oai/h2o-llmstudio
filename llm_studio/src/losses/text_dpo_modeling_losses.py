@@ -1,3 +1,8 @@
+"""
+Loss Implementation based upon
+https://github.com/eric-mitchell/direct-preference-optimization
+"""
+
 import logging
 from typing import Any, KeysView, Tuple
 
@@ -12,8 +17,10 @@ logger = logging.getLogger(__name__)
 
 class DPOLoss(nn.Module):
     """
-    Implementation based upon
-    https://github.com/eric-mitchell/direct-preference-optimization
+    Implements
+    "Direct Preference Optimization:
+    Your Language Model is Secretly a Reward Model"
+    from https://arxiv.org/abs/2305.18290
     """
 
     def __init__(self, cfg: Any):
@@ -66,6 +73,12 @@ class HingeLoss(DPOLoss):
 
 
 class IPOLoss(DPOLoss):
+    """
+    Implements "A General Theoretical Paradigm
+    to Understand Learning from Human Preferences"
+    from https://arxiv.org/pdf/2310.12036.pdf
+    """
+
     def get_losses(self, logits):
         # eqn (17) of the https://arxiv.org/pdf/2310.12036.pdf
         # where beta is the real, positive KL parameter for the IPO loss,

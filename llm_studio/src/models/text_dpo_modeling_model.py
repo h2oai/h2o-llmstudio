@@ -21,9 +21,11 @@ def get_batch_logps(
     labels: torch.LongTensor,
     average_log_prob: bool = False,
 ) -> torch.Tensor:
-    # Implementation from
-    # https://github.com/eric-mitchell/direct-preference-optimization
-    """Compute the log probabilities of the given labels under the given logits.
+    """
+    Based upon the official implementation of DPO:
+    https://github.com/eric-mitchell/direct-preference-optimization
+
+    Compute the log probabilities of the given labels under the given logits.
     Args:
         logits:
             Logits of the model (unnormalized).
