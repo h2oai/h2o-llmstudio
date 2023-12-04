@@ -38,7 +38,7 @@ class ConfigNLPDPOLMDataset(ConfigNLPCausalLMDataset):
         self._visibility["mask_prompt_labels"] = -1
         self._visibility["answer_column"] = -1
 
-        # TODO Catch errors
+        # TODO Catch errors -> write a e2e test
         self.answer_column = None
 
         self._order.insert("chosen_response_column", after="answer_column")

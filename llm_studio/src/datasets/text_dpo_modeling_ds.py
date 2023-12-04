@@ -14,6 +14,40 @@ from llm_studio.src.datasets.text_utils import get_tokenizer
 logger = logging.getLogger(__name__)
 
 
+class PatchedAttribute:
+    """
+    Patches an attribute of an object for the duration of a context manager.
+    Similar to unittest.mock.patch,
+    but works also for properties that are not present in the original class
+
+    >>> class MyObj:
+    ...     attr = 'original'
+    >>> my_obj = MyObj()
+    >>> with PatchedAttribute(my_obj, 'attr', 'patched'):
+    ...     print(my_obj.attr)
+    patched
+    >>> print(my_obj.attr)
+    original
+    """
+
+    def __init__(self, obj, attribute, new_value):
+        self.obj = obj
+        self.attribute = attribute
+        self.new_value = new_value
+        self.original_exists = hasattr(obj, attribute)
+        if self.original_exists:
+            self.original_value = getattr(obj, attribute)
+
+    def __enter__(self):
+        setattr(self.obj, self.attribute, self.new_value)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.original_exists:
+            setattr(self.obj, self.attribute, self.original_value)
+        else:
+            delattr(self.obj, self.attribute)
+
+
 class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
     """
     Dataset for DPO optimization.
@@ -60,7 +94,6 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
         self.conversation_chain_handler_rejected = (
             ConversationChainHandlerRejectedResponses(self.df, cfg)
         )
-        self.conversation_chain_handler = None
 
     def __len__(self) -> int:
         return len(self.conversation_chain_handler_chosen)
@@ -75,31 +108,35 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
                 self.conversation_chain_handler_rejected,
             ],
         ):
-            self.conversation_chain_handler = conversation_chain_handler
+            with PatchedAttribute(
+                self, "conversation_chain_handler", conversation_chain_handler
+            ):
+                sample.update(
+                    {
+                        f"{name}_{key}": value
+                        for key, value in super().__getitem__(idx).items()
+                        if key
+                        in ["input_ids", "attention_mask", "token_type_ids", "labels"]
+                    }
+                )
+
+        # Used chosen responses for functionality related to generation
+        with PatchedAttribute(
+            self, "conversation_chain_handler", self.conversation_chain_handler_chosen
+        ):
             sample.update(
                 {
-                    f"{name}_{key}": value
+                    key: value
                     for key, value in super().__getitem__(idx).items()
                     if key
-                    in ["input_ids", "attention_mask", "token_type_ids", "labels"]
+                    in [
+                        "prompt_input_ids",
+                        "prompt_attention_mask",
+                        "prompt_token_type_ids",
+                    ]
                 }
             )
-        # Used chosen repsonses for functionality related to generation
-        self.conversation_chain_handler = self.conversation_chain_handler_chosen
-        sample.update(
-            {
-                key: value
-                for key, value in super().__getitem__(idx).items()
-                if key
-                in [
-                    "prompt_input_ids",
-                    "prompt_attention_mask",
-                    "prompt_token_type_ids",
-                ]
-            }
-        )
-        # set to None to catch any unexpected usage
-        self.conversation_chain_handler = None
+
         return sample
 
     def get_labels(self, prompt_encodings, answer_encodings):
@@ -138,18 +175,23 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
         return sample
 
     def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
-        self.conversation_chain_handler = self.conversation_chain_handler_chosen
-        output = super().postprocess_output(cfg, df, output)
-        self.conversation_chain_handler = None
-        return output
+        with PatchedAttribute(
+            self, "conversation_chain_handler", self.conversation_chain_handler_chosen
+        ):
+            return super().postprocess_output(cfg, df, output)
 
     def format_output(
         self, cfg, df: pd.DataFrame, output: Dict
     ) -> Tuple[Dict, pd.DataFrame]:
-        self.conversation_chain_handler = self.conversation_chain_handler_chosen
-        output, df = super().format_output(cfg, df, output)
-        self.conversation_chain_handler = None
-        return output, df
+        with PatchedAttribute(
+            cfg.dataset, "answer_column", cfg.dataset.chosen_answer_column
+        ):
+            with PatchedAttribute(
+                self,
+                "conversation_chain_handler",
+                self.conversation_chain_handler_chosen,
+            ):
+                return super().format_output(cfg, df, output)
 
     @classmethod
     def sanity_check(cls, df: pd.DataFrame, cfg: Any, mode: str = "train"):

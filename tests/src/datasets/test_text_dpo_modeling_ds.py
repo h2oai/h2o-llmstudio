@@ -8,7 +8,7 @@ from llm_studio.python_configs.text_dpo_modeling_config import (
     ConfigNLPDPOLMDataset,
     ConfigProblemBase,
 )
-from llm_studio.src.datasets.text_dpo_modeling_ds import CustomDataset
+from llm_studio.src.datasets.text_dpo_modeling_ds import CustomDataset, PatchedAttribute
 
 
 @pytest.fixture
@@ -161,3 +161,29 @@ def test_dataloader_has_correct_keys(df):
             ]
             assert set(batch.keys()) - set(keys) == set()
             assert set(keys) - set(batch.keys()) == set()
+
+
+def test_patched_attribute():
+    cfg = ConfigProblemBase(
+        dataset=ConfigNLPDPOLMDataset(
+            prompt_column=("prompt_column",),
+            chosen_response_column="chosen_response_column",
+            rejected_response_column="rejected_response_column",
+            parent_id_column="None",
+        )
+    )
+    with PatchedAttribute(cfg.dataset, "answer_column", "chosen_response"):
+        assert cfg.dataset.answer_column == "chosen_response"
+
+    with PatchedAttribute(
+        cfg.dataset, "chosen_response_column", "new_chosen_response_column"
+    ):
+        assert cfg.dataset.chosen_response_column == "new_chosen_response_column"
+
+    assert cfg.dataset.chosen_response_column == "chosen_response_column"
+
+    with PatchedAttribute(cfg.dataset, "new_property", "new_value"):
+        assert cfg.dataset.new_property == "new_value"
+
+    with pytest.raises(AttributeError):
+        cfg.dataset.new_property
