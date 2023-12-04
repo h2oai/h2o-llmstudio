@@ -4,6 +4,7 @@ from typing import Dict, List
 import numpy as np
 
 from llm_studio.src.datasets.text_utils import get_texts
+from llm_studio.src.utils.utils import PatchedAttribute
 
 logger = logging.getLogger(__name__)
 
@@ -53,30 +54,12 @@ class ConversationChainHandler:
         df,
         cfg,
     ):
+        # Do not set self.cfg = cfg, as ConversationChainHandler will be used with
+        # a temporary answer_column in DPO training
         self.conversation_chain_ids = self.get_conversation_chain_ids(cfg, df)
         self.prompts = get_texts(df, cfg, separator="")
         self.answers = self.get_answers(df, cfg)
-
-        if cfg.dataset.system_column != "None":
-            if cfg.dataset.system_column not in df.columns:
-                logger.warning(
-                    f"System column {cfg.dataset.system_column} not found."
-                    f"Disabling functionality."
-                )
-                self.systems = ["" for _ in range(len(self.prompts))]
-            else:
-                self.systems = df[cfg.dataset.system_column].astype(str).tolist()
-        else:
-            self.systems = ["" for _ in range(len(self.prompts))]
-
-    def get_answers(self, df, cfg):
-        # For subclassing, let this the only place where cfg.dataset.answer_column is used explcitly
-        answer_column = cfg.dataset.answer_column
-        if answer_column in df.columns:
-            answers = df[answer_column].astype(str).tolist()
-        else:
-            answers = ["" for _ in range(len(self.prompts))]
-        return answers
+        self.systems = self.get_systems(cfg, df)
 
     def get_conversation_chain_ids(self, cfg, df):
         """
@@ -142,6 +125,29 @@ class ConversationChainHandler:
             for conversation_ids in conversation_chain_ids
         ]
         return conversation_chain_ids
+
+    def get_answers(self, df, cfg):
+        # For subclassing, let this the only place where cfg.dataset.answer_column is used explcitly
+        answer_column = cfg.dataset.answer_column
+        if answer_column in df.columns:
+            answers = df[answer_column].astype(str).tolist()
+        else:
+            answers = ["" for _ in range(len(self.prompts))]
+        return answers
+
+    def get_systems(self, cfg, df):
+        if cfg.dataset.system_column != "None":
+            if cfg.dataset.system_column not in df.columns:
+                logger.warning(
+                    f"System column {cfg.dataset.system_column} not found."
+                    f"Disabling functionality."
+                )
+                systems = ["" for _ in range(len(self.prompts))]
+            else:
+                systems = df[cfg.dataset.system_column].astype(str).tolist()
+        else:
+            systems = ["" for _ in range(len(self.prompts))]
+        return systems
 
     @staticmethod
     def get_conversation_ids(id2parent_id, end_id):
@@ -209,33 +215,11 @@ class ConversationChainHandler:
         ]
 
 
-class ConversationChainHandlerChosenResponses(ConversationChainHandler):
-    def get_answers(self, df, cfg):
-        answer_column = cfg.dataset.chosen_response_column
-        if answer_column in df.columns:
-            answers = df[answer_column].astype(str).tolist()
-        else:
-            answers = ["" for _ in range(len(self.prompts))]
-        return answers
-
-
-class ConversationChainHandlerRejectedResponses(ConversationChainHandler):
-    def get_answers(self, df, cfg):
-        answer_column = cfg.dataset.rejected_response_column
-        if answer_column in df.columns:
-            answers = df[answer_column].astype(str).tolist()
-        else:
-            answers = ["" for _ in range(len(self.prompts))]
-        return answers
-
-
 def get_conversation_chains(
     df, cfg, limit_chained_samples=True
 ) -> List[Dict[str, List[str]]]:
-    orig_limit_chained_samples = cfg.dataset.limit_chained_samples
-    cfg.dataset.limit_chained_samples = limit_chained_samples
-    conversation_chain_handler = ConversationChainHandler(df, cfg)
-    cfg.dataset.limit_chained_samples = orig_limit_chained_samples
+    with PatchedAttribute(cfg.dataset, "limit_chained_samples", limit_chained_samples):
+        conversation_chain_handler = ConversationChainHandler(df, cfg)
     conversations = [
         conversation
         for conversation in conversation_chain_handler  # type: ignore[attr-defined]

@@ -91,7 +91,6 @@ def prepare_oasst_hh_dpo(q):
             train_dataframe=os.path.join(path, "train.pq"),
             validation_dataframe=os.path.join(path, "valid.pq"),
             prompt_column=("instruction",),
-            answer_column="output",
             parent_id_column="parent_id",
             chosen_response_column="chosen_response",
             rejected_response_column="rejected_response",

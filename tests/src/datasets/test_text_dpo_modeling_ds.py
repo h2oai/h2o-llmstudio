@@ -8,7 +8,8 @@ from llm_studio.python_configs.text_dpo_modeling_config import (
     ConfigNLPDPOLMDataset,
     ConfigProblemBase,
 )
-from llm_studio.src.datasets.text_dpo_modeling_ds import CustomDataset, PatchedAttribute
+from llm_studio.src.datasets.text_dpo_modeling_ds import CustomDataset
+from llm_studio.src.utils.utils import PatchedAttribute
 
 
 @pytest.fixture

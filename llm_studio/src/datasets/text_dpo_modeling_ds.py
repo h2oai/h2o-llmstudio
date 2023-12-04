@@ -5,47 +5,11 @@ import pandas as pd
 import torch
 
 import llm_studio.src.datasets.text_causal_language_modeling_ds as text_causal_language_modeling_ds
-from llm_studio.src.datasets.conversation_chain_handler import (
-    ConversationChainHandlerChosenResponses,
-    ConversationChainHandlerRejectedResponses,
-)
+from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
 from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.utils.utils import PatchedAttribute
 
 logger = logging.getLogger(__name__)
-
-
-class PatchedAttribute:
-    """
-    Patches an attribute of an object for the duration of a context manager.
-    Similar to unittest.mock.patch,
-    but works also for properties that are not present in the original class
-
-    >>> class MyObj:
-    ...     attr = 'original'
-    >>> my_obj = MyObj()
-    >>> with PatchedAttribute(my_obj, 'attr', 'patched'):
-    ...     print(my_obj.attr)
-    patched
-    >>> print(my_obj.attr)
-    original
-    """
-
-    def __init__(self, obj, attribute, new_value):
-        self.obj = obj
-        self.attribute = attribute
-        self.new_value = new_value
-        self.original_exists = hasattr(obj, attribute)
-        if self.original_exists:
-            self.original_value = getattr(obj, attribute)
-
-    def __enter__(self):
-        setattr(self.obj, self.attribute, self.new_value)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.original_exists:
-            setattr(self.obj, self.attribute, self.original_value)
-        else:
-            delattr(self.obj, self.attribute)
 
 
 class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
@@ -88,12 +52,19 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
         self.df = df.copy()
         self.tokenizer = get_tokenizer(self.cfg)
 
-        self.conversation_chain_handler_chosen = (
-            ConversationChainHandlerChosenResponses(self.df, cfg)
-        )
-        self.conversation_chain_handler_rejected = (
-            ConversationChainHandlerRejectedResponses(self.df, cfg)
-        )
+        with PatchedAttribute(
+            cfg.dataset, "answer_column", cfg.dataset.chosen_answer_column
+        ):
+            self.conversation_chain_handler_chosen = ConversationChainHandler(
+                self.df, cfg
+            )
+
+        with PatchedAttribute(
+            cfg.dataset, "answer_column", cfg.dataset.rejected_answer_column
+        ):
+            self.conversation_chain_handler_rejected = ConversationChainHandler(
+                self.df, cfg
+            )
 
     def __len__(self) -> int:
         return len(self.conversation_chain_handler_chosen)
