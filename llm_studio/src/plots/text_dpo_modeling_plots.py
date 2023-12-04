@@ -1,6 +1,6 @@
 import hashlib
 import os
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import pandas as pd
 
@@ -10,10 +10,7 @@ from llm_studio.src.plots.text_causal_language_modeling_plots import (
     create_batch_prediction_df,
 )
 from llm_studio.src.utils.data_utils import read_dataframe_drop_missing_labels
-from llm_studio.src.utils.plot_utils import (
-    PlotData,
-    format_for_markdown_visualization,
-)
+from llm_studio.src.utils.plot_utils import PlotData, format_for_markdown_visualization
 from llm_studio.src.utils.utils import PatchedAttribute
 
 
@@ -40,8 +37,8 @@ class Plots:
             str(cfg.dataset.train_dataframe)
             + str(cfg.dataset.system_column)
             + str(cfg.dataset.prompt_column)
-            + str(cfg.dataset.chosen_response_column)
-            + str(cfg.dataset.rejected_response_column)
+            + str(cfg.dataset.answer_column)
+            + str(cfg.dataset.rejected_answer_column)
             + str(cfg.dataset.parent_id_column)
         )
         config_hash = hashlib.md5(config_id.encode()).hexdigest()
@@ -54,14 +51,11 @@ class Plots:
 
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
 
+        conversations_chosen = get_conversation_chains(
+            df, cfg, limit_chained_samples=True
+        )
         with PatchedAttribute(
-            cfg.dataset, "answer_column", cfg.dataset.chosen_response_column
-        ):
-            conversations_chosen = get_conversation_chains(
-                df, cfg, limit_chained_samples=True
-            )
-        with PatchedAttribute(
-            cfg.dataset, "answer_column", cfg.dataset.rejected_response_column
+            cfg.dataset, "answer_column", cfg.dataset.rejected_answer_column
         ):
             conversations_rejected = get_conversation_chains(
                 df, cfg, limit_chained_samples=True
@@ -76,7 +70,7 @@ class Plots:
             15,
         )
 
-        conversations_to_display = []
+        conversations_to_display: List = []
         for conversation_length in range(1, max_conversation_length + 1):
             conversations_to_display += [
                 (conversation_chosen, conversations_rejected)
@@ -103,7 +97,7 @@ class Plots:
             for prompt, answer_chosen, answer_rejected in zip(
                 conversation_chosen["prompts"],
                 conversation_chosen["answers"],
-                conversations_rejected["answers"],
+                conversations_rejected["answers"],  # type: ignore
             ):
                 df_transposed.loc[i] = [
                     sample_number,
@@ -144,12 +138,9 @@ class Plots:
     def plot_validation_predictions(
         cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
     ) -> PlotData:
-        with PatchedAttribute(
-            cfg.dataset, "answer_column", cfg.dataset.chosen_response_column
-        ):
-            conversations_chosen = get_conversation_chains(
-                val_df, cfg, limit_chained_samples=cfg.dataset.limit_chained_samples
-            )
+        conversations_chosen = get_conversation_chains(
+            val_df, cfg, limit_chained_samples=cfg.dataset.limit_chained_samples
+        )
 
         prompt_column_name = (
             cfg.dataset.prompt_column

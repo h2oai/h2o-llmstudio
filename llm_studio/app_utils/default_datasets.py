@@ -55,7 +55,8 @@ def prepare_default_dataset_causal_language_modeling(path):
 
 def prepare_default_dataset_dpo_modeling(split: str) -> pd.DataFrame:
     """
-    Adapted from https://github.com/eric-mitchell/direct-preference-optimization/blob/main/preference_datasets.py
+    Adapted from
+    https://github.com/eric-mitchell/direct-preference-optimization/blob/main/preference_datasets.py
     """
     dataset = load_dataset("Anthropic/hh-rlhf", split=split)
     rnd = random.Random()

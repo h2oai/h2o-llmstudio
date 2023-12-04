@@ -127,7 +127,8 @@ class ConversationChainHandler:
         return conversation_chain_ids
 
     def get_answers(self, df, cfg):
-        # For subclassing, let this the only place where cfg.dataset.answer_column is used explcitly
+        # For subclassing, let this the only place
+        # where cfg.dataset.answer_column is used explicitly
         answer_column = cfg.dataset.answer_column
         if answer_column in df.columns:
             answers = df[answer_column].astype(str).tolist()

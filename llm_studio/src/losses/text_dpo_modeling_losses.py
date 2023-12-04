@@ -27,16 +27,6 @@ class DPOLoss(nn.Module):
         reference_chosen_logps: torch.FloatTensor,
         reference_rejected_logps: torch.FloatTensor,
     ) -> Tuple[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]:
-        """Compute the DPO loss for a batch of policy and reference model log probabilities.
-        Args:
-            policy_chosen_logps: Log probabilities of the policy model for the chosen responses. Shape: (batch_size,)
-            policy_rejected_logps: Log probabilities of the policy model for the rejected responses. Shape: (batch_size,)
-            reference_chosen_logps: Log probabilities of the reference model for the chosen responses. Shape: (batch_size,)
-            reference_rejected_logps: Log probabilities of the reference model for the rejected responses. Shape: (batch_size,)
-            beta: Temperature parameter for the DPO loss, typically something in the range of 0.1 to 0.5. We ignore the reference model as beta -> 0.
-        Returns:
-            DPO loss
-        """
         pi_logratios = policy_chosen_logps - policy_rejected_logps
         ref_logratios = reference_chosen_logps - reference_rejected_logps
 
@@ -53,8 +43,10 @@ class DPOLoss(nn.Module):
         return losses.mean(), chosen_rewards.mean(), rejected_rewards.mean()
 
     def get_losses(self, logits):
-        # The beta is a temperature parameter for the DPO loss, typically something in the range of 0.1 to 0.5.
-        # We ignore the reference model as beta -> 0. The label_smoothing parameter encodes our uncertainty about the labels and
+        # The beta is a temperature parameter for the DPO loss,
+        # typically something in the range of 0.1 to 0.5.
+        # We ignore the reference model as beta -> 0.
+        # The label_smoothing parameter encodes our uncertainty about the labels and
         # calculates a conservative DPO loss.
 
         # Set to 0 per default, probably not too important to make it configurable (?)

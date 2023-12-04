@@ -1,7 +1,6 @@
 import logging
 import os
 import shutil
-import time
 from tempfile import NamedTemporaryFile
 
 from bokeh.resources import Resources as BokehResources
@@ -100,8 +99,8 @@ def prepare_oasst_hh_dpo(q):
             validation_dataframe=os.path.join(path, "valid.pq"),
             prompt_column=("instruction",),
             parent_id_column="parent_id",
-            chosen_response_column="chosen_response",
-            rejected_response_column="rejected_response",
+            answer_column="chosen_response",
+            rejected_answer_column="rejected_response",
         ),
     )
 

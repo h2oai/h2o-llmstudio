@@ -16,8 +16,8 @@ def df():
     return pd.DataFrame(
         {
             "prompt_column": [f"prompt {i}" for i in range(200)],
-            "chosen_response_column": [f"chosen_response {i}" for i in range(200)],
-            "rejected_response_column": [f"rejected_response {i}" for i in range(200)],
+            "answer_column": [f"chosen_response {i}" for i in range(200)],
+            "rejected_answer_column": [f"rejected_response {i}" for i in range(200)],
         }
     )
 
@@ -44,8 +44,8 @@ def df_with_conversation_chain_ids():
     return pd.DataFrame(
         {
             "prompt_column": [f"prompt {i}" for i in range(200)],
-            "chosen_response_column": chosen_responses,
-            "rejected_response_column": rejected_responses,
+            "answer_column": chosen_responses,
+            "rejected_answer_column": rejected_responses,
             "parent_id_column": parent_ids,
             "id": ids,
         }
@@ -56,14 +56,14 @@ def test_dataset_conversation_chain_is_correct(df_with_conversation_chain_ids):
     cfg = ConfigProblemBase(
         dataset=ConfigNLPDPOLMDataset(
             prompt_column=("prompt_column",),
-            chosen_response_column="chosen_response_column",
-            rejected_response_column="rejected_response_column",
+            answer_column="answer_column",
+            rejected_answer_column="rejected_answer_column",
             parent_id_column="parent_id_column",
         )
     )
     dataset = CustomDataset(df_with_conversation_chain_ids, cfg, mode="train")
 
-    ## Check for right formatting, e.g.:
+    # Check for right formatting, e.g.:
     # dataset.conversation_chain_handler_chosen[0] ==
     # {
     #     "prompts": ["prompt 0", "prompt 1", "prompt 2", "prompt 3", "prompt 4"],
@@ -107,8 +107,8 @@ def test_dataset_label_is_correct(df_with_conversation_chain_ids):
     cfg = ConfigProblemBase(
         dataset=ConfigNLPDPOLMDataset(
             prompt_column=("prompt_column",),
-            chosen_response_column="chosen_response_column",
-            rejected_response_column="rejected_response_column",
+            answer_column="answer_column",
+            rejected_answer_column="rejected_answer_column",
             parent_id_column="parent_id_column",
         )
     )
@@ -132,8 +132,8 @@ def test_dataloader_has_correct_keys(df):
     cfg = ConfigProblemBase(
         dataset=ConfigNLPDPOLMDataset(
             prompt_column=("prompt_column",),
-            chosen_response_column="chosen_response_column",
-            rejected_response_column="rejected_response_column",
+            answer_column="answer_column",
+            rejected_answer_column="rejected_answer_column",
             parent_id_column="None",
         )
     )

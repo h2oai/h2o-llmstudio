@@ -4,7 +4,7 @@ from typing import Any, Dict, Tuple
 import pandas as pd
 import torch
 
-import llm_studio.src.datasets.text_causal_language_modeling_ds as text_causal_language_modeling_ds
+import llm_studio.src.datasets.text_causal_language_modeling_ds as text_causal_language_modeling_ds  # noqa: [F401]
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.utils.utils import PatchedAttribute
@@ -26,7 +26,7 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
         parent_id                                                         None
         chosen_response       Humans and dinosaurs didn’t live at the same t...
         rejected_response     Humans and dinosaurs didn’t live at the same t...
-    Within a chat-answer interaction (parent_id points for the previous prompt-answer sample):
+    Within a chat-answer interaction:
         instruction                                               yes they did
         output               to guess, and that would probably require lots...
         id                                573e8d77-550a-4889-8ff4-1e8d8944897c
@@ -52,15 +52,10 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
         self.df = df.copy()
         self.tokenizer = get_tokenizer(self.cfg)
 
-        with PatchedAttribute(
-            cfg.dataset, "answer_column", cfg.dataset.chosen_response_column
-        ):
-            self.conversation_chain_handler_chosen = ConversationChainHandler(
-                self.df, cfg
-            )
+        self.conversation_chain_handler_chosen = ConversationChainHandler(self.df, cfg)
 
         with PatchedAttribute(
-            cfg.dataset, "answer_column", cfg.dataset.rejected_response_column
+            cfg.dataset, "answer_column", cfg.dataset.rejected_answer_column
         ):
             self.conversation_chain_handler_rejected = ConversationChainHandler(
                 self.df, cfg
@@ -155,14 +150,11 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
         self, cfg, df: pd.DataFrame, output: Dict
     ) -> Tuple[Dict, pd.DataFrame]:
         with PatchedAttribute(
-            cfg.dataset, "answer_column", cfg.dataset.chosen_response_column
+            self,
+            "conversation_chain_handler",
+            self.conversation_chain_handler_chosen,
         ):
-            with PatchedAttribute(
-                self,
-                "conversation_chain_handler",
-                self.conversation_chain_handler_chosen,
-            ):
-                return super().format_output(cfg, df, output)
+            return super().format_output(cfg, df, output)
 
     @classmethod
     def sanity_check(cls, df: pd.DataFrame, cfg: Any, mode: str = "train"):
@@ -182,8 +174,8 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
                 "Please ensure that some parent ids are empty."
             )
         for answer_column in [
-            cfg.dataset.chosen_response_column,
-            cfg.dataset.rejected_response_column,
+            cfg.dataset.answer_column,
+            cfg.dataset.rejected_answer_column,
         ]:
             assert answer_column in df.columns, (
                 f"Answer column {answer_column} not found in the " f"{mode} DataFrame."

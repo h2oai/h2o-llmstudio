@@ -25,24 +25,20 @@ from llm_studio.src.utils.modeling_utils import generate_experiment_name
 @dataclass
 class ConfigNLPDPOLMDataset(ConfigNLPCausalLMDataset):
     dataset_class: Any = llm_studio.src.datasets.text_dpo_modeling_ds.CustomDataset
-    # Always have full chat history. Chosen/Rejected prompt are only at the end of a conversation.
+    # Always have full chat history.
+    # Chosen/Rejected prompt are only at the end of a conversation.
     limit_chained_samples: bool = True
     mask_prompt_labels: bool = True
 
-    chosen_response_column: str = "chosen_response"
-    rejected_response_column: str = "rejected_response"
+    answer_column: str = "chosen_response"
+    rejected_answer_column: str = "rejected_response"
 
     def __post_init__(self):
         super().__post_init__()
         self._visibility["limit_chained_samples"] = -1
         self._visibility["mask_prompt_labels"] = -1
-        self._visibility["answer_column"] = -1
-
-        # TODO Catch errors -> write a e2e test
-        self.answer_column = None
-
-        self._order.insert("chosen_response_column", after="answer_column")
-        self._order.insert("rejected_response_column", after="chosen_response_column")
+        self._order.insert("answer_column", after="answer_column")
+        self._order.insert("rejected_answer_column", after="answer_column")
 
 
 @dataclass
@@ -60,7 +56,7 @@ class ConfigDPOCausalLMTraining(ConfigNLPCausalLMTraining):
         self._possible_values["beta"] = possible_values.Number(0.05, 0.5, 0.05)
         self._order.insert("beta", after="learning_rate")
         self._nesting.add(
-            "beta",
+            ["beta"],
             dependencies=[
                 Dependency(key="loss_function", value="DPOLoss", is_set=True)
             ],
