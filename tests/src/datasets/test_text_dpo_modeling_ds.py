@@ -81,7 +81,7 @@ def test_dataset_conversation_chain_is_correct(df_with_conversation_chain_ids):
         for name, conversation_chain_handler in zip(
             ["chosen", "rejected"],
             [
-                dataset.conversation_chain_handler_chosen,
+                dataset.conversation_chain_handler,
                 dataset.conversation_chain_handler_rejected,
             ],
         ):

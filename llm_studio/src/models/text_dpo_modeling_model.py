@@ -96,7 +96,7 @@ class Model(nn.Module):
 
         outputs: Dict = {}
 
-        for answer in ["rejected", "chosen"]:
+        for answer in ["chosen", "rejected"]:
             if padding:
                 batch = batch_padding(
                     self.cfg,
