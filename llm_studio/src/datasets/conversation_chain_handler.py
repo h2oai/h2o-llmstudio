@@ -55,11 +55,7 @@ class ConversationChainHandler:
     ):
         self.conversation_chain_ids = self.get_conversation_chain_ids(cfg, df)
         self.prompts = get_texts(df, cfg, separator="")
-
-        if cfg.dataset.answer_column in df.columns:
-            self.answers = df[cfg.dataset.answer_column].astype(str).tolist()
-        else:
-            self.answers = ["" for _ in range(len(self.prompts))]
+        self.answers = self.get_answers(df, cfg)
 
         if cfg.dataset.system_column != "None":
             if cfg.dataset.system_column not in df.columns:
@@ -72,6 +68,15 @@ class ConversationChainHandler:
                 self.systems = df[cfg.dataset.system_column].astype(str).tolist()
         else:
             self.systems = ["" for _ in range(len(self.prompts))]
+
+    def get_answers(self, df, cfg):
+        # For subclassing, let this the only place where cfg.dataset.answer_column is used explcitly
+        answer_column = cfg.dataset.answer_column
+        if answer_column in df.columns:
+            answers = df[answer_column].astype(str).tolist()
+        else:
+            answers = ["" for _ in range(len(self.prompts))]
+        return answers
 
     def get_conversation_chain_ids(self, cfg, df):
         """
@@ -202,6 +207,26 @@ class ConversationChainHandler:
         return [
             conversation_chain[-1] for conversation_chain in self.conversation_chain_ids
         ]
+
+
+class ConversationChainHandlerChosenResponses(ConversationChainHandler):
+    def get_answers(self, df, cfg):
+        answer_column = cfg.dataset.chosen_response_column
+        if answer_column in df.columns:
+            answers = df[answer_column].astype(str).tolist()
+        else:
+            answers = ["" for _ in range(len(self.prompts))]
+        return answers
+
+
+class ConversationChainHandlerRejectedResponses(ConversationChainHandler):
+    def get_answers(self, df, cfg):
+        answer_column = cfg.dataset.rejected_response_column
+        if answer_column in df.columns:
+            answers = df[answer_column].astype(str).tolist()
+        else:
+            answers = ["" for _ in range(len(self.prompts))]
+        return answers
 
 
 def get_conversation_chains(

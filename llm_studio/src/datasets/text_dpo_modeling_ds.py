@@ -1,11 +1,14 @@
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import pandas as pd
 import torch
 
 import llm_studio.src.datasets.text_causal_language_modeling_ds as text_causal_language_modeling_ds
-from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
+from llm_studio.src.datasets.conversation_chain_handler import (
+    ConversationChainHandlerChosenResponses,
+    ConversationChainHandlerRejectedResponses,
+)
 from llm_studio.src.datasets.text_utils import get_tokenizer
 
 logger = logging.getLogger(__name__)
@@ -14,7 +17,11 @@ logger = logging.getLogger(__name__)
 class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
     """
     Dataset for DPO optimization.
-    The data is assumed to be in hierarchical form of the following format:
+    The data is assumed to be in (potential) hierarchical format.
+    id and parent_id are not necessarily required.
+
+    Example format from HH DPO dataset:
+
     Beginning of a chat-answer interaction (parent_id is not set):
         instruction                    What kind of noises did dinosaurs make?
         id                                610e4ad5-09c4-4055-9ff4-948fe6b4f832
@@ -47,13 +54,12 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
         self.df = df.copy()
         self.tokenizer = get_tokenizer(self.cfg)
 
-        cfg.dataset.answer_column = cfg.dataset.chosen_response_column
-        self.conversation_chain_handler_chosen = ConversationChainHandler(self.df, cfg)
-        cfg.dataset.answer_column = cfg.dataset.rejected_response_column
-        self.conversation_chain_handler_rejected = ConversationChainHandler(
-            self.df, cfg
+        self.conversation_chain_handler_chosen = (
+            ConversationChainHandlerChosenResponses(self.df, cfg)
         )
-
+        self.conversation_chain_handler_rejected = (
+            ConversationChainHandlerRejectedResponses(self.df, cfg)
+        )
         self.conversation_chain_handler = None
 
     def __len__(self) -> int:
@@ -78,6 +84,7 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
                     in ["input_ids", "attention_mask", "token_type_ids", "labels"]
                 }
             )
+        # Used chosen repsonses for functionality related to generation
         self.conversation_chain_handler = self.conversation_chain_handler_chosen
         sample.update(
             {
@@ -91,11 +98,14 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
                 ]
             }
         )
-
+        # set to None to catch any unexpected usage
+        self.conversation_chain_handler = None
         return sample
 
     def get_labels(self, prompt_encodings, answer_encodings):
-        # all but the last answer should be masked
+        """
+        Mask all but the last answer.
+        """
         labels = torch.cat(
             [
                 torch.cat(
@@ -126,3 +136,52 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
         sample = dict(labels=torch.full((self.cfg.tokenizer.max_length,), -100))
         sample["labels"][-len(labels) :] = labels
         return sample
+
+    def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
+        self.conversation_chain_handler = self.conversation_chain_handler_chosen
+        output = super().postprocess_output(cfg, df, output)
+        self.conversation_chain_handler = None
+        return output
+
+    def format_output(
+        self, cfg, df: pd.DataFrame, output: Dict
+    ) -> Tuple[Dict, pd.DataFrame]:
+        self.conversation_chain_handler = self.conversation_chain_handler_chosen
+        output, df = super().format_output(cfg, df, output)
+        self.conversation_chain_handler = None
+        return output, df
+
+    @classmethod
+    def sanity_check(cls, df: pd.DataFrame, cfg: Any, mode: str = "train"):
+        """
+        Quick check whether Dataframe and configurations are correctly set.
+        """
+        if (
+            cfg.dataset.parent_id_column is not None
+            and cfg.dataset.parent_id_column in df.columns
+            and "id" in df.columns
+        ):
+            assert (
+                df[cfg.dataset.parent_id_column] != df["id"]
+            ).all(), "Parent id column is the same as id column for some rows"
+            assert (df[cfg.dataset.parent_id_column].fillna("") == "").sum() > 0, (
+                "Did not find any conversation start. "
+                "Please ensure that some parent ids are empty."
+            )
+        for answer_column in [
+            cfg.dataset.chosen_answer_column,
+            cfg.dataset.rejected_answer_column,
+        ]:
+            assert answer_column in df.columns, (
+                f"Answer column {answer_column} not found in the " f"{mode} DataFrame."
+            )
+            assert df.shape[0] == df[[answer_column]].dropna().shape[0], (
+                f"The {mode} DataFrame"
+                f" column {answer_column}"
+                " contains missing values."
+            )
+
+        if cfg.dataset.parent_id_column != "None":
+            assert (
+                "id" in df.columns
+            ), "When using parent column, the dataframe requires an 'id' column. "

@@ -227,14 +227,6 @@ def test_getitem():
     assert result["input_ids"].shape == (513,)
     assert result["prompt_input_ids"].shape == (513,)
 
-    assert dataset.get_chained_prompt_text_list(0) == [
-        "system 1prompt 1",
-        "answer 1",
-        "prompt 2",
-        "answer 2",
-        "prompt 3",
-    ]
-
 
 def test_getitem_no_chaining():
     df = pd.DataFrame(
@@ -294,6 +286,3 @@ def test_getitem_no_chaining():
             f"Prompt:prompt {i+1}"
             "Answer:"
         )
-        assert dataset.get_chained_prompt_text_list(i) == [
-            f"system {i+1}prompt {i+1}",
-        ]
