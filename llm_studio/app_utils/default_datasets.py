@@ -1,7 +1,7 @@
 import os
+import random
 import re
 import uuid
-from random import random
 
 import pandas as pd
 from datasets import load_dataset
@@ -90,8 +90,12 @@ def prepare_default_dataset_dpo_modeling(split: str) -> pd.DataFrame:
             ],
         )
         dfs.append(df)
-
-    return pd.concat(dfs).reset_index(drop=True)
+    df = pd.concat(dfs).reset_index(drop=True)
+    # merge output into chosen and rejected response
+    df["chosen_response"] = df["chosen_response"].fillna(df["output"])
+    df["rejected_response"] = df["rejected_response"].fillna(df["output"])
+    del df["output"]
+    return df
 
 
 def extract_anthropic_prompt(prompt_and_response):

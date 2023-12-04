@@ -142,9 +142,14 @@ def read_dataframe_drop_missing_labels(path: str, cfg: Any) -> pd.DataFrame:
         verbose=verbose,
         fill_columns=fill_columns,
     )
-    df[input_cols + [cfg.dataset.answer_column]] = (
-        df[input_cols + [cfg.dataset.answer_column]].fillna("").astype(str)
-    )
+    df[input_cols] = df[input_cols].fillna("").astype(str)
+    if (
+        hasattr(cfg.dataset, "answer_column")
+        and cfg.dataset.answer_column in df.columns
+    ):
+        df[cfg.dataset.answer_column] = (
+            df[cfg.dataset.answer_column].fillna("").astype(str)
+        )
     return df
 
 

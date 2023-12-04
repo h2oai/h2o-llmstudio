@@ -1,6 +1,9 @@
 import pytest
 
-from llm_studio.python_configs.text_dpo_modeling_config import ConfigProblemBase, ConfigNLPDPOLMDataset
+from llm_studio.python_configs.text_dpo_modeling_config import (
+    ConfigNLPDPOLMDataset,
+    ConfigProblemBase,
+)
 from llm_studio.src.utils.utils import PatchedAttribute
 
 

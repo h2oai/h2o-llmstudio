@@ -12,6 +12,7 @@ from llm_studio.src.utils.plot_utils import (
     format_for_markdown_visualization,
     list_to_markdown_representation,
 )
+from llm_studio.src.utils.utils import PatchedAttribute
 
 
 class Plots:
@@ -35,7 +36,8 @@ class Plots:
             str(cfg.dataset.train_dataframe)
             + str(cfg.dataset.system_column)
             + str(cfg.dataset.prompt_column)
-            + str(cfg.dataset.answer_column)
+            + str(cfg.dataset.chosen_response_column)
+            + str(cfg.dataset.rejected_response_column)
             + str(cfg.dataset.parent_id_column)
         )
         config_hash = hashlib.md5(config_id.encode()).hexdigest()
@@ -48,47 +50,83 @@ class Plots:
 
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
 
-        conversations = get_conversation_chains(df, cfg, limit_chained_samples=True)
+        with PatchedAttribute(
+            cfg.dataset, "answer_column", cfg.dataset.chosen_response_column
+        ):
+            conversations_chosen = get_conversation_chains(
+                df, cfg, limit_chained_samples=True
+            )
+        with PatchedAttribute(
+            cfg.dataset, "answer_column", cfg.dataset.rejected_response_column
+        ):
+            conversations_rejected = get_conversation_chains(
+                df, cfg, limit_chained_samples=True
+            )
 
         # Limit to max 15 prompt-conversation-answer rounds
         # This yields to max 5 * sum_{i=1}^{15} i = 600 rows in the DataFrame
         max_conversation_length = min(
-            max([len(conversation["prompts"]) for conversation in conversations]), 15
+            max(
+                [len(conversation["prompts"]) for conversation in conversations_chosen]
+            ),
+            15,
         )
 
         conversations_to_display = []
         for conversation_length in range(1, max_conversation_length + 1):
             conversations_to_display += [
-                conversation
-                for conversation in conversations
-                if len(conversation["prompts"]) == conversation_length
+                (conversation_chosen, conversations_rejected)
+                for conversation_chosen, conversations_rejected in zip(
+                    conversations_chosen, conversations_rejected
+                )
+                if len(conversation_chosen["prompts"]) == conversation_length
             ][:5]
 
         # Convert into a scrollable table by transposing the dataframe
         df_transposed = pd.DataFrame(columns=["Sample Number", "Field", "Content"])
 
         i = 0
-        for sample_number, conversation in enumerate(conversations_to_display):
-            if conversation["systems"][0] != "":
+        for sample_number, (conversation_chosen, conversations_rejected) in enumerate(
+            conversations_to_display
+        ):
+            if conversation_chosen["systems"][0] != "":
                 df_transposed.loc[i] = [
                     sample_number,
                     "System",
-                    conversation["systems"][0],
+                    conversation_chosen["systems"][0],
                 ]
                 i += 1
-            for prompt, answer in zip(conversation["prompts"], conversation["answers"]):
+            for prompt, answer_chosen, answer_rejected in zip(
+                conversation_chosen["prompts"],
+                conversation_chosen["answers"],
+                conversations_rejected["answers"],
+            ):
                 df_transposed.loc[i] = [
                     sample_number,
                     "Prompt",
                     prompt,
                 ]
                 i += 1
-                df_transposed.loc[i] = [
-                    sample_number,
-                    "Answer",
-                    answer,
-                ]
-                i += 1
+                if answer_chosen == answer_rejected:
+                    df_transposed.loc[i] = [
+                        sample_number,
+                        "Answer",
+                        answer_chosen,
+                    ]
+                    i += 1
+                else:
+                    df_transposed.loc[i] = [
+                        sample_number,
+                        "Answer Chosen",
+                        answer_chosen,
+                    ]
+                    i += 1
+                    df_transposed.loc[i] = [
+                        sample_number,
+                        "Answer Rejected",
+                        answer_rejected,
+                    ]
+                    i += 1
 
         df_transposed["Content"] = df_transposed["Content"].apply(
             format_for_markdown_visualization

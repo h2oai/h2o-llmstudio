@@ -1,10 +1,11 @@
 import logging
 import os
 import shutil
+import time
 from tempfile import NamedTemporaryFile
 
 from bokeh.resources import Resources as BokehResources
-from h2o_wave import Q
+from h2o_wave import Q, ui
 
 from llm_studio.app_utils.config import default_cfg
 from llm_studio.app_utils.db import Database, Dataset
@@ -27,7 +28,7 @@ from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
 logger = logging.getLogger(__name__)
 
 
-def import_default_data(q: Q):
+async def import_default_data(q: Q):
     """Imports default data"""
 
     try:
@@ -97,7 +98,7 @@ def prepare_oasst_hh_dpo(q):
         ),
     )
 
-    cfg_path = os.path.join(path, "text_dpo_language_modeling_config.yaml")
+    cfg_path = os.path.join(path, "text_dpo_modeling_config.yaml")
     save_config_yaml(cfg_path, cfg)
     dataset = Dataset(
         id=2,
@@ -133,13 +134,16 @@ async def initialize_client(q: Q) -> None:
         q.client.client_initialized = True
 
         q.client["mode_curr"] = "full"
-
-        import_default_data(q)
-
         load_user_settings_and_secrets(q)
-
         await interface(q)
+        q.page["meta"].dialog = ui.dialog(
+            title="Downloading default datasets",
+            blocking=True,
+            items=[ui.progress(label="Please be patient...")],
+        )
+        await q.page.save()
 
+        await import_default_data(q)
         q.args[default_cfg.start_page] = True
 
     return

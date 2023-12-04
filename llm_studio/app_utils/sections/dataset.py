@@ -1,3 +1,4 @@
+import contextlib
 import functools
 import hashlib
 import logging
@@ -54,6 +55,7 @@ from llm_studio.src.utils.data_utils import (
     sanity_check,
 )
 from llm_studio.src.utils.plot_utils import PlotData
+from llm_studio.src.utils.utils import PatchedAttribute
 
 logger = logging.getLogger(__name__)
 
@@ -1279,9 +1281,16 @@ def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str):
     """
     df_train = read_dataframe(dataset_path)
     cfg = load_config_yaml(cfg_path)
-    conversations = get_conversation_chains(
-        df=df_train, cfg=cfg, limit_chained_samples=True
-    )
+    if cfg.problem_type == "text_dpo_modeling":
+        context_manager = PatchedAttribute(
+            cfg.dataset, "answer_column", cfg.dataset.chosen_response_column
+        )
+    else:
+        context_manager = contextlib.nullcontext()
+    with context_manager:
+        conversations = get_conversation_chains(
+            df=df_train, cfg=cfg, limit_chained_samples=True
+        )
     stats_dict = {}
     for chat_type in ["prompts", "answers"]:
         text_lengths = [
