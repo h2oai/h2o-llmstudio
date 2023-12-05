@@ -276,12 +276,9 @@ def load_train_valid_data(cfg) -> Tuple[pd.DataFrame, pd.DataFrame]:
             # this ensures that all samples from the
             # same conversation are in the same fold
             with PatchedAttribute(cfg.dataset, "limit_chained_samples", True):
-                # answer_column is set to None to avoid any issues with DPO
-                # not needed when using conversation_chain_ids
-                with PatchedAttribute(cfg.dataset, "answer_column", "None"):
-                    conversation_chain_ids = ConversationChainHandler(
-                        df=df, cfg=cfg
-                    ).conversation_chain_ids
+                conversation_chain_ids = ConversationChainHandler(
+                    df=df, cfg=cfg
+                ).conversation_chain_ids
             # Some conversations may have the same parent id, e.g. for OASST
             # 6aa548c6-65ad-4531-9411-76173ae060a3 and
             # 2a164c2a-4f0e-45aa-8990-e7dd3b51c06b
