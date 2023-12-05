@@ -5,7 +5,7 @@ import torch
 from tqdm import tqdm
 
 from llm_studio.python_configs.text_dpo_modeling_config import (
-    ConfigNLPDPOLMDataset,
+    ConfigDPODataset,
     ConfigProblemBase,
 )
 from llm_studio.src.datasets.text_dpo_modeling_ds import CustomDataset
@@ -54,7 +54,7 @@ def df_with_conversation_chain_ids():
 
 def test_dataset_conversation_chain_is_correct(df_with_conversation_chain_ids):
     cfg = ConfigProblemBase(
-        dataset=ConfigNLPDPOLMDataset(
+        dataset=ConfigDPODataset(
             prompt_column=("prompt_column",),
             answer_column="answer_column",
             rejected_answer_column="rejected_answer_column",
@@ -105,7 +105,7 @@ def test_dataset_conversation_chain_is_correct(df_with_conversation_chain_ids):
 
 def test_dataset_label_is_correct(df_with_conversation_chain_ids):
     cfg = ConfigProblemBase(
-        dataset=ConfigNLPDPOLMDataset(
+        dataset=ConfigDPODataset(
             prompt_column=("prompt_column",),
             answer_column="answer_column",
             rejected_answer_column="rejected_answer_column",
@@ -130,7 +130,7 @@ def test_dataset_label_is_correct(df_with_conversation_chain_ids):
 
 def test_dataloader_has_correct_keys(df):
     cfg = ConfigProblemBase(
-        dataset=ConfigNLPDPOLMDataset(
+        dataset=ConfigDPODataset(
             prompt_column=("prompt_column",),
             answer_column="answer_column",
             rejected_answer_column="rejected_answer_column",

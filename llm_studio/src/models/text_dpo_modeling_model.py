@@ -98,6 +98,9 @@ class Model(nn.Module):
 
         outputs: Dict = {}
 
+        chosen_logits = None
+        chosen_labels = None
+
         for answer in ["chosen", "rejected"]:
             if padding:
                 batch = batch_padding(
@@ -115,6 +118,11 @@ class Model(nn.Module):
                 input_ids=batch[f"{answer}_input_ids"],
                 attention_mask=batch[f"{answer}_attention_mask"],
             ).logits
+            chosen_logits = logits.detach() if answer == "chosen" else chosen_logits
+            chosen_labels = (
+                batch[f"{answer}_labels"] if answer == "chosen" else chosen_labels
+            )
+
             outputs[f"{answer}_logps"] = get_batch_logps(
                 logits, batch[f"{answer}_labels"]
             )
@@ -141,6 +149,9 @@ class Model(nn.Module):
         outputs["chosen_rewards"] = chosen_rewards
         outputs["rejected_rewards"] = rejected_rewards
         outputs["reward_margin"] = chosen_rewards - rejected_rewards
+
+        if not self.training and self.cfg.prediction.metric == "Perplexity":
+            outputs["perplexity"] = self.perplexity(chosen_logits, chosen_labels)
 
         # enable cache again if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:

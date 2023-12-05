@@ -88,13 +88,13 @@ def prepare_oasst_hh_dpo(q):
     valid_df = prepare_default_dataset_dpo_modeling("test")
     valid_df.to_parquet(os.path.join(path, "valid.pq"), index=False)
 
-    from llm_studio.python_configs.text_dpo_modeling_config import ConfigNLPDPOLMDataset
+    from llm_studio.python_configs.text_dpo_modeling_config import ConfigDPODataset
     from llm_studio.python_configs.text_dpo_modeling_config import (
         ConfigProblemBase as ConfigProblemBaseDPO,
     )
 
     cfg: ConfigProblemBaseDPO = ConfigProblemBaseDPO(
-        dataset=ConfigNLPDPOLMDataset(
+        dataset=ConfigDPODataset(
             train_dataframe=os.path.join(path, "train.pq"),
             validation_dataframe=os.path.join(path, "valid.pq"),
             prompt_column=("instruction",),

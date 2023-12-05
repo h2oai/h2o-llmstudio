@@ -23,7 +23,7 @@ from llm_studio.src.utils.modeling_utils import generate_experiment_name
 
 
 @dataclass
-class ConfigNLPDPOLMDataset(ConfigNLPCausalLMDataset):
+class ConfigDPODataset(ConfigNLPCausalLMDataset):
     dataset_class: Any = llm_studio.src.datasets.text_dpo_modeling_ds.CustomDataset
     # Always have full chat history.
     # Chosen/Rejected prompt are only at the end of a conversation.
@@ -41,7 +41,7 @@ class ConfigNLPDPOLMDataset(ConfigNLPCausalLMDataset):
 
 
 @dataclass
-class ConfigDPOCausalLMTraining(ConfigNLPCausalLMTraining):
+class ConfigDPOTraining(ConfigNLPCausalLMTraining):
     learning_rate: float = 1e-6
     beta: float = 0.2
     gradient_clip: float = 10.0
@@ -64,12 +64,12 @@ class ConfigDPOCausalLMTraining(ConfigNLPCausalLMTraining):
 
 
 @dataclass
-class ConfigDPOCausalLMArchitecture(ConfigNLPCausalLMArchitecture):
+class ConfigDPOArchitecture(ConfigNLPCausalLMArchitecture):
     model_class: Any = text_dpo_modeling_model.Model
 
 
 @dataclass
-class ConfigDPOPCausalLMLogging(ConfigNLPCausalLMLogging):
+class ConfigDPOPLogging(ConfigNLPCausalLMLogging):
     plots_class: Any = text_dpo_modeling_plots.Plots
 
 
@@ -80,16 +80,12 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     _parent_experiment: str = ""
     llm_backbone: str = "h2oai/h2ogpt-4096-llama2-7b"
 
-    dataset: ConfigNLPDPOLMDataset = field(default_factory=ConfigNLPDPOLMDataset)
+    dataset: ConfigDPODataset = field(default_factory=ConfigDPODataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
         default_factory=ConfigNLPCausalLMTokenizer
     )
-    architecture: ConfigDPOCausalLMArchitecture = field(
-        default_factory=ConfigDPOCausalLMArchitecture
-    )
-    training: ConfigDPOCausalLMTraining = field(
-        default_factory=ConfigDPOCausalLMTraining
-    )
+    architecture: ConfigDPOArchitecture = field(default_factory=ConfigDPOArchitecture)
+    training: ConfigDPOTraining = field(default_factory=ConfigDPOTraining)
     augmentation: ConfigNLPAugmentation = field(default_factory=ConfigNLPAugmentation)
     prediction: ConfigNLPCausalLMPrediction = field(
         default_factory=ConfigNLPCausalLMPrediction
@@ -97,9 +93,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     environment: ConfigNLPCausalLMEnvironment = field(
         default_factory=ConfigNLPCausalLMEnvironment
     )
-    logging: ConfigDPOPCausalLMLogging = field(
-        default_factory=ConfigDPOPCausalLMLogging
-    )
+    logging: ConfigDPOPLogging = field(default_factory=ConfigDPOPLogging)
 
     def __post_init__(self):
         super().__post_init__()

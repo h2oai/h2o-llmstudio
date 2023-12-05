@@ -1,7 +1,7 @@
 import pytest
 
 from llm_studio.python_configs.text_dpo_modeling_config import (
-    ConfigNLPDPOLMDataset,
+    ConfigDPODataset,
     ConfigProblemBase,
 )
 from llm_studio.src.utils.utils import PatchedAttribute
@@ -9,7 +9,7 @@ from llm_studio.src.utils.utils import PatchedAttribute
 
 def test_patched_attribute():
     cfg = ConfigProblemBase(
-        dataset=ConfigNLPDPOLMDataset(
+        dataset=ConfigDPODataset(
             prompt_column=("prompt_column",),
             answer_column="answer_column",
             rejected_answer_column="rejected_answer_column",
