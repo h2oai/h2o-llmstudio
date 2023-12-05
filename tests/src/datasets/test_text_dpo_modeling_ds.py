@@ -4,6 +4,9 @@ import pytest
 import torch
 from tqdm import tqdm
 
+from llm_studio.python_configs.text_causal_language_modeling_config import (
+    ConfigNLPCausalLMTokenizer,
+)
 from llm_studio.python_configs.text_dpo_modeling_config import (
     ConfigDPODataset,
     ConfigProblemBase,
@@ -197,3 +200,78 @@ def test_empy_answer_dataset_throws_no_error(df):
         dataset = CustomDataset(df, cfg, mode="train")
         [dataset[i] for i in range(len(dataset))]
         df[column] = values
+
+
+@pytest.fixture
+def df_single_prompt():
+    prompt = """when ordering your sandstones, you select which colour scale you would want.
+ it could be e.g. a 100% from grey/sand mix, or 80% fra beige/yellow mixed with 20% from black/brown.
+  This is all lower case. Can you fix that?"""
+    system = """You are an AI assistant. User will you give you a task. Your goal is to complete the task as faithfully as you can.
+While performing the task think step-by-step and justify your steps."""
+    answer = """When ordering your sandstones, you select which color scale you would want. It could be, for example, a 100% from grey/sand mix, or 80% from beige/yellow mixed with 20% from black/brown.
+Step 1: Capitalize the first letter of the sentence.
+Step 2: Correct the spelling of "color" (assuming American English usage).
+Step 3: Replace ", e.g." with "for example" to clarify the sentence.
+Step 4: Capitalize "a" in "100% from a grey/sand mix"
+Step 5: Ensure the proper usage of words and punctuation throughout the revised sentence."""
+    return pd.DataFrame(
+        {
+            "prompt": [prompt],
+            "system": [system],
+            "answer": [answer],
+            "rejected_answer": ["I cannot do that."],
+        }
+    )
+
+
+def generate_causal_lm_model_input_ids(df):
+    from llm_studio.python_configs.text_causal_language_modeling_config import (
+        ConfigNLPCausalLMDataset,
+    )
+    from llm_studio.python_configs.text_causal_language_modeling_config import (
+        ConfigProblemBase as ConfigCausalLMProblemBase,
+    )
+    from llm_studio.src.datasets.text_causal_language_modeling_ds import (
+        CustomDataset as CausalLMCustomDataset,
+    )
+
+    cfg = ConfigCausalLMProblemBase(
+        llm_backbone="h2oai/h2ogpt-4096-llama2-7b",
+        dataset=ConfigNLPCausalLMDataset(
+            system_column="system",
+            prompt_column=("prompt",),
+            answer_column="answer",
+        ),
+        tokenizer=ConfigNLPCausalLMTokenizer(
+            max_length_prompt=256, max_length_answer=256, max_length=512
+        ),
+    )
+    dataset = CausalLMCustomDataset(df, cfg, mode="train")
+    return dataset[0]
+
+
+def test_dataset_prompt_ids_are_the_same_as_for_causal_language_modeling(
+    df_single_prompt,
+):
+    generated_text_causal_lm = generate_causal_lm_model_input_ids(df_single_prompt)
+
+    cfg = ConfigProblemBase(
+        llm_backbone="h2oai/h2ogpt-4096-llama2-7b",
+        dataset=ConfigDPODataset(
+            system_column="system",
+            prompt_column=("prompt",),
+            answer_column="answer",
+            rejected_answer_column="rejected_answer",
+        ),
+        tokenizer=ConfigNLPCausalLMTokenizer(
+            max_length_prompt=256, max_length_answer=256, max_length=512
+        ),
+    )
+    dataset = CustomDataset(df_single_prompt, cfg, mode="train")
+    generated_text = dataset[0]
+
+    for key in ["prompt_input_ids", "prompt_attention_mask"]:
+        assert torch.all(
+            generated_text_causal_lm[key] == generated_text[key]
+        ), f"{key} is not the same"

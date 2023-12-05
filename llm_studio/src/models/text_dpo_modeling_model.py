@@ -85,7 +85,7 @@ class Model(nn.Module):
             self.perplexity = Perplexity(self.cfg, reduce=False)
 
     def generate(self, batch: Dict, cfg: Any, streamer=None):
-        return generate(self.backbone, batch, cfg, streamer, self.training)
+        return generate(self.backbone, batch, cfg, streamer)
 
     def forward(
         self,
