@@ -81,7 +81,13 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
                 )
             ]
         ).clone()
-        labels[-len(answer_encodings[-1]) :] = answer_encodings[-1]
+        try:
+            labels[-len(answer_encodings[-1]) :] = answer_encodings[-1]
+        except Exception as e:
+            raise ValueError(
+                f"Could not get labels for prompt_encodings={prompt_encodings} "
+                f"and answer_encodings={answer_encodings}."
+            ) from e
 
         if self.cfg.dataset.add_eos_token_to_answer:
             # eos_token may be equal to pad_token. Add the label back manually.
