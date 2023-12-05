@@ -102,82 +102,86 @@ class Plots:
     def plot_validation_predictions(
         cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
     ) -> PlotData:
-        conversations = get_conversation_chains(
-            val_df, cfg, limit_chained_samples=cfg.dataset.limit_chained_samples
-        )
-        prompt_column_name = (
-            cfg.dataset.prompt_column
-            if len(cfg.dataset.prompt_column) > 1
-            else cfg.dataset.prompt_column[0]
-        )
+        return plot_validation_predictions(val_outputs, cfg, val_df, mode)
 
-        target_texts = [conversation["answers"][-1] for conversation in conversations]
 
-        input_texts = []
-        for conversation in conversations:
-            input_text = conversation["systems"][0]
-            prompts = conversation["prompts"]
-            answers = conversation["answers"]
-            # exclude last answer
-            answers[-1] = ""
-            for prompt, answer in zip(prompts, answers):
-                input_text += (
-                    f" **{prompt_column_name}:** "
-                    f"{prompt}\n\n"
-                    f"**{cfg.dataset.answer_column}:** "
-                    f"{answer}\n\n"
-                )
-            input_texts += [input_text]
+def plot_validation_predictions(
+    val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
+) -> PlotData:
+    conversations = get_conversation_chains(
+        val_df, cfg, limit_chained_samples=cfg.dataset.limit_chained_samples
+    )
+    prompt_column_name = (
+        cfg.dataset.prompt_column
+        if len(cfg.dataset.prompt_column) > 1
+        else cfg.dataset.prompt_column[0]
+    )
 
-        if "predicted_text" in val_outputs.keys():
-            predicted_texts = val_outputs["predicted_text"]
-        else:
-            predicted_texts = [
-                "No predictions are generated for the selected metric"
-            ] * len(target_texts)
+    target_texts = [conversation["answers"][-1] for conversation in conversations]
 
-        input_text_column_name = (
-            "Input Text (tokenization max length setting "
-            "may truncate the input text during training/inference)"
-        )
-        df = pd.DataFrame(
-            {
-                input_text_column_name: input_texts,
-                "Target Text": target_texts,
-                "Predicted Text": predicted_texts,
-            }
-        )
-        df[input_text_column_name] = df[input_text_column_name].apply(
-            format_for_markdown_visualization
-        )
-        df["Target Text"] = df["Target Text"].apply(format_for_markdown_visualization)
-        df["Predicted Text"] = df["Predicted Text"].apply(
-            format_for_markdown_visualization
-        )
+    input_texts = []
+    for conversation in conversations:
+        input_text = conversation["systems"][0]
+        prompts = conversation["prompts"]
+        answers = conversation["answers"]
+        # exclude last answer
+        answers[-1] = ""
+        for prompt, answer in zip(prompts, answers):
+            input_text += (
+                f" **{prompt_column_name}:** "
+                f"{prompt}\n\n"
+                f"**{cfg.dataset.answer_column}:** "
+                f"{answer}\n\n"
+            )
+        input_texts += [input_text]
 
-        if val_outputs.get("metrics") is not None:
-            metric_column_name = f"Metric ({cfg.prediction.metric})"
-            df[metric_column_name] = val_outputs["metrics"]
-            df[metric_column_name] = df[metric_column_name].round(decimals=3)
-            if len(df) > 900:
-                df.sort_values(by=metric_column_name, inplace=True)
-                df = pd.concat(
-                    [
-                        df.iloc[:300],
-                        df.iloc[300:-300].sample(n=300, random_state=42),
-                        df.iloc[-300:],
-                    ]
-                ).reset_index(drop=True)
+    if "predicted_text" in val_outputs.keys():
+        predicted_texts = val_outputs["predicted_text"]
+    else:
+        predicted_texts = [
+            "No predictions are generated for the selected metric"
+        ] * len(target_texts)
 
-        elif len(df) > 900:
-            df = df.sample(n=900, random_state=42).reset_index(drop=True)
+    input_text_column_name = (
+        "Input Text (tokenization max length setting "
+        "may truncate the input text during training/inference)"
+    )
+    df = pd.DataFrame(
+        {
+            input_text_column_name: input_texts,
+            "Target Text": target_texts,
+            "Predicted Text": predicted_texts,
+        }
+    )
+    df[input_text_column_name] = df[input_text_column_name].apply(
+        format_for_markdown_visualization
+    )
+    df["Target Text"] = df["Target Text"].apply(format_for_markdown_visualization)
+    df["Predicted Text"] = df["Predicted Text"].apply(format_for_markdown_visualization)
 
-        if val_outputs.get("explanations") is not None:
-            df["Explanation"] = val_outputs["explanations"]
+    if val_outputs.get("metrics") is not None:
+        metric_column_name = f"Metric ({cfg.prediction.metric})"
+        df[metric_column_name] = val_outputs["metrics"]
+        df[metric_column_name] = df[metric_column_name].round(decimals=3)
+        if len(df) > 900:
+            df.sort_values(by=metric_column_name, inplace=True)
+            df = pd.concat(
+                [
+                    df.iloc[:300],
+                    df.iloc[300:-300].sample(n=300, random_state=42),
+                    df.iloc[-300:],
+                ]
+            ).reset_index(drop=True)
 
-        path = os.path.join(cfg.output_directory, f"{mode}_viz.parquet")
-        df.to_parquet(path)
-        return PlotData(data=path, encoding="df")
+    elif len(df) > 900:
+        df = df.sample(n=900, random_state=42).reset_index(drop=True)
+
+    if val_outputs.get("explanations") is not None:
+        df["Explanation"] = val_outputs["explanations"]
+
+    path = os.path.join(cfg.output_directory, f"{mode}_viz.parquet")
+    df.to_parquet(path)
+    return PlotData(data=path, encoding="df")
 
 
 def create_batch_prediction_df(batch, tokenizer, ids_for_tokenized_text="input_ids"):

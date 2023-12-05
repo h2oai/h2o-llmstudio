@@ -1,6 +1,6 @@
 import hashlib
 import os
-from typing import List
+from typing import Any, Dict, List
 
 import pandas as pd
 
@@ -8,6 +8,7 @@ from llm_studio.src.datasets.conversation_chain_handler import get_conversation_
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.plots.text_causal_language_modeling_plots import (
     create_batch_prediction_df,
+    plot_validation_predictions,
 )
 from llm_studio.src.utils.data_utils import read_dataframe_drop_missing_labels
 from llm_studio.src.utils.plot_utils import PlotData, format_for_markdown_visualization
@@ -130,3 +131,9 @@ class Plots:
         )
         df_transposed.to_parquet(path)
         return PlotData(path, encoding="df")
+
+    @classmethod
+    def plot_validation_predictions(
+        cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
+    ) -> PlotData:
+        return plot_validation_predictions(val_outputs, cfg, val_df, mode)
