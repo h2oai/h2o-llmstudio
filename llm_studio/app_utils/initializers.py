@@ -89,6 +89,7 @@ def prepare_dpo(q):
     from llm_studio.python_configs.text_dpo_modeling_config import (
         ConfigProblemBase as ConfigProblemBaseDPO,
     )
+
     cfg: ConfigProblemBaseDPO = ConfigProblemBaseDPO(
         dataset=ConfigDPODataset(
             train_dataframe=os.path.join(path, "train.pq"),

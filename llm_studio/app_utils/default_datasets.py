@@ -96,3 +96,49 @@ def _split_up_prompt(prompt):
     assert len(human_texts) == len(assistant_texts), prompt
     dialogue = list(zip(human_texts, assistant_texts))
     return dialogue
+
+
+def prepare_hh_dpo_modeling(split: str) -> pd.DataFrame:
+    """
+    Adapted from
+    https://github.com/eric-mitchell/direct-preference-optimization/blob/main/preference_datasets.py
+    """
+    dataset = load_dataset("Anthropic/hh-rlhf", split=split)
+    rnd = random.Random()
+    rnd.seed(123)
+    dfs = []
+    for row in tqdm(dataset):
+        prompt, chosen_response, rejected_response = _parse_row(row)
+        if len(rejected_response) == 0:
+            # remove rejected answers that are empty
+            continue
+
+        parent_uuid = None
+        parsed_texts = []
+        for human_text, assistant_text in _split_up_prompt(prompt):
+            random_uuid = str(uuid.UUID(int=rnd.getrandbits(128), version=4))
+            parsed_texts += [
+                [human_text, assistant_text, random_uuid, parent_uuid, None, None]
+            ]
+            parent_uuid = random_uuid
+
+        parsed_texts[-1][-2] = chosen_response
+        parsed_texts[-1][-1] = rejected_response
+        df = pd.DataFrame(
+            parsed_texts,
+            columns=[
+                "instruction",
+                "output",
+                "id",
+                "parent_id",
+                "chosen_response",
+                "rejected_response",
+            ],
+        )
+        dfs.append(df)
+    df = pd.concat(dfs).reset_index(drop=True)
+    # merge output into chosen and rejected response
+    df["chosen_response"] = df["chosen_response"].fillna(df["output"])
+    df["rejected_response"] = df["rejected_response"].fillna(df["output"])
+    del df["output"]
+    return df
