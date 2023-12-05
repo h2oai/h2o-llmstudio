@@ -161,3 +161,23 @@ def test_dataloader_has_correct_keys(df):
             ]
             assert set(batch.keys()) - set(keys) == set()
             assert set(keys) - set(batch.keys()) == set()
+
+
+def test_empy_answer_dataset_throws_no_error(df):
+    cfg = ConfigProblemBase(
+        llm_backbone="h2oai/h2ogpt-4096-llama2-13b-chat",
+        dataset=ConfigDPODataset(
+            prompt_column=("prompt_column",),
+            answer_column="answer_column",
+            rejected_answer_column="rejected_answer_column",
+            add_eos_token_to_answer=False,
+            add_eos_token_to_prompt=False,
+            add_eos_token_to_system=False,
+        ),
+    )
+    for column in ["prompt_column", "answer_column", "rejected_answer_column"]:
+        values = df[column].values
+        df[column] = ""
+        dataset = CustomDataset(df, cfg, mode="train")
+        [dataset[i] for i in range(len(dataset))]
+        df[column] = values

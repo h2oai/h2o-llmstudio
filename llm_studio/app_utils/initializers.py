@@ -82,7 +82,7 @@ def prepare_dpo(q):
     if os.path.exists(path):
         shutil.rmtree(path)
     os.makedirs(path, exist_ok=True)
-    train_df = prepare_default_dataset_dpo_modeling("train")
+    train_df = prepare_default_dataset_dpo_modeling()
     train_df.to_parquet(os.path.join(path, "train.pq"), index=False)
 
     from llm_studio.python_configs.text_dpo_modeling_config import ConfigDPODataset

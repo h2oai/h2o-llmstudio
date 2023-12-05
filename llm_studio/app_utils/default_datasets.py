@@ -53,7 +53,7 @@ def prepare_default_dataset_causal_language_modeling(path):
     return df_assistant[(df_assistant["rank"] == 0.0) & (df_assistant["lang"] == "en")]
 
 
-def prepare_default_dataset_dpo_modeling(split: str) -> pd.DataFrame:
+def prepare_default_dataset_dpo_modeling() -> pd.DataFrame:
     df = load_dataset("Intel/orca_dpo_pairs")["train"].to_pandas()
     return df
 

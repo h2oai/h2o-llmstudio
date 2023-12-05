@@ -35,6 +35,11 @@ class ConfigDPODataset(ConfigNLPCausalLMDataset):
 
     def __post_init__(self):
         super().__post_init__()
+        self._possible_values["rejected_answer_column"] = possible_values.Columns(
+            prefer_with=lambda column: column
+            in ("rejected_answer", "rejected_response")
+        )
+
         self._visibility["limit_chained_samples"] = -1
         self._visibility["mask_prompt_labels"] = -1
         self._order.insert("rejected_answer_column", after="answer_column")
