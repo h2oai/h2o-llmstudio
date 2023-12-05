@@ -3,8 +3,8 @@ import pytest
 import torch
 
 from llm_studio.python_configs.text_dpo_modeling_config import (
-    ConfigProblemBase,
     ConfigDPODataset,
+    ConfigProblemBase,
 )
 from llm_studio.src.datasets.text_dpo_modeling_ds import CustomDataset
 from llm_studio.src.models.text_dpo_modeling_model import Model
@@ -40,10 +40,45 @@ Step 5: Ensure the proper usage of words and punctuation throughout the revised 
     )
 
 
+def generate_causal_lm_model_text(df):
+    from llm_studio.python_configs.text_causal_language_modeling_config import (
+        ConfigNLPCausalLMDataset,
+    )
+    from llm_studio.python_configs.text_causal_language_modeling_config import (
+        ConfigProblemBase as ConfigCausalLMProblemBase,
+    )
+    from llm_studio.src.datasets.text_causal_language_modeling_ds import (
+        CustomDataset as CausalLMCustomDataset,
+    )
+    from llm_studio.src.models.text_causal_language_modeling_model import (
+        Model as CausalLMModel,
+    )
+
+    cfg = ConfigCausalLMProblemBase(
+        llm_backbone="h2oai/h2ogpt-4096-llama2-7b-chat",
+        dataset=ConfigNLPCausalLMDataset(
+            system_column="system",
+            prompt_column=("prompt",),
+            answer_column="answer_column",
+        ),
+    )
+    dataset = CausalLMCustomDataset(df, cfg, mode="train")
+    model = CausalLMModel(cfg).cuda().eval()
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True)
+
+    batch = next(iter(dataloader))
+    batch = {k: v.cuda() for k, v in batch.items()}
+
+    with torch.no_grad():
+        generated_text = model.generate(batch, cfg)
+
+    return generated_text
+
+
 @need_gpus
 def test_generation_works(df):
     cfg = ConfigProblemBase(
-        llm_backbone="h2oai/h2ogpt-4096-llama2-13b-chat",
+        llm_backbone="h2oai/h2ogpt-4096-llama2-7b-chat",
         dataset=ConfigDPODataset(
             system_column="system",
             prompt_column=("prompt",),
@@ -61,3 +96,10 @@ def test_generation_works(df):
 
     with torch.no_grad():
         generated_text = model.generate(batch, cfg)
+
+    generated_text_causal_lm = generate_causal_lm_model_text(df)
+    assert (
+        generated_text == generated_text_causal_lm
+    ), "Generated text is not the same as from causal LM model:" "{}\n{}".format(
+        generated_text, generated_text_causal_lm
+    )
