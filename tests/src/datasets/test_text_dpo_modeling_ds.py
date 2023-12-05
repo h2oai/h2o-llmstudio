@@ -124,6 +124,23 @@ def test_dataset_label_is_correct(df_with_conversation_chain_ids):
             sample["rejected_labels"][sample["rejected_labels"] != -100],
             skip_special_tokens=True,
         )
+        prompt = dataset.tokenizer.decode(
+            sample["prompt_input_ids"][sample["prompt_input_ids"] != 0],
+            skip_special_tokens=True,
+        )
+
+        assert (
+            prompt == f"<|prompt|>prompt {idx * 5} "
+            f"<|answer|> response {idx * 5 + 1} "
+            f"<|prompt|>prompt {idx * 5 + 1} "
+            f"<|answer|> response {idx * 5 + 2} "
+            f"<|prompt|>prompt {idx * 5 + 2} "
+            f"<|answer|> response {idx * 5 + 3} "
+            f"<|prompt|>prompt {idx * 5 + 3} "
+            f"<|answer|> response {idx * 5 + 4} "
+            f"<|prompt|>prompt {idx * 5 + 4} "
+            "<|answer|>"
+        )
         assert chosen_response == f"chosen_response {idx * 5 + 5}"
         assert rejected_response == f"rejected_response {idx * 5 + 5}"
 
