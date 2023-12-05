@@ -42,7 +42,7 @@ async def import_default_data(q: Q):
 
             dataset = prepare_oasst(q)
             q.client.app_db.add_dataset(dataset)
-            dataset = prepare_oasst_hh_dpo(q)
+            dataset = prepare_dpo(q)
             q.client.app_db.add_dataset(dataset)
 
     except Exception as e:
@@ -77,30 +77,25 @@ def prepare_oasst(q: Q) -> Dataset:
     return dataset
 
 
-def prepare_oasst_hh_dpo(q):
-    path = f"{get_data_dir(q)}/hh"
+def prepare_dpo(q):
+    path = f"{get_data_dir(q)}/dpo"
     if os.path.exists(path):
         shutil.rmtree(path)
     os.makedirs(path, exist_ok=True)
     train_df = prepare_default_dataset_dpo_modeling("train")
     train_df.to_parquet(os.path.join(path, "train.pq"), index=False)
 
-    valid_df = prepare_default_dataset_dpo_modeling("test")
-    valid_df.to_parquet(os.path.join(path, "valid.pq"), index=False)
-
     from llm_studio.python_configs.text_dpo_modeling_config import ConfigDPODataset
     from llm_studio.python_configs.text_dpo_modeling_config import (
         ConfigProblemBase as ConfigProblemBaseDPO,
     )
-
     cfg: ConfigProblemBaseDPO = ConfigProblemBaseDPO(
         dataset=ConfigDPODataset(
             train_dataframe=os.path.join(path, "train.pq"),
-            validation_dataframe=os.path.join(path, "valid.pq"),
-            prompt_column=("instruction",),
-            parent_id_column="parent_id",
-            answer_column="chosen_response",
-            rejected_answer_column="rejected_response",
+            system_column="system",
+            prompt_column=("question",),
+            answer_column="chosen",
+            rejected_answer_column="rejected",
         ),
     )
 
@@ -108,11 +103,10 @@ def prepare_oasst_hh_dpo(q):
     save_config_yaml(cfg_path, cfg)
     dataset = Dataset(
         id=2,
-        name="hh_dpo",
+        name="dpo",
         path=path,
         config_file=cfg_path,
         train_rows=train_df.shape[0],
-        validation_rows=valid_df.shape[0],
     )
     return dataset
 
