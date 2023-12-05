@@ -678,7 +678,8 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             import flash_attn  # noqa: F401
 
             use_flash_attention_2 = cfg.training.use_flash_attention_2
-            logger.info("Using Flash Attention 2.")
+            if cfg.environment._local_rank == 0:
+                logger.info("Using Flash Attention 2.")
         except ImportError:
             use_flash_attention_2 = False
             logger.warning(
@@ -689,6 +690,9 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         use_flash_attention_2 = False
 
     if cfg.architecture.pretrained:
+        if cfg.environment._local_rank == 0:
+            logger.info(f"Loading {cfg.llm_backbone}. This may take a while.")
+
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
             revision=cfg.environment.huggingface_branch,
@@ -697,12 +701,15 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             use_flash_attention_2=use_flash_attention_2,
             **kwargs,
         )
+        if cfg.environment._local_rank == 0:
+            logger.info(f"Loaded {cfg.llm_backbone}.")
     else:
         kwargs.pop("use_auth_token", None)
         backbone = model_class.from_config(config, **kwargs)
 
     if cfg.tokenizer._vocab_length > config.vocab_size:
-        logger.info(f"Resizing token embeddings to {cfg.tokenizer._vocab_length}")
+        if cfg.environment._local_rank == 0:
+            logger.info(f"Resizing token embeddings to {cfg.tokenizer._vocab_length}")
         backbone.resize_token_embeddings(cfg.tokenizer._vocab_length)
 
     backbone.model_parallel = False
