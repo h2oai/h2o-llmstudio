@@ -165,7 +165,6 @@ def test_dataloader_has_correct_keys(df):
 
 def test_empy_answer_dataset_throws_no_error(df):
     cfg = ConfigProblemBase(
-        llm_backbone="h2oai/h2ogpt-4096-llama2-13b-chat",
         dataset=ConfigDPODataset(
             prompt_column=("prompt_column",),
             answer_column="answer_column",
