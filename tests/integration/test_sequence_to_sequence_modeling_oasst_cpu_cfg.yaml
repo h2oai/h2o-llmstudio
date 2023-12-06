@@ -56,6 +56,7 @@ prediction:
     max_length_inference: 16
     metric: Perplexity
     metric_gpt_model: gpt-3.5-turbo-0301
+    metric_gpt_template: general
     min_length_inference: 2
     num_beams: 1
     num_history: 4
