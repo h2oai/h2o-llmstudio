@@ -2,7 +2,9 @@ import pandas as pd
 import pytest
 import torch
 
-from llm_studio.python_configs.text_causal_language_modeling_config import ConfigNLPCausalLMTokenizer
+from llm_studio.python_configs.text_causal_language_modeling_config import (
+    ConfigNLPCausalLMTokenizer,
+)
 from llm_studio.python_configs.text_dpo_modeling_config import (
     ConfigDPODataset,
     ConfigProblemBase,

@@ -59,10 +59,10 @@ default_cfg = {
     "kaggle_command": ("kaggle competitions download -c " "dataset"),
     "problem_types": [
         "text_causal_language_modeling_config",
+        "text_dpo_modeling_config",
         "text_rlhf_language_modeling_config",
         "text_sequence_to_sequence_modeling_config",
         "text_causal_classification_modeling_config",
-        "text_dpo_modeling_config",
     ],
     "problem_categories": ["text"],
     "dataset_keys": [

@@ -34,7 +34,7 @@ async def import_default_data(q: Q):
         if q.client.app_db.get_dataset(1) is None:
             logger.info("Downloading default dataset...")
             q.page["meta"].dialog = ui.dialog(
-                title="Downloading default datasets",
+                title="Creating default datasets",
                 blocking=True,
                 items=[ui.progress(label="Please be patient...")],
             )
