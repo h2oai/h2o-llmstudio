@@ -184,7 +184,9 @@ def plot_validation_predictions(
     return PlotData(data=path, encoding="df")
 
 
-def create_batch_prediction_df(batch, tokenizer, ids_for_tokenized_text="input_ids"):
+def create_batch_prediction_df(
+    batch, tokenizer, ids_for_tokenized_text="input_ids", labels_column="labels"
+):
     df = pd.DataFrame(
         {
             "Prompt Text": [
@@ -194,13 +196,16 @@ def create_batch_prediction_df(batch, tokenizer, ids_for_tokenized_text="input_i
         }
     )
     df["Prompt Text"] = df["Prompt Text"].apply(format_for_markdown_visualization)
-    if "labels" in batch.keys():
+    if labels_column in batch.keys():
         df["Answer Text"] = [
             tokenizer.decode(
                 [label for label in labels if label != -100],
                 skip_special_tokens=True,
             )
-            for labels in batch.get("labels", batch["input_ids"]).detach().cpu().numpy()
+            for labels in batch.get(labels_column, batch["input_ids"])
+            .detach()
+            .cpu()
+            .numpy()
         ]
     tokens_list = [
         tokenizer.convert_ids_to_tokens(input_ids)
@@ -208,7 +213,7 @@ def create_batch_prediction_df(batch, tokenizer, ids_for_tokenized_text="input_i
     ]
     masks_list = [
         [label != -100 for label in labels]
-        for labels in batch.get("labels", batch[ids_for_tokenized_text])
+        for labels in batch.get(labels_column, batch[ids_for_tokenized_text])
         .detach()
         .cpu()
         .numpy()

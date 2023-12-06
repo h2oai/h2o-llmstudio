@@ -20,7 +20,10 @@ class Plots:
     def plot_batch(cls, batch, cfg) -> PlotData:
         tokenizer = get_tokenizer(cfg)
         df = create_batch_prediction_df(
-            batch, tokenizer, ids_for_tokenized_text="chosen_input_ids"
+            batch,
+            tokenizer,
+            ids_for_tokenized_text="chosen_input_ids",
+            labels_column="chosen_labels",
         )
         path = os.path.join(cfg.output_directory, "batch_viz.parquet")
         df.to_parquet(path)
