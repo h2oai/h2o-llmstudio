@@ -47,12 +47,13 @@ class ConfigDPODataset(ConfigNLPCausalLMDataset):
 
 @dataclass
 class ConfigDPOTraining(ConfigNLPCausalLMTraining):
-    learning_rate: float = 1e-6
+    learning_rate: float = 1e-4  # relatively high as we use LORA
     beta: float = 0.2
     gradient_clip: float = 10.0
     loss_class: Any = text_dpo_modeling_losses.Losses
     loss_function: str = "DPOLoss"
     optimizer: str = "AdamW"
+    # Needs to be enabled as we need logits from original model, see forward pass
     lora: bool = True
 
     def __post_init__(self):
@@ -83,7 +84,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
-    llm_backbone: str = "h2oai/h2ogpt-4096-llama2-13b"
+    # 7b model may be unstable (NaN loss)
+    llm_backbone: str = "h2oai/h2ogpt-4096-llama2-13b-chat"
 
     dataset: ConfigDPODataset = field(default_factory=ConfigDPODataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(

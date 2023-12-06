@@ -17,7 +17,7 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
     The data is assumed to be in the same format as for causal language modeling,
     but an additional column with rejected answers is required.
     For chained conversations, rejected answers are equal normal answers up to the
-    last answer. The last answer is the rejected answer.
+    last answer. THe last answers are then different.
     """
 
     def __init__(self, df: pd.DataFrame, cfg: Any, mode: str = "train"):
@@ -81,8 +81,9 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
                 )
             ]
         ).clone()
-        # empty answers create a RuntimeErrorma
+
         if len(answer_encodings[-1]):
+            # empty answers would create a RuntimeError
             labels[-len(answer_encodings[-1]) :] = answer_encodings[-1]
 
         if self.cfg.dataset.add_eos_token_to_answer:
