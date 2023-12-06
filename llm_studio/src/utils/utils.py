@@ -139,7 +139,7 @@ class DisableLogger:
 
 class PatchedAttribute:
     """
-    Patches an attribute of an object for the duration of a context manager.
+    Patches an attribute of an object for the duration of this context manager.
     Similar to unittest.mock.patch,
     but works also for properties that are not present in the original class
 
