@@ -202,7 +202,7 @@ def create_batch_prediction_df(
                 [label for label in labels if label != -100],
                 skip_special_tokens=True,
             )
-            for labels in batch.get(labels_column, batch["input_ids"])
+            for labels in batch.get(labels_column, batch[ids_for_tokenized_text])
             .detach()
             .cpu()
             .numpy()
