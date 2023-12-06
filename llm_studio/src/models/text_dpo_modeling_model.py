@@ -44,11 +44,13 @@ def get_batch_logps(
     """
     assert logits.shape[:-1] == labels.shape
 
+    # shift labels and logits to account for next token prediction
+    # See also text_causal_language_modeling_losses.py
     labels = labels[:, 1:].clone()
     logits = logits[:, :-1, :]
     loss_mask = labels != -100
 
-    # dummy token; we'll ignore the losses on these tokens later
+    # dummy token; we'll ignore the losses on these tokens when loss_mask is applied
     # Needed to be able to apply torch.gather with index=labels.unsqueeze(2)
     labels[labels == -100] = 0
 
@@ -92,6 +94,15 @@ class Model(nn.Module):
         batch: Dict,
         padding: bool = True,
     ) -> Dict:
+        """
+        Forward pass of DPO model.
+        Runtime is 4 times slower than causal language modeling model
+        as we need to compute
+        - logits for chosen answer
+        - logits for rejected answer
+        - logits for chosen answer with reference model
+        - logits for rejected answer with reference model
+        """
         # disable cache if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:
             self.backbone.config.use_cache = False
@@ -148,6 +159,7 @@ class Model(nn.Module):
         # These values will be logged to Neptune, if enabled, see train.py
         outputs["chosen_rewards"] = chosen_rewards
         outputs["rejected_rewards"] = rejected_rewards
+        # Reward margin should increase over time
         outputs["reward_margin"] = chosen_rewards - rejected_rewards
 
         if not self.training and self.cfg.prediction.metric == "Perplexity":

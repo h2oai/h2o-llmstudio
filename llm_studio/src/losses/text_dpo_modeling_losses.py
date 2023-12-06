@@ -56,7 +56,8 @@ class DPOLoss(nn.Module):
         # The label_smoothing parameter encodes our uncertainty about the labels and
         # calculates a conservative DPO loss.
 
-        # Set to 0 per default, probably not too important to make it configurable
+        # For now, set label_smoothing to 0 (original DPO loss).
+        # See https://ericmitchell.ai/cdpo.pdf for more details
         label_smoothing = 0
 
         losses = (

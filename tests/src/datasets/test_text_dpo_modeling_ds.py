@@ -27,6 +27,16 @@ def df():
 
 @pytest.fixture
 def df_with_conversation_chain_ids():
+    """
+    Create a dataframe with conversation chain ids, e.g.:
+          prompt_column      answer_column rejected_answer_column parent_id_column id
+    0      prompt 1         response 1             response 1             None  1
+    1      prompt 2         response 2             response 2                1  2
+    2      prompt 3         response 3             response 3                2  3
+    3      prompt 4         response 4             response 4                3  4
+    4      prompt 5  chosen_response 5    rejected_response 5                4  5
+    5      prompt 6         response 6             response 6             None  6
+    """
     ids = [str(i + 1) for i in range(200)]
 
     parent_ids = np.array(ids, dtype=object).reshape(-1, 5)
@@ -46,7 +56,7 @@ def df_with_conversation_chain_ids():
     ]
     return pd.DataFrame(
         {
-            "prompt_column": [f"prompt {i}" for i in range(200)],
+            "prompt_column": [f"prompt {idx}" for idx in ids],
             "answer_column": chosen_responses,
             "rejected_answer_column": rejected_responses,
             "parent_id_column": parent_ids,
@@ -69,7 +79,7 @@ def test_dataset_conversation_chain_is_correct(df_with_conversation_chain_ids):
     # Check for right formatting, e.g.:
     # dataset.conversation_chain_handler_chosen[0] ==
     # {
-    #     "prompts": ["prompt 0", "prompt 1", "prompt 2", "prompt 3", "prompt 4"],
+    #     "prompts": ["prompt 1", "prompt 2", "prompt 3", "prompt 4", "prompt 5"],
     #     "answers": [
     #         "response 1",
     #         "response 2",
@@ -90,7 +100,7 @@ def test_dataset_conversation_chain_is_correct(df_with_conversation_chain_ids):
         ):
             input_text_dict = conversation_chain_handler[idx]
             expected = {
-                "prompts": [f"prompt {i}" for i in range(idx * 5, (idx + 1) * 5)],
+                "prompts": [f"prompt {i + 1}" for i in range(idx * 5, (idx + 1) * 5)],
                 "answers": [
                     f"response {i + 1}" for i in range(idx * 5, (idx + 1) * 5 - 1)
                 ]
@@ -133,15 +143,15 @@ def test_dataset_label_is_correct(df_with_conversation_chain_ids):
         )
 
         assert (
-            prompt == f"<|prompt|>prompt {idx * 5} "
+            prompt == f"<|prompt|>prompt {idx * 5 + 1} "
             f"<|answer|> response {idx * 5 + 1} "
-            f"<|prompt|>prompt {idx * 5 + 1} "
-            f"<|answer|> response {idx * 5 + 2} "
             f"<|prompt|>prompt {idx * 5 + 2} "
-            f"<|answer|> response {idx * 5 + 3} "
+            f"<|answer|> response {idx * 5 + 2} "
             f"<|prompt|>prompt {idx * 5 + 3} "
-            f"<|answer|> response {idx * 5 + 4} "
+            f"<|answer|> response {idx * 5 + 3} "
             f"<|prompt|>prompt {idx * 5 + 4} "
+            f"<|answer|> response {idx * 5 + 4} "
+            f"<|prompt|>prompt {idx * 5 + 5} "
             "<|answer|>"
         )
         assert chosen_response == f"chosen_response {idx * 5 + 5}"
@@ -254,6 +264,9 @@ def generate_causal_lm_model_input_ids(df):
 def test_dataset_prompt_ids_are_the_same_as_for_causal_language_modeling(
     df_single_prompt,
 ):
+    """
+    DPO model should generate the same prompts as causal language modeling
+    """
     generated_text_causal_lm = generate_causal_lm_model_input_ids(df_single_prompt)
 
     cfg = ConfigProblemBase(

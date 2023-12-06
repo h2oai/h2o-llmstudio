@@ -94,6 +94,9 @@ def generate_causal_lm_model_text(df):
 
 
 def test_generation_is_the_same_as_for_causal_language_modeling(df):
+    """
+    DPO model should generate the same output text as causal language modeling
+    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     generated_text_causal_lm = generate_causal_lm_model_text(df)
 
