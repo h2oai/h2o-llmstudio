@@ -151,6 +151,10 @@ class PatchedAttribute:
     patched
     >>> print(my_obj.attr)
     original
+    >>> with PatchedAttribute(my_obj, 'new_attr', 'new_patched'):
+    ...     print(my_obj.new_attr)
+    new_patched
+    >>> assert not hasattr(my_obj, 'new_attr')
     """
 
     def __init__(self, obj, attribute, new_value):
