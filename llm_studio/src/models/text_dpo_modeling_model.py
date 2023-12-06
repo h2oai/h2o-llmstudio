@@ -58,6 +58,7 @@ def get_batch_logps(
         logits.log_softmax(-1), dim=2, index=labels.unsqueeze(2)
     ).squeeze(2)
 
+    # both trl and original dpo repo have average_log_prob=False
     if average_log_prob:
         return (per_token_logps * loss_mask).sum(-1) / loss_mask.sum(-1)
     else:
