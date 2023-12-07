@@ -757,15 +757,16 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
 
 # Adapted from https://github.com/huggingface/trl/blob/
 # 2068fdcd931183b59110aa6dc99d8f5bb55c6f2d/trl/trainer/utils.py#L742
-def activate_neftune(backbone, neftune_noise_alpha):
+def activate_neftune(model, neftune_noise_alpha):
     r"""
     Activates the neftune as presented in this code:
     https://github.com/neelsjain/NEFTune and paper: https://arxiv.org/abs/2310.05914
     """
+    backbone = unwrap_model(model).backbone
     if isinstance(backbone, PeftModel):
-        embeddings = unwrap_model(backbone.base_model).get_input_embeddings()
+        embeddings = backbone.base_model.get_input_embeddings()
     else:
-        embeddings = unwrap_model(backbone).get_input_embeddings()
+        embeddings = backbone.get_input_embeddings()
 
     embeddings.neftune_noise_alpha = neftune_noise_alpha
     embeddings.register_forward_hook(neftune_post_forward_hook)

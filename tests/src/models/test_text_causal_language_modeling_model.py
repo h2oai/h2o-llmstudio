@@ -57,7 +57,6 @@ def test_neftune_is_disabled_in_inference():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     cfg = ConfigProblemBase(llm_backbone="MaxJeblick/llama2-0b-unit-test")
     cfg.architecture.backbone_dtype = "float32"
-    cfg.architecture.mixed_precision = False
     model = Model(cfg).eval().to(device)
 
     input_batch = {
@@ -72,7 +71,7 @@ def test_neftune_is_disabled_in_inference():
     with torch.no_grad():
         outputs = model.backbone(**input_batch)
 
-    activate_neftune(model.backbone, neftune_noise_alpha=10)
+    activate_neftune(model, neftune_noise_alpha=10)
     assert model.backbone.get_input_embeddings().neftune_noise_alpha == 10
 
     with torch.no_grad():

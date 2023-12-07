@@ -181,7 +181,7 @@ def run_train(
         hasattr(cfg.augmentation, "neftune_noise_alpha")
         and cfg.augmentation.neftune_noise_alpha > 0
     ):
-        activate_neftune(model.backbone, cfg.augmentation.neftune_noise_alpha)
+        activate_neftune(model, cfg.augmentation.neftune_noise_alpha)
 
     scaler: GradScaler | None = None
     if cfg.environment.mixed_precision:
