@@ -29,6 +29,7 @@ import ASintermediateDropout from '../../tooltips/experiments/_intermediate-drop
 import ASpretrainedWeights from '../../tooltips/experiments/_pretrained-weights.mdx';
 import TSoptimizer from '../../tooltips/experiments/_optimizer.mdx';
 import TSlearningRate from '../../tooltips/experiments/_learning-rate.mdx';
+import TSuseflashattention2 from '../../tooltips/experiments/_use-flash-attention-2.mdx';
 import TSbatchSize from '../../tooltips/experiments/_batch-size.mdx';
 import TSepochs from '../../tooltips/experiments/_epochs.mdx';
 import TSschedule from '../../tooltips/experiments/_schedule.mdx';
@@ -230,6 +231,10 @@ The settings under each category are listed and described below.
 ### Learning rate
 
 <TSlearningRate/>
+
+### Use Flash Attention 2
+
+<TSuseflashattention2/>
 
 ### Batch size
 

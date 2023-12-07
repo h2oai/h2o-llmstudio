@@ -5,6 +5,7 @@ module.exports = {
       "Get started": [
         "get-started/what-is-h2o-llm-studio",
         "get-started/set-up-llm-studio",
+        "get-started/llm-studio-performance",
         "get-started/llm-studio-flow",
         "get-started/core-features",
         "get-started/videos",
@@ -34,6 +35,7 @@ module.exports = {
             "guide/experiments/view-an-experiment",
             "guide/experiments/compare-experiments",
             "guide/experiments/export-trained-model",
+            "guide/experiments/import-to-h2ogpt"
           ],
         },
       ],

@@ -2,6 +2,7 @@ import glob
 import logging
 import os
 import shutil
+import time
 import zipfile
 from pathlib import Path
 from typing import Callable, List, Optional, Set
@@ -48,6 +49,7 @@ from llm_studio.python_configs.cfg_checks import check_config_for_errors
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
+    NON_GENERATION_PROBLEM_TYPES,
     load_config_py,
     load_config_yaml,
     save_config_yaml,
@@ -1591,7 +1593,7 @@ def get_experiment_list_message_bar(q):
     return msg_bar
 
 
-async def experiment_download_model(q: Q, error: str = ""):
+async def experiment_download_model(q: Q):
     experiment = q.client["experiment/display/experiment"]
     experiment_path = q.client["experiment/display/experiment_path"]
     zip_path = get_model_path(experiment.name, experiment_path)
@@ -1617,8 +1619,13 @@ async def experiment_download_model(q: Q, error: str = ""):
 
         model = unwrap_model(model)
         checkpoint_path = cfg.output_directory
+
+        model_save_time = time.time()
         model.backbone.save_pretrained(checkpoint_path)
-        tokenizer.save_pretrained(checkpoint_path)
+        # See PreTrainedTokenizerBase.save_pretrained for documentation
+        # Safeguard against None return if tokenizer class is
+        # not inherited from PreTrainedTokenizerBase
+        tokenizer_files = list(tokenizer.save_pretrained(checkpoint_path) or [])
 
         card = get_model_card(cfg, model, repo_id="<path_to_local_folder>")
         card.save(os.path.join(experiment_path, "model_card.md"))
@@ -1640,17 +1647,41 @@ async def experiment_download_model(q: Q, error: str = ""):
             "model_card.md",
             "classification_head.pth",
         ]
+        FILES_TO_PUSH = set(
+            FILES_TO_PUSH
+            + [os.path.split(tokenizer_file)[-1] for tokenizer_file in tokenizer_files]
+        )
 
+        # Add tokenizer and config.json files, as well as potential classification head
+        paths_added = []
         for file in FILES_TO_PUSH:
             path = os.path.join(experiment_path, file)
             if os.path.isfile(path):
+                paths_added.append(path)
                 add_file_to_zip(zf=zf, path=path)
 
-        # Add model weight files
-        weight_files = glob.glob(os.path.join(checkpoint_path, "pytorch_model*.*"))
-        for file in weight_files:
-            add_file_to_zip(zf=zf, path=file)
+        # Add model weight files. save_pretrained() does not return the saved files
+        weight_paths = glob.glob(os.path.join(checkpoint_path, "pytorch_model*.*"))
+        for path in weight_paths:
+            paths_added.append(path)
+            add_file_to_zip(zf=zf, path=path)
 
+        # Add all files that were created after the model was saved.
+        # This is useful for potential changes/different
+        # naming conventions across different backbones.
+        for file in os.listdir(checkpoint_path):
+            file_path = os.path.join(checkpoint_path, file)
+            if (
+                os.path.getmtime(file_path) > model_save_time
+                and file_path not in paths_added
+                and file_path != zip_path
+            ):
+                add_file_to_zip(zf=zf, path=file)
+                paths_added.append(file_path)
+                logger.info(
+                    f"Added {file_path} to zip file as it "
+                    "was created when saving the model state."
+                )
         zf.close()
 
     download_url = get_download_link(q, zip_path)
@@ -1828,14 +1859,20 @@ def get_experiment_summary_code_card(cfg) -> str:
     )
 
     text = text.replace("{{trust_remote_code}}", str(cfg.environment.trust_remote_code))
-    text = text.replace("{{min_new_tokens}}", str(cfg.prediction.min_length_inference))
-    text = text.replace("{{max_new_tokens}}", str(cfg.prediction.max_length_inference))
-    text = text.replace("{{use_fast}}", str(cfg.tokenizer.use_fast))
-    text = text.replace("{{do_sample}}", str(cfg.prediction.do_sample))
-    text = text.replace("{{num_beams}}", str(cfg.prediction.num_beams))
-    text = text.replace("{{temperature}}", str(cfg.prediction.temperature))
-    text = text.replace(
-        "{{repetition_penalty}}", str(cfg.prediction.repetition_penalty)
-    )
+
+    if cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES:
+        text = text.replace(
+            "{{min_new_tokens}}", str(cfg.prediction.min_length_inference)
+        )
+        text = text.replace(
+            "{{max_new_tokens}}", str(cfg.prediction.max_length_inference)
+        )
+        text = text.replace("{{use_fast}}", str(cfg.tokenizer.use_fast))
+        text = text.replace("{{do_sample}}", str(cfg.prediction.do_sample))
+        text = text.replace("{{num_beams}}", str(cfg.prediction.num_beams))
+        text = text.replace("{{temperature}}", str(cfg.prediction.temperature))
+        text = text.replace(
+            "{{repetition_penalty}}", str(cfg.prediction.repetition_penalty)
+        )
 
     return text

@@ -24,11 +24,13 @@ from transformers import (
     StoppingCriteria,
     StoppingCriteriaList,
 )
+from transformers.pytorch_utils import Conv1D as Conv1DTransformer
 from transformers.utils import logging as transformers_logging
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
+from llm_studio.src.utils.config_utils import NON_GENERATION_PROBLEM_TYPES
 from llm_studio.src.utils.data_utils import (
     OrderedDistributedSampler,
     batch_padding,
@@ -113,7 +115,7 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
 
     if (
         cfg.environment._local_rank == 0
-        and cfg.problem_type == "text_causal_classification_modeling"
+        and "classification_head.weight" in checkpoint["model"]
     ):
         torch.save(
             checkpoint["model"]["classification_head.weight"],
@@ -495,7 +497,7 @@ def run_inference(
         if cfg.environment.use_deepspeed:
             if (
                 cfg.prediction.metric != "Perplexity"
-                and cfg.problem_type != "text_causal_classification_modeling"
+                and cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES
             ):
                 output = {}
                 output["predicted_answer_ids"] = (
@@ -507,7 +509,7 @@ def run_inference(
             with autocast(enabled=cfg.environment.mixed_precision):
                 if (
                     cfg.prediction.metric != "Perplexity"
-                    and cfg.problem_type != "text_causal_classification_modeling"
+                    and cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES
                 ):
                     output = {}
                     output["predicted_answer_ids"] = (
@@ -671,12 +673,28 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
 
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
 
+    if cfg.training.use_flash_attention_2:
+        try:
+            import flash_attn  # noqa: F401
+
+            use_flash_attention_2 = cfg.training.use_flash_attention_2
+            logger.info("Using Flash Attention 2.")
+        except ImportError:
+            use_flash_attention_2 = False
+            logger.warning(
+                "Flash Attention 2.0 is not available. "
+                "Please consider to run 'make setup' to install it."
+            )
+    else:
+        use_flash_attention_2 = False
+
     if cfg.architecture.pretrained:
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
             revision=cfg.environment.huggingface_branch,
             config=config,
             quantization_config=quantization_config,
+            use_flash_attention_2=use_flash_attention_2,
             **kwargs,
         )
     else:
@@ -858,7 +876,9 @@ def prepare_lora(cfg, backbone):
         target_modules = []
         for name, module in backbone.named_modules():
             if (
-                isinstance(module, (torch.nn.Linear, torch.nn.Conv1d))
+                isinstance(
+                    module, (torch.nn.Linear, torch.nn.Conv1d, Conv1DTransformer)
+                )
                 and "head" not in name
             ):
                 name = name.split(".")[-1]

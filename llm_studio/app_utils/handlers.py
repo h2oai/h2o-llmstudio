@@ -347,6 +347,12 @@ async def handle(q: Q) -> None:
         elif q.args["dataset/import/cfg_file"]:
             await dataset_import(q, step=3)
 
+        # leave at the end of dataset import routing,
+        # would also be triggered if user clicks on
+        # a continue button in the dataset import wizard
+        elif q.args["dataset/import/cfg/train_dataframe"]:
+            await dataset_import(q, step=3)
+
         elif q.args["experiment/start/cfg_file"]:
             q.client["experiment/start/cfg_file"] = q.args["experiment/start/cfg_file"]
             await experiment_start(q)
