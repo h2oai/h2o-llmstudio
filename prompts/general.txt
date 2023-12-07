@@ -2,17 +2,22 @@
 We would like to request your feedback on the performance of an AI assistants in response to the user question and ground truth answer displayed below. 
 
 [Question]
-{question}
+{_PROMPT}
 
 [Start of Reference Answer]
-{reference_answer}
+{_TARGET_TEXT}
 [End of Reference Answer]
 
 [Task]
 Now rate the helpfulness, relevance, accuracy, level of details of the response from another assistant displayed below. The assistant receives an overall score on a scale between 0 and 1, where a higher score indicates better overall performance.
 A score of 0 means the assistant could not address the question, 0.5 means it could somewhat address it, and 1 would mean it perfectly addressed it.
-Please first output a single line containing a single values indicating the scores for the assistant. In the subsequent line, please provide a comprehensive explanation of your evaluation.
+
+Please first provide a comprehensive explanation of your evaluation.
+In the final line, output a single value indicating the score for the assistant.
+Please give your response in structured way in two separate lines.
+EXPLANATION: ...
+SCORE: ...
 
 [Start of Assistant Answer]
-{assistant_answer}
+{_PREDICTED_TEXT}
 [End of Assistant Answer]

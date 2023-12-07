@@ -1,0 +1,30 @@
+[System]
+We would like to request your feedback on the performance of an AI assistant in response to a question displayed below.
+The assistant should answer the question based on the context. To make your task easier we also provide a good ground truth answer.
+
+[Context]
+{context_truncated}
+
+[Question]
+{question}
+
+[Start of Ground Truth Answer]
+{_TARGET_TEXT}
+[End of Ground Truth Answer]
+
+[Task]
+Now rate the helpfulness, relevance, accuracy of the response from another assistant displayed below.
+The assistant receives an overall score on a scale between 0 and 1, where a higher score indicates better overall performance.
+A score of 0 means the assistant could not address the question, 0.5 means it could somewhat address it, and 1 would mean it perfectly addressed it.
+Facts, financial figures must be precise for a perfect answer.
+Statements that can not be supported by the context result in score deduction of 0.5.
+
+Please first provide a comprehensive explanation of your evaluation.
+In the final line, output a single value indicating the score for the assistant.
+Please give your response in structured way in two separate lines.
+EXPLANATION: ...
+SCORE: ...
+
+[Start of Assistant Answer]
+{_PREDICTED_TEXT}
+[End of Assistant Answer]

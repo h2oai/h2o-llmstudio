@@ -2,6 +2,8 @@ FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+RUN apt-get update && apt-get upgrade -y
+
 RUN apt-get update && apt-get install -y \
     git \
     curl \
