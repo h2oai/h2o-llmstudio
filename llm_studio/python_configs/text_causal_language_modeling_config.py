@@ -279,7 +279,6 @@ class ConfigNLPAugmentation(DefaultConfig):
         self._possible_values["token_mask_probability"] = (0.0, 0.9, 0.05)
         self._possible_values["skip_parent_probability"] = (0.0, 1.0, 0.05)
         self._possible_values["random_parent_probability"] = (0.0, 1.0, 0.05)
-        # TODO double check the max value https://arxiv.org/pdf/2310.05914.pdf
         self._possible_values["neftune_noise_alpha"] = (0.0, 15, 0.05)
         self._visibility["nlp_augmentations_class"] = -1
 
