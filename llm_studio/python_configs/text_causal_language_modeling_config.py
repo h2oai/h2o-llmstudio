@@ -286,6 +286,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     metric_class: Any = text_causal_language_modeling_metrics.Metrics
     metric: str = "GPT"
     metric_gpt_model: str = "gpt-3.5-turbo-0301"
+    metric_gpt_template: str = "general"
 
     min_length_inference: int = 2
     max_length_inference: int = 256
@@ -311,8 +312,12 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
                 "gpt-3.5-turbo-0613",
                 "gpt-4-0314",
                 "gpt-4-0613",
+                "gpt-4-1106-preview",
             ),
             allow_custom=True,
+        )
+        self._possible_values["metric_gpt_template"] = possible_values.String(
+            values=(f.split(".")[0] for f in os.listdir("prompts"))
         )
 
         self._possible_values["batch_size_inference"] = (0, 512, 1)
@@ -331,7 +336,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._visibility["num_history"] = -1
 
         self._nesting.add(
-            ["metric_gpt_model"],
+            ["metric_gpt_model", "metric_gpt_template"],
             [Dependency(key="metric", value="GPT", is_set=True)],
         )
 
