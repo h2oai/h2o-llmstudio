@@ -50,6 +50,7 @@ from llm_studio.src.utils.logging_utils import (
     write_flag,
 )
 from llm_studio.src.utils.modeling_utils import (
+    activate_neftune,
     check_disk_space,
     get_ds_config,
     get_number_of_validation_epochs,
@@ -62,7 +63,6 @@ from llm_studio.src.utils.modeling_utils import (
     save_predictions,
     unwrap_model,
     wrap_model_distributed,
-    activate_neftune,
 )
 from llm_studio.src.utils.utils import kill_ddp_processes, set_environment, set_seed
 
@@ -181,9 +181,6 @@ def run_train(
         hasattr(cfg.augmentation, "neftune_noise_alpha")
         and cfg.augmentation.neftune_noise_alpha > 0
     ):
-        # TODO May not work with deepspeed
-        # TODO: Don't think one needs to remove the forward hook after training, but need to check
-        #       see https://twitter.com/iliasmiraoui/status/1714416978109092218
         activate_neftune(model.backbone, cfg.augmentation.neftune_noise_alpha)
 
     scaler: GradScaler | None = None
