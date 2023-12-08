@@ -1,7 +1,8 @@
+import os
+
 from hac_playwright.main import keycloak_login, okta_login, okta_otp_local
 from hac_playwright.pages.base import BasePage
 from playwright.sync_api import Page, expect
-import os
 
 
 def login(
@@ -138,3 +139,41 @@ class LLMStudioPage(BasePage):
         dataset = self.page.get_by_role("button", name=dataset_name)
         # Assert that the element not found
         expect(dataset).not_to_be_visible()
+
+    def create_experiment(self, experiment_name: str):
+        self.page.get_by_role("button", name="Create experiment").click()
+        self.page.locator(
+            '[data-test="experiment\\/start\\/cfg\\/experiment_name"]'
+        ).fill(experiment_name)
+        self.page.get_by_role("combobox", name="LLM Backbone").fill(
+            "MaxJeblick/llama2-0b-unit-test"
+        )
+        self.sample_data(0.2)
+        # self.page.wait_for_timeout(10000)
+        self.page.locator('[data-test="experiment\\/start\\/run"]').click()
+
+    def sample_data(self, settings: float):
+        # Assuming you have a page object named 'page'
+        element = self.page.locator('[data-test="experiment/start/cfg/data_sample"]')
+        # Extract the aria-valuenow attribute value
+        value = element.evaluate('(element) => element.getAttribute("aria-valuenow")')
+        while value != "0.2":
+            self.page.locator(
+                '[data-test="experiment\\/start\\/cfg\\/data_sample"] span'
+            ).nth(2).click()
+            self.page.wait_for_timeout(1000)
+            value = element.evaluate(
+                '(element) => element.getAttribute("aria-valuenow")'
+            )
+
+    def view_experiment(self, experiment_name: str):
+        self.page.get_by_role("button", name="View experiments").click()
+        i = 1
+        while i > 0:
+            if self.page.get_by_text("queued").is_visible():
+                self.page.wait_for_timeout(1000)
+                i = i + 1
+            elif self.page.get_by_text("running").is_visible():
+                break
+
+        status = self.page.locator('[role="gridcell"]').nth(0)

@@ -1,6 +1,7 @@
 import logging
-from functools import partial, partialmethod
 import os
+from functools import partial, partialmethod
+
 import pytest
 from dotenv import load_dotenv
 

@@ -1,8 +1,9 @@
 import logging
+import os
 from playwright.sync_api import Page
 from pytest_bdd import given, parsers, scenarios, then, when
 
-from tests.ui.utils import LLMStudioPage, login, handle_terms_and_conditions_page
+from tests.ui.utils import LLMStudioPage, handle_terms_and_conditions_page, login
 
 scenarios("llm_studio.feature")
 
@@ -15,7 +16,9 @@ def open_llm_studio(page: Page, app_address: str):
 
 @when("I login to LLM Studio", target_fixture="llm_studio")
 def login_to_llm_studio(logger: logging.Logger, page: Page, app_address: str):
-    login(page, "okta", "H2O-Tester", "ManagedCloud5")
+    okta_user = os.environ.get("OKTA_USER")
+    okta_password = os.environ.get("OKTA_PASSWORD")
+    login(page, "okta", okta_user, okta_password)
     return LLMStudioPage(logger, page, app_address)
 
 
@@ -46,3 +49,13 @@ def delete_dataset(llm_studio: LLMStudioPage, dataset_name: str):
 def view_datasets(llm_studio: LLMStudioPage, dataset_name: str):
     llm_studio.view_datasets()
     llm_studio.assert_dataset_deletion(dataset_name)
+
+
+@when(parsers.parse("I create experiment {experiment_name}"))
+def create_experiment(llm_studio: LLMStudioPage, experiment_name: str):
+    llm_studio.create_experiment(experiment_name)
+
+
+@then(parsers.parse("I should see the {experiment_name} should finish successfully"))
+def view_experiment(llm_studio: LLMStudioPage, experiment_name: str):
+    llm_studio.view_experiment(experiment_name)
