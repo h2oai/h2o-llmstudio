@@ -53,7 +53,7 @@ The following metrics were measured.
 The runtimes were gathered using the default parameters. 
 
 <details>
-<summary>Expand to see the default parameters</summary>
+<summary>Expand to see the default parameters </summary>
 
 ```
 architecture:
