@@ -50,6 +50,7 @@ from llm_studio.src.utils.logging_utils import (
     write_flag,
 )
 from llm_studio.src.utils.modeling_utils import (
+    activate_neftune,
     check_disk_space,
     get_ds_config,
     get_number_of_validation_epochs,
@@ -176,6 +177,11 @@ def run_train(
         Validation metric
         Last train batch
     """
+    if (
+        hasattr(cfg.augmentation, "neftune_noise_alpha")
+        and cfg.augmentation.neftune_noise_alpha > 0
+    ):
+        activate_neftune(model, cfg.augmentation.neftune_noise_alpha)
 
     scaler: GradScaler | None = None
     if cfg.environment.mixed_precision:

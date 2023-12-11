@@ -52,7 +52,8 @@ The following metrics were measured.
 :::info
 The runtimes were gathered using the default parameters. 
 
-<details><summary>Expand to see the default parameters</summary>
+<details>
+<summary>Expand to see the default parameters </summary>
 
 ```
 architecture:

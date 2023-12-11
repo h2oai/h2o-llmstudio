@@ -272,12 +272,14 @@ class ConfigNLPAugmentation(DefaultConfig):
     token_mask_probability: float = 0.0
     skip_parent_probability: float = 0.0
     random_parent_probability: float = 0.0
+    neftune_noise_alpha: float = 0.0
 
     def __post_init__(self):
         super().__post_init__()
         self._possible_values["token_mask_probability"] = (0.0, 0.9, 0.05)
         self._possible_values["skip_parent_probability"] = (0.0, 1.0, 0.05)
         self._possible_values["random_parent_probability"] = (0.0, 1.0, 0.05)
+        self._possible_values["neftune_noise_alpha"] = (0.0, 15, 0.05)
         self._visibility["nlp_augmentations_class"] = -1
 
 
