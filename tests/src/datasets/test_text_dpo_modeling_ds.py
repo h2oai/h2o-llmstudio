@@ -267,7 +267,7 @@ def test_dataset_prompt_ids_are_the_same_as_for_causal_language_modeling(
     """
     DPO model should generate the same prompts as causal language modeling
     """
-    generated_text_causal_lm = generate_causal_lm_model_input_ids(df_single_prompt)
+    sample_causal_lm = generate_causal_lm_model_input_ids(df_single_prompt)
 
     cfg = ConfigProblemBase(
         llm_backbone="h2oai/h2ogpt-4096-llama2-7b",
@@ -282,9 +282,39 @@ def test_dataset_prompt_ids_are_the_same_as_for_causal_language_modeling(
         ),
     )
     dataset = CustomDataset(df_single_prompt, cfg, mode="train")
-    generated_text = dataset[0]
+    sample = dataset[0]
 
     for key in ["prompt_input_ids", "prompt_attention_mask"]:
-        assert torch.all(
-            generated_text_causal_lm[key] == generated_text[key]
-        ), f"{key} is not the same"
+        assert torch.all(sample_causal_lm[key] == sample[key]), f"{key} is not the same"
+
+
+def test_default_config_conforms_mistral_template(df_single_prompt):
+    # See https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.1
+    cfg = ConfigProblemBase(
+        dataset=ConfigDPODataset(
+            prompt_column=("prompt",),
+            answer_column="answer",
+            rejected_answer_column="rejected_answer",
+        )
+    )
+
+    # Reminder to reinspect prompt template if the default backbone is updated
+    assert cfg.llm_backbone == "mistralai/Mistral-7B-Instruct-v0.1"
+    dataset = CustomDataset(df_single_prompt, cfg, mode="train")
+    sample = dataset[0]
+    text = dataset.tokenizer.decode(
+        sample["chosen_input_ids"][sample["chosen_attention_mask"] == 1],
+        skip_special_tokens=False,
+    )
+
+    # Example from model card:
+    # text = "<s>[INST] What is your favourite condiment? [/INST]"
+    # "Well, I'm quite partial to a good squeeze of fresh lemon juice.
+    # It adds just the right amount of zesty flavour to whatever I'm cooking up in the kitchen!</s> "
+    assert text.startswith("<s> [INST]")
+
+    prompt, chosen_answer = text[len("<s> [INST]") :].split("[/INST] ")
+    assert prompt == df_single_prompt["prompt"].values[0]
+
+    assert chosen_answer.endswith("</s>")
+    assert chosen_answer[: -len("</s>")] == df_single_prompt["answer"].values[0]

@@ -33,6 +33,14 @@ class ConfigDPODataset(ConfigNLPCausalLMDataset):
     answer_column: str = "chosen_response"
     rejected_answer_column: str = "rejected_response"
 
+    # in accordance with mistralai/Mistral-7B-Instruct-v0.1
+    text_prompt_start: str = "<s>[INST]"
+    text_answer_separator: str = "[/INST]"
+
+    add_eos_token_to_system: bool = False
+    add_eos_token_to_prompt: bool = False
+    add_eos_token_to_answer: bool = True
+
     def __post_init__(self):
         super().__post_init__()
         self._possible_values["rejected_answer_column"] = possible_values.Columns(
@@ -85,7 +93,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
     # 7b model may be unstable (NaN loss)
-    llm_backbone: str = "h2oai/h2ogpt-4096-llama2-13b-chat"
+    llm_backbone: str = "mistralai/Mistral-7B-Instruct-v0.1"
 
     dataset: ConfigDPODataset = field(default_factory=ConfigDPODataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
