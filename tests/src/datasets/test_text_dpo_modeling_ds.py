@@ -123,6 +123,11 @@ def test_dataset_label_is_correct(df_with_conversation_chain_ids):
             answer_column="answer_column",
             rejected_answer_column="rejected_answer_column",
             parent_id_column="parent_id_column",
+            text_prompt_start="<|prompt|>",
+            text_answer_separator="<|answer|>",
+            add_eos_token_to_system=True,
+            add_eos_token_to_prompt=True,
+            add_eos_token_to_answer=True,
         )
     )
     dataset = CustomDataset(df_with_conversation_chain_ids, cfg, mode="train")
