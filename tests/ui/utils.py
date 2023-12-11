@@ -148,23 +148,82 @@ class LLMStudioPage(BasePage):
         self.page.get_by_role("combobox", name="LLM Backbone").fill(
             "MaxJeblick/llama2-0b-unit-test"
         )
-        self.sample_data(0.2)
-        # self.page.wait_for_timeout(10000)
+        self.set_slider_value('[data-test="experiment/start/cfg/data_sample"]', 0.01)
+        self.set_slider_value('[data-test="experiment/start/cfg/max_length"]', 32)
+        self.set_slider_value(
+            '[data-test="experiment/start/cfg/max_length_prompt"]', 32
+        )
+        self.set_slider_value(
+            '[data-test="experiment/start/cfg/max_length_answer"]', 32
+        )
+        self.set_slider_value(
+            '[data-test="experiment/start/cfg/max_length_inference"]', 1
+        )
         self.page.locator('[data-test="experiment\\/start\\/run"]').click()
 
-    def sample_data(self, settings: float):
+    def sample_data(self, sample: float):
+        """
+        Due to UI restrictions, this function will only accept following values 0.04, 0.07 etc
+        """
         # Assuming you have a page object named 'page'
         element = self.page.locator('[data-test="experiment/start/cfg/data_sample"]')
-        # Extract the aria-valuenow attribute value
-        value = element.evaluate('(element) => element.getAttribute("aria-valuenow")')
-        while value != "0.2":
-            self.page.locator(
-                '[data-test="experiment\\/start\\/cfg\\/data_sample"] span'
-            ).nth(2).click()
-            self.page.wait_for_timeout(1000)
+        while True:
+            # Extract the aria-valuenow attribute value
             value = element.evaluate(
                 '(element) => element.getAttribute("aria-valuenow")'
             )
+            if value == str(sample):
+                print(f"INSIDE IF Value is {float(value)}")
+                break
+            else:
+                self.page.locator(
+                    '[data-test="experiment\\/start\\/cfg\\/data_sample"] span'
+                ).nth(2).click()
+
+    def set_slider_value(self, selector: str, target_value: int):
+        slider_selector = '[data-test="experiment/start/cfg/max_length"]'
+        # Check if the element is present
+        slider = self.page.locator(selector)
+        current_value = slider.get_attribute("aria-valuenow")
+        isCompleted = False
+        while not isCompleted:
+            slider_box = slider.bounding_box()
+            print(f"slider_box is {slider_box}")
+            if slider_box:
+                self.page.mouse.move(
+                    slider_box["x"] + slider_box["width"] / 100,
+                    slider_box["y"] + slider_box["height"] / 100,
+                )
+                self.page.mouse.down()
+                self.page.mouse.move(
+                    slider_box["x"] + 2, slider_box["y"] + slider_box["height"] / 100
+                )
+                self.page.mouse.up()
+                current_value = slider.get_attribute("aria-valuenow")
+                if current_value == str(target_value):
+                    isCompleted = True
+
+    def max_length_prompt(self, length: int):
+        valueAsPercent = 40
+        slider = self.page.locator(
+            '[data-test="experiment/start/cfg/max_length_prompt"]'
+        )
+        sliderBound = slider.bounding_box()
+        currentSliderValue = float(slider.get_attribute("aria-valuenow"))
+        print(f"Current value is {currentSliderValue}")
+        targetX = sliderBound["x"] + (
+            sliderBound["width"] * float(currentSliderValue / 100)
+        )
+        targetY = sliderBound["y"] + sliderBound["height"] / 2
+        self.page.mouse.move(targetX, targetY)
+        self.page.mouse.down()
+        self.page.mouse.move(
+            sliderBound["x"] + float((sliderBound["width"] * valueAsPercent) / 100),
+            sliderBound["y"] + sliderBound["height"] / 2,
+        )
+        self.page.mouse.up()
+        finalSliderValue = float(slider.get_attribute("aria-valuenow"))
+        print(f"Final value is {finalSliderValue}")
 
     def view_experiment(self, experiment_name: str):
         self.page.get_by_role("button", name="View experiments").click()
