@@ -257,7 +257,6 @@ def generate_causal_lm_model_input_ids(df):
             system_column="system",
             prompt_column=("prompt",),
             answer_column="answer",
-            text_system_start="<s>[INST]",
             text_prompt_start="<s>[INST]",
             text_answer_separator="[/INST]",
             add_eos_token_to_system=False,

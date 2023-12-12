@@ -34,7 +34,6 @@ class ConfigDPODataset(ConfigNLPCausalLMDataset):
     rejected_answer_column: str = "rejected_response"
 
     # in accordance with mistralai/Mistral-7B-Instruct-v0.1
-    text_system_start: str = "<s>[INST]"
     text_prompt_start: str = "<s>[INST]"
     text_answer_separator: str = "[/INST]"
 
