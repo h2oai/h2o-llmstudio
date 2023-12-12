@@ -64,11 +64,6 @@ def generate_causal_lm_model_text(df):
             system_column="system",
             prompt_column=("prompt",),
             answer_column="answer_column",
-            text_prompt_start="<s>[INST]",
-            text_answer_separator="[/INST]",
-            add_eos_token_to_system=False,
-            add_eos_token_to_prompt=False,
-            add_eos_token_to_answer=True,
         ),
         tokenizer=ConfigNLPCausalLMTokenizer(
             max_length_prompt=256, max_length_answer=256, max_length=512
@@ -112,11 +107,6 @@ def test_generation_is_the_same_as_for_causal_language_modeling(df):
             prompt_column=("prompt",),
             answer_column="answer_column",
             rejected_answer_column="rejected_answer",
-            text_prompt_start="<s>[INST]",
-            text_answer_separator="[/INST]",
-            add_eos_token_to_system=False,
-            add_eos_token_to_prompt=False,
-            add_eos_token_to_answer=True,
         ),
         tokenizer=ConfigNLPCausalLMTokenizer(
             max_length_prompt=256, max_length_answer=256, max_length=512

@@ -247,16 +247,11 @@ def generate_causal_lm_model_input_ids(df):
     )
 
     cfg = ConfigCausalLMProblemBase(
-        llm_backbone="mistralai/Mistral-7B-Instruct-v0.1",
+        llm_backbone="h2oai/h2ogpt-4096-llama2-7b",
         dataset=ConfigNLPCausalLMDataset(
             system_column="system",
             prompt_column=("prompt",),
             answer_column="answer",
-            text_prompt_start="<s>[INST]",
-            text_answer_separator="[/INST]",
-            add_eos_token_to_system=False,
-            add_eos_token_to_prompt=False,
-            add_eos_token_to_answer=True,
         ),
         tokenizer=ConfigNLPCausalLMTokenizer(
             max_length_prompt=256, max_length_answer=256, max_length=512
@@ -275,15 +270,12 @@ def test_dataset_prompt_ids_are_the_same_as_for_causal_language_modeling(
     sample_causal_lm = generate_causal_lm_model_input_ids(df_single_prompt)
 
     cfg = ConfigProblemBase(
-        llm_backbone="mistralai/Mistral-7B-Instruct-v0.1",
+        llm_backbone="h2oai/h2ogpt-4096-llama2-7b",
         dataset=ConfigDPODataset(
             system_column="system",
             prompt_column=("prompt",),
             answer_column="answer",
             rejected_answer_column="rejected_answer",
-            add_eos_token_to_system=False,
-            add_eos_token_to_prompt=False,
-            add_eos_token_to_answer=True,
         ),
         tokenizer=ConfigNLPCausalLMTokenizer(
             max_length_prompt=256, max_length_answer=256, max_length=512
@@ -293,9 +285,7 @@ def test_dataset_prompt_ids_are_the_same_as_for_causal_language_modeling(
     sample = dataset[0]
 
     for key in ["prompt_input_ids", "prompt_attention_mask"]:
-        assert torch.all(
-            sample_causal_lm[key] == sample[key]
-        ), f"{key} is not the same, diff: {sample_causal_lm[key] - sample[key]}"
+        assert torch.all(sample_causal_lm[key] == sample[key]), f"{key} is not the same"
 
 
 def test_default_config_conforms_mistral_template(df_single_prompt):
