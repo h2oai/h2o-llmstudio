@@ -46,6 +46,7 @@ class Model(nn.Module):
     def init_deepspeed(self):
         self.backward = self.backbone.backward
         self.save_checkpoint = self.backbone.save_checkpoint
+        self.save_16bit_model = self.backbone.save_16bit_model
         if self.cfg.training.lora:
             self.backbone.base_model.model.config = (
                 self.backbone.base_model.model.module.config

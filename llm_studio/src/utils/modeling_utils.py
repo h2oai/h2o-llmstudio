@@ -58,21 +58,24 @@ def check_disk_space(model: torch.nn.Module, path: str, use_deepspeed: bool = Fa
 
     model_size_in_bytes = 0
     for param in model.parameters():
+        n_params = param.ds_numel if hasattr(param, "ds_numel") else param.numel()
         if param.data.dtype in [torch.int8, torch.uint8]:
-            model_size_in_bytes += param.numel() * 1
+            model_size_in_bytes += n_params * 1
         elif param.data.dtype in [torch.float16, torch.bfloat16]:
-            model_size_in_bytes += param.numel() * 2
+            model_size_in_bytes += n_params * 2
         elif param.data.dtype == torch.float32:
-            model_size_in_bytes += param.numel() * 4
+            model_size_in_bytes += n_params * 4
         else:
             # If the data type is not supported, calculate it as float32.
-            model_size_in_bytes += param.numel() * 4
+            model_size_in_bytes += n_params * 4
             logger.warning(f"Unsupported data type: {param.data.dtype}")
 
-    if use_deepspeed:
-        model_size_in_bytes *= 2  # need double space for converting deepspeed engine.
     if model_size_in_bytes * 1.03 < free:  # leave a 3% margin here.
-        logger.info("Enough space available for saving model weights.")
+        logger.info(
+            "Enough space available for saving model weights."
+            f"Required space: {model_size_in_bytes * 1.03 / (1024 * 1024):.2f}MB, "
+            f"Available space: {free / (1024 * 1024):.2f}MB."
+        )
     else:
         raise ValueError(
             f"Not enough space available for saving model weights. "
@@ -95,17 +98,30 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
 
     if cfg.environment.use_deepspeed:
         if path is not None:
-            # gather model params from all ranks
-            model.save_checkpoint(os.path.join(path, "ds_checkpoint"))  # type: ignore[operator] # noqa: E501
-            if cfg.environment._local_rank == 0:
-                # load to cpu
-                state_dict = get_fp32_state_dict_from_zero_checkpoint(
-                    os.path.join(path, "ds_checkpoint")
+            # gather model params from all ranks when using Deepspeed
+            status = model.save_16bit_model(path, "checkpoint.pth")
+            if status:
+                if cfg.environment._local_rank == 0:
+                    checkpoint = {
+                        "model": torch.load(os.path.join(path, "checkpoint.pth"), map_location="cpu")
+                    }
+            else:
+                logger.warning(
+                    "deepspeed.save_16bit_model didn't save the model, since"
+                    " stage3_gather_16bit_weights_on_model_save=False."
+                    " Saving the full checkpoint instead"
                 )
-                # save as normal checkpoint that can be loaded by `load_state_dict`
-                checkpoint = {"model": state_dict}
-                torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
-                shutil.rmtree(os.path.join(path, "ds_checkpoint"))
+                model.save_checkpoint(os.path.join(path, "ds_checkpoint"))
+                if cfg.environment._local_rank == 0:
+                    # load to cpu
+                    state_dict = get_fp32_state_dict_from_zero_checkpoint(
+                        os.path.join(path, "ds_checkpoint")
+                    )
+                    # save as normal checkpoint that can be loaded by `load_state_dict`
+                    checkpoint = {"model": state_dict}
+                    torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
+                    shutil.rmtree(os.path.join(path, "ds_checkpoint"))
+
     else:
         if cfg.environment._local_rank == 0:
             model = unwrap_model(model)
@@ -195,16 +211,18 @@ def load_checkpoint(
     if weights_path is None:
         weights_path = cfg.architecture.pretrained_weights
 
-    model_weights = torch.load(weights_path, map_location="cpu")["model"]
+    model_weights = torch.load(weights_path, map_location="cpu")
+    if 'model' in model_weights.keys():
+        model_weights = model_weights["model"]
 
     if cfg.environment.use_deepspeed:
         if cfg.training.lora:
-            model.backbone.base_model.model = load_model_weights(
-                model.backbone.base_model.model, model_weights, strict, cfg
+            model.backbone.base_model.model = load_model_weights(  # type: ignore
+                model.backbone.base_model.model, model_weights, strict, cfg  # type: ignore
             )
         else:
             model.backbone = load_model_weights(
-                model.backbone, model_weights, strict, cfg
+                model.backbone, model_weights, strict, cfg  # type: ignore
             )
     else:
         model = load_model_weights(model, model_weights, strict, cfg)
@@ -236,6 +254,7 @@ def get_ds_config(cfg: Any):
             # zero3
             "stage3_prefetch_bucket_size": cfg.environment.deepspeed_stage3_prefetch_bucket_size,  # noqa: E501
             "stage3_param_persistence_threshold": cfg.environment.deepspeed_stage3_param_persistence_threshold,  # noqa: E501
+            "stage3_gather_16bit_weights_on_model_save": True,
             # zero3 offload cpu
             # "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,  # noqa: E501
             # "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,  # noqa: E501
