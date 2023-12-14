@@ -673,6 +673,22 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
 
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
 
+    if cfg.training.use_flash_attention_2:
+        try:
+            import flash_attn  # noqa: F401
+
+            use_flash_attention_2 = cfg.training.use_flash_attention_2
+            if cfg.environment._local_rank == 0:
+                logger.info("Using Flash Attention 2.")
+        except ImportError:
+            use_flash_attention_2 = False
+            logger.warning(
+                "Flash Attention 2.0 is not available. "
+                "Please consider to run 'make setup' to install it."
+            )
+    else:
+        use_flash_attention_2 = False
+
     if cfg.architecture.pretrained:
         if cfg.environment._local_rank == 0:
             logger.info(f"Loading {cfg.llm_backbone}. This may take a while.")
@@ -682,6 +698,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             revision=cfg.environment.huggingface_branch,
             config=config,
             quantization_config=quantization_config,
+            use_flash_attention_2=use_flash_attention_2,
             **kwargs,
         )
         if cfg.environment._local_rank == 0:
