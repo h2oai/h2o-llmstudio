@@ -103,7 +103,9 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
             if status:
                 if cfg.environment._local_rank == 0:
                     checkpoint = {
-                        "model": torch.load(os.path.join(path, "checkpoint.pth"), map_location="cpu")
+                        "model": torch.load(
+                            os.path.join(path, "checkpoint.pth"), map_location="cpu"
+                        )
                     }
             else:
                 logger.warning(
@@ -212,13 +214,16 @@ def load_checkpoint(
         weights_path = cfg.architecture.pretrained_weights
 
     model_weights = torch.load(weights_path, map_location="cpu")
-    if 'model' in model_weights.keys():
+    if "model" in model_weights.keys():
         model_weights = model_weights["model"]
 
     if cfg.environment.use_deepspeed:
         if cfg.training.lora:
             model.backbone.base_model.model = load_model_weights(  # type: ignore
-                model.backbone.base_model.model, model_weights, strict, cfg  # type: ignore
+                model.backbone.base_model.model,  # type: ignore
+                model_weights,
+                strict,
+                cfg,
             )
         else:
             model.backbone = load_model_weights(
