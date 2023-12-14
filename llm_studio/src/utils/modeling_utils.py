@@ -680,7 +680,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             # see https://github.com/fxmarty/transformers/
             # blob/3f06a3a0aec8cc1ec3ad6bf66ebe277392c5ab37/
             # src/transformers/configuration_utils.py#L380
-            config.attn_implementation = "flash_attention_2"
+            config._attn_implementation_internal = "flash_attention_2"
             if cfg.environment._local_rank == 0:
                 logger.info("Using Flash Attention 2.")
         except ImportError:
