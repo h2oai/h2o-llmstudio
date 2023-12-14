@@ -4,10 +4,14 @@ import shutil
 from tempfile import NamedTemporaryFile
 
 from bokeh.resources import Resources as BokehResources
-from h2o_wave import Q
+from h2o_wave import Q, ui
 
 from llm_studio.app_utils.config import default_cfg
 from llm_studio.app_utils.db import Database, Dataset
+from llm_studio.app_utils.default_datasets import (
+    prepare_default_dataset_causal_language_modeling,
+    prepare_default_dataset_dpo_modeling,
+)
 from llm_studio.app_utils.sections.common import interface
 from llm_studio.app_utils.setting_utils import load_user_settings_and_secrets
 from llm_studio.app_utils.utils import (
@@ -17,57 +21,95 @@ from llm_studio.app_utils.utils import (
     get_output_dir,
     get_user_db_path,
     get_user_name,
-    prepare_default_dataset,
 )
 from llm_studio.src.utils.config_utils import load_config_py, save_config_yaml
 
 logger = logging.getLogger(__name__)
 
 
-def import_data(q: Q):
+async def import_default_data(q: Q):
     """Imports default data"""
 
     try:
         if q.client.app_db.get_dataset(1) is None:
             logger.info("Downloading default dataset...")
-
-            path = f"{get_data_dir(q)}/oasst"
-
-            if os.path.exists(path):
-                shutil.rmtree(path)
-            os.makedirs(path, exist_ok=True)
-
-            df = prepare_default_dataset(path)
-
-            cfg = load_config_py(
-                config_path=os.path.join(
-                    "llm_studio/python_configs", default_cfg.cfg_file
-                ),
-                config_name="ConfigProblemBase",
+            q.page["meta"].dialog = ui.dialog(
+                title="Creating default datasets",
+                blocking=True,
+                items=[ui.progress(label="Please be patient...")],
             )
+            await q.page.save()
 
-            cfg.dataset.train_dataframe = os.path.join(path, "train_full.pq")
-            cfg.dataset.prompt_column = ("instruction",)
-            cfg.dataset.answer_column = "output"
-            cfg.dataset.parent_id_column = "None"
-
-            cfg_path = os.path.join(path, f"{default_cfg.cfg_file}.yaml")
-
-            save_config_yaml(cfg_path, cfg)
-
-            dataset = Dataset(
-                id=1,
-                name="oasst",
-                path=path,
-                config_file=cfg_path,
-                train_rows=df.shape[0],
-            )
-
+            dataset = prepare_oasst(q)
             q.client.app_db.add_dataset(dataset)
+            dataset = prepare_dpo(q)
+            q.client.app_db.add_dataset(dataset)
+
     except Exception as e:
         q.client.app_db._session.rollback()
         logger.warning(f"Could not download default dataset: {e}")
         pass
+
+
+def prepare_oasst(q: Q) -> Dataset:
+    path = f"{get_data_dir(q)}/oasst"
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path, exist_ok=True)
+    df = prepare_default_dataset_causal_language_modeling(path)
+    cfg = load_config_py(
+        config_path=os.path.join("llm_studio/python_configs", default_cfg.cfg_file),
+        config_name="ConfigProblemBase",
+    )
+    cfg.dataset.train_dataframe = os.path.join(path, "train_full.pq")
+    cfg.dataset.prompt_column = ("instruction",)
+    cfg.dataset.answer_column = "output"
+    cfg.dataset.parent_id_column = "None"
+    cfg_path = os.path.join(path, f"{default_cfg.cfg_file}.yaml")
+    save_config_yaml(cfg_path, cfg)
+    dataset = Dataset(
+        id=1,
+        name="oasst",
+        path=path,
+        config_file=cfg_path,
+        train_rows=df.shape[0],
+    )
+    return dataset
+
+
+def prepare_dpo(q):
+    path = f"{get_data_dir(q)}/dpo"
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path, exist_ok=True)
+    train_df = prepare_default_dataset_dpo_modeling()
+    train_df.to_parquet(os.path.join(path, "train.pq"), index=False)
+
+    from llm_studio.python_configs.text_dpo_modeling_config import ConfigDPODataset
+    from llm_studio.python_configs.text_dpo_modeling_config import (
+        ConfigProblemBase as ConfigProblemBaseDPO,
+    )
+
+    cfg: ConfigProblemBaseDPO = ConfigProblemBaseDPO(
+        dataset=ConfigDPODataset(
+            train_dataframe=os.path.join(path, "train.pq"),
+            system_column="system",
+            prompt_column=("question",),
+            answer_column="chosen",
+            rejected_answer_column="rejected",
+        ),
+    )
+
+    cfg_path = os.path.join(path, "text_dpo_modeling_config.yaml")
+    save_config_yaml(cfg_path, cfg)
+    dataset = Dataset(
+        id=2,
+        name="dpo",
+        path=path,
+        config_file=cfg_path,
+        train_rows=train_df.shape[0],
+    )
+    return dataset
 
 
 async def initialize_client(q: Q) -> None:
@@ -93,13 +135,10 @@ async def initialize_client(q: Q) -> None:
         q.client.client_initialized = True
 
         q.client["mode_curr"] = "full"
-
-        import_data(q)
-
         load_user_settings_and_secrets(q)
-
         await interface(q)
 
+        await import_default_data(q)
         q.args[default_cfg.start_page] = True
 
     return

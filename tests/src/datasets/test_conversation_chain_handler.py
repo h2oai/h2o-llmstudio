@@ -5,7 +5,9 @@ from unittest.mock import MagicMock
 import pandas as pd
 import pytest
 
-from llm_studio.app_utils.utils import prepare_default_dataset
+from llm_studio.app_utils.default_datasets import (
+    prepare_default_dataset_causal_language_modeling,
+)
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
 
 
@@ -263,7 +265,7 @@ def test_oasst_conversation_chain_handler(tmp_path):
     Test conversation chain handler on default OASST dataset.
     """
 
-    df = prepare_default_dataset(tmp_path)
+    df = prepare_default_dataset_causal_language_modeling(tmp_path)
     cfg = mock.MagicMock()
     cfg.dataset.prompt_column = "instruction"
     cfg.dataset.answer_column = "output"
@@ -303,7 +305,7 @@ def test_oasst_conversation_chain_handler(tmp_path):
 
 
 def test_oasst_conversation_chain_handler_is_fast(tmp_path):
-    df_oasst = prepare_default_dataset(tmp_path)
+    df_oasst = prepare_default_dataset_causal_language_modeling(tmp_path)
     cfg = mock.MagicMock()
     cfg.dataset.prompt_column = "instruction"
     cfg.dataset.answer_column = "output"
