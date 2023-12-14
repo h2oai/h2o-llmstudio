@@ -117,21 +117,12 @@ The following command will create a virtual environment using pipenv and will in
 make setup
 ```
 
-If you are having troubles installing the flash_attn package, consider running
-
-```bash
-make setup-no-flash
-```
-
-instead. This will install the dependencies without the flash_attn package. Note that this will disable the use of Flash Attention 2 and model training will be slower and consume more memory.
-
 ### Using requirements.txt
 
 If you wish to use conda or another virtual environment, you can also install the dependencies using the requirements.txt file:
 
 ```bash
 pip install -r requirements.txt
-pip install flash-attn==2.3.3 --no-build-isolation  # optional for Flash Attention 2
 ```
 
 ## Run H2O LLM Studio GUI
