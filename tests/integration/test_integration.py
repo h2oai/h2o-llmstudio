@@ -9,7 +9,9 @@ import torch
 import yaml
 from transformers.testing_utils import execute_subprocess_async
 
-from llm_studio.app_utils.utils import prepare_default_dataset
+from llm_studio.app_utils.default_datasets import (
+    prepare_default_dataset_causal_language_modeling,
+)
 
 need_gpus = pytest.mark.skipif(not torch.cuda.is_available(), reason="GPU only test")
 has_no_gpus = pytest.mark.skipif(torch.cuda.is_available(), reason="CPU only test")
@@ -116,7 +118,7 @@ def run_oasst(tmp_path, config_name, metric):
 
     Pytest keeps around the last 3 test runs in the tmp_path fixture.
     """
-    prepare_default_dataset(tmp_path)
+    prepare_default_dataset_causal_language_modeling(tmp_path)
     train_path = os.path.join(tmp_path, "train_full.pq")
     # create dummy labels for classification problem type,
     # unused for other problem types
