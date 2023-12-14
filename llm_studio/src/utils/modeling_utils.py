@@ -99,7 +99,7 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
     if cfg.environment.use_deepspeed:
         if path is not None:
             # gather model params from all ranks when using Deepspeed
-            status = model.save_16bit_model(path, "checkpoint.pth")
+            status = model.save_16bit_model(path, "checkpoint.pth")  # type: ignore
             if status:
                 if cfg.environment._local_rank == 0:
                     checkpoint = {
@@ -113,7 +113,7 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
                     " stage3_gather_16bit_weights_on_model_save=False."
                     " Saving the full checkpoint instead"
                 )
-                model.save_checkpoint(os.path.join(path, "ds_checkpoint"))
+                model.save_checkpoint(os.path.join(path, "ds_checkpoint"))  # type: ignore
                 if cfg.environment._local_rank == 0:
                     # load to cpu
                     state_dict = get_fp32_state_dict_from_zero_checkpoint(
@@ -309,14 +309,14 @@ def wrap_model_distributed(
             model.backbone = ds_engine
         else:
             ds_engine, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
-                model=model.backbone.base_model.model,
+                model=model.backbone.base_model.model,  # type: ignore
                 optimizer=optimizer,
                 lr_scheduler=lr_scheduler,
                 training_data=train_dataloader.dataset,
                 config_params=ds_config,
             )
-            model.backbone.base_model.model = ds_engine
-        model.init_deepspeed()
+            model.backbone.base_model.model = ds_engine  # type: ignore
+        model.init_deepspeed()  # type: ignore
         val_dataloader = DeepSpeedDataLoader(
             val_dataloader.dataset,
             batch_size=val_dataloader.batch_size,
