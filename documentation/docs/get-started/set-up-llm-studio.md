@@ -208,18 +208,17 @@ H2O LLM Studio requires the following minimum requirements:
 
 ## Install custom package
 
-If required, you can install additional Python packages into your environment. This can be done using pip after activating your virtual environment via `make shell`. For example, to install flash-attention, you would use the following commands:
+If required, you can install additional Python packages into your environment. This can be done using pip after activating your virtual environment via `make shell`. For example, to install pydantic, you would use the following commands:
 
 ```bash
 make shell
-pip install flash-attn --no-build-isolation
-pip install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
+pip install pydantic
 ```
 
 Alternatively, you can also directly install the custom package by running the following command.
 
 ```bash
-pipenv install package_name
+pipenv install pydantic
 ```
 
 ## Run H2O LLM Studio
