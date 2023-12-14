@@ -113,7 +113,9 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
                     " stage3_gather_16bit_weights_on_model_save=False."
                     " Saving the full checkpoint instead"
                 )
-                model.save_checkpoint(os.path.join(path, "ds_checkpoint"))  # type: ignore
+                model.save_checkpoint(  # type: ignore
+                    os.path.join(path, "ds_checkpoint")
+                )
                 if cfg.environment._local_rank == 0:
                     # load to cpu
                     state_dict = get_fp32_state_dict_from_zero_checkpoint(
