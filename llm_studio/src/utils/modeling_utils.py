@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from deepspeed.runtime.dataloader import DeepSpeedDataLoader
 from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
-from peft import LoraConfig, get_peft_model
+from peft import LoraConfig, PeftModel, get_peft_model
 from torch.cuda.amp import autocast
 from torch.nn.parallel import DistributedDataParallel
 from tqdm import tqdm
@@ -801,6 +801,53 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         backbone.generation_config.bos_token_id = config.bos_token_id
 
     return backbone, config
+
+
+# Adapted from https://github.com/huggingface/trl/blob/
+# 2068fdcd931183b59110aa6dc99d8f5bb55c6f2d/trl/trainer/utils.py#L742
+def activate_neftune(model, neftune_noise_alpha):
+    r"""
+    Activates the neftune as presented in this code:
+    https://github.com/neelsjain/NEFTune and paper: https://arxiv.org/abs/2310.05914
+    """
+    backbone = unwrap_model(model).backbone
+    if isinstance(backbone, PeftModel):
+        embeddings = backbone.base_model.get_input_embeddings()
+    else:
+        embeddings = backbone.get_input_embeddings()
+
+    embeddings.neftune_noise_alpha = neftune_noise_alpha
+    embeddings.register_forward_hook(neftune_post_forward_hook)
+
+
+def neftune_post_forward_hook(module, input, output):
+    """
+    Implements the NEFTune forward pass for the model using forward hooks.
+    Note this works only for torch.nn.Embedding layers.
+    This method is slightly adapted from the original source code
+    that can be found here: https://github.com/neelsjain/NEFTune
+
+    Simply add it to your model as follows:
+    ```python
+    model = ...
+    model.embed_tokens.neftune_noise_alpha = 0.1
+    model.embed_tokens.register_forward_hook(neftune_post_forward_hook)
+    ```
+
+    Args:
+        module (`torch.nn.Module`):
+            The embedding module where the hook is attached. Note that you need to set
+            `module.neftune_noise_alpha` to the desired noise alpha value.
+        input (`torch.Tensor`):
+            The input tensor to the model.
+        output (`torch.Tensor`):
+            The output tensor of the model (i.e. the embeddings).
+    """
+    if module.training:
+        dims = torch.tensor(output.size(1) * output.size(2))
+        mag_norm = module.neftune_noise_alpha / torch.sqrt(dims)
+        output = output + torch.zeros_like(output).uniform_(-mag_norm, mag_norm)
+    return output
 
 
 class TokenStoppingCriteria(StoppingCriteria):
