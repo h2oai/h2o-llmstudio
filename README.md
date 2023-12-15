@@ -195,7 +195,7 @@ docker run \
     -v ~/.cache:/home/llmstudio/.cache \
     h2o-llmstudio
 ```
-Alternatively, you can run H2O LLM Studio GUI by using our own Docker image available [here](https://console.cloud.google.com/gcr/images/vorvan/global/h2oai/h2o-llmstudio).
+Alternatively, you can run H2O LLM Studio GUI by using our self-hosted Docker image available [here](https://console.cloud.google.com/gcr/images/vorvan/global/h2oai/h2o-llmstudio).
 
 ## Run H2O LLM Studio with command line interface (CLI)
 
