@@ -4,7 +4,8 @@ import os
 from playwright.sync_api import Page
 from pytest_bdd import given, parsers, scenarios, then, when
 
-from tests.ui.utils import LLMStudioPage, handle_terms_and_conditions_page, login
+from tests.ui.utils import handle_terms_and_conditions_page, login
+from tests.ui.llm_studio_page import LLMStudioPage
 
 scenarios("llm_studio.feature")
 
@@ -57,6 +58,46 @@ def create_experiment(llm_studio: LLMStudioPage, experiment_name: str):
     llm_studio.create_experiment(experiment_name)
 
 
+@when(parsers.parse("I tweak data sampling to {value}"))
+def tweak_data_sampling(llm_studio: LLMStudioPage, value: str):
+    llm_studio.data_sample(value)
+
+
+@when(parsers.parse("I update LLM Backbone to {llm_backbone}"))
+def update_llm_backbone(llm_studio: LLMStudioPage, llm_backbone: str):
+    llm_studio.llm_backbone(llm_backbone)
+
+
+@when(parsers.parse("I tweak max length prompt to {value}"))
+def tweak_max_length_prompt(llm_studio: LLMStudioPage, value: str):
+    llm_studio.max_length_prompt(value)
+
+
+@when(parsers.parse("I tweak max length answer to {value}"))
+def tweak_max_length_answer(llm_studio: LLMStudioPage, value: str):
+    llm_studio.max_length_answer(value)
+
+
+@when(parsers.parse("I tweak max length to {value}"))
+def tweak_max_length(llm_studio: LLMStudioPage, value: str):
+    llm_studio.max_length(value)
+
+
+@when("I run the experiment")
+def run_experiment(llm_studio: LLMStudioPage):
+    llm_studio.run_experiment()
+
+
 @then(parsers.parse("I should see the {experiment_name} should finish successfully"))
 def view_experiment(llm_studio: LLMStudioPage, experiment_name: str):
     llm_studio.view_experiment(experiment_name)
+
+
+@when(parsers.parse("I delete experiment {experiment_name}"))
+def delete_experiment(llm_studio: LLMStudioPage, experiment_name: str):
+    llm_studio.delete_experiment(experiment_name)
+
+
+@then(parsers.parse("I should not see the experiment {experiment_name}"))
+def view_experiment(llm_studio: LLMStudioPage, experiment_name: str):
+    llm_studio.assert_experiment_deletion(experiment_name)
