@@ -16,7 +16,7 @@ endif
 PHONY: pipenv
 pipenv:
 	$(PIP) install pip --upgrade
-	$(PIP) install pipenv==2022.10.4
+	$(PIP) install pipenv==2023.11.15
 
 .PHONY: setup
 setup: pipenv
@@ -26,10 +26,8 @@ setup: pipenv
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
 
-setup-ui-test:
-	$(PYTHON) -m venv venv
-	$(ENV_BIN)pip install pip --upgrade
-	$(ENV_BIN)pip install -r requirements_test.txt
+setup-ui-test: pipenv
+	$(PIPENV) install --verbose --categories=dev-packages   
 
 .PHONY: export-requirements
 export-requirements: pipenv
@@ -88,7 +86,8 @@ test: reports
 test-ui: reports
 	$(ENV_BIN)python -m pytest -v --junitxml=reports/junit_ui.xml \
 	--html=./reports/pytest_ui.html \
-	tests/ui/test.py 2>&1 | tee reports/tests.log
+	-o log_cli=true -o log_level=INFO -o log_file=reports/tests_ui.log \
+	tests/ui/test.py 2>&1 | tee reports/tests_ui.log
 
 .PHONY: test-ui-local
 test-ui-local: 
