@@ -7,7 +7,9 @@ from unittest.mock import MagicMock
 import pandas as pd
 import pytest
 
-from llm_studio.app_utils.utils import prepare_default_dataset
+from llm_studio.app_utils.default_datasets import (
+    prepare_default_dataset_causal_language_modeling,
+)
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
 from llm_studio.src.utils.data_utils import load_train_valid_data
 
@@ -85,7 +87,7 @@ def test_get_data_automatic_split(
 
 
 def test_oasst_data_automatic_split(tmp_path: pathlib.Path):
-    prepare_default_dataset(tmp_path)
+    prepare_default_dataset_causal_language_modeling(tmp_path)
     assert len(os.listdir(tmp_path)) > 0, tmp_path
     cfg_mock = MagicMock()
     for file in os.listdir(tmp_path):

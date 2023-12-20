@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -62,3 +62,16 @@ class CustomDataset(CausalLMCustomDataset):
 
     def augment_data(self, encodings):
         return encodings
+
+    def get_chained_prompt_text_list(self, idx: int) -> List[str]:
+        text_dict = self.conversation_chain_handler[idx]
+        chat_history = "".join(
+            [
+                prompt + TEXT_SEPARATOR + answer + TEXT_SEPARATOR
+                for prompt, answer in zip(
+                    text_dict["prompts"][:-1], text_dict["answers"][:-1]
+                )
+            ]
+        )
+        prompt_text = text_dict["systems"][0] + chat_history + text_dict["prompts"][-1]
+        return prompt_text.split(TEXT_SEPARATOR)

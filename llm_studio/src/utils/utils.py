@@ -135,3 +135,41 @@ class DisableLogger:
 
     def __exit__(self, exit_type, exit_value, exit_traceback):
         logging.disable(logging.NOTSET)
+
+
+class PatchedAttribute:
+    """
+    Patches an attribute of an object for the duration of this context manager.
+    Similar to unittest.mock.patch,
+    but works also for properties that are not present in the original class
+
+    >>> class MyObj:
+    ...     attr = 'original'
+    >>> my_obj = MyObj()
+    >>> with PatchedAttribute(my_obj, 'attr', 'patched'):
+    ...     print(my_obj.attr)
+    patched
+    >>> print(my_obj.attr)
+    original
+    >>> with PatchedAttribute(my_obj, 'new_attr', 'new_patched'):
+    ...     print(my_obj.new_attr)
+    new_patched
+    >>> assert not hasattr(my_obj, 'new_attr')
+    """
+
+    def __init__(self, obj, attribute, new_value):
+        self.obj = obj
+        self.attribute = attribute
+        self.new_value = new_value
+        self.original_exists = hasattr(obj, attribute)
+        if self.original_exists:
+            self.original_value = getattr(obj, attribute)
+
+    def __enter__(self):
+        setattr(self.obj, self.attribute, self.new_value)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.original_exists:
+            setattr(self.obj, self.attribute, self.original_value)
+        else:
+            delattr(self.obj, self.attribute)

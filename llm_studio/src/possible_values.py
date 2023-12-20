@@ -250,6 +250,8 @@ class Columns(DatasetValue):
 
         if isinstance(value, str):
             value = [value]
+        if value is None:
+            value = [columns[0]]
 
         value = DatasetValue._compute_current_values(value, columns, self.prefer_with)
 
