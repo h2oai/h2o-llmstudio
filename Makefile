@@ -5,7 +5,6 @@ PIPENV ?= $(PYTHON) -m pipenv
 PIPENV_PYTHON = $(PIPENV) run python
 PIPENV_PIP = $(PIPENV_PYTHON) -m pip
 PWD = $(shell pwd)
-ENV_BIN=./venv/bin/
 
 ifeq ($(origin H2O_LLM_STUDIO_WORKDIR), environment)
     WORKDIR := $(H2O_LLM_STUDIO_WORKDIR)
@@ -27,7 +26,8 @@ setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
 
 setup-ui-test: pipenv
-	$(PIPENV) install --verbose --categories=dev-packages   
+	$(PIPENV) install --verbose --categories=dev-packages  
+	$(PIPENV) run playwright install 
 
 .PHONY: export-requirements
 export-requirements: pipenv
@@ -84,14 +84,14 @@ test: reports
 
 .PHONY: test-ui
 test-ui: reports
-	$(ENV_BIN)python -m pytest -v --junitxml=reports/junit_ui.xml \
+	$(PIPENV) run pytest -v --junitxml=reports/junit_ui.xml \
 	--html=./reports/pytest_ui.html \
 	-o log_cli=true -o log_level=INFO -o log_file=reports/tests_ui.log \
 	tests/ui/test.py 2>&1 | tee reports/tests_ui.log
 
 .PHONY: test-ui-local
 test-ui-local: 
-	$(ENV_BIN)python -m pytest -vvs --headed \
+	$(PIPENV) run pytest -vvs --headed \
 	tests/ui/test.py 2>&1 | tee reports/tests.log
 
 .PHONY: wave
