@@ -94,9 +94,18 @@ def gpt_score(
     model = cfg.prediction.metric_gpt_model
     template_name = cfg.prediction.metric_gpt_template
 
-    eval_template = open(f"prompts/{template_name}.txt", "r").read()
+    if template_name == "mt-bench":
+        eval_template = open(f"prompts/mt-bench/general.txt", "r").read()
+    else:
+        eval_template = open(f"prompts/{template_name}.txt", "r").read()
+    eval_templates = np.array([eval_template] * len(vdf))
+    if template_name == "mt-bench":
+        eval_template = open(f"prompts/mt-bench/reference.txt", "r").read()
+        for category in ["math", "reasoning", "coding"]:
+            eval_templates[vdf.category.values == category] = eval_template
+        print(pd.Series(eval_templates).value_counts())
     vdf["filled_eval_template"] = [
-        eval_template.format(**row) for _, row in vdf.iterrows()
+        eval_templates[idx].format(**row) for idx, row in vdf.iterrows()
     ]
 
     ret = Parallel(n_jobs=8, backend="multiprocessing")(

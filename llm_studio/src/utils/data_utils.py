@@ -216,6 +216,29 @@ def sample_data(cfg: Any, df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def load_mt_bench_data(cfg: Any) -> pd.DataFrame:
+    """Loads MT-BENCH data.
+
+    Args:
+        cfg: input config
+
+    Returns:
+        MT-BENCH DataFrame
+    """
+
+    prompt_column = cfg.dataset.prompt_column[0]
+    answer_column = cfg.dataset.answer_column
+
+    df = df = pd.read_json("prompts/mt-bench/question.jsonl", lines=True)
+    df = df.rename(columns={"turns": prompt_column, "reference": answer_column})
+    df[prompt_column] = df[prompt_column].apply(lambda x: x[0])
+    df[answer_column] = (
+        df[answer_column].fillna("").apply(lambda x: x[0] if x != "" else x)
+    )
+
+    return df
+
+
 def get_data(cfg: Any) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Prepares train and validation DataFrames.
 
@@ -227,6 +250,14 @@ def get_data(cfg: Any) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
 
     train_df, val_df = load_train_valid_data(cfg)
+
+    if (
+        hasattr(cfg.prediction, "metric_gpt_template")
+        and cfg.prediction.metric_gpt_template == "mt-bench"
+    ):
+        if cfg.environment._local_rank == 0:
+            logger.info("Overwriting validation data with MT-BENCH data.")
+        val_df = load_mt_bench_data(cfg)
 
     if cfg.dataset.data_sample < 1.0:
         if "Train" in cfg.dataset.data_sample_choice:
