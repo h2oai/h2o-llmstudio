@@ -54,7 +54,6 @@ deepspeed = "==0.11.1"
 keyring = "==24.2.0"
 
 [dev-packages]
-black = "==23.7.0"
 coverage = "==7.2.7"
 flake8 = "==6.1.0"
 flake8-black = "==0.3.6"
@@ -70,7 +69,6 @@ types-requests = ">=2.31"
 types-toml = ">=0.10"
 wheel = "==0.41.0"
 pytest-bdd = "==6.1.1"
-pytest-playwright = "==0.3.0"
-playwright = "==1.27.0"
+playwright = "==1.40.0"
 python-dotenv = "==1.0.0"
-hac-playwright = {file = "http://h2o-public-test-data.s3.amazonaws.com/e2e-testing/hac_playwright-1.27.0-py3-none-any.whl"}
+hac-playwright = { file = "http://h2o-public-test-data.s3.amazonaws.com/e2e-testing/hac_playwright-1.40.0-py3-none-any.whl" }
