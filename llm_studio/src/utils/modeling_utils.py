@@ -677,17 +677,18 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         try:
             import flash_attn  # noqa: F401
 
-            use_flash_attention_2 = cfg.training.use_flash_attention_2
+            # see https://github.com/fxmarty/transformers/
+            # blob/3f06a3a0aec8cc1ec3ad6bf66ebe277392c5ab37/
+            # src/transformers/configuration_utils.py#L380
+            config._attn_implementation_internal = "flash_attention_2"
             if cfg.environment._local_rank == 0:
                 logger.info("Using Flash Attention 2.")
         except ImportError:
-            use_flash_attention_2 = False
-            logger.warning(
-                "Flash Attention 2.0 is not available. "
-                "Please consider to run 'make setup' to install it."
-            )
-    else:
-        use_flash_attention_2 = False
+            if cfg.environment._local_rank == 0:
+                logger.warning(
+                    "Flash Attention 2.0 is not available. "
+                    "Please consider to run 'make setup' to install it."
+                )
 
     if cfg.architecture.pretrained:
         if cfg.environment._local_rank == 0:
@@ -698,7 +699,6 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             revision=cfg.environment.huggingface_branch,
             config=config,
             quantization_config=quantization_config,
-            use_flash_attention_2=use_flash_attention_2,
             **kwargs,
         )
         if cfg.environment._local_rank == 0:
