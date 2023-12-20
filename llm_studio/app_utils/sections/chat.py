@@ -23,7 +23,10 @@ from llm_studio.app_utils.utils import (
 from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.models.text_causal_language_modeling_model import Model
-from llm_studio.src.utils.config_utils import load_config_yaml
+from llm_studio.src.utils.config_utils import (
+    NON_GENERATION_PROBLEM_TYPES,
+    load_config_yaml,
+)
 from llm_studio.src.utils.modeling_utils import load_checkpoint
 
 logger = logging.getLogger(__name__)
@@ -165,7 +168,7 @@ async def should_start_chat(q: Q):
         os.path.join(q.client["experiment/display/experiment_path"], "cfg.yaml")
     )
 
-    if cfg.problem_type == "text_causal_classification_modeling":
+    if cfg.problem_type in NON_GENERATION_PROBLEM_TYPES:
         q.page["experiment/display/chat"] = ui.form_card(
             box="first",
             items=[

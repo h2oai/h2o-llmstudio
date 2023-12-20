@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader, Sampler, SequentialSampler
 
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
 from llm_studio.src.utils.exceptions import LLMDataException
-from llm_studio.src.utils.utils import set_seed
+from llm_studio.src.utils.utils import PatchedAttribute, set_seed
 
 logger = logging.getLogger(__name__)
 
@@ -142,9 +142,14 @@ def read_dataframe_drop_missing_labels(path: str, cfg: Any) -> pd.DataFrame:
         verbose=verbose,
         fill_columns=fill_columns,
     )
-    df[input_cols + [cfg.dataset.answer_column]] = (
-        df[input_cols + [cfg.dataset.answer_column]].fillna("").astype(str)
-    )
+    df[input_cols] = df[input_cols].fillna("").astype(str)
+    if (
+        hasattr(cfg.dataset, "answer_column")
+        and cfg.dataset.answer_column in df.columns
+    ):
+        df[cfg.dataset.answer_column] = (
+            df[cfg.dataset.answer_column].fillna("").astype(str)
+        )
     return df
 
 
@@ -270,12 +275,10 @@ def load_train_valid_data(cfg) -> Tuple[pd.DataFrame, pd.DataFrame]:
             # split based on conversation_chain_ids
             # this ensures that all samples from the
             # same conversation are in the same fold
-            limit_chained_samples = cfg.dataset.limit_chained_samples
-            cfg.dataset.limit_chained_samples = True
-            conversation_chain_ids = ConversationChainHandler(
-                df=df, cfg=cfg
-            ).conversation_chain_ids
-            cfg.dataset.limit_chained_samples = limit_chained_samples
+            with PatchedAttribute(cfg.dataset, "limit_chained_samples", True):
+                conversation_chain_ids = ConversationChainHandler(
+                    df=df, cfg=cfg
+                ).conversation_chain_ids
             # Some conversations may have the same parent id, e.g. for OASST
             # 6aa548c6-65ad-4531-9411-76173ae060a3 and
             # 2a164c2a-4f0e-45aa-8990-e7dd3b51c06b

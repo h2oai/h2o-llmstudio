@@ -52,7 +52,8 @@ The following metrics were measured.
 :::info
 The runtimes were gathered using the default parameters. 
 
-<details><summary>Expand to see the default parameters</summary>
+<details>
+<summary>Expand to see the default parameters </summary>
 
 ```
 architecture:
@@ -121,6 +122,7 @@ prediction:
     max_length_inference: 256
     metric: BLEU
     metric_gpt_model: gpt-3.5-turbo-0301
+    metric_gpt_template: general
     min_length_inference: 2
     num_beams: 1
     num_history: 4

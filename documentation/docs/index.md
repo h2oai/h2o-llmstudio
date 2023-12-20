@@ -98,6 +98,10 @@ import H2OHome from '@site/src/components/H2OHome';
             label: "Videos",
             to: "/get-started/videos",
           },
+          {
+            label: "Key Terms",
+            to: "/key-terms",
+          },
         ],
       },
     ],

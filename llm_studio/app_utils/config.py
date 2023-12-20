@@ -20,7 +20,7 @@ def get_size(x):
         return 2**31
 
 
-version = "1.1.0-dev"
+version = "1.3.0-dev"
 
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -59,6 +59,7 @@ default_cfg = {
     "kaggle_command": ("kaggle competitions download -c " "dataset"),
     "problem_types": [
         "text_causal_language_modeling_config",
+        "text_dpo_modeling_config",
         "text_rlhf_language_modeling_config",
         "text_sequence_to_sequence_modeling_config",
         "text_causal_classification_modeling_config",

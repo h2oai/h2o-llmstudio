@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from deepspeed.runtime.dataloader import DeepSpeedDataLoader
 from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
-from peft import LoraConfig, get_peft_model
+from peft import LoraConfig, PeftModel, get_peft_model
 from torch.cuda.amp import autocast
 from torch.nn.parallel import DistributedDataParallel
 from tqdm import tqdm
@@ -24,11 +24,13 @@ from transformers import (
     StoppingCriteria,
     StoppingCriteriaList,
 )
+from transformers.pytorch_utils import Conv1D as Conv1DTransformer
 from transformers.utils import logging as transformers_logging
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
+from llm_studio.src.utils.config_utils import NON_GENERATION_PROBLEM_TYPES
 from llm_studio.src.utils.data_utils import (
     OrderedDistributedSampler,
     batch_padding,
@@ -56,21 +58,24 @@ def check_disk_space(model: torch.nn.Module, path: str, use_deepspeed: bool = Fa
 
     model_size_in_bytes = 0
     for param in model.parameters():
+        n_params = param.ds_numel if hasattr(param, "ds_numel") else param.numel()
         if param.data.dtype in [torch.int8, torch.uint8]:
-            model_size_in_bytes += param.numel() * 1
+            model_size_in_bytes += n_params * 1
         elif param.data.dtype in [torch.float16, torch.bfloat16]:
-            model_size_in_bytes += param.numel() * 2
+            model_size_in_bytes += n_params * 2
         elif param.data.dtype == torch.float32:
-            model_size_in_bytes += param.numel() * 4
+            model_size_in_bytes += n_params * 4
         else:
             # If the data type is not supported, calculate it as float32.
-            model_size_in_bytes += param.numel() * 4
+            model_size_in_bytes += n_params * 4
             logger.warning(f"Unsupported data type: {param.data.dtype}")
 
-    if use_deepspeed:
-        model_size_in_bytes *= 2  # need double space for converting deepspeed engine.
     if model_size_in_bytes * 1.03 < free:  # leave a 3% margin here.
-        logger.info("Enough space available for saving model weights.")
+        logger.info(
+            "Enough space available for saving model weights."
+            f"Required space: {model_size_in_bytes * 1.03 / (1024 * 1024):.2f}MB, "
+            f"Available space: {free / (1024 * 1024):.2f}MB."
+        )
     else:
         raise ValueError(
             f"Not enough space available for saving model weights. "
@@ -93,17 +98,34 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
 
     if cfg.environment.use_deepspeed:
         if path is not None:
-            # gather model params from all ranks
-            model.save_checkpoint(os.path.join(path, "ds_checkpoint"))  # type: ignore[operator] # noqa: E501
-            if cfg.environment._local_rank == 0:
-                # load to cpu
-                state_dict = get_fp32_state_dict_from_zero_checkpoint(
+            # gather model params from all ranks when using Deepspeed
+            status = model.save_16bit_model(path, "checkpoint.pth")  # type: ignore
+            if status:
+                if cfg.environment._local_rank == 0:
+                    checkpoint = {
+                        "model": torch.load(
+                            os.path.join(path, "checkpoint.pth"), map_location="cpu"
+                        )
+                    }
+            else:
+                logger.warning(
+                    "deepspeed.save_16bit_model didn't save the model, since"
+                    " stage3_gather_16bit_weights_on_model_save=False."
+                    " Saving the full checkpoint instead"
+                )
+                model.save_checkpoint(  # type: ignore
                     os.path.join(path, "ds_checkpoint")
                 )
-                # save as normal checkpoint that can be loaded by `load_state_dict`
-                checkpoint = {"model": state_dict}
-                torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
-                shutil.rmtree(os.path.join(path, "ds_checkpoint"))
+                if cfg.environment._local_rank == 0:
+                    # load to cpu
+                    state_dict = get_fp32_state_dict_from_zero_checkpoint(
+                        os.path.join(path, "ds_checkpoint")
+                    )
+                    # save as normal checkpoint that can be loaded by `load_state_dict`
+                    checkpoint = {"model": state_dict}
+                    torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
+                    shutil.rmtree(os.path.join(path, "ds_checkpoint"))
+
     else:
         if cfg.environment._local_rank == 0:
             model = unwrap_model(model)
@@ -113,7 +135,7 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
 
     if (
         cfg.environment._local_rank == 0
-        and cfg.problem_type == "text_causal_classification_modeling"
+        and "classification_head.weight" in checkpoint["model"]
     ):
         torch.save(
             checkpoint["model"]["classification_head.weight"],
@@ -193,9 +215,24 @@ def load_checkpoint(
     if weights_path is None:
         weights_path = cfg.architecture.pretrained_weights
 
-    model_weights = torch.load(weights_path, map_location="cpu")["model"]
+    model_weights = torch.load(weights_path, map_location="cpu")
+    if "model" in model_weights.keys():
+        model_weights = model_weights["model"]
 
-    model = load_model_weights(model, model_weights, strict, cfg)
+    if cfg.environment.use_deepspeed:
+        if cfg.training.lora:
+            model.backbone.base_model.model = load_model_weights(  # type: ignore
+                model.backbone.base_model.model,  # type: ignore
+                model_weights,
+                strict,
+                cfg,
+            )
+        else:
+            model.backbone = load_model_weights(
+                model.backbone, model_weights, strict, cfg  # type: ignore
+            )
+    else:
+        model = load_model_weights(model, model_weights, strict, cfg)
 
     del model_weights
     gc.collect()
@@ -224,6 +261,7 @@ def get_ds_config(cfg: Any):
             # zero3
             "stage3_prefetch_bucket_size": cfg.environment.deepspeed_stage3_prefetch_bucket_size,  # noqa: E501
             "stage3_param_persistence_threshold": cfg.environment.deepspeed_stage3_param_persistence_threshold,  # noqa: E501
+            "stage3_gather_16bit_weights_on_model_save": True,
             # zero3 offload cpu
             # "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,  # noqa: E501
             # "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,  # noqa: E501
@@ -262,13 +300,25 @@ def wrap_model_distributed(
 ):
     if cfg.environment.use_deepspeed:
         ds_config = get_ds_config(cfg)
-        model, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
-            model=model,
-            optimizer=optimizer,
-            lr_scheduler=lr_scheduler,
-            training_data=train_dataloader.dataset,
-            config_params=ds_config,
-        )
+        if not cfg.training.lora:
+            ds_engine, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
+                model=model.backbone,
+                optimizer=optimizer,
+                lr_scheduler=lr_scheduler,
+                training_data=train_dataloader.dataset,
+                config_params=ds_config,
+            )
+            model.backbone = ds_engine
+        else:
+            ds_engine, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
+                model=model.backbone.base_model.model,  # type: ignore
+                optimizer=optimizer,
+                lr_scheduler=lr_scheduler,
+                training_data=train_dataloader.dataset,
+                config_params=ds_config,
+            )
+            model.backbone.base_model.model = ds_engine  # type: ignore
+        model.init_deepspeed()  # type: ignore
         val_dataloader = DeepSpeedDataLoader(
             val_dataloader.dataset,
             batch_size=val_dataloader.batch_size,
@@ -495,11 +545,11 @@ def run_inference(
         if cfg.environment.use_deepspeed:
             if (
                 cfg.prediction.metric != "Perplexity"
-                and cfg.problem_type != "text_causal_classification_modeling"
+                and cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES
             ):
                 output = {}
                 output["predicted_answer_ids"] = (
-                    model.module.generate(batch, cfg).detach().cpu()  # type: ignore
+                    model.generate(batch, cfg).detach().cpu()  # type: ignore
                 )
             else:
                 output = model.forward(batch)
@@ -507,7 +557,7 @@ def run_inference(
             with autocast(enabled=cfg.environment.mixed_precision):
                 if (
                     cfg.prediction.metric != "Perplexity"
-                    and cfg.problem_type != "text_causal_classification_modeling"
+                    and cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES
                 ):
                     output = {}
                     output["predicted_answer_ids"] = (
@@ -671,7 +721,27 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
 
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
 
+    if cfg.training.use_flash_attention_2:
+        try:
+            import flash_attn  # noqa: F401
+
+            # see https://github.com/fxmarty/transformers/
+            # blob/3f06a3a0aec8cc1ec3ad6bf66ebe277392c5ab37/
+            # src/transformers/configuration_utils.py#L380
+            config._attn_implementation_internal = "flash_attention_2"
+            if cfg.environment._local_rank == 0:
+                logger.info("Using Flash Attention 2.")
+        except ImportError:
+            if cfg.environment._local_rank == 0:
+                logger.warning(
+                    "Flash Attention 2.0 is not available. "
+                    "Please consider to run 'make setup' to install it."
+                )
+
     if cfg.architecture.pretrained:
+        if cfg.environment._local_rank == 0:
+            logger.info(f"Loading {cfg.llm_backbone}. This may take a while.")
+
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
             revision=cfg.environment.huggingface_branch,
@@ -679,12 +749,15 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             quantization_config=quantization_config,
             **kwargs,
         )
+        if cfg.environment._local_rank == 0:
+            logger.info(f"Loaded {cfg.llm_backbone}.")
     else:
         kwargs.pop("use_auth_token", None)
         backbone = model_class.from_config(config, **kwargs)
 
     if cfg.tokenizer._vocab_length > config.vocab_size:
-        logger.info(f"Resizing token embeddings to {cfg.tokenizer._vocab_length}")
+        if cfg.environment._local_rank == 0:
+            logger.info(f"Resizing token embeddings to {cfg.tokenizer._vocab_length}")
         backbone.resize_token_embeddings(cfg.tokenizer._vocab_length)
 
     backbone.model_parallel = False
@@ -735,6 +808,53 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         backbone.generation_config.bos_token_id = config.bos_token_id
 
     return backbone, config
+
+
+# Adapted from https://github.com/huggingface/trl/blob/
+# 2068fdcd931183b59110aa6dc99d8f5bb55c6f2d/trl/trainer/utils.py#L742
+def activate_neftune(model, neftune_noise_alpha):
+    r"""
+    Activates the neftune as presented in this code:
+    https://github.com/neelsjain/NEFTune and paper: https://arxiv.org/abs/2310.05914
+    """
+    backbone = unwrap_model(model).backbone
+    if isinstance(backbone, PeftModel):
+        embeddings = backbone.base_model.get_input_embeddings()
+    else:
+        embeddings = backbone.get_input_embeddings()
+
+    embeddings.neftune_noise_alpha = neftune_noise_alpha
+    embeddings.register_forward_hook(neftune_post_forward_hook)
+
+
+def neftune_post_forward_hook(module, input, output):
+    """
+    Implements the NEFTune forward pass for the model using forward hooks.
+    Note this works only for torch.nn.Embedding layers.
+    This method is slightly adapted from the original source code
+    that can be found here: https://github.com/neelsjain/NEFTune
+
+    Simply add it to your model as follows:
+    ```python
+    model = ...
+    model.embed_tokens.neftune_noise_alpha = 0.1
+    model.embed_tokens.register_forward_hook(neftune_post_forward_hook)
+    ```
+
+    Args:
+        module (`torch.nn.Module`):
+            The embedding module where the hook is attached. Note that you need to set
+            `module.neftune_noise_alpha` to the desired noise alpha value.
+        input (`torch.Tensor`):
+            The input tensor to the model.
+        output (`torch.Tensor`):
+            The output tensor of the model (i.e. the embeddings).
+    """
+    if module.training:
+        dims = torch.tensor(output.size(1) * output.size(2))
+        mag_norm = module.neftune_noise_alpha / torch.sqrt(dims)
+        output = output + torch.zeros_like(output).uniform_(-mag_norm, mag_norm)
+    return output
 
 
 class TokenStoppingCriteria(StoppingCriteria):
@@ -815,7 +935,9 @@ def prepare_lora(cfg, backbone):
         target_modules = []
         for name, module in backbone.named_modules():
             if (
-                isinstance(module, (torch.nn.Linear, torch.nn.Conv1d))
+                isinstance(
+                    module, (torch.nn.Linear, torch.nn.Conv1d, Conv1DTransformer)
+                )
                 and "head" not in name
             ):
                 name = name.split(".")[-1]

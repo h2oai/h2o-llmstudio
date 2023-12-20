@@ -50,6 +50,7 @@ from llm_studio.src.utils.logging_utils import (
     write_flag,
 )
 from llm_studio.src.utils.modeling_utils import (
+    activate_neftune,
     check_disk_space,
     get_ds_config,
     get_number_of_validation_epochs,
@@ -176,6 +177,11 @@ def run_train(
         Validation metric
         Last train batch
     """
+    if (
+        hasattr(cfg.augmentation, "neftune_noise_alpha")
+        and cfg.augmentation.neftune_noise_alpha > 0
+    ):
+        activate_neftune(model, cfg.augmentation.neftune_noise_alpha)
 
     scaler: GradScaler | None = None
     if cfg.environment.mixed_precision:
@@ -333,6 +339,15 @@ def run_train(
                     cfg.environment._curr_step,
                     step=cfg.environment._curr_step,
                 )
+
+                for key in ["chosen_rewards", "rejected_rewards", "reward_margin"]:
+                    if key in output_dict:
+                        cfg.logging._logger.log(
+                            "train",
+                            key,
+                            output_dict[key].item(),
+                            step=cfg.environment._curr_step,
+                        )
 
                 # Show logs each 5% of the epoch (only if doing per epoch evaluation)
                 if (itr + 1) % log_update_steps == 0 or itr == epoch_steps - 1:
@@ -964,11 +979,8 @@ def run(cfg: Any) -> None:
 
     if cfg.training.epochs == 0:
         checkpoint_path = cfg.output_directory
-        logger.info(
-            f"Saving last model checkpoint: "
-            f"val_loss {val_loss:.5}, val_{cfg.prediction.metric} "
-            f"{val_metric:.5} to {checkpoint_path}"
-        )
+        if cfg.environment._local_rank == 0:
+            logger.info(f"Saving last model checkpoint to {checkpoint_path}")
         save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
     if cfg.environment._local_rank == 0:

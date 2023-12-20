@@ -5,7 +5,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from llm_studio.app_utils.utils import prepare_default_dataset
+from llm_studio.app_utils.default_datasets import (
+    prepare_default_dataset_causal_language_modeling,
+)
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMDataset,
     ConfigNLPCausalLMTokenizer,
@@ -15,7 +17,7 @@ from llm_studio.src.datasets.text_causal_language_modeling_ds import CustomDatas
 
 
 def test_prepare_default_dataset(tmp_path):
-    df = prepare_default_dataset(tmp_path)
+    df = prepare_default_dataset_causal_language_modeling(tmp_path)
     assert isinstance(df, pd.DataFrame)
     assert set(df.keys()) == set(
         ["instruction", "output", "id", "parent_id", "lang", "rank"]
@@ -225,14 +227,6 @@ def test_getitem():
     assert result["input_ids"].shape == (513,)
     assert result["prompt_input_ids"].shape == (513,)
 
-    assert dataset.get_chained_prompt_text_list(0) == [
-        "system 1prompt 1",
-        "answer 1",
-        "prompt 2",
-        "answer 2",
-        "prompt 3",
-    ]
-
 
 def test_getitem_no_chaining():
     df = pd.DataFrame(
@@ -292,6 +286,3 @@ def test_getitem_no_chaining():
             f"Prompt:prompt {i+1}"
             "Answer:"
         )
-        assert dataset.get_chained_prompt_text_list(i) == [
-            f"system {i+1}prompt {i+1}",
-        ]

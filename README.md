@@ -54,6 +54,7 @@ Using CLI for fine-tuning LLMs:
 
 ## What's New
 
+- [PR 539](https://github.com/h2oai/h2o-llmstudio/pull/539) Introduced a new problem type for DPO/IPO optimization. This optimization technique can be used as an alternative to RLHF.
 - [PR 288](https://github.com/h2oai/h2o-llmstudio/pull/288) Introduced Deepspeed for sharded training allowing to train larger models on machines with multiple GPUs. Requires NVLink. This feature replaces FSDP and offers more flexibility. Deepspeed requires a system installation of cudatoolkit and we recommend using version 11.8. See [Recommended Install](#recommended-install).
 - [PR 449](https://github.com/h2oai/h2o-llmstudio/pull/449) New problem type for Causal Classification Modeling allows to train binary and multiclass models using LLMs.
 - [PR 364](https://github.com/h2oai/h2o-llmstudio/pull/364) User secrets are now handled more securely and flexible. Support for handling secrets using the 'keyring' library was added. User settings are tried to be migrated automatically.
@@ -70,6 +71,8 @@ Please note that due to current rapid development we cannot guarantee full backw
 H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
 
 For more information about installation prerequisites, see the [Set up H2O LLM Studio](https://docs.h2o.ai/h2o-llmstudio/get-started/set-up-llm-studio#prerequisites) guide in the documentation.
+
+For a performance comparison of different GPUs, see the [H2O LLM Studio performance](https://h2oai.github.io/h2o-llmstudio/get-started/llm-studio-performance) guide in the documentation.
 
 ### Recommended Install
 
@@ -98,7 +101,7 @@ sudo apt-get update
 sudo apt-get -y install cuda
 ```
 
-alternatively, one can install cudatoolkits in a cuda environmet:
+alternatively, one can install cudatoolkits in a cuda environment:
 
 ```bash
 conda create -n llmstudio python=3.10
@@ -114,12 +117,21 @@ The following command will create a virtual environment using pipenv and will in
 make setup
 ```
 
+If you are having troubles installing the flash_attn package, consider running
+
+```bash
+make setup-no-flash
+```
+
+instead. This will install the dependencies without the flash_attn package. Note that this will disable the use of Flash Attention 2 and model training will be slower and consume more memory.
+
 ### Using requirements.txt
 
 If you wish to use conda or another virtual environment, you can also install the dependencies using the requirements.txt file:
 
 ```bash
 pip install -r requirements.txt
+pip install flash-attn==2.3.3 --no-build-isolation  # optional for Flash Attention 2
 ```
 
 ## Run H2O LLM Studio GUI
@@ -184,6 +196,7 @@ docker run \
     -v ~/.cache:/home/llmstudio/.cache \
     h2o-llmstudio
 ```
+Alternatively, you can run H2O LLM Studio GUI by using our self-hosted Docker image available [here](https://console.cloud.google.com/gcr/images/vorvan/global/h2oai/h2o-llmstudio).
 
 ## Run H2O LLM Studio with command line interface (CLI)
 
