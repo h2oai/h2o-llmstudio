@@ -29,7 +29,7 @@ Also make sure you are providing your huggingface token if the model is lying in
     - You can login to hugginface_hub by running
         ```python
         import huggingface_hub
-        huggingface_hub.login(<ACCES_TOKEN>)
+        huggingface_hub.login(<ACCESS_TOKEN>)
         ```
 
 You will also need to download the classification head, either manually, or by running the following code:
