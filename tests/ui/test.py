@@ -25,7 +25,6 @@ def login_to_llm_studio(logger: logging.Logger, page: Page, app_address: str):
 
 @then(parsers.parse("I should see the dataset {dataset_name}"))
 def view_datasets(llm_studio: LLMStudioPage, dataset_name: str):
-    llm_studio.view_datasets()
     llm_studio.assert_dataset_import(dataset_name)
 
 
@@ -47,7 +46,7 @@ def delete_dataset(llm_studio: LLMStudioPage, dataset_name: str):
 
 
 @then(parsers.parse("I should not see the dataset {dataset_name}"))
-def view_datasets(llm_studio: LLMStudioPage, dataset_name: str):
+def assert_dataset_deletion(llm_studio: LLMStudioPage, dataset_name: str):
     llm_studio.view_datasets()
     llm_studio.assert_dataset_deletion(dataset_name)
 
@@ -98,5 +97,5 @@ def delete_experiment(llm_studio: LLMStudioPage, experiment_name: str):
 
 
 @then(parsers.parse("I should not see the experiment {experiment_name}"))
-def view_experiment(llm_studio: LLMStudioPage, experiment_name: str):
+def assert_experiment_deletion(llm_studio: LLMStudioPage, experiment_name: str):
     llm_studio.assert_experiment_deletion(experiment_name)

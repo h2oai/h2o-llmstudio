@@ -36,9 +36,6 @@ class LLMStudioPage(BasePage):
     MAX_LENGTH_INFERENCE = "experiment/start/cfg/max_length_inference"
     EXPERIMENT_REFRESH_SELECTOR = "experiment/list/refresh"
 
-    def view_datasets(self):
-        self.page.get_by_role("button", name="View datasets").click()
-
     def assert_dataset_import(self, dataset_name: str):
         dataset = self.page.get_by_role("button", name=dataset_name)
         # Assert that the element is not None and visible
@@ -121,6 +118,7 @@ class LLMStudioPage(BasePage):
         locator.click()
 
     def assert_dataset_deletion(self, dataset_name: str):
+        self.view_datasets()
         dataset = self.page.get_by_role("button", name=dataset_name)
         # Assert that the element not found
         expect(dataset).not_to_be_visible()
@@ -205,7 +203,6 @@ class LLMStudioPage(BasePage):
                 status = self.page.locator(
                     f"{self.EXPERIMENT_STATUS_SELECTOR} >> nth={i}"
                 ).inner_text()
-                print(f"status={status}")
             elif status == "finished":
                 break
 

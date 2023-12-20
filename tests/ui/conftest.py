@@ -26,8 +26,6 @@ def app_address() -> str:
         if address:
             return address
         else:
-            raise EnvironmentError(
-                "LLMSTUDIO_ADDRESS is not set in the environment: `export LLMSTUDIO_ADDRESS=...`"
-            )
+            raise EnvironmentError("LLMSTUDIO_ADDRESS is not set in the environment.")
     except Exception as e:
         return str(e)
