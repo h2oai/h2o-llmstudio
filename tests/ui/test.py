@@ -3,9 +3,8 @@ import os
 
 from playwright.sync_api import Page
 from pytest_bdd import given, parsers, scenarios, then, when
-
-from ui.utils import handle_terms_and_conditions_page, login
 from ui.llm_studio_page import LLMStudioPage
+from ui.utils import handle_terms_and_conditions_page, login
 
 scenarios("llm_studio.feature")
 
