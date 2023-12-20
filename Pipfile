@@ -70,5 +70,4 @@ types-toml = ">=0.10"
 wheel = "==0.41.0"
 pytest-bdd = "==6.1.1"
 playwright = "==1.40.0"
-python-dotenv = "==1.0.0"
 hac-playwright = { file = "http://h2o-public-test-data.s3.amazonaws.com/e2e-testing/hac_playwright-1.40.0-py3-none-any.whl" }

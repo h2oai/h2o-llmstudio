@@ -1,12 +1,8 @@
 import logging
 import os
 from functools import partial, partialmethod
-
 import pytest
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
 
 logging.TRACE = 5
 logging.addLevelName(logging.TRACE, "TRACE")
