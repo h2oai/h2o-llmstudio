@@ -366,12 +366,7 @@ def get_train_dataloader(train_ds: Any, cfg: Any, verbose=True):
     Returns:
         Train Dataloader
     """
-
-    base_sampler: Sampler = (
-        SequentialSampler
-        if cfg.problem_type != "text_kto_language_modeling"
-        else KTOSampler
-    )(train_ds)
+    base_sampler = cfg.dataset.sampler_class(train_ds)
 
     if cfg.environment._distributed:
         sampler = DistributedSamplerWrapper(

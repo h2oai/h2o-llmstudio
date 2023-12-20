@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Tuple
 
 import torch
+from torch.utils.data import SequentialSampler
 
 import llm_studio.src.datasets.text_causal_language_modeling_ds
 from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
@@ -25,6 +26,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     dataset_class: Any = (
         llm_studio.src.datasets.text_causal_language_modeling_ds.CustomDataset
     )
+    sampler_class: Any = SequentialSampler
 
     personalize: bool = False
     chatbot_name: str = "h2oGPT"
@@ -125,6 +127,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
         )
 
         self._visibility["dataset_class"] = -1
+        self._visibility["sampler_class"] = -1
 
 
 @dataclass
