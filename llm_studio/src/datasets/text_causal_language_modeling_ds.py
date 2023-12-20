@@ -26,7 +26,7 @@ class CustomDataset(Dataset):
         """
         self.cfg = cfg
         self.mode = mode
-        self.df = df.copy()
+        self.df = df.reset_index(drop=True).copy()
 
         self.tokenizer = get_tokenizer(self.cfg)
         self.conversation_chain_handler = ConversationChainHandler(self.df, cfg)

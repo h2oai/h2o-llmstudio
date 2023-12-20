@@ -10,9 +10,12 @@ import pyarrow.parquet as pq
 import torch
 from sklearn.model_selection import GroupShuffleSplit, train_test_split
 from torch import distributed as dist
-from torch.utils.data import DataLoader, Sampler, SequentialSampler
+from torch.utils.data import DataLoader, DistributedSampler, Sampler, SequentialSampler
 
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
+from llm_studio.src.datasets.text_kto_language_modeling_ds import (
+    CustomDataset as CustomKTOCausalLLMDataset,
+)
 from llm_studio.src.utils.exceptions import LLMDataException
 from llm_studio.src.utils.utils import PatchedAttribute, set_seed
 
@@ -364,9 +367,14 @@ def get_train_dataloader(train_ds: Any, cfg: Any, verbose=True):
         Train Dataloader
     """
 
-    sampler: Sampler
+    base_sampler: Sampler = (
+        SequentialSampler
+        if cfg.problem_type != "text_kto_language_modeling"
+        else KTOSampler
+    )(train_ds)
+
     if cfg.environment._distributed:
-        sampler = torch.utils.data.distributed.DistributedSampler(
+        sampler = DistributedSamplerWrapper(
             train_ds,
             num_replicas=cfg.environment._world_size,
             rank=cfg.environment._local_rank,
@@ -376,8 +384,8 @@ def get_train_dataloader(train_ds: Any, cfg: Any, verbose=True):
         )
         sampler_length = len(sampler)
     else:
-        sampler = None
         sampler_length = len(train_ds)
+        sampler = base_sampler
 
     if sampler_length < cfg.training.batch_size and cfg.training.drop_last_batch:
         logger.warning(
@@ -392,7 +400,7 @@ def get_train_dataloader(train_ds: Any, cfg: Any, verbose=True):
     train_dataloader = DataLoader(
         train_ds,
         sampler=sampler,
-        shuffle=(sampler is None),
+        shuffle=not cfg.environment._distributed,
         batch_size=cfg.training.batch_size,
         num_workers=cfg.environment.number_of_workers,
         pin_memory=True,
@@ -551,6 +559,129 @@ class OrderedDistributedSampler(Sampler):
 
     def __len__(self):
         return self.num_samples
+
+
+class KTOSampler(Sampler):
+    """
+    Sampler that alternates data loading between
+    """
+
+    def __init__(
+        self,
+        dataset: CustomKTOCausalLLMDataset,
+    ):
+        """
+        Args:
+            dataset: Dataset used for sampling
+        """
+        self.dataset = dataset
+        self.classes = self.dataset.feedback_values
+
+    def __iter__(self):
+        preferred_classes = np.where(self.classes == 1)[0]
+        non_preferred_classes = np.where(self.classes == 0)[0]
+        np.random.shuffle(preferred_classes)
+        np.random.shuffle(non_preferred_classes)
+        # zip them together in alternating order
+        indices = [
+            item
+            for pair in zip(preferred_classes, non_preferred_classes)
+            for item in pair
+        ]
+        # add remaining indices
+        # Todo: Add over/undersampling??
+        if len(preferred_classes) > len(non_preferred_classes):
+            indices += preferred_classes[len(non_preferred_classes) :]
+        elif len(preferred_classes) < len(non_preferred_classes):
+            indices += non_preferred_classes[len(preferred_classes) :]
+        assert len(indices) == len(self.dataset)
+        return iter(indices)
+
+    def __len__(self):
+        return len(self.dataset)
+
+
+# https://github.com/catalyst-team/catalyst/blob/ea3fadbaa6034dabeefbbb53ab8c310186f6e5d0/catalyst/data/sampler.py#L522
+class DatasetFromSampler(Dataset):
+    """Dataset to create indexes from `Sampler`.
+
+    Args:
+        sampler: PyTorch sampler
+    """
+
+    def __init__(self, sampler: Sampler):
+        """Initialisation for DatasetFromSampler."""
+        self.sampler = sampler
+        self.sampler_list = None
+
+    def __getitem__(self, index: int):
+        """Gets element of the dataset.
+
+        Args:
+            index: index of the element in the dataset
+
+        Returns:
+            Single element by index
+        """
+        if self.sampler_list is None:
+            self.sampler_list = list(self.sampler)
+        return self.sampler_list[index]
+
+    def __len__(self) -> int:
+        """
+        Returns:
+            int: length of the dataset
+        """
+        return len(self.sampler)
+
+
+class DistributedSamplerWrapper(DistributedSampler):
+    """
+    Wrapper over `Sampler` for distributed training.
+    Allows you to use any sampler in distributed mode.
+    It is especially useful in conjunction with
+    `torch.nn.parallel.DistributedDataParallel`. In such case, each
+    process can pass a DistributedSamplerWrapper instance as a DataLoader
+    sampler, and load a subset of subsampled data of the original dataset
+    that is exclusive to it.
+    .. note::
+        Sampler is assumed to be of constant size.
+    """
+
+    def __init__(
+        self,
+        sampler,
+        num_replicas: Optional[int] = None,
+        rank: Optional[int] = None,
+        shuffle: bool = True,
+        seed: int = 0,
+        drop_last: bool = False,
+    ):
+        """
+        Args:
+            sampler: Sampler used for subsampling
+            num_replicas (int, optional): Number of processes participating in
+              distributed training
+            rank (int, optional): Rank of the current process
+              within ``num_replicas``
+            shuffle (bool, optional): If true (default),
+              sampler will shuffle the indices
+        """
+        super(DistributedSamplerWrapper, self).__init__(
+            DatasetFromSampler(sampler),
+            num_replicas=num_replicas,
+            rank=rank,
+            shuffle=shuffle,
+            seed=cfg.environment._seed,
+            drop_last=True,
+        )
+        self.sampler = sampler
+
+    def __iter__(self):
+        self.dataset = DatasetFromSampler(self.sampler)
+        indexes_of_indexes = super().__iter__()
+        subsampler_indexes = self.dataset
+        return iter(itemgetter(*indexes_of_indexes)(subsampler_indexes))
 
 
 def sample_indices(length: int, n_indices: int = 10, seed: int = 1337) -> np.ndarray:
