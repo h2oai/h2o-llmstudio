@@ -61,7 +61,7 @@ def call_openai_api(template, model, deployment_id=None):
     )
     ret = response["choices"][0]["message"]["content"]
     try:
-        score = float(ret.split("SCORE:")[-1].split()[0])
+        score = float(ret.split("SCORE:")[-1].split()[0].split("/")[0])
     except ValueError:
         raise ValueError(f"Could not parse score from response: {ret}")
     return score, ret
@@ -98,15 +98,16 @@ def gpt_score(
         eval_template = open(f"prompts/mt-bench/general.txt", "r").read()
     else:
         eval_template = open(f"prompts/{template_name}.txt", "r").read()
-    eval_templates = np.array([eval_template] * len(vdf))
+    vdf["filled_eval_template"] = eval_template
     if template_name == "mt-bench":
         eval_template = open(f"prompts/mt-bench/reference.txt", "r").read()
-        for category in ["math", "reasoning", "coding"]:
-            eval_templates[vdf.category.values == category] = eval_template
-        print(pd.Series(eval_templates).value_counts())
-    vdf["filled_eval_template"] = [
-        eval_templates[idx].format(**row) for idx, row in vdf.iterrows()
-    ]
+        vdf.loc[
+            vdf.category.isin(["math", "reasoning", "coding"]), "filled_eval_template"
+        ] = eval_template
+
+    vdf["filled_eval_template"] = vdf.apply(
+        lambda row: row["filled_eval_template"].format(**row), axis=1
+    )
 
     ret = Parallel(n_jobs=8, backend="multiprocessing")(
         delayed(rate_reply)(
@@ -123,6 +124,13 @@ def gpt_score(
     )
     scores = [x[0] for x in ret]
     explanations = [x[1] for x in ret]
+
+    if template_name == "mt-bench":
+        vdf["score"] = scores
+        score_by_category = vdf.groupby("category").agg({"score": "mean"}).reset_index()
+        logger.info(
+            "MT-Bench scores by category:\n" + score_by_category.to_string(index=False)
+        )
 
     if raw_results:
         return np.array(scores), explanations
