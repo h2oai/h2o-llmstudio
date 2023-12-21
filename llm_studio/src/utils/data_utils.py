@@ -256,7 +256,11 @@ def get_data(cfg: Any) -> Tuple[pd.DataFrame, pd.DataFrame]:
         and cfg.prediction.metric_gpt_template == "mt-bench"
     ):
         if cfg.environment._local_rank == 0:
-            logger.info("Overwriting validation data with MT-BENCH data.")
+            logger.info(
+                "Overwriting validation data with MT-BENCH data. Please note that "
+                "respective metric is an approximation and might not fully match "
+                "the original implementation."
+            )
         val_df = load_mt_bench_data(cfg)
 
     if cfg.dataset.data_sample < 1.0:
