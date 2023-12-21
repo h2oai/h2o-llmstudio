@@ -43,8 +43,26 @@ class Model(nn.Module):
         if self.cfg.prediction.metric == "Perplexity":
             self.perplexity = Perplexity(self.cfg, reduce=False)
 
+    def init_deepspeed(self):
+        self.backward = self.backbone.backward
+        self.save_checkpoint = self.backbone.save_checkpoint
+        self.save_16bit_model = self.backbone.save_16bit_model
+        if self.cfg.training.lora:
+            self.backbone.base_model.model.config = (
+                self.backbone.base_model.model.module.config
+            )
+            self.backbone.base_model.model.generation_config = (
+                self.backbone.base_model.model.module.generation_config
+            )
+        else:
+            self.backbone.config = self.backbone.module.config
+            self.backbone.generation_config = self.backbone.module.generation_config
+
     def generate(self, batch: Dict, cfg: Any, streamer=None):
-        return generate(self.backbone, batch, cfg, streamer)
+        if cfg.environment.use_deepspeed and cfg.training.lora:
+            return generate(self.backbone.base_model.model, batch, cfg, streamer)
+        else:
+            return generate(self.backbone, batch, cfg, streamer)
 
     def forward(
         self,

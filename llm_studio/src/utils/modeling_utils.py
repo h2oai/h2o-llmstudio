@@ -58,21 +58,24 @@ def check_disk_space(model: torch.nn.Module, path: str, use_deepspeed: bool = Fa
 
     model_size_in_bytes = 0
     for param in model.parameters():
+        n_params = param.ds_numel if hasattr(param, "ds_numel") else param.numel()
         if param.data.dtype in [torch.int8, torch.uint8]:
-            model_size_in_bytes += param.numel() * 1
+            model_size_in_bytes += n_params * 1
         elif param.data.dtype in [torch.float16, torch.bfloat16]:
-            model_size_in_bytes += param.numel() * 2
+            model_size_in_bytes += n_params * 2
         elif param.data.dtype == torch.float32:
-            model_size_in_bytes += param.numel() * 4
+            model_size_in_bytes += n_params * 4
         else:
             # If the data type is not supported, calculate it as float32.
-            model_size_in_bytes += param.numel() * 4
+            model_size_in_bytes += n_params * 4
             logger.warning(f"Unsupported data type: {param.data.dtype}")
 
-    if use_deepspeed:
-        model_size_in_bytes *= 2  # need double space for converting deepspeed engine.
     if model_size_in_bytes * 1.03 < free:  # leave a 3% margin here.
-        logger.info("Enough space available for saving model weights.")
+        logger.info(
+            "Enough space available for saving model weights."
+            f"Required space: {model_size_in_bytes * 1.03 / (1024 * 1024):.2f}MB, "
+            f"Available space: {free / (1024 * 1024):.2f}MB."
+        )
     else:
         raise ValueError(
             f"Not enough space available for saving model weights. "
@@ -95,17 +98,34 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
 
     if cfg.environment.use_deepspeed:
         if path is not None:
-            # gather model params from all ranks
-            model.save_checkpoint(os.path.join(path, "ds_checkpoint"))  # type: ignore[operator] # noqa: E501
-            if cfg.environment._local_rank == 0:
-                # load to cpu
-                state_dict = get_fp32_state_dict_from_zero_checkpoint(
+            # gather model params from all ranks when using Deepspeed
+            status = model.save_16bit_model(path, "checkpoint.pth")  # type: ignore
+            if status:
+                if cfg.environment._local_rank == 0:
+                    checkpoint = {
+                        "model": torch.load(
+                            os.path.join(path, "checkpoint.pth"), map_location="cpu"
+                        )
+                    }
+            else:
+                logger.warning(
+                    "deepspeed.save_16bit_model didn't save the model, since"
+                    " stage3_gather_16bit_weights_on_model_save=False."
+                    " Saving the full checkpoint instead"
+                )
+                model.save_checkpoint(  # type: ignore
                     os.path.join(path, "ds_checkpoint")
                 )
-                # save as normal checkpoint that can be loaded by `load_state_dict`
-                checkpoint = {"model": state_dict}
-                torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
-                shutil.rmtree(os.path.join(path, "ds_checkpoint"))
+                if cfg.environment._local_rank == 0:
+                    # load to cpu
+                    state_dict = get_fp32_state_dict_from_zero_checkpoint(
+                        os.path.join(path, "ds_checkpoint")
+                    )
+                    # save as normal checkpoint that can be loaded by `load_state_dict`
+                    checkpoint = {"model": state_dict}
+                    torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
+                    shutil.rmtree(os.path.join(path, "ds_checkpoint"))
+
     else:
         if cfg.environment._local_rank == 0:
             model = unwrap_model(model)
@@ -195,9 +215,24 @@ def load_checkpoint(
     if weights_path is None:
         weights_path = cfg.architecture.pretrained_weights
 
-    model_weights = torch.load(weights_path, map_location="cpu")["model"]
+    model_weights = torch.load(weights_path, map_location="cpu")
+    if "model" in model_weights.keys():
+        model_weights = model_weights["model"]
 
-    model = load_model_weights(model, model_weights, strict, cfg)
+    if cfg.environment.use_deepspeed:
+        if cfg.training.lora:
+            model.backbone.base_model.model = load_model_weights(  # type: ignore
+                model.backbone.base_model.model,  # type: ignore
+                model_weights,
+                strict,
+                cfg,
+            )
+        else:
+            model.backbone = load_model_weights(
+                model.backbone, model_weights, strict, cfg  # type: ignore
+            )
+    else:
+        model = load_model_weights(model, model_weights, strict, cfg)
 
     del model_weights
     gc.collect()
@@ -226,6 +261,7 @@ def get_ds_config(cfg: Any):
             # zero3
             "stage3_prefetch_bucket_size": cfg.environment.deepspeed_stage3_prefetch_bucket_size,  # noqa: E501
             "stage3_param_persistence_threshold": cfg.environment.deepspeed_stage3_param_persistence_threshold,  # noqa: E501
+            "stage3_gather_16bit_weights_on_model_save": True,
             # zero3 offload cpu
             # "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,  # noqa: E501
             # "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,  # noqa: E501
@@ -264,13 +300,25 @@ def wrap_model_distributed(
 ):
     if cfg.environment.use_deepspeed:
         ds_config = get_ds_config(cfg)
-        model, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
-            model=model,
-            optimizer=optimizer,
-            lr_scheduler=lr_scheduler,
-            training_data=train_dataloader.dataset,
-            config_params=ds_config,
-        )
+        if not cfg.training.lora:
+            ds_engine, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
+                model=model.backbone,
+                optimizer=optimizer,
+                lr_scheduler=lr_scheduler,
+                training_data=train_dataloader.dataset,
+                config_params=ds_config,
+            )
+            model.backbone = ds_engine
+        else:
+            ds_engine, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
+                model=model.backbone.base_model.model,  # type: ignore
+                optimizer=optimizer,
+                lr_scheduler=lr_scheduler,
+                training_data=train_dataloader.dataset,
+                config_params=ds_config,
+            )
+            model.backbone.base_model.model = ds_engine  # type: ignore
+        model.init_deepspeed()  # type: ignore
         val_dataloader = DeepSpeedDataLoader(
             val_dataloader.dataset,
             batch_size=val_dataloader.batch_size,
@@ -501,7 +549,7 @@ def run_inference(
             ):
                 output = {}
                 output["predicted_answer_ids"] = (
-                    model.module.generate(batch, cfg).detach().cpu()  # type: ignore
+                    model.generate(batch, cfg).detach().cpu()  # type: ignore
                 )
             else:
                 output = model.forward(batch)
@@ -677,17 +725,18 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         try:
             import flash_attn  # noqa: F401
 
-            use_flash_attention_2 = cfg.training.use_flash_attention_2
+            # see https://github.com/fxmarty/transformers/
+            # blob/3f06a3a0aec8cc1ec3ad6bf66ebe277392c5ab37/
+            # src/transformers/configuration_utils.py#L380
+            config._attn_implementation_internal = "flash_attention_2"
             if cfg.environment._local_rank == 0:
                 logger.info("Using Flash Attention 2.")
         except ImportError:
-            use_flash_attention_2 = False
-            logger.warning(
-                "Flash Attention 2.0 is not available. "
-                "Please consider to run 'make setup' to install it."
-            )
-    else:
-        use_flash_attention_2 = False
+            if cfg.environment._local_rank == 0:
+                logger.warning(
+                    "Flash Attention 2.0 is not available. "
+                    "Please consider to run 'make setup' to install it."
+                )
 
     if cfg.architecture.pretrained:
         if cfg.environment._local_rank == 0:
@@ -698,7 +747,6 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             revision=cfg.environment.huggingface_branch,
             config=config,
             quantization_config=quantization_config,
-            use_flash_attention_2=use_flash_attention_2,
             **kwargs,
         )
         if cfg.environment._local_rank == 0:

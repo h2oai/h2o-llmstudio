@@ -29,9 +29,9 @@ Also make sure you are providing your huggingface token to the pipeline if the m
     - Either leave `token=True` in the `pipeline` and login to hugginface_hub by running
         ```python
         import huggingface_hub
-        huggingface_hub.login(<ACCES_TOKEN>)
+        huggingface_hub.login(<ACCESS_TOKEN>)
         ```
-    - Or directly pass your <ACCES_TOKEN> to `token` in the `pipeline`
+    - Or directly pass your <ACCESS_TOKEN> to `token` in the `pipeline`
 
 ```python
 from transformers import pipeline

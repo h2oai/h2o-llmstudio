@@ -12,9 +12,9 @@ pip install transformers=={{transformers_version}}
    - Either leave <b>token=True</b> in the <b>pipeline</b> and login to hugginface_hub by running
    ```python
    import huggingface_hub
-   huggingface_hub.login(<ACCES_TOKEN>)
+   huggingface_hub.login(<ACCESS_TOKEN>)
    ```
-   - Or directly pass your <ACCES_TOKEN> to <b>token</b> in the <b>pipeline</b>
+   - Or directly pass your <ACCESS_TOKEN> to <b>token</b> in the <b>pipeline</b>
 ```python
 from transformers import pipeline
 
