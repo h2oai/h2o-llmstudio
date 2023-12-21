@@ -95,12 +95,12 @@ def gpt_score(
     template_name = cfg.prediction.metric_gpt_template
 
     if template_name == "mt-bench":
-        eval_template = open(f"prompts/mt-bench/general.txt", "r").read()
+        eval_template = open("prompts/mt-bench/general.txt", "r").read()
     else:
         eval_template = open(f"prompts/{template_name}.txt", "r").read()
     vdf["filled_eval_template"] = eval_template
     if template_name == "mt-bench":
-        eval_template = open(f"prompts/mt-bench/reference.txt", "r").read()
+        eval_template = open("prompts/mt-bench/reference.txt", "r").read()
         vdf.loc[
             vdf.category.isin(["math", "reasoning", "coding"]), "filled_eval_template"
         ] = eval_template
