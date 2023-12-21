@@ -297,7 +297,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     do_sample: bool = False
     num_beams: int = 1
     temperature: float = 0.0
-    repetition_penalty: float = 1.2
+    repetition_penalty: float = 1.0
     stop_tokens: str = ""
     top_k: int = 0
     top_p: float = 1.0
