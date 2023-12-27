@@ -12,10 +12,16 @@ else
     WORKDIR := $(shell pwd)
 endif
 
+ifeq ($(LOG_LEVEL), $(filter $(LOG_LEVEL), debug trace))
+    PW_DEBUG = DEBUG=pw:api
+else
+    PW_DEBUG =
+endif
+
 PHONY: pipenv
 pipenv:
 	$(PIP) install pip --upgrade
-	$(PIP) install pipenv==2023.11.15
+	$(PIP) install pipenv>=2023.11.15
 
 .PHONY: setup
 setup: pipenv
@@ -26,14 +32,15 @@ setup: pipenv
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
 	- $(PIPENV_PIP) install flash-attn==2.3.3 --no-build-isolation
+	$(PIPENV) run playwright install
 
 .PHONY: setup-no-flash
 setup-no-flash: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
 
 setup-ui-test: pipenv
-	$(PIPENV) install --verbose --categories=dev-packages  
-	$(PIPENV) run playwright install 
+	$(PIPENV) install --verbose --categories=dev-packages
+	$(PIPENV) run playwright install
 
 .PHONY: export-requirements
 export-requirements: pipenv
@@ -90,14 +97,18 @@ test: reports
 
 .PHONY: test-ui
 test-ui: reports
-	$(PIPENV) run pytest -v --junitxml=reports/junit_ui.xml \
+	$(PW_DEBUG) $(PIPENV) run pytest \
+	-v \
+	--junitxml=reports/junit_ui.xml \
 	--html=./reports/pytest_ui.html \
-	-o log_cli=true -o log_level=INFO -o log_file=reports/tests_ui.log \
+	-o log_cli=true \
+	-o log_level=$(LOG_LEVEL) \
+	-o log_file=reports/tests_ui.log \
 	tests/ui/test.py 2>&1 | tee reports/tests_ui.log
 
 .PHONY: test-ui-local
 test-ui-local: 
-	$(PIPENV) run pytest -vvs --headed \
+	$(PW_DEBUG) $(PIPENV) run pytest -vvs --headed \
 	tests/ui/test.py 2>&1 | tee reports/tests.log
 
 .PHONY: wave
