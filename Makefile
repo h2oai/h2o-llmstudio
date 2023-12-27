@@ -39,7 +39,7 @@ setup-no-flash: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
 
 setup-ui-test: pipenv
-	$(PIPENV) install --verbose --categories=dev-packages
+	$(PIPENV) install --verbose --categories=dev-packages --python $(PYTHON_VERSION)
 	$(PIPENV) run playwright install
 
 .PHONY: export-requirements
@@ -108,7 +108,9 @@ test-ui: reports
 
 .PHONY: test-ui-local
 test-ui-local: 
-	$(PW_DEBUG) $(PIPENV) run pytest -vvs --headed \
+	$(PW_DEBUG) $(PIPENV) run pytest \
+	-vvs \
+	--headed \
 	tests/ui/test.py 2>&1 | tee reports/tests.log
 
 .PHONY: wave

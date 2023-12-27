@@ -9,7 +9,7 @@ class LLMStudioPage(BasePage):
     DATASET_LIST_DELETE_SELECTOR = "dataset/list/delete"
     DATASET_DELETE_DIALOG_SELECTOR = "dataset/delete/dialog"
     DATASET_DELETE_SELECTOR = "dataset/delete"
-    EXPERIMENT_START_RUN_SELECTOR = "experiment/start/run"
+    EXPERIMENT_RUN_SELECTOR = "experiment/start/run"
     EXPERIMENT_NAME_SELECTOR = "experiment/start/cfg/experiment_name"
     EXPERIMENT_LIST_DELETE_SELECTOR = "experiment/list/delete"
     EXPERIMENT_DELETE_DIALOG_SELECTOR = "experiment/delete/dialog"
@@ -38,9 +38,9 @@ class LLMStudioPage(BasePage):
 
     def assert_dataset_import(self, dataset_name: str):
         dataset = self.page.get_by_role("button", name=dataset_name)
-        # Assert that the element is not None and visible
+        # Assert that the element is not None and clickable
         assert dataset is not None
-        assert dataset.is_visible()
+        dataset.click()
 
     def get_by_test_id(self, test_id):
         selector = f'[data-test="{test_id}"]'
@@ -157,8 +157,7 @@ class LLMStudioPage(BasePage):
                 i += step
 
     def run_experiment(self):
-        self.page.wait_for_timeout(3000)
-        locator = self.get_by_test_id(self.EXPERIMENT_START_RUN_SELECTOR)
+        locator = self.get_by_test_id(self.EXPERIMENT_RUN_SELECTOR)
         locator.click()
         self.page.wait_for_timeout(3000)
 
