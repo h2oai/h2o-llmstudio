@@ -1,6 +1,8 @@
 from hac_playwright.pages.base import BasePage
 from playwright.sync_api import expect
 
+CLOUD_FILESYSTEM_PATH = "/home/llmstudio/mount/data/user/"
+
 
 class LLMStudioPage(BasePage):
     # Constants for selectors
@@ -16,7 +18,6 @@ class LLMStudioPage(BasePage):
     EXPERIMENT_DELETE_SELECTOR = "experiment/delete"
     EXPERIMENT_STATUS_SELECTOR = "[data-automation-key='status']"
     EXPERIMENT_INDEX_SELECTOR = "[data-automation-key='name']"
-    FILESYSTEM_PATH = "/home/llmstudio/mount/data/user/"
     FILESYSTEM_SELECTOR = "dataset/import/local_path"
     FILENAME_SELECTOR = "dataset/import/name"
     S3_BUCKET_SELECTOR = "dataset/import/s3_bucket"
@@ -54,7 +55,7 @@ class LLMStudioPage(BasePage):
 
     def import_dataset_from_filesystem(self, filepath: str, filename: str):
         self.import_dataset("Local")
-        path = f"{self.FILESYSTEM_PATH}{filepath}"
+        path = f"{CLOUD_FILESYSTEM_PATH}{filepath}"
         self.get_by_test_id(self.FILESYSTEM_SELECTOR).fill(path)
         self.continue_button().click()
         # Dataset configuration
