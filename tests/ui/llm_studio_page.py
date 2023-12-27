@@ -198,7 +198,6 @@ class LLMStudioPage(BasePage):
 
         while True:
             if status in ["queued", "running"]:
-                self.page.wait_for_timeout(3000)
                 self.get_by_test_id(self.EXPERIMENT_REFRESH_SELECTOR).click()
                 status = self.page.locator(
                     f"{self.EXPERIMENT_STATUS_SELECTOR} >> nth={i}"
