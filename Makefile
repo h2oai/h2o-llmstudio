@@ -26,12 +26,12 @@ pipenv:
 .PHONY: setup
 setup: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
-	-$(PIPENV_PIP) install flash-attn==2.3.3 --no-build-isolation
+	-$(PIPENV_PIP) install flash-attn==2.3.6 --no-build-isolation --upgrade
 
 .PHONY: setup-dev
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
-	- $(PIPENV_PIP) install flash-attn==2.3.3 --no-build-isolation
+	- $(PIPENV_PIP) install flash-attn==2.3.6 --no-build-isolation --upgrade
 	$(PIPENV) run playwright install
 
 .PHONY: setup-no-flash

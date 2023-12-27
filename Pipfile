@@ -12,8 +12,7 @@ verify_ssl = false
 python_version = "3.10"
 
 [packages]
-torch = {index = "pytorch", version = "==2.0.1+cu118"}
-torchvision = {index = "pytorch", version = "==0.15.2+cu118"}
+torch = {index = "pytorch", version = "==2.1.2+cu118"}
 tqdm = ">=4.65.0, <5.0.0"
 transformers = "==4.36.1"
 numpy = ">=1.23.2, <2.0.0"
