@@ -207,18 +207,18 @@ class LLMStudioPage(BasePage):
                 break
 
     def find_experiment_index(self, experiment_name):
-        i = 0
-        while True:
+        index = 0
+        while index < 100:  # number of experiments
             # Get the innerText of the element with the specified selector
             inner_text = self.page.locator(
-                f"{self.EXPERIMENT_INDEX_SELECTOR} >> nth={i}"
+                f"{self.EXPERIMENT_INDEX_SELECTOR} >> nth={index}"
             ).inner_text()
             # Check if the current name matches the target name
             if inner_text != experiment_name:
-                i += 1
+                index += 1
             else:
                 break
-        return i
+        return index
 
     def delete_experiment(self, experiment_name: str):
         # Go to experiment page
