@@ -1,0 +1,7 @@
+Requirement already satisfied: pipenv in /opt/hostedtoolcache/Python/3.10.11/x64/lib/python3.10/site-packages (2023.11.15)
+Requirement already satisfied: certifi in /opt/hostedtoolcache/Python/3.10.11/x64/lib/python3.10/site-packages (from pipenv) (2023.11.17)
+Requirement already satisfied: setuptools>=67 in /opt/hostedtoolcache/Python/3.10.11/x64/lib/python3.10/site-packages (from pipenv) (69.0.3)
+Requirement already satisfied: virtualenv>=20.24.2 in /opt/hostedtoolcache/Python/3.10.11/x64/lib/python3.10/site-packages (from pipenv) (20.25.0)
+Requirement already satisfied: distlib<1,>=0.3.7 in /opt/hostedtoolcache/Python/3.10.11/x64/lib/python3.10/site-packages (from virtualenv>=20.24.2->pipenv) (0.3.8)
+Requirement already satisfied: filelock<4,>=3.12.2 in /opt/hostedtoolcache/Python/3.10.11/x64/lib/python3.10/site-packages (from virtualenv>=20.24.2->pipenv) (3.13.1)
+Requirement already satisfied: platformdirs<5,>=3.9.1 in /opt/hostedtoolcache/Python/3.10.11/x64/lib/python3.10/site-packages (from virtualenv>=20.24.2->pipenv) (4.1.0)
