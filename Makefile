@@ -21,7 +21,7 @@ endif
 PHONY: pipenv
 pipenv:
 	$(PIP) install pip --upgrade
-	$(PIP) install pipenv==2023.11.15
+	$(PIP) install pipenv>=2023.11.15
 
 .PHONY: setup
 setup: pipenv
@@ -32,6 +32,7 @@ setup: pipenv
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
 	- $(PIPENV_PIP) install flash-attn==2.3.6 --no-build-isolation --upgrade
+	$(PIPENV) run playwright install
 
 .PHONY: setup-no-flash
 setup-no-flash: pipenv
