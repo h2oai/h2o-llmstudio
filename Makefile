@@ -21,7 +21,7 @@ endif
 PHONY: pipenv
 pipenv:
 	$(PIP) install pip --upgrade
-	$(PIP) install pipenv>=2023.11.15
+	$(PIP) install "pipenv>=2023.11.15"
 
 .PHONY: setup
 setup: pipenv
