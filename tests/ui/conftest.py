@@ -1,31 +1,13 @@
 import logging
+import os
+from functools import partial, partialmethod
 
 import pytest
 
-TRACE = 5
-
-# Add a custom log level
-logging.addLevelName(TRACE, "TRACE")
-
-
-# Define a custom log method for TRACE level
-def trace(self, message, *args, **kwargs):
-    if self.isEnabledFor(TRACE):
-        self._log(TRACE, message, args, **kwargs)
-
-
-# Attach the custom log method to the Logger class
-logging.Logger.trace = trace
-
-logging.TRACE = TRACE
-
-# Set up a custom logger configuration
-logging.basicConfig(
-    level=logging.TRACE, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-# Add levelName for TRACE
-logging.addLevelName(TRACE, "TRACE")
+logging.TRACE = 5
+logging.addLevelName(logging.TRACE, "TRACE")
+logging.Logger.trace = partialmethod(logging.Logger.log, logging.TRACE)
+logging.trace = partial(logging.log, logging.TRACE)
 
 
 @pytest.fixture(scope="session")
