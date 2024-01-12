@@ -132,7 +132,7 @@ class LLMStudioPage(BasePage):
 
     def slider(self, slider_selector, target_value: str):
         is_completed = False
-        i = 0
+        i = 0.0
         # Get the slider element
         slider = self.get_by_test_id(slider_selector)
         slider.click()

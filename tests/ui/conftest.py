@@ -9,6 +9,12 @@ logging.Logger.trace = partialmethod(logging.Logger.log, logging.TRACE)
 logging.trace = partial(logging.log, logging.TRACE)
 
 
+class CustomLogger(logging.Logger):
+    def trace(self, msg, *args, **kwargs):
+        if self.isEnabledFor(logging.TRACE):
+            self._log(logging.TRACE, msg, args, **kwargs)
+
+
 @pytest.fixture(scope="session")
 def logger() -> logging.Logger:
-    return logging.getLogger("ui-tests")
+    return CustomLogger("ui-tests")
