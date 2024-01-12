@@ -1,20 +1,18 @@
 import logging
 from functools import partial, partialmethod
+from typing import Any
 
 import pytest
 
-logging.TRACE = 5
-logging.addLevelName(logging.TRACE, "TRACE")
-logging.Logger.trace = partialmethod(logging.Logger.log, logging.TRACE)
-logging.trace = partial(logging.log, logging.TRACE)
-
-
-class CustomLogger(logging.Logger):
-    def trace(self, msg, *args, **kwargs):
-        if self.isEnabledFor(logging.TRACE):
-            self._log(logging.TRACE, msg, args, **kwargs)
+try:
+    logging.TRACE  # type: ignore
+except AttributeError:
+    logging.TRACE = 5
+    logging.addLevelName(logging.TRACE, "TRACE")
+    logging.Logger.trace = partialmethod(logging.Logger.log, logging.TRACE)
+    logging.trace = partial(logging.log, logging.TRACE)
 
 
 @pytest.fixture(scope="session")
-def logger() -> logging.Logger:
-    return CustomLogger("ui-tests")
+def logger() -> Any:
+    return logging.getLogger("ui-tests")
