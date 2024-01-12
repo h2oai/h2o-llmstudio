@@ -39,7 +39,7 @@ setup-dev: pipenv
 setup-no-flash: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
 
-setup-ui-test: pipenv
+setup-ui: pipenv
 	$(PIPENV) install --verbose --categories=dev-packages --python $(PYTHON_VERSION)
 	$(PIPENV) run playwright install
 
