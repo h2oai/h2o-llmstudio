@@ -1,9 +1,8 @@
+# mypy: begin ignore
 import logging
 from functools import partial, partialmethod
 
 import pytest
-
-# type: ignore
 
 logging.TRACE = 5
 logging.addLevelName(logging.TRACE, "TRACE")
@@ -14,3 +13,6 @@ logging.trace = partial(logging.log, logging.TRACE)
 @pytest.fixture(scope="session")
 def logger() -> logging.Logger:
     return logging.getLogger("ui-tests")
+
+
+# mypy: end ignore
