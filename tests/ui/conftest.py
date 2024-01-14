@@ -1,8 +1,9 @@
 import logging
-import os
 from functools import partial, partialmethod
 
 import pytest
+
+# type: ignore
 
 logging.TRACE = 5
 logging.addLevelName(logging.TRACE, "TRACE")
