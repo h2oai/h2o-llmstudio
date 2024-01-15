@@ -1,5 +1,6 @@
 from hac_playwright.pages.base import BasePage
 from playwright.sync_api import expect
+import os
 
 CLOUD_FILESYSTEM_PATH = "/home/llmstudio/mount/data/user/"
 
@@ -55,7 +56,10 @@ class LLMStudioPage(BasePage):
 
     def import_dataset_from_filesystem(self, filepath: str, filename: str):
         self.import_dataset("Local")
-        path = f"{CLOUD_FILESYSTEM_PATH}{filepath}"
+        if "LOCAL_FILESYSTEM_PATH" in os.environ:
+            path = f"{os.environ['LOCAL_FILESYSTEM_PATH']}{filepath}"
+        else:
+            path = f"{CLOUD_FILESYSTEM_PATH}{filepath}"
         self.get_by_test_id(self.FILESYSTEM_SELECTOR).fill(path)
         self.continue_button().click()
         # Dataset configuration

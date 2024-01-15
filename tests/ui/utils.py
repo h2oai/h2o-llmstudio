@@ -17,13 +17,3 @@ def login(
         okta_otp_local(page, username, password, secret)
     else:
         raise ValueError(f"Unknown login type '{login_type}'")
-
-
-def handle_terms_and_conditions_page(page: Page):
-    terms_and_conditions = page.get_by_role("heading", name="EULA")
-
-    if terms_and_conditions.is_visible():
-        # If the heading is present, click the "I agree" button
-        page.get_by_role("button", name="I agree").click()
-    else:
-        return 1

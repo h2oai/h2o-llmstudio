@@ -32,7 +32,6 @@ setup: pipenv
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
 	- $(PIPENV_PIP) install flash-attn==2.3.6 --no-build-isolation --upgrade
-	- $(PIPENV_PIP) install playwright==1.40.0
 	$(PIPENV) run playwright install
 
 .PHONY: setup-no-flash
@@ -107,8 +106,9 @@ test-ui: reports
 	-o log_file=reports/tests_ui.log \
 	tests/ui/test.py 2>&1 | tee reports/tests_ui.log
 
-.PHONY: test-ui-local
-test-ui-local: 
+.PHONY: test-ui-headed
+test-ui-headed: 
+	$(LOCAL_TEST)=true \
 	$(PW_DEBUG) $(PIPENV) run pytest \
 	-vvs \
 	--headed \

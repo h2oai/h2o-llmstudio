@@ -3,8 +3,8 @@ import os
 
 from playwright.sync_api import Page
 from pytest_bdd import given, parsers, scenarios, then, when
-from ui.llm_studio_page import LLMStudioPage
-from ui.utils import handle_terms_and_conditions_page, login
+from .llm_studio_page import LLMStudioPage
+from .utils import login
 
 scenarios("llm_studio.feature")
 
@@ -12,7 +12,6 @@ scenarios("llm_studio.feature")
 @given("LLM Studio home page is opened")
 def open_llm_studio(page: Page, base_url):
     page.goto(base_url)
-    handle_terms_and_conditions_page(page)
 
 
 @when("I login to LLM Studio", target_fixture="llm_studio")
