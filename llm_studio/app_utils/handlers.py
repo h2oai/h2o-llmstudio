@@ -162,7 +162,7 @@ async def handle(q: Q) -> None:
         elif q.args["dataset/display/summary"]:
             await dataset_display(q)
 
-        elif q.args["experiment/start/run"]:
+        elif q.args["experiment/start/run"] or q.args["experiment/start/error/proceed"]:
             # add model type to cfg file name here
             q.client["experiment/start/cfg_file"] = add_model_type(
                 q.client["experiment/start/cfg_file"],
@@ -171,8 +171,7 @@ async def handle(q: Q) -> None:
             q.client.delete_cards.add("experiment/start")
             experiment_started = await experiment_run(q, pre="experiment/start")
             q.client["experiment/list/mode"] = "train"
-            if experiment_started:
-                await list_current_experiments(q)
+
         elif q.args["experiment/start_experiment"] or q.args["experiment/list/new"]:
             if q.client["experiment/list/df_experiments"] is not None:
                 selected_idx = int(q.args["experiment/list/new"])
