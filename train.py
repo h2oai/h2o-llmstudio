@@ -1,5 +1,7 @@
 import os
 
+import llm_studio.app_utils.sections.chat_update
+
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
@@ -560,8 +562,7 @@ def run_train_rlhf(
                 logger.debug("Rollout: Generating response from active model")
                 output_dict = {}
                 output_dict["predicted_answer_ids"] = (
-                    unwrap_model(model)
-                    .generate(batch, unwrap_model(model).cfg)
+                    llm_studio.app_utils.sections.chat_update.generate(batch, unwrap_model(model).cfg)
                     .detach()
                 )
                 output_dict = train_dataloader.dataset.postprocess_batch_predictions(

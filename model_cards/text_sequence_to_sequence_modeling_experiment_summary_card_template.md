@@ -11,6 +11,7 @@ pip install transformers=={{transformers_version}}
 - Then, you can use the following code snippet:
 
 ```python
+import llm_studio.app_utils.sections.chat_update
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 model_name = "{{repo_id}}"  # either local folder or huggingface model name
@@ -33,7 +34,7 @@ model.cuda().eval()
 inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
 
 # generate configuration can be modified to your needs
-tokens = model.generate(
+tokens = llm_studio.app_utils.sections.chat_update.generate(
     input_ids=inputs["input_ids"],
     attention_mask=inputs["attention_mask"],
     min_new_tokens={{min_new_tokens}},

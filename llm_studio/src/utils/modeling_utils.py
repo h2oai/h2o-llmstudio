@@ -27,6 +27,7 @@ from transformers import (
 from transformers.pytorch_utils import Conv1D as Conv1DTransformer
 from transformers.utils import logging as transformers_logging
 
+import llm_studio.app_utils.sections.chat_update
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
@@ -978,7 +979,7 @@ def generate(backbone, batch, cfg, streamer, remove_prompt=True):
     input_ids = batch["prompt_input_ids"]
     attention_mask = batch["prompt_attention_mask"]
     # Adding GenerationMixin type annotation for faster lookup
-    generation_function: GenerationMixin.generate = backbone.generate
+    generation_function: GenerationMixin.generate = llm_studio.app_utils.sections.chat_update.generate
     verbosity = transformers_logging.get_verbosity()
     stopping_criteria = StoppingCriteriaList(
         [

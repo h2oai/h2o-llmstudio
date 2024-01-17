@@ -1,5 +1,6 @@
 import os
 
+import llm_studio.app_utils.sections.chat_update
 from llm_studio.src.utils.config_utils import load_config_yaml
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -131,7 +132,7 @@ if __name__ == "__main__":
             with torch.no_grad():
                 with torch.cuda.amp.autocast():
                     output["predicted_answer_ids"] = (
-                        model.generate(inputs, cfg).detach().cpu()
+                        llm_studio.app_utils.sections.chat_update.generate(inputs, cfg).detach().cpu()
                     )
 
             predicted_text = [
