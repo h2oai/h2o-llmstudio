@@ -1,6 +1,7 @@
 import asyncio
 import gc
 import logging
+import os
 import threading
 from typing import Any, Callable, Dict, List, Optional
 
@@ -11,6 +12,7 @@ from transformers import AutoTokenizer, TextStreamer
 
 from llm_studio.app_utils.utils import parse_ui_elements
 from llm_studio.src.models.text_causal_language_modeling_model import Model
+from llm_studio.src.utils.modeling_utils import EnvVariableStoppingCriteria
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,21 @@ async def update_chat_window(q):
         q=q,
         pre="chat/cfg_predictions/cfg/",
     )
+    if cfg_prediction.do_sample and cfg_prediction.temperature == 0.0:
+        q.page["meta"].dialog = ui.dialog(
+            title="Invalid Text Generation configuration.",
+            name="chatbot_invalid_settings",
+            items=[
+                ui.text(
+                    "Do Sample enabled and Temperature = 0 are mutually exclusive. "
+                    "Please increase Temperature or disable sampling."
+                ),
+            ],
+            closable=True,
+        )
+        await q.page.save()
+        return
+
     logger.info(f"Using chatbot config: {cfg_prediction}")
     q.client["experiment/display/chat/cfg"].prediction = cfg_prediction
     prompt = q.client["experiment/display/chat/chatbot"]
@@ -138,22 +155,41 @@ async def answer_chat(q: Q) -> str:
 
     if cfg.prediction.num_beams == 1:
         streamer = WaveChatStreamer(tokenizer=tokenizer, q=q, text_cleaner=text_cleaner)
-        q.client["chat_streamer"] = streamer
         # Need to start generation in a separate thread, otherwise streaming is blocked
         thread = threading.Thread(
             target=generate,
             kwargs=dict(model=model, inputs=inputs, cfg=cfg, streamer=streamer),
         )
+        q.client["currently_chat_streaming"] = True
         try:
             thread.start()
-        finally:
-            while True:
-                if streamer.finished:
-                    thread.join()
+            max_wait_time_in_seconds = 60 * 3
+            for current_wait_time in range(max_wait_time_in_seconds):
+                thread_is_dead = not thread.is_alive()
+                takes_too_much_time = current_wait_time == max_wait_time_in_seconds - 1
+                streaming_finished = streamer.finished
+
+                if streaming_finished or takes_too_much_time or thread_is_dead:
+                    if takes_too_much_time:
+                        logger.warning(
+                            "Chat generation took too much time. "
+                            "Stopping chat generation."
+                        )
+                    if thread_is_dead:
+                        logger.warning(
+                            "Chat generation thread is not alive anymore. "
+                            "Please check logs!"
+                        )
+                    if streaming_finished:
+                        logger.info("Chat Stream has been completed")
+
                     predicted_text = streamer.answer
-                    q.client["chat_streamer"] = None
                     break
                 await q.sleep(1)
+        finally:
+            del q.client["currently_chat_streaming"]
+            if thread.is_alive():
+                thread.join()
     else:
         # ValueError: `streamer` cannot be used with beam search (yet!).
         # Make sure that `num_beams` is set to 1.
@@ -208,28 +244,26 @@ async def is_app_blocked_while_streaming(q: Q):
     """
     if (
         q.args["experiment/display/chat/abort_stream"]
-        and q.client["chat_streamer"] is not None
+        and q.client["currently_chat_streaming"]
     ):
-        # User clicks abort button while the chat is currently streaming
-        # - Set the streamer to finished state
-        # - wait till the text generation thread has stopped, i.e.
-        #   q.client["chat_streamer"] is None.
-        #   In that case, chat_update function will finish
-        #   and "experiment/display/chat/finished" will be set to True.
-
-        logger.info("Stopping Chat Stream")
-        q.client["chat_streamer"].finished = True
-        await show_stream_is_aborted_dialog(q)
-        await q.page.save()
-        for _ in range(20):  # don't wait longer than 10 seconds
-            await q.sleep(0.5)
-            if q.client["chat_streamer"] is None:
-                q.page["meta"].dialog = None
+        try:
+            # User clicks abort button while the chat is currently streaming
+            logger.info("Stopping Chat Stream")
+            os.environ[EnvVariableStoppingCriteria.stop_streaming_env] = "True"
+            for _ in range(20):  # don't wait longer than 10 seconds
+                await show_stream_is_aborted_dialog(q)
                 await q.page.save()
+                await q.sleep(0.5)
+                if q.client["currently_chat_streaming"] is None:
+                    q.page["meta"].dialog = None
+                    await q.page.save()
+                    return True
+            else:
+                logger.warning("Could not terminate stream")
                 return True
-        else:
-            logger.warning("Could not terminate stream")
-            return True
+        finally:
+            if EnvVariableStoppingCriteria.stop_streaming_env in os.environ:
+                del os.environ[EnvVariableStoppingCriteria.stop_streaming_env]
 
     elif q.client["experiment/display/chat/finished"] is False:
         await show_chat_is_running_dialog(q)
