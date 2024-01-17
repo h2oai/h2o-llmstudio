@@ -62,6 +62,7 @@ async def handle(q: Q) -> None:
     if not (
         q.args["experiment/display/chat/chatbot"]
         or q.args["experiment/display/chat/clear_history"]
+        or q.args["experiment/display/chat/abort_stream"]
     ):
         if "experiment/display/chat/cfg" in q.client:
             del q.client["experiment/display/chat/cfg"]
