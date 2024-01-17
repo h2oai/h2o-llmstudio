@@ -5,7 +5,8 @@ from typing import List
 import torch
 from h2o_wave import Q
 
-from llm_studio.app_utils.sections.chat import chat_tab, chat_update
+from llm_studio.app_utils.sections.chat import chat_tab
+from llm_studio.app_utils.sections.chat_update import chat_update
 from llm_studio.app_utils.sections.common import delete_dialog
 from llm_studio.app_utils.sections.dataset import (
     dataset_delete_current_datasets,

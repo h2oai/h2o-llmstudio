@@ -2,7 +2,6 @@ import gc
 import logging
 import os
 
-import numpy as np
 import torch
 from accelerate import dispatch_model, infer_auto_device_map
 from accelerate.utils import get_balanced_memory
@@ -10,16 +9,9 @@ from h2o_wave import Q
 from h2o_wave import data as chat_data
 from h2o_wave import ui
 
-from llm_studio.app_utils.sections.chat_update import USER, BOT, predict_text
-from llm_studio.app_utils.utils import (
-    get_experiments,
-    get_ui_elements,
-    parse_ui_elements,
-    set_env,
-)
+from llm_studio.app_utils.utils import get_experiments, get_ui_elements, set_env
 from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.datasets.text_utils import get_tokenizer
-from llm_studio.src.models.text_causal_language_modeling_model import Model
 from llm_studio.src.utils.config_utils import (
     NON_GENERATION_PROBLEM_TYPES,
     load_config_yaml,
@@ -87,7 +79,7 @@ async def chat_tab(q: Q, load_model=True):
         data=chat_data(fields="content from_user", t="list"),  # type: ignore
         name="experiment/display/chat/chatbot",
     )
-    q.page["experiment/display/chat"].data += [initial_message, BOT]
+    q.page["experiment/display/chat"].data += [initial_message, False]
 
     option_items = get_ui_elements(
         cfg=q.client["experiment/display/chat/cfg"].prediction,
@@ -97,17 +89,20 @@ async def chat_tab(q: Q, load_model=True):
     q.page["experiment/display/chat/settings"] = ui.form_card(
         box="second",
         items=[
-            ui.buttons([
-            ui.button(
-                name="experiment/display/chat/clear_history",
-                label="Clear History",
-                primary=True,
+            ui.buttons(
+                [
+                    ui.button(
+                        name="experiment/display/chat/clear_history",
+                        label="Clear History",
+                        primary=True,
+                    ),
+                    ui.button(
+                        name="experiment/display/chat/abort_stream",
+                        label="Stop Streaming",
+                        primary=True,
+                    ),
+                ]
             ),
-            ui.button(
-                name="experiment/display/chat/abort_stream",
-                label="Stop Straming",
-                primary=True,
-            )]),
             ui.expander(
                 name="chat_settings",
                 label="Chat Settings",
@@ -171,76 +166,6 @@ def gpu_is_blocked(q, gpu_id):
     return gpu_blocked
 
 
-@torch.inference_mode(mode=True)
-async def chat_update(q: Q) -> None:
-    """
-    Update the chatbot with the new message.
-    """
-    q.client["experiment/display/chat/finished"] = False
-    try:
-        await update_chat_window(q)
-    finally:
-        q.client["experiment/display/chat/finished"] = True
-
-
-async def update_chat_window(q):
-    cfg_prediction = parse_ui_elements(
-        cfg=q.client["experiment/display/chat/cfg"].prediction,
-        q=q,
-        pre="chat/cfg_predictions/cfg/",
-    )
-    logger.info(f"Using chatbot config: {cfg_prediction}")
-    q.client["experiment/display/chat/cfg"].prediction = cfg_prediction
-    prompt = q.client["experiment/display/chat/chatbot"]
-    message = [prompt, USER]
-    q.client["experiment/display/chat/messages"].append(message)
-    q.page["experiment/display/chat"].data += message
-    q.page["experiment/display/chat"].data += ["", BOT]
-    await q.page.save()
-    cfg = q.client["experiment/display/chat/cfg"]
-    model: Model = q.client["experiment/display/chat/model"]
-    tokenizer = q.client["experiment/display/chat/tokenizer"]
-    full_prompt = ""
-    if len(q.client["experiment/display/chat/messages"]):
-        for prev_message in q.client["experiment/display/chat/messages"][
-            -(cfg.prediction.num_history + 1) :
-        ]:
-            if prev_message[1] is USER:
-                prev_message = cfg.dataset.dataset_class.parse_prompt(
-                    cfg, prev_message[0]
-                )
-            else:
-                prev_message = prev_message[0]
-                if cfg.dataset.add_eos_token_to_answer:
-                    prev_message += cfg._tokenizer_eos_token
-
-            full_prompt += prev_message
-    logger.info(f"Full prompt: {full_prompt}")
-    inputs = cfg.dataset.dataset_class.encode(
-        tokenizer, full_prompt, cfg.tokenizer.max_length_prompt, "left"
-    )
-    inputs["prompt_input_ids"] = (
-        inputs.pop("input_ids").unsqueeze(0).to(cfg.environment._device)
-    )
-    inputs["prompt_attention_mask"] = (
-        inputs.pop("attention_mask").unsqueeze(0).to(cfg.environment._device)
-    )
-
-    def text_cleaner(text: str) -> str:
-        return cfg.dataset.dataset_class.clean_output(
-            output={"predicted_text": np.array([text])}, cfg=cfg
-        )["predicted_text"][0]
-
-    predicted_text = await predict_text(cfg, inputs, model, q, text_cleaner, tokenizer)
-    logger.info(f"Predicted Answer: {predicted_text}")
-    message = [predicted_text, BOT]
-    q.client["experiment/display/chat/messages"].append(message)
-    q.page["experiment/display/chat"].data[-1] = message
-    del inputs
-    gc.collect()
-    torch.cuda.empty_cache()
-
-
 def load_cfg_model_tokenizer(
     experiment_path: str, merge: bool = False, device: str = "cuda:0"
 ):
@@ -292,26 +217,3 @@ def load_cfg_model_tokenizer(
     model.backbone.use_cache = True
 
     return cfg, model, tokenizer
-
-
-async def show_chat_is_running_dialog(q):
-    q.page["meta"].dialog = ui.dialog(
-        title="Text Generation is streaming.",
-        name="chatbot_running_dialog",
-        items=[
-            ui.text("Please wait till the text generation has stopped."),
-        ],
-        closable=True,
-    )
-    await q.page.save()
-
-
-async def block_app_while_streaming(q: Q):
-    if q.args["experiment/display/chat/abort_stream"]:
-        # - join thread and check it has been finished
-        # - set "experiment/display/chat/finished" to False
-        return True
-    elif q.client["experiment/display/chat/finished"] is False:
-        await show_chat_is_running_dialog(q)
-        return True
-    return False
