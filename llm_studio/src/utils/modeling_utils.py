@@ -254,14 +254,14 @@ def get_ds_config(cfg: Any):
         # https://www.deepspeed.ai/docs/config-json/#zero-optimizations-for-fp16-training
         "zero_force_ds_cpu_optimizer": False,
         "zero_optimization": {
-            "stage": 3,
+            # "stage": 3,
             "overlap_comm": True,
             "contiguous_gradients": True,
             "reduce_bucket_size": cfg.environment.deepspeed_reduce_bucket_size,
             # zero3
-            "stage3_prefetch_bucket_size": cfg.environment.deepspeed_stage3_prefetch_bucket_size,  # noqa: E501
-            "stage3_param_persistence_threshold": cfg.environment.deepspeed_stage3_param_persistence_threshold,  # noqa: E501
-            "stage3_gather_16bit_weights_on_model_save": True,
+            # "stage3_prefetch_bucket_size": cfg.environment.deepspeed_stage3_prefetch_bucket_size,  # noqa: E501
+            # "stage3_param_persistence_threshold": cfg.environment.deepspeed_stage3_param_persistence_threshold,  # noqa: E501
+            # "stage3_gather_16bit_weights_on_model_save": True,
             # zero3 offload cpu
             # "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,  # noqa: E501
             # "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,  # noqa: E501
@@ -276,6 +276,21 @@ def get_ds_config(cfg: Any):
         "gradient_accumulation_steps": cfg.training.grad_accumulation,
         "wall_clock_breakdown": False,
     }
+
+    if cfg.environment.use_zero2:
+        ds_config["zero_optimization"]["stage"] = 2
+    elif cfg.environment.use_zero3:
+        ds_config["zero_optimization"]["stage"] = 3
+        ds_config["zero_optimization"]["stage3_prefetch_bucket_size"] = (
+            cfg.environment.deepspeed_stage3_prefetch_bucket_size
+        )
+        ds_config["zero_optimization"]["stage3_param_persistence_threshold"] = (
+            cfg.environment.deepspeed_stage3_param_persistence_threshold
+        )
+        ds_config["zero_optimization"][
+            "stage3_gather_16bit_weights_on_model_save"
+        ] = True
+
     # TODO: Do not enable offload cpu for now.
     # if cfg.environment.deepspeed_offload_optimizer:
     #     ds_config["zero_optimization"]["offload_optimizer"] = {
@@ -286,6 +301,8 @@ def get_ds_config(cfg: Any):
     # if cfg.environment.deepspeed_offload_param:
     #     ds_config["zero_optimization"]["offload_param"] =
     #         {"device": "cpu", "pin_memory": True}
+
+    logger.info(f"DeepSpeed config: {ds_config}")
 
     return ds_config
 

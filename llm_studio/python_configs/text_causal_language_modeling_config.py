@@ -351,6 +351,8 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
     compile_model: bool = False
     use_deepspeed: bool = False
+    use_zero2: bool = False
+    use_zero3: bool = False
     deepspeed_reduce_bucket_size: int = int(1e6)
     deepspeed_stage3_prefetch_bucket_size: int = int(1e6)
     deepspeed_stage3_param_persistence_threshold: int = int(1e6)
@@ -406,13 +408,17 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
             "deepspeed_stage3_max_reuse_distance"
         ] = possible_values.Number(step=1, min=1e6)
         self._nesting.add(
+            ["use_zero2", "use_zero3"],
+            [Dependency(key="use_deepspeed", value=False, is_set=False)],
+        )
+        self._nesting.add(
             [
                 "deepspeed_reduce_bucket_size",
                 "deepspeed_stage3_prefetch_bucket_size",
                 "deepspeed_stage3_param_persistence_threshold",
                 # "deepspeed_offload_optimizer",
             ],
-            [Dependency(key="use_deepspeed", value=False, is_set=False)],
+            [Dependency(key="use_zero3", value=False, is_set=False)],
         )
         # self._nesting.add(
         #     [
