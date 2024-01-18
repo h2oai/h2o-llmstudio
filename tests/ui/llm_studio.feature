@@ -6,7 +6,8 @@ Feature: LLM Studio
         Then I see the home page
 
     Scenario: Import dataset using filesystem
-        When I upload dataset with path oasst/train_full.pq and name train-full.pq
+        When I upload dataset train_full.pq 
+        And I name the dataset train-full.pq
         Then I should see the dataset train-full.pq
         When I delete dataset train-full.pq
         Then I should not see the dataset train-full.pq

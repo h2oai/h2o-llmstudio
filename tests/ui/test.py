@@ -3,6 +3,7 @@ import os
 
 from playwright.sync_api import Page
 from pytest_bdd import given, parsers, scenarios, then, when
+
 from .llm_studio_page import LLMStudioPage
 from .utils import login
 
@@ -16,9 +17,10 @@ def open_llm_studio(page: Page, base_url):
 
 @when("I login to LLM Studio", target_fixture="llm_studio")
 def login_to_llm_studio(logger: logging.Logger, page: Page, base_url: str):
-    okta_user = os.environ.get("OKTA_USER")
-    okta_password = os.environ.get("OKTA_PASSWORD")
-    login(page, "okta", okta_user, okta_password)
+    if "LOCAL_TEST" not in os.environ:
+        okta_user = os.environ.get("OKTA_USER")
+        okta_password = os.environ.get("OKTA_PASSWORD")
+        login(page, "okta", okta_user, okta_password)
 
     return LLMStudioPage(logger, page, base_url)
 
@@ -28,11 +30,14 @@ def view_datasets(llm_studio: LLMStudioPage, dataset_name: str):
     llm_studio.assert_dataset_import(dataset_name)
 
 
-@when(parsers.parse("I upload dataset with path {filepath} and name {dataset_name}"))
-def upload_dataset_using_filesystem(
-    llm_studio: LLMStudioPage, filepath: str, dataset_name: str
-):
-    llm_studio.import_dataset_from_filesystem(filepath, dataset_name)
+@when(parsers.parse("I upload dataset {filepath}"))
+def upload_dataset_using_filesystem(llm_studio: LLMStudioPage, filepath: str):
+    llm_studio.import_dataset_from_filesystem(filepath)
+
+
+@when(parsers.parse("I name the dataset {dataset_name}"))
+def dataset_name(llm_studio: LLMStudioPage, dataset_name: str):
+    llm_studio.dataset_name(dataset_name)
 
 
 @then("I see the home page")

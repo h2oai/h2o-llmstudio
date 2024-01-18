@@ -108,7 +108,6 @@ test-ui: reports
 
 .PHONY: test-ui-headed
 test-ui-headed: 
-	$(LOCAL_TEST)=true \
 	$(PW_DEBUG) $(PIPENV) run pytest \
 	-vvs \
 	--headed \

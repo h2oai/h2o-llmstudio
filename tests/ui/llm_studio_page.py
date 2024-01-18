@@ -1,8 +1,14 @@
-from hac_playwright.pages.base import BasePage
-from playwright.sync_api import expect
 import os
 
-CLOUD_FILESYSTEM_PATH = "/home/llmstudio/mount/data/user/"
+from hac_playwright.pages.base import BasePage
+from playwright.sync_api import expect
+
+relative_path = "data/user/oasst"
+current_directory = os.getcwd()
+
+CLOUD_FILESYSTEM_PATH = "/home/llmstudio/mount/data/user/oasst"
+# LOCAL_FILESYSTEM_PATH = "/home/dvorka/munish/h2o-llmstudio/data/user/oasst"
+LOCAL_FILESYSTEM_PATH = os.path.join(current_directory, relative_path)
 
 
 class LLMStudioPage(BasePage):
@@ -54,19 +60,19 @@ class LLMStudioPage(BasePage):
     def open_app_settings(self):
         self.page.get_by_role("button", name="Settings").click()
 
-    def import_dataset_from_filesystem(self, filepath: str, filename: str):
+    def dataset_name(self, filename):
+        self.get_by_test_id(self.FILENAME_SELECTOR).fill(filename)
+        self.continue_button().click()
+        self.continue_button().click()
+
+    def import_dataset_from_filesystem(self, filepath: str):
         self.import_dataset("Local")
-        if "LOCAL_FILESYSTEM_PATH" in os.environ:
-            path = f"{os.environ['LOCAL_FILESYSTEM_PATH']}{filepath}"
+        if "LOCAL_TEST" in os.environ:
+            path = f"{LOCAL_FILESYSTEM_PATH}/{filepath}"
         else:
-            path = f"{CLOUD_FILESYSTEM_PATH}{filepath}"
+            path = f"{CLOUD_FILESYSTEM_PATH}/{filepath}"
         self.get_by_test_id(self.FILESYSTEM_SELECTOR).fill(path)
         self.continue_button().click()
-        # Dataset configuration
-        self.get_by_test_id(self.FILENAME_SELECTOR).fill(filename)
-        self.get_by_test_id("dataset/import/4").click()
-        # Data validity check
-        self.get_by_test_id("dataset/import/6").click()
 
     def continue_button(self):
         return self.page.get_by_role("button", name="Continue")
