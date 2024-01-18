@@ -3,12 +3,8 @@ import os
 from hac_playwright.pages.base import BasePage
 from playwright.sync_api import expect
 
-relative_path = "data/user/oasst"
-current_directory = os.getcwd()
-
 CLOUD_FILESYSTEM_PATH = "/home/llmstudio/mount/data/user/oasst"
-# LOCAL_FILESYSTEM_PATH = "/home/dvorka/munish/h2o-llmstudio/data/user/oasst"
-LOCAL_FILESYSTEM_PATH = os.path.join(current_directory, relative_path)
+LOCAL_FILESYSTEM_PATH = os.path.join(os.getcwd(), "data/user/oasst")
 
 
 class LLMStudioPage(BasePage):
@@ -170,15 +166,12 @@ class LLMStudioPage(BasePage):
     def run_experiment(self):
         locator = self.get_by_test_id(self.EXPERIMENT_RUN_SELECTOR)
         locator.click()
-        self.page.wait_for_timeout(3000)
 
     def experiment_name(self, name: str):
-        locator = self.get_by_test_id(self.EXPERIMENT_NAME_SELECTOR)
-        locator.fill(name)
+        self.get_by_test_id(self.EXPERIMENT_NAME_SELECTOR).fill(name)
 
     def llm_backbone(self, value: str):
-        locator = self.page.get_by_role("combobox", name="LLM Backbone")
-        locator.fill(value)
+        self.page.get_by_role("combobox", name="LLM Backbone").fill(value)
 
     def data_sample(self, value):
         self.slider(self.DATA_SAMPLING, value)
@@ -196,8 +189,7 @@ class LLMStudioPage(BasePage):
         self.slider(self.MAX_LENGTH_INFERENCE, value)
 
     def view_experiment_page(self):
-        locator = self.page.get_by_role("button", name="View experiments")
-        locator.click()
+        self.page.get_by_role("button", name="View experiments").click()
 
     def view_experiment(self, experiment_name: str):
         self.view_experiment_page()
