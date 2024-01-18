@@ -564,7 +564,6 @@ def run_train_rlhf(
                     .generate(batch, unwrap_model(model).cfg)
                     .detach()
                 )
-
                 output_dict = train_dataloader.dataset.postprocess_batch_predictions(
                     output=output_dict
                 )
