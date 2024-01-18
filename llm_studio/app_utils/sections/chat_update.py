@@ -40,6 +40,10 @@ async def update_chat_window(q):
         q=q,
         pre="chat/cfg_predictions/cfg/",
     )
+    q.client["experiment/display/chat/cfg"].prediction = cfg_prediction
+
+    # could also invoke cfg.check() here, but leave it explicit as cfg.check()
+    # may raise other issues not related to the chatbot
     if cfg_prediction.do_sample and cfg_prediction.temperature == 0.0:
         q.page["meta"].dialog = ui.dialog(
             title="Invalid Text Generation configuration.",
@@ -55,8 +59,8 @@ async def update_chat_window(q):
         await q.page.save()
         return
 
+    # populate chat window with user message
     logger.info(f"Using chatbot config: {cfg_prediction}")
-    q.client["experiment/display/chat/cfg"].prediction = cfg_prediction
     prompt = q.client["experiment/display/chat/chatbot"]
     message = [prompt, USER]
     q.client["experiment/display/chat/messages"].append(message)
@@ -65,62 +69,19 @@ async def update_chat_window(q):
     await q.page.save()
 
     predicted_text = await answer_chat(q)
+
+    # populate chat window with bot message
     logger.info(f"Predicted Answer: {predicted_text}")
     message = [predicted_text, BOT]
     q.client["experiment/display/chat/messages"].append(message)
     q.page["experiment/display/chat"].data[-1] = message
 
 
-class WaveChatStreamer(TextStreamer):
-    """
-    Utility class that updates the chabot card in a streaming fashion
-    """
-
-    def __init__(
-        self,
-        tokenizer: AutoTokenizer,
-        q: Q,
-        text_cleaner: Optional[Callable] = None,
-        **decode_kwargs,
-    ):
-        super().__init__(tokenizer, skip_prompt=True, **decode_kwargs)
-        self.text_cleaner = text_cleaner
-        self.words_predicted_answer: List[str] = []
-        self.q = q
-        self.loop = asyncio.get_event_loop()
-        self.finished = False
-
-    def on_finalized_text(self, text: str, stream_end: bool = False):
-        self.words_predicted_answer += [text]
-        self.loop.create_task(self.update_chat_page())
-
-    async def update_chat_page(self):
-        self.q.page["experiment/display/chat"].data[-1] = [self.answer, BOT]
-        await self.q.page.save()
-
-    @property
-    def answer(self):
-        """
-        Create the answer by joining the generated words.
-        By this, self.text_cleaner does not need to be idempotent.
-        """
-        answer = "".join(self.words_predicted_answer)
-        if answer.endswith(self.tokenizer.eos_token):
-            # text generation is stopped
-            answer = answer.replace(self.tokenizer.eos_token, "")
-        if self.text_cleaner:
-            answer = self.text_cleaner(answer)
-        return answer
-
-    def end(self):
-        super().end()
-        self.finished = True
-
-
 async def answer_chat(q: Q) -> str:
     cfg = q.client["experiment/display/chat/cfg"]
     model: Model = q.client["experiment/display/chat/model"]
     tokenizer = q.client["experiment/display/chat/tokenizer"]
+
     full_prompt = ""
     if len(q.client["experiment/display/chat/messages"]):
         for prev_message in q.client["experiment/display/chat/messages"][
@@ -171,11 +132,13 @@ async def answer_chat(q: Q) -> str:
 
                 if streaming_finished or takes_too_much_time or thread_is_dead:
                     if takes_too_much_time:
+                        # this is more of a safety measure
+                        # to ensure the app gets responsive eventually
                         logger.warning(
                             "Chat generation took too much time. "
                             "Stopping chat generation."
                         )
-                    if thread_is_dead:
+                    if thread_is_dead:  # some error occurred during streaming
                         logger.warning(
                             "Chat generation thread is not alive anymore. "
                             "Please check logs!"
@@ -185,7 +148,7 @@ async def answer_chat(q: Q) -> str:
 
                     predicted_text = streamer.answer
                     break
-                await q.sleep(1)
+                await q.sleep(1)  # 1 second, see max_wait_time_in_seconds
         finally:
             del q.client["currently_chat_streaming"]
             if thread.is_alive():
@@ -206,6 +169,52 @@ async def answer_chat(q: Q) -> str:
     gc.collect()
     torch.cuda.empty_cache()
     return predicted_text
+
+
+class WaveChatStreamer(TextStreamer):
+    """
+    Utility class that updates the chabot card in a streaming fashion
+    """
+
+    def __init__(
+        self,
+        tokenizer: AutoTokenizer,
+        q: Q,
+        text_cleaner: Optional[Callable] = None,
+        **decode_kwargs,
+    ):
+        super().__init__(tokenizer, skip_prompt=True, **decode_kwargs)
+        self.text_cleaner = text_cleaner
+        self.words_predicted_answer: List[str] = []
+        self.q = q
+        self.loop = asyncio.get_event_loop()
+        self.finished = False
+
+    def on_finalized_text(self, text: str, stream_end: bool = False):
+        self.words_predicted_answer += [text]
+        self.loop.create_task(self.update_chat_page())
+
+    async def update_chat_page(self):
+        self.q.page["experiment/display/chat"].data[-1] = [self.answer, BOT]
+        await self.q.page.save()
+
+    @property
+    def answer(self):
+        """
+        Create the answer by joining the generated words.
+        By this, self.text_cleaner does not need to be idempotent.
+        """
+        answer = "".join(self.words_predicted_answer)
+        if answer.endswith(self.tokenizer.eos_token):
+            # text generation is stopped
+            answer = answer.replace(self.tokenizer.eos_token, "")
+        if self.text_cleaner:
+            answer = self.text_cleaner(answer)
+        return answer
+
+    def end(self):
+        super().end()
+        self.finished = True
 
 
 def generate(model: Model, inputs: Dict, cfg: Any, streamer: TextStreamer = None):
@@ -250,9 +259,10 @@ async def is_app_blocked_while_streaming(q: Q):
             # User clicks abort button while the chat is currently streaming
             logger.info("Stopping Chat Stream")
             os.environ[EnvVariableStoppingCriteria.stop_streaming_env] = "True"
+            await show_stream_is_aborted_dialog(q)
+            await q.page.save()
+
             for _ in range(20):  # don't wait longer than 10 seconds
-                await show_stream_is_aborted_dialog(q)
-                await q.page.save()
                 await q.sleep(0.5)
                 if q.client["currently_chat_streaming"] is None:
                     q.page["meta"].dialog = None
