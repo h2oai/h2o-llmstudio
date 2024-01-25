@@ -5,7 +5,8 @@ from typing import List
 import torch
 from h2o_wave import Q
 
-from llm_studio.app_utils.sections.chat import chat_tab, chat_update
+from llm_studio.app_utils.sections.chat import chat_tab
+from llm_studio.app_utils.sections.chat_update import chat_update
 from llm_studio.app_utils.sections.common import delete_dialog
 from llm_studio.app_utils.sections.dataset import (
     dataset_delete_current_datasets,
@@ -61,6 +62,7 @@ async def handle(q: Q) -> None:
     if not (
         q.args["experiment/display/chat/chatbot"]
         or q.args["experiment/display/chat/clear_history"]
+        or q.args["experiment/display/chat/abort_stream"]
     ):
         if "experiment/display/chat/cfg" in q.client:
             del q.client["experiment/display/chat/cfg"]
