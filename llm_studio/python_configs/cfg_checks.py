@@ -83,7 +83,11 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             "Please enable pretrained model or disable quantization."
         ]
 
-    if not cfg.training.lora and cfg.architecture.backbone_dtype != "float32":
+    if (
+        not cfg.training.lora
+        and cfg.architecture.backbone_dtype != "float32"
+        and cfg.training.epochs > 0
+    ):
         if cfg.environment.mixed_precision:
             errors["title"] += ["Mixed precision not supported."]
             errors["message"] += [
