@@ -928,6 +928,21 @@ class TokenStoppingCriteria(StoppingCriteria):
         return False
 
 
+class EnvVariableStoppingCriteria(StoppingCriteria):
+    """
+    Stopping criteria based on env variable.
+    Useful to force stopping within the app.
+    """
+
+    stop_streaming_env: str = "STOP_STREAMING"
+
+    def __call__(self, input_ids: torch.Tensor, scores: torch.FloatTensor, **kwargs):
+        should_stop = self.stop_streaming_env in os.environ
+        if should_stop:
+            logger.info("Received signal to stop generating")
+        return should_stop
+
+
 def prepare_lora(cfg, backbone):
     target_modules = (
         [
@@ -994,7 +1009,8 @@ def generate(backbone, batch, cfg, streamer, remove_prompt=True):
             TokenStoppingCriteria(
                 stop_word_ids=cfg.tokenizer._stop_words_ids,
                 prompt_input_ids_len=input_ids.shape[1],
-            )
+            ),
+            EnvVariableStoppingCriteria(),
         ]
     )
     # force to use cache and disable gradient checkpointing if enabled
