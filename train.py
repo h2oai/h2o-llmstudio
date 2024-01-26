@@ -285,7 +285,11 @@ def run_train(
                 loss = loss / cfg.training.grad_accumulation
 
             # Backward pass
-            if cfg.environment.mixed_precision and not cfg.environment.use_deepspeed:
+            if (
+                cfg.environment.mixed_precision
+                and len(cfg.environment.gpus)
+                and not cfg.environment.use_deepspeed
+            ):
                 scaler.scale(loss).backward()  # type: ignore
                 if itr % cfg.training.grad_accumulation == 0:
                     if cfg.training.gradient_clip > 0:
