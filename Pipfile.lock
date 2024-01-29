@@ -1,7 +1,11 @@
 {
     "_meta": {
         "hash": {
+<<<<<<< HEAD
             "sha256": "551459a1b2a4acd2bc4668a4e71b8a2f640a8235d7f935f0dbb380eb017739f6"
+=======
+            "sha256": "002fe16264363e8d4a99d991a8344ba57573e70691b292bd4369c68c858059c9"
+>>>>>>> main
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1007,7 +1011,11 @@
             ],
             "index": "pypi",
             "markers": "python_version >= '3.7'",
+<<<<<<< HEAD
             "version": "==0.1.5"
+=======
+            "version": "==0.1.3"
+>>>>>>> main
         },
         "hjson": {
             "hashes": [
@@ -1911,11 +1919,19 @@
         },
         "referencing": {
             "hashes": [
+<<<<<<< HEAD
                 "sha256:39240f2ecc770258f28b642dd47fd74bc8b02484de54e1882b74b35ebd779bd5",
                 "sha256:c775fedf74bc0f9189c2a3be1c12fd03e8c23f4d371dce795df44e06c5b412f7"
             ],
             "markers": "python_version >= '3.8'",
             "version": "==0.33.0"
+=======
+                "sha256:3c57da0513e9563eb7e203ebe9bb3a1b509b042016433bd1e45a2853466c3dd3",
+                "sha256:7e4dc12271d8e15612bfe35792f5ea1c40970dadf8624602e33db2758f7ee554"
+            ],
+            "markers": "python_version >= '3.8'",
+            "version": "==0.32.1"
+>>>>>>> main
         },
         "regex": {
             "hashes": [
@@ -2852,7 +2868,11 @@
                 "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
             ],
             "index": "pypi",
+<<<<<<< HEAD
             "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2'",
+=======
+            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+>>>>>>> main
             "version": "==0.10.2"
         },
         "torch": {
@@ -2902,7 +2922,11 @@
             ],
             "index": "pypi",
             "markers": "python_full_version >= '3.8.0'",
+<<<<<<< HEAD
             "version": "==4.37.1"
+=======
+            "version": "==4.36.1"
+>>>>>>> main
         },
         "triton": {
             "hashes": [
@@ -2959,11 +2983,19 @@
         },
         "uvicorn": {
             "hashes": [
+<<<<<<< HEAD
                 "sha256:4b85ba02b8a20429b9b205d015cbeb788a12da527f731811b643fd739ef90d5f",
                 "sha256:54898fcd80c13ff1cd28bf77b04ec9dbd8ff60c5259b499b4b12bb0917f22907"
             ],
             "markers": "python_version >= '3.8'",
             "version": "==0.27.0.post1"
+=======
+                "sha256:890b00f6c537d58695d3bb1f28e23db9d9e7a17cbcc76d7457c499935f933e24",
+                "sha256:c855578045d45625fd027367f7653d249f7c49f9361ba15cf9624186b26b8eb6"
+            ],
+            "markers": "python_version >= '3.8'",
+            "version": "==0.27.0"
+>>>>>>> main
         },
         "wcwidth": {
             "hashes": [
