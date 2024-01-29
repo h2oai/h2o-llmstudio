@@ -76,9 +76,9 @@ async def handle(q: Q) -> None:
     try:
         if q.args["home"]:
             await home(q)
-        elif q.args["__wave_submission_name__"] == "settings":
+        elif q.args["settings"]:
             await settings(q)
-        elif q.args["__wave_submission_name__"] == "save_settings":
+        elif q.args["save_settings"]:
             logger.info("Saving user settings")
             await save_user_settings_and_secrets(q)
             await settings(q)
@@ -92,9 +92,9 @@ async def handle(q: Q) -> None:
         elif q.args["report_error"]:
             await report_error(q)
 
-        elif q.args["__wave_submission_name__"] == "dataset/import":
+        elif q.args["dataset/import"]:
             await dataset_import(q, step=1)
-        elif q.args["__wave_submission_name__"] == "dataset/list":
+        elif q.args["dataset/list"]:
             await dataset_list(q)
         elif q.args["dataset/list/delete/abort"]:
             q.page["dataset/list"].items[0].table.multiple = False
