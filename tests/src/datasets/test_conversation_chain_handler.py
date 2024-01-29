@@ -297,8 +297,8 @@ def test_oasst_conversation_chain_handler(tmp_path):
     ]
     systems = ["", "", ""]
     sample = conversation_chain_handler[
-        842
-    ]  # 842 == first sample with 3 round conversation
+        10717
+    ]  # 10717 == sample with 3 round conversation
     assert sample["prompts"] == prompts
     assert sample["answers"] == answers
     assert sample["systems"] == systems
