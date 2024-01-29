@@ -32,10 +32,10 @@ Follow the relevant steps below to create an experiment in H2O LLM Studio.
 
 The steps below provide an example of how to to run an experiment on [OASST](https://huggingface.co/OpenAssistant) data via the command line interface (CLI).
 
-1. Get the training dataset (`train_full.csv`), [OpenAssistant Conversations Dataset OASST1](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=126228752) and place it into the `examples/data_oasst1` folder; or download it directly using the [Kaggle API](https://www.kaggle.com/docs/api) command given below.
+1. Get the training dataset (`train_full.csv`), [OpenAssistant Conversations Dataset OASST2](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst2?scriptVersionId=160485459) and place it into the `examples/data_oasst2` folder; or download it directly using the [Kaggle API](https://www.kaggle.com/docs/api) command given below.
 
  ```bash
- kaggle kernels output philippsinger/openassistant-conversations-dataset-oasst1 -p examples/data_oasst1/
+ kaggle kernels output philippsinger/openassistant-conversations-dataset-oasst2 -p examples/data_oasst2/
  ```
 
 2. Go into the interactive shell or open a new terminal window. Install the dependencies first, if you have not installed them already. 
@@ -48,12 +48,12 @@ The steps below provide an example of how to to run an experiment on [OASST](htt
 3. Run the following command to run the experiment. 
 
  ```bash
- python train.py -C examples/cfg_example_oasst1.py
+ python train.py -C examples/cfg_example_oasst2.py
  ```
 
-After the experiment is completed, you can find all output artifacts in the `examples/output_oasst1` folder.
+After the experiment is completed, you can find all output artifacts in the `examples/output_oasst2` folder.
 You can then use the `prompt.py` script to chat with your model.
 
 ```bash
-python prompt.py -e examples/output_oasst1
+python prompt.py -e examples/output_oasst2
 ```
