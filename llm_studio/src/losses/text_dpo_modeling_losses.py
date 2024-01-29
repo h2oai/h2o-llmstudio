@@ -67,6 +67,40 @@ class DPOLoss(nn.Module):
         return losses
 
 
+class KTOPairLoss(nn.Module):
+    """
+    Implements
+    """
+
+    def __init__(self, cfg: Any):
+        super().__init__()
+        self.cfg = cfg
+
+    def forward(
+        self,
+        policy_chosen_logps: torch.FloatTensor,
+        policy_rejected_logps: torch.FloatTensor,
+        reference_chosen_logps: torch.FloatTensor,
+        reference_rejected_logps: torch.FloatTensor,
+    ) -> Tuple[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]:
+        # eqn (7) of the HALOs paper
+        chosen_KL = (policy_chosen_logps - reference_chosen_logps).mean().clamp(min=0)
+        rejected_KL = (policy_rejected_logps - reference_rejected_logps).mean().clamp(min=0)
+
+        chosen_logratios = policy_chosen_logps - reference_chosen_logps
+        rejected_logratios = policy_rejected_logps - reference_rejected_logps
+        # As described in the KTO report, the KL term for chosen (rejected) is estimated using the rejected (chosen) half.
+        losses = torch.cat(
+            (
+                1 - F.sigmoid(self.cfg.training.beta * (chosen_logratios - rejected_KL)),
+                1 - F.sigmoid(self.cfg.training.beta * (chosen_KL - rejected_logratios)),
+            ),
+            0,
+        )
+
+        return losses.mean(), losses.mean(), losses.mean()
+
+
 class HingeLoss(DPOLoss):
     def get_losses(self, logits):
         losses = torch.relu(1 - self.cfg.training.beta * logits)
@@ -95,6 +129,7 @@ class Losses:
         "DPOLoss": DPOLoss,
         "HingeLoss": HingeLoss,
         "IPOLoss": IPOLoss,
+        "KTOPairLoss": KTOPairLoss  
     }
 
     @classmethod
