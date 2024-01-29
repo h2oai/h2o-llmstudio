@@ -22,7 +22,7 @@ def test_prepare_default_dataset(tmp_path):
     assert set(df.keys()) == set(
         ["instruction", "output", "id", "parent_id", "lang", "rank"]
     )
-    assert df.shape == (8274, 6)
+    assert df.shape == (13026, 6)
 
 
 def test_clean_output():

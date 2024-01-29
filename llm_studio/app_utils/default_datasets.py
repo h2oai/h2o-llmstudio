@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 
 def prepare_default_dataset_causal_language_modeling(path):
-    ds = load_dataset("OpenAssistant/oasst1")
+    ds = load_dataset("OpenAssistant/oasst2")
     train = ds["train"].to_pandas()
     val = ds["validation"].to_pandas()
 
