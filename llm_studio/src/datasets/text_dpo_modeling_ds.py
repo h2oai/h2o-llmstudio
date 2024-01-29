@@ -25,12 +25,21 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
             cfg.dataset.limit_chained_samples
         ), "Need to enable limit_chained_samples for dpo training"
         super().__init__(df=df, cfg=cfg, mode=mode)
+        
         with PatchedAttribute(
             cfg.dataset, "answer_column", cfg.dataset.rejected_answer_column
         ):
-            self.conversation_chain_handler_rejected = ConversationChainHandler(
-                self.df, cfg
-            )
+            if cfg.dataset.rejected_prompt_column != "None":
+                with PatchedAttribute(
+                    cfg.dataset, "prompt_column", cfg.dataset.rejected_prompt_column
+                ):
+                    self.conversation_chain_handler_rejected = ConversationChainHandler(
+                        self.df, cfg
+                    )
+            else:
+                self.conversation_chain_handler_rejected = ConversationChainHandler(
+                    self.df, cfg
+                )
 
     def __getitem__(self, idx: int) -> Dict:
         """Reads a single text observation."""
