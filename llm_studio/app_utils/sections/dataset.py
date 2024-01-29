@@ -360,7 +360,7 @@ async def dataset_import(
             )
 
         q.page["dataset/import/footer"] = ui.form_card(
-            box="footer", items=[ui.inline(items=buttons, justify="start")]
+            box="footer", items=[ui.inline(items=buttons)]
         )
         q.client.delete_cards.add("dataset/import/footer")
 
@@ -531,7 +531,7 @@ async def dataset_import(
                     ui.button(name="dataset/list", label="Abort"),
                 ]
             q.page["dataset/import/footer"] = ui.form_card(
-                box="footer", items=[ui.inline(items=buttons, justify="start")]
+                box="footer", items=[ui.inline(items=buttons)]
             )
 
             wizard.items = items
@@ -643,7 +643,7 @@ async def dataset_import(
         q.client.delete_cards.add("dataset/import")
 
         q.page["dataset/import/footer"] = ui.form_card(
-            box="footer", items=[ui.inline(items=buttons, justify="start")]
+            box="footer", items=[ui.inline(items=buttons)]
         )
         q.client.delete_cards.add("dataset/import/footer")
 
@@ -748,7 +748,7 @@ async def dataset_merge(q: Q, step, error=""):
         ]
 
         q.page["dataset/import/footer"] = ui.form_card(
-            box="footer", items=[ui.inline(items=buttons, justify="start")]
+            box="footer", items=[ui.inline(items=buttons)]
         )
         q.client.delete_cards.add("dataset/import/footer")
 
@@ -908,8 +908,7 @@ async def dataset_list(q: Q, reset: bool = True) -> None:
                         label="Delete datasets",
                         primary=False,
                     ),
-                ],
-                justify="start",
+                ]
             )
         ],
     )
@@ -1117,8 +1116,7 @@ async def dataset_display(q: Q) -> None:
                         tooltip=None,
                     ),
                     ui.button(name="dataset/list", label="Back", primary=False),
-                ],
-                justify="start",
+                ]
             )
         ],
     )
