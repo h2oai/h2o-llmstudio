@@ -281,8 +281,7 @@ def test_oasst_conversation_chain_handler(tmp_path):
                 df.loc[idx, "parent_id"] = parent_idx
                 parent_idx = idx
 
-    # explicit example of a chained conversation
-    cfg.dataset.limit_chained_samples = True
+    cfg.dataset.limit_chained_samples = False
     conversation_chain_handler = ConversationChainHandler(df, cfg=cfg)
 
     prompts = [
@@ -297,8 +296,8 @@ def test_oasst_conversation_chain_handler(tmp_path):
     ]
     systems = ["", "", ""]
     sample = conversation_chain_handler[
-        10717
-    ]  # 10717 == sample with 3 round conversation
+        10719
+    ]  # 10719 == sample with 3 round conversation
     assert sample["prompts"] == prompts
     assert sample["answers"] == answers
     assert sample["systems"] == systems
