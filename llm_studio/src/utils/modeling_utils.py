@@ -679,13 +679,13 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         config = AutoConfig.from_pretrained(
             cfg.llm_backbone,
             trust_remote_code=cfg.environment.trust_remote_code,
-            use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
+            token=os.getenv("HUGGINGFACE_TOKEN"),
             revision=cfg.environment.huggingface_branch,
         )
-        kwargs["use_auth_token"] = os.getenv("HUGGINGFACE_TOKEN")
+        kwargs["token"] = os.getenv("HUGGINGFACE_TOKEN")
     except TypeError:
         # TypeError: RWForCausalLM.__init__() got
-        # an unexpected keyword argument 'use_auth_token'
+        # an unexpected keyword argument 'token'
         config = AutoConfig.from_pretrained(
             cfg.llm_backbone,
             trust_remote_code=cfg.environment.trust_remote_code,
@@ -761,7 +761,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         if cfg.environment._local_rank == 0:
             logger.info(f"Loaded {cfg.llm_backbone}.")
     else:
-        kwargs.pop("use_auth_token", None)
+        kwargs.pop("token", None)
         backbone = model_class.from_config(config, **kwargs)
 
     if cfg.tokenizer._vocab_length > config.vocab_size:

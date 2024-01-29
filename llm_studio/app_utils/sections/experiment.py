@@ -475,7 +475,8 @@ async def experiment_start(q: Q) -> None:
                         label="Run experiment",
                         primary=True,
                     )
-                ]
+                ],
+                justify="start",
             )
         ],
     )
@@ -661,7 +662,7 @@ async def experiment_list(
     ]
 
     q.page["dataset/display/footer"] = ui.form_card(
-        box="footer", items=[ui.inline(items=buttons)]
+        box="footer", items=[ui.inline(items=buttons, justify="start")]
     )
     q.client.delete_cards.add("dataset/display/footer")
 
@@ -751,7 +752,7 @@ async def experiment_compare(q: Q, selected_rows: list):
         ui.button(name="experiment/list/current", label="Back", primary=False),
     ]
     q.page["experiment/compare/footer"] = ui.form_card(
-        box="footer", items=[ui.inline(items=buttons)]
+        box="footer", items=[ui.inline(items=buttons, justify="start")]
     )
     q.client.delete_cards.add("experiment/compare/footer")
 
@@ -779,7 +780,7 @@ async def experiment_rename_form(q: Q, error: str = "") -> None:
         ui.button(name="experiment/list/current", label="Abort", primary=False),
     ]
     q.page["dataset/display/footer"] = ui.form_card(
-        box="footer", items=[ui.inline(items=buttons)]
+        box="footer", items=[ui.inline(items=buttons, justify="start")]
     )
     q.client.delete_cards.add("dataset/display/footer")
 
@@ -1026,7 +1027,7 @@ async def experiment_display(q: Q) -> None:
     q.page["experiment/display/footer"] = ui.form_card(
         box="footer",
         items=[
-            ui.inline(items=buttons),
+            ui.inline(items=buttons, justify="start"),
         ],
     )
     q.client.delete_cards.add("experiment/display/footer")
