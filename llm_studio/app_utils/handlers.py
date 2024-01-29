@@ -92,7 +92,7 @@ async def handle(q: Q) -> None:
         elif q.args["report_error"]:
             await report_error(q)
 
-        elif q.args["dataset/import"]:
+        elif q.args["__wave_submission_name__"] == "dataset/import":
             await dataset_import(q, step=1)
         elif q.args["dataset/list"]:
             await dataset_list(q)
