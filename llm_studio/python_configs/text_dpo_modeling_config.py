@@ -60,12 +60,6 @@ class ConfigDPOTraining(ConfigNLPCausalLMTraining):
         super().__post_init__()
         self._possible_values["beta"] = possible_values.Number(0.05, 0.5, 0.05)
         self._order.insert("beta", after="learning_rate")
-        self._nesting.add(
-            ["beta"],
-            dependencies=[
-                Dependency(key="loss_function", value="DPOLoss", is_set=True)
-            ],
-        )
         self._visibility["lora"] = -1
 
 
