@@ -923,7 +923,9 @@ def get_ui_element(
                         name=pre + k,
                         label=make_label(k),
                         value=v[0],
-                        choices=list(options),
+                        choices=list(options) + v
+                        if v not in options
+                        else list(options),
                         tooltip=tooltip,
                     )
                 ]
