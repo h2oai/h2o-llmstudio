@@ -17,7 +17,6 @@
 - [Setup](#setup)
   - [Recommended Install](#recommended-install)
   - [Using requirements.txt](#using-requirementstxt)
-  - [Installing custom packages](#installing-custom-packages)
 - [Run H2O LLM Studio GUI](#run-h2o-llm-studio-gui)
 - [Run H2O LLM Studio GUI using Docker from a nightly build](#run-h2o-llm-studio-gui-using-docker-from-a-nightly-build)
 - [Run H2O LLM Studio GUI by building your own Docker image](#run-h2o-llm-studio-gui-by-building-your-own-docker-image)
@@ -196,6 +195,7 @@ docker run \
     -v ~/.cache:/home/llmstudio/.cache \
     h2o-llmstudio
 ```
+
 Alternatively, you can run H2O LLM Studio GUI by using our self-hosted Docker image available [here](https://console.cloud.google.com/gcr/images/vorvan/global/h2oai/h2o-llmstudio).
 
 ## Run H2O LLM Studio with command line interface (CLI)
@@ -240,7 +240,7 @@ python publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_ke
 
 ## Data format and example data
 
-For details on the data format required when importing your data or example data that you can use to try out H2O LLM Studio, see [Data format](https://docs.h2o.ai/h2o-llmstudio/guide/datasets/data-connectors-format#data-format) in the H2O LLM Studio documentation. 
+For details on the data format required when importing your data or example data that you can use to try out H2O LLM Studio, see [Data format](https://docs.h2o.ai/h2o-llmstudio/guide/datasets/data-connectors-format#data-format) in the H2O LLM Studio documentation.
 
 ## Training your model
 
