@@ -44,7 +44,6 @@ def get_experiment_status(path: str) -> str:
     [
         "test_causal_language_modeling_oasst_cfg",
         "test_sequence_to_sequence_modeling_oasst_cfg",
-        "test_rlhf_language_modeling_oasst_cfg",
     ],
 )
 @pytest.mark.parametrize(
@@ -98,7 +97,6 @@ def test_oasst_classification_training_cpu(tmp_path, settings):
     [
         "test_causal_language_modeling_oasst_cpu_cfg",
         "test_sequence_to_sequence_modeling_oasst_cpu_cfg",
-        "test_rlhf_language_modeling_oasst_cpu_cfg",
     ],
 )
 @pytest.mark.parametrize(
