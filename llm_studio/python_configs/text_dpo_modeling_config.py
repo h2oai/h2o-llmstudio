@@ -57,7 +57,7 @@ class ConfigDPOTraining(ConfigNLPCausalLMTraining):
 
     def __post_init__(self):
         super().__post_init__()
-        self._possible_values["beta"] = possible_values.Number(0.05, 0.5, 0.05)
+        self._possible_values["beta"] = possible_values.Number(0.05, 1.0, 0.05)
         self._order.insert("beta", after="learning_rate")
         self._visibility["lora"] = -1
 
