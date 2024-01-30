@@ -24,9 +24,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers.deepspeed import HfDeepSpeedConfig
 
-from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.loggers import MainLogger
-from llm_studio.src.trl.trainer import PPOTrainer
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,
@@ -61,7 +59,6 @@ from llm_studio.src.utils.modeling_utils import (
     run_inference,
     save_checkpoint,
     save_predictions,
-    unwrap_model,
     wrap_model_distributed,
 )
 from llm_studio.src.utils.utils import kill_ddp_processes, set_environment, set_seed
