@@ -421,6 +421,13 @@ def run(cfg: Any) -> None:
     Args:
         cfg: config object with all the hyperparameters
     """
+
+    if cfg.problem_type == "text_rlhf_language_modeling":
+        raise DeprecationWarning(
+            "text_rlhf_language_modeling is deprecated. "
+            "Please use DPO Modeling instead."
+        )
+
     os.makedirs(cfg.output_directory, exist_ok=True)
 
     # Force evaluation if user trains 0 epochs
