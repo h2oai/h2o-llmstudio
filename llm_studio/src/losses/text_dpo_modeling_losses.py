@@ -110,3 +110,7 @@ class Losses:
             A class to build the Losses
         """
         return cls._losses.get(name, DPOLoss)
+
+
+# see https://github.com/huggingface/trl/commit/29d439a2043edf4455b05cae5a1e2ade69d22794
+LOSS_REDUCTION = {"DPOLoss": False, "HingeLoss": True, "IPOLoss": True}

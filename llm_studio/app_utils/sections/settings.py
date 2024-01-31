@@ -500,7 +500,8 @@ async def settings(q: Q) -> None:
                         label="Restore default settings",
                         primary=False,
                     ),
-                ]
+                ],
+                justify="start",
             )
         ],
     )

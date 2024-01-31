@@ -39,15 +39,15 @@ def get_tokenizer(cfg: Any):
         add_prefix_space=cfg.tokenizer.add_prefix_space,
         use_fast=cfg.tokenizer.use_fast,
         trust_remote_code=cfg.environment.trust_remote_code,
-        use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
+        token=os.getenv("HUGGINGFACE_TOKEN"),
     )
 
     try:
         tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
     except TypeError:
         # TypeError: RWForCausalLM.__init__() got
-        # an unexpected keyword argument 'use_auth_token'
-        kwargs.pop("use_auth_token")
+        # an unexpected keyword argument 'token'
+        kwargs.pop("token")
         tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
     tokenizer.padding_side = getattr(
         cfg.tokenizer, "_padding_side", tokenizer.padding_side
