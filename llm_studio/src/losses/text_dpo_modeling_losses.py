@@ -69,7 +69,9 @@ class DPOLoss(nn.Module):
 
 class KTOPairLoss(nn.Module):
     """
-    Implements
+    Implements original paired KTO implementation
+    Adopted from https://github.com/ContextualAI/HALOs 
+    and https://github.com/huggingface/trl
     """
 
     def __init__(self, cfg: Any):
@@ -83,7 +85,6 @@ class KTOPairLoss(nn.Module):
         reference_chosen_logps: torch.FloatTensor,
         reference_rejected_logps: torch.FloatTensor,
     ) -> Tuple[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]:
-        # eqn (7) of the HALOs paper
         chosen_KL = (policy_chosen_logps - reference_chosen_logps).mean().clamp(min=0)
         rejected_KL = (
             (policy_rejected_logps - reference_rejected_logps).mean().clamp(min=0)
@@ -91,7 +92,6 @@ class KTOPairLoss(nn.Module):
 
         chosen_logratios = policy_chosen_logps - reference_chosen_logps
         rejected_logratios = policy_rejected_logps - reference_rejected_logps
-        # As described in the KTO report, the KL term for chosen (rejected) is estimated using the rejected (chosen) half.
         losses = torch.cat(
             (
                 1
@@ -102,7 +102,16 @@ class KTOPairLoss(nn.Module):
             0,
         )
 
-        return losses.mean(), losses.mean(), losses.mean()
+        chosen_rewards = (
+            self.cfg.training.beta
+            * (policy_chosen_logps - reference_chosen_logps).detach()
+        )
+        rejected_rewards = (
+            self.cfg.training.beta
+            * (policy_rejected_logps - reference_rejected_logps).detach()
+        )
+
+        return losses.mean(), chosen_rewards.mean(), rejected_rewards.mean()
 
 
 class HingeLoss(DPOLoss):
