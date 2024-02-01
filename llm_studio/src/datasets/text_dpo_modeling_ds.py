@@ -25,7 +25,7 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
             cfg.dataset.limit_chained_samples
         ), "Need to enable limit_chained_samples for dpo training"
         super().__init__(df=df, cfg=cfg, mode=mode)
-        
+
         with PatchedAttribute(
             cfg.dataset, "answer_column", cfg.dataset.rejected_answer_column
         ):

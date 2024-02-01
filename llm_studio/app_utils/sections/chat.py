@@ -200,8 +200,6 @@ def load_cfg_model_tokenizer(
         )
         load_checkpoint(cfg, model, strict=False)
 
-    
-
     if device == "cpu_shard":
         max_memory = get_balanced_memory(
             model,
