@@ -110,7 +110,7 @@ def add_file_to_zip(zf: zipfile.ZipFile, path: str) -> None:
     try:
         zf.write(path, os.path.basename(path))
     except Exception:
-        pass
+        logger.warning(f"File {path} could not be added to zip.")
 
 
 def save_pickle(path: str, obj: Any, protocol: int = 4) -> None:

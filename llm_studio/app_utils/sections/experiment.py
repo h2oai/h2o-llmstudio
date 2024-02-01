@@ -1683,7 +1683,7 @@ async def experiment_download_model(q: Q):
                 and file_path not in paths_added
                 and file_path != zip_path
             ):
-                add_file_to_zip(zf=zf, path=file)
+                add_file_to_zip(zf=zf, path=file_path)
                 paths_added.append(file_path)
                 logger.info(
                     f"Added {file_path} to zip file as it "

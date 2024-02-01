@@ -17,7 +17,6 @@
 - [Setup](#setup)
   - [Recommended Install](#recommended-install)
   - [Using requirements.txt](#using-requirementstxt)
-  - [Installing custom packages](#installing-custom-packages)
 - [Run H2O LLM Studio GUI](#run-h2o-llm-studio-gui)
 - [Run H2O LLM Studio GUI using Docker from a nightly build](#run-h2o-llm-studio-gui-using-docker-from-a-nightly-build)
 - [Run H2O LLM Studio GUI by building your own Docker image](#run-h2o-llm-studio-gui-by-building-your-own-docker-image)
@@ -54,6 +53,7 @@ Using CLI for fine-tuning LLMs:
 
 ## What's New
 
+- [PR 592](https://github.com/h2oai/h2o-llmstudio/pull/592) Starting to deprecate RLHF in favor of DPO/IPO optimization. Training is disabled, but old experiments are still viewable. RLHF will be fully removed in a future release.
 - [PR 530](https://github.com/h2oai/h2o-llmstudio/pull/530) Introduced a new problem type for DPO/IPO optimization. This optimization technique can be used as an alternative to RLHF.
 - [PR 288](https://github.com/h2oai/h2o-llmstudio/pull/288) Introduced Deepspeed for sharded training allowing to train larger models on machines with multiple GPUs. Requires NVLink. This feature replaces FSDP and offers more flexibility. Deepspeed requires a system installation of cudatoolkit and we recommend using version 11.8. See [Recommended Install](#recommended-install).
 - [PR 449](https://github.com/h2oai/h2o-llmstudio/pull/449) New problem type for Causal Classification Modeling allows to train binary and multiclass models using LLMs.
@@ -196,6 +196,7 @@ docker run \
     -v ~/.cache:/home/llmstudio/.cache \
     h2o-llmstudio
 ```
+
 Alternatively, you can run H2O LLM Studio GUI by using our self-hosted Docker image available [here](https://console.cloud.google.com/gcr/images/vorvan/global/h2oai/h2o-llmstudio).
 
 ## Run H2O LLM Studio with command line interface (CLI)
@@ -240,7 +241,7 @@ python publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_ke
 
 ## Data format and example data
 
-For details on the data format required when importing your data or example data that you can use to try out H2O LLM Studio, see [Data format](https://docs.h2o.ai/h2o-llmstudio/guide/datasets/data-connectors-format#data-format) in the H2O LLM Studio documentation. 
+For details on the data format required when importing your data or example data that you can use to try out H2O LLM Studio, see [Data format](https://docs.h2o.ai/h2o-llmstudio/guide/datasets/data-connectors-format#data-format) in the H2O LLM Studio documentation.
 
 ## Training your model
 

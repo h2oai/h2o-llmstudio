@@ -5,6 +5,7 @@ import torch
 from torch import nn
 from transformers import AutoModelForCausalLM
 
+from llm_studio.src.losses.text_dpo_modeling_losses import LOSS_REDUCTION
 from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import (
@@ -58,7 +59,6 @@ def get_batch_logps(
         logits.log_softmax(-1), dim=2, index=labels.unsqueeze(2)
     ).squeeze(2)
 
-    # both trl and original dpo repo have average_log_prob=False
     if average_log_prob:
         return (per_token_logps * loss_mask).sum(-1) / loss_mask.sum(-1)
     else:
@@ -136,7 +136,9 @@ class Model(nn.Module):
             )
 
             outputs[f"{answer}_logps"] = get_batch_logps(
-                logits, batch[f"{answer}_labels"]
+                logits,
+                batch[f"{answer}_labels"],
+                average_log_prob=LOSS_REDUCTION[self.cfg.training.loss_function],
             )
 
             with self.backbone.disable_adapter():
@@ -146,7 +148,11 @@ class Model(nn.Module):
                         attention_mask=batch[f"{answer}_attention_mask"],
                     ).logits
                     outputs[f"{answer}_reference_logps"] = get_batch_logps(
-                        reference_logits, batch[f"{answer}_labels"]
+                        reference_logits,
+                        batch[f"{answer}_labels"],
+                        average_log_prob=LOSS_REDUCTION[
+                            self.cfg.training.loss_function
+                        ],
                     )
 
         loss, chosen_rewards, rejected_rewards = self.loss_fn(
