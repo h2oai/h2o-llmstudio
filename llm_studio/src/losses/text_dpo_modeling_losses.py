@@ -70,7 +70,7 @@ class DPOLoss(nn.Module):
 class KTOPairLoss(nn.Module):
     """
     Implements original paired KTO implementation
-    Adopted from https://github.com/ContextualAI/HALOs 
+    Adopted from https://github.com/ContextualAI/HALOs
     and https://github.com/huggingface/trl
     """
 
