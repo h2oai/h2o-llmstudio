@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pandas as pd
 from pandas.core.frame import DataFrame
 from sqlalchemy import Integer, String, create_engine
@@ -18,7 +20,9 @@ class Dataset(Base):
     path: Mapped[str] = mapped_column("path", String)
     config_file: Mapped[str] = mapped_column("config_file", String)
     train_rows: Mapped[int] = mapped_column("train_rows", Integer)
-    validation_rows: Mapped[int] = mapped_column("validation_rows", Integer)
+    validation_rows: Mapped[Optional[int]] = mapped_column(
+        "validation_rows", Integer, nullable=True
+    )
 
 
 class Experiment(Base):
