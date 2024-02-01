@@ -4,9 +4,6 @@ from llm_studio.python_configs.text_causal_classification_modeling_config import
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigProblemBase as CausalConfigProblemBase,
 )
-from llm_studio.python_configs.text_rlhf_language_modeling_config import (
-    ConfigProblemBase as RLHFConfigProblemBase,
-)
 from llm_studio.python_configs.text_sequence_to_sequence_modeling_config import (
     ConfigProblemBase as Seq2SeqConfigProblemBase,
 )
@@ -18,7 +15,6 @@ from llm_studio.src.utils.config_utils import (
 
 def test_from_dict():
     for cfg_class in [
-        RLHFConfigProblemBase,
         CausalConfigProblemBase,
         Seq2SeqConfigProblemBase,
         CausalClassificationConfigProblemBase,
