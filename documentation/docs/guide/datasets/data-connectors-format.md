@@ -27,5 +27,5 @@ To train a chatbot style model, you need to convert your data into a question an
 
 ## Example data
 
-H2O LLM Studio provides a sample dataset (converted dataset from [OpenAssistant/oasst1](https://huggingface.co/datasets/OpenAssistant/oasst1))
-that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst1?scriptVersionId=127047926). It is recommended to use `train_full.csv` for training. This dataset is also downloaded and prepared by default when first starting the GUI. Multiple dataframes can be uploaded into a single dataset by uploading a `.zip` archive.
+H2O LLM Studio provides a sample dataset (converted dataset from [OpenAssistant/oasst2](https://huggingface.co/datasets/OpenAssistant/oasst2))
+that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst2?scriptVersionId=160485459). It is recommended to use `train_full.csv` for training. This dataset is also downloaded and prepared by default when first starting the GUI. Multiple dataframes can be uploaded into a single dataset by uploading a `.zip` archive.
