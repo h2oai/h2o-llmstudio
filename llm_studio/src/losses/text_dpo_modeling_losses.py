@@ -161,4 +161,9 @@ class Losses:
 
 
 # see https://github.com/huggingface/trl/commit/29d439a2043edf4455b05cae5a1e2ade69d22794
-LOSS_REDUCTION = {"DPOLoss": False, "HingeLoss": True, "IPOLoss": True}
+LOSS_REDUCTION = {
+    "DPOLoss": False,
+    "KTOPairLoss": False,
+    "HingeLoss": True,
+    "IPOLoss": True,
+}
