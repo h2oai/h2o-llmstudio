@@ -108,12 +108,6 @@ def run_eval(
         val_data = val_dataloader.dataset.postprocess_output(  # type: ignore
             cfg=cfg, df=val_df, output=val_data
         )
-        with open("data/val_data.pkl", "wb") as f:
-            import pickle
-
-            pickle.dump(val_data, f)
-            raise ValueError("val_data.pkl")
-
     val_loss = 0.0
     val_metric = 0.0
     if cfg.environment._local_rank == 0:
