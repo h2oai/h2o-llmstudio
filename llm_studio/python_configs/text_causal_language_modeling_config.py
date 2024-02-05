@@ -318,8 +318,11 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
             ),
             allow_custom=True,
         )
+        prompt_template_directory = os.path.join(
+            os.path.dirname(__file__), "../../prompts"
+        )
         self._possible_values["metric_gpt_template"] = possible_values.String(
-            values=(f.split(".")[0] for f in os.listdir("prompts"))
+            values=(f.split(".")[0] for f in prompt_template_directory)
         )
 
         self._possible_values["batch_size_inference"] = (0, 512, 1)
