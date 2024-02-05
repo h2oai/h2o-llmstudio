@@ -84,12 +84,13 @@ def run_eval(
     Returns:
         Validation loss
     """
-
+    torch.inference_mode(mode=True)
     with torch.no_grad():
         model.eval()
         val_data: Dict[str, Any] = run_inference(
             cfg, model, val_dataloader, mode
         )  # type: ignore
+    torch.inference_mode(mode=False)
 
     # Sync validation predictions across GPUs
     if cfg.environment._distributed and cfg.environment._distributed_inference:
@@ -98,50 +99,50 @@ def run_eval(
                 value, cfg.environment._world_size, group=cfg.environment._cpu_comm
             )
 
-    torch.inference_mode(mode=True)
+    if cfg.environment._local_rank != 0:
+        # data has been synced, so we can return early on other ranks
+        if cfg.environment._distributed:
+            torch.distributed.barrier()
+        return 0, 0
+
     # Drop any extra observations
     for k, v in val_data.items():
         val_data[k] = v[: len(val_dataloader.dataset)]  # type: ignore
 
-    if cfg.environment._local_rank == 0:
-        val_data = val_dataloader.dataset.postprocess_output(  # type: ignore
-            cfg=cfg, df=val_df, output=val_data
-        )
-
+    val_data = val_dataloader.dataset.postprocess_output(  # type: ignore
+        cfg=cfg, df=val_df, output=val_data
+    )
     val_loss = np.mean(val_data.get("loss", torch.tensor(0)).float().cpu().numpy())
     # postprocess_output only runs on rank 0 to save time/memory
-    val_metric = np.mean(val_data["metrics"]) if cfg.environment._local_rank == 0 else 0
-    if cfg.environment._local_rank == 0:
-        logger.info(f"{mode.capitalize()} {cfg.prediction.metric}: {val_metric:.5f}")
+    val_metric = np.mean(val_data["metrics"])
+    logger.info(f"{mode.capitalize()} {cfg.prediction.metric}: {val_metric:.5f}")
 
-        for key in val_data:
-            if key.startswith("additional_log_") or key == "loss":
-                value = np.mean(val_data[key].float().cpu().numpy())
-                key = key.replace("additional_log_", "")
-                logger.info(f"Mean {mode} {key}: {value:.5f}")
-                cfg.logging._logger.log(
-                    mode,
-                    key,
-                    value,
-                    step=cfg.environment._curr_step,
-                )
-        cfg.logging._logger.log(
-            mode, cfg.prediction.metric, val_metric, step=cfg.environment._curr_step
-        )
-
-        # Log plots
-        if val_df is not None:
-            plot = cfg.logging.plots_class.plot_validation_predictions(
-                val_outputs=val_data, cfg=cfg, val_df=val_df, mode="validation"
+    for key in val_data:
+        if key.startswith("additional_log_") or key == "loss":
+            value = np.mean(val_data[key].float().cpu().numpy())
+            key = key.replace("additional_log_", "")
+            logger.info(f"Mean {mode} {key}: {value:.5f}")
+            cfg.logging._logger.log(
+                mode,
+                key,
+                value,
+                step=cfg.environment._curr_step,
             )
-            log_plot(cfg, plot, "validation_predictions")
+    cfg.logging._logger.log(
+        mode, cfg.prediction.metric, val_metric, step=cfg.environment._curr_step
+    )
 
-        save_predictions(cfg, val_data, val_dataloader, val_df, mode)
+    # Log plots
+    if val_df is not None:
+        plot = cfg.logging.plots_class.plot_validation_predictions(
+            val_outputs=val_data, cfg=cfg, val_df=val_df, mode="validation"
+        )
+        log_plot(cfg, plot, "validation_predictions")
+
+    save_predictions(cfg, val_data, val_dataloader, val_df, mode)
 
     if cfg.environment._distributed:
         torch.distributed.barrier()
-
-    torch.inference_mode(mode=False)
 
     return val_loss, val_metric
 
