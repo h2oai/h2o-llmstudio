@@ -4,7 +4,7 @@ https://github.com/eric-mitchell/direct-preference-optimization
 """
 
 import logging
-from typing import Any, KeysView, Tuple
+from typing import Any, KeysView
 
 import torch
 import torch.nn.functional as F
@@ -33,7 +33,7 @@ class DPOLoss(nn.Module):
         policy_rejected_logps: torch.FloatTensor,
         reference_chosen_logps: torch.FloatTensor,
         reference_rejected_logps: torch.FloatTensor,
-    ) -> Tuple[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]:
+    ):
         pi_logratios = policy_chosen_logps - policy_rejected_logps
         ref_logratios = reference_chosen_logps - reference_rejected_logps
 
@@ -84,7 +84,7 @@ class KTOPairLoss(nn.Module):
         policy_rejected_logps: torch.FloatTensor,
         reference_chosen_logps: torch.FloatTensor,
         reference_rejected_logps: torch.FloatTensor,
-    ) -> Tuple[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]:
+    ):
         chosen_KL = (policy_chosen_logps - reference_chosen_logps).mean().clamp(min=0)
         rejected_KL = (
             (policy_rejected_logps - reference_rejected_logps).mean().clamp(min=0)
@@ -103,13 +103,13 @@ class KTOPairLoss(nn.Module):
         )
 
         chosen_rewards = (
-            self.cfg.training.beta
+            float(self.cfg.training.beta)
             * (policy_chosen_logps - reference_chosen_logps).detach()
-        )
+        ).float()
         rejected_rewards = (
-            self.cfg.training.beta
+            float(self.cfg.training.beta)
             * (policy_rejected_logps - reference_rejected_logps).detach()
-        )
+        ).float()
 
         return losses.mean(), chosen_rewards.mean(), rejected_rewards.mean()
 
