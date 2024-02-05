@@ -103,11 +103,11 @@ class KTOPairLoss(nn.Module):
         )
 
         chosen_rewards = (
-            float(self.cfg.training.beta)
+            self.cfg.training.beta
             * (policy_chosen_logps - reference_chosen_logps).detach()
         ).float()
         rejected_rewards = (
-            float(self.cfg.training.beta)
+            self.cfg.training.beta
             * (policy_rejected_logps - reference_rejected_logps).detach()
         ).float()
 
