@@ -341,7 +341,13 @@ def run_train(
                     step=cfg.environment._curr_step,
                 )
 
-                for key in ["chosen_rewards", "rejected_rewards", "reward_margin"]:
+                for key in [
+                    "chosen_rewards",
+                    "rejected_rewards",
+                    "reward_margin",
+                    "chosen_ce_loss",
+                    "rejected_ce_loss",
+                ]:
                     if key in output_dict:
                         cfg.logging._logger.log(
                             "train",
