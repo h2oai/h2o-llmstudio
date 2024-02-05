@@ -5,6 +5,7 @@ import torch
 from torch import nn
 from transformers import AutoModelForCausalLM
 
+from llm_studio.src.losses.text_causal_language_modeling_losses import SampleAveragedCrossEntropyLoss
 from llm_studio.src.losses.text_dpo_modeling_losses import LOSS_REDUCTION
 from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
@@ -169,10 +170,11 @@ class Model(nn.Module):
             # Reward margin should increase over time
             outputs["reward_margin"] = chosen_rewards - rejected_rewards
         else:
-            outputs["loss"] = nn.CrossEntropyLoss()(chosen_logits, chosen_labels)
+            outputs["loss"] = SampleAveragedCrossEntropyLoss(self.cfg)(chosen_logits, chosen_labels)
 
         if not self.training and self.cfg.prediction.metric == "Perplexity":
             outputs["perplexity"] = self.perplexity(chosen_logits, chosen_labels)
+
 
         # enable cache again if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:
