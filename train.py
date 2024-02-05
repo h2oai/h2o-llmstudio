@@ -108,6 +108,11 @@ def run_eval(
         val_data = val_dataloader.dataset.postprocess_output(  # type: ignore
             cfg=cfg, df=val_df, output=val_data
         )
+        with open("data/val_data.pkl", "wb") as f:
+            import pickle
+
+            pickle.dump(val_data, f)
+            raise ValueError("val_data.pkl")
 
     val_loss = 0.0
     val_metric = 0.0
@@ -132,7 +137,7 @@ def run_eval(
                 cfg.logging._logger.log(
                     "val",
                     key,
-                    val_data[key].item(),
+                    val_data[key].mean().item(),
                     step=cfg.environment._curr_step,
                 )
 
