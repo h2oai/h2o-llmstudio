@@ -121,6 +121,20 @@ def run_eval(
             cfg.logging._logger.log(
                 mode, "loss", val_loss, step=cfg.environment._curr_step
             )
+        for key in [
+            "chosen_rewards",
+            "rejected_rewards",
+            "reward_margin",
+            "chosen_ce_loss",
+            "rejected_ce_loss",
+        ]:
+            if key in val_data:
+                cfg.logging._logger.log(
+                    "val",
+                    key,
+                    val_data[key].item(),
+                    step=cfg.environment._curr_step,
+                )
 
         # Calculate reduced validation metric
         _, _, reduce = cfg.prediction.metric_class.get(cfg.prediction.metric)
