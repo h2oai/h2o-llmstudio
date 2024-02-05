@@ -113,10 +113,8 @@ class Model(nn.Module):
 
         outputs: Dict = {}
 
-        chosen_logits = None
-        rejected_logits = None
-        chosen_labels = None
-        rejected_labels = None
+        logits_dict = {}
+        labels_dict = {}
 
         for answer in ["chosen", "rejected"]:
             if padding:
@@ -136,16 +134,8 @@ class Model(nn.Module):
                 attention_mask=batch[f"{answer}_attention_mask"],
             ).logits
 
-            chosen_logits = logits.detach() if answer == "chosen" else chosen_logits
-            rejected_logits = (
-                logits.detach() if answer == "rejected" else rejected_logits
-            )
-            chosen_labels = (
-                batch[f"{answer}_labels"] if answer == "chosen" else chosen_labels
-            )
-            rejected_labels = (
-                batch[f"{answer}_labels"] if answer == "rejected" else rejected_labels
-            )
+            logits_dict[answer] = logits
+            labels_dict[answer] = batch[f"{answer}_labels"]
 
             outputs[f"{answer}_logps"] = get_batch_logps(
                 logits,
@@ -187,18 +177,20 @@ class Model(nn.Module):
         outputs[
             "additional_log_chosen_cross_entropy_loss"
         ] = SampleAveragedCrossEntropyLoss(self.cfg)(
-            chosen_logits, chosen_labels
+            logits_dict["chosen"], labels_dict["chosen"]
         ).detach()
         outputs[
             "additional_log_rejected_cross_entropy_loss"
         ] = SampleAveragedCrossEntropyLoss(self.cfg)(
-            rejected_logits, rejected_labels
+            logits_dict["rejected"], labels_dict["rejected"]
         ).detach()
 
         if not self.training and self.cfg.prediction.metric == "Perplexity":
-            outputs["perplexity"] = self.perplexity(chosen_logits, chosen_labels)
+            outputs["perplexity"] = self.perplexity(
+                logits_dict["chosen"], labels_dict["chosen"]
+            )
             outputs["additional_log_rejected_perplexity"] = self.perplexity(
-                rejected_logits, rejected_labels
+                logits_dict["rejected"], labels_dict["rejected"]
             )
 
         # enable cache again if gradient checkpointing is enabled

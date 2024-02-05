@@ -55,7 +55,6 @@ from llm_studio.src.utils.modeling_utils import (
     get_optimizer,
     get_scheduler,
     load_checkpoint,
-    reduce_metric,
     run_inference,
     save_checkpoint,
     save_predictions,
@@ -108,9 +107,12 @@ def run_eval(
         val_data = val_dataloader.dataset.postprocess_output(  # type: ignore
             cfg=cfg, df=val_df, output=val_data
         )
-    val_loss = 0.0
-    val_metric = 0.0
+
+    val_loss = np.mean(val_data.get("loss", torch.tensor(0)).float().cpu().numpy())
+    val_metric = np.mean(val_data["metrics"])
     if cfg.environment._local_rank == 0:
+        logger.info(f"{mode.capitalize()} {cfg.prediction.metric}: {val_metric:.5f}")
+
         for key in val_data:
             if key.startswith("additional_log_") or key == "loss":
                 value = np.mean(val_data[key].float().cpu().numpy())
@@ -122,12 +124,6 @@ def run_eval(
                     value,
                     step=cfg.environment._curr_step,
                 )
-
-        # Calculate reduced validation metric
-        _, _, reduce = cfg.prediction.metric_class.get(cfg.prediction.metric)
-        val_metric = reduce_metric(val_data, reduce=reduce)
-
-        logger.info(f"{mode.capitalize()} {cfg.prediction.metric}: {val_metric:.5f}")
         cfg.logging._logger.log(
             mode, cfg.prediction.metric, val_metric, step=cfg.environment._curr_step
         )
