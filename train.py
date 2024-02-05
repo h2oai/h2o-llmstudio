@@ -109,7 +109,8 @@ def run_eval(
         )
 
     val_loss = np.mean(val_data.get("loss", torch.tensor(0)).float().cpu().numpy())
-    val_metric = np.mean(val_data["metrics"])
+    # postprocess_output only runs on rank 0 to save time/memory
+    val_metric = np.mean(val_data["metrics"]) if cfg.environment._local_rank == 0 else 0
     if cfg.environment._local_rank == 0:
         logger.info(f"{mode.capitalize()} {cfg.prediction.metric}: {val_metric:.5f}")
 
