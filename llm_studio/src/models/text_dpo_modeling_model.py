@@ -154,20 +154,22 @@ class Model(nn.Module):
                             self.cfg.training.loss_function
                         ],
                     )
+        if self.training:
+            loss, chosen_rewards, rejected_rewards = self.loss_fn(
+                policy_chosen_logps=outputs["chosen_logps"],
+                policy_rejected_logps=outputs["rejected_logps"],
+                reference_chosen_logps=outputs["chosen_reference_logps"],
+                reference_rejected_logps=outputs["rejected_reference_logps"],
+            )
+            outputs["loss"] = loss
 
-        loss, chosen_rewards, rejected_rewards = self.loss_fn(
-            policy_chosen_logps=outputs["chosen_logps"],
-            policy_rejected_logps=outputs["rejected_logps"],
-            reference_chosen_logps=outputs["chosen_reference_logps"],
-            reference_rejected_logps=outputs["rejected_reference_logps"],
-        )
-        outputs["loss"] = loss
-
-        # These values will be logged to Neptune, if enabled, see train.py
-        outputs["chosen_rewards"] = chosen_rewards
-        outputs["rejected_rewards"] = rejected_rewards
-        # Reward margin should increase over time
-        outputs["reward_margin"] = chosen_rewards - rejected_rewards
+            # These values will be logged to Neptune, if enabled, see train.py
+            outputs["chosen_rewards"] = chosen_rewards
+            outputs["rejected_rewards"] = rejected_rewards
+            # Reward margin should increase over time
+            outputs["reward_margin"] = chosen_rewards - rejected_rewards
+        else:
+            outputs["loss"] = nn.CrossEntropyLoss()(chosen_logits, chosen_labels)
 
         if not self.training and self.cfg.prediction.metric == "Perplexity":
             outputs["perplexity"] = self.perplexity(chosen_logits, chosen_labels)
