@@ -167,16 +167,18 @@ class Model(nn.Module):
         outputs["loss"] = loss
 
         # These values will be logged to Neptune, if enabled, see train.py
-        outputs["chosen_rewards"] = chosen_rewards
-        outputs["rejected_rewards"] = rejected_rewards
-        outputs["chosen_ce_loss"] = SampleAveragedCrossEntropyLoss(self.cfg)(
-            chosen_logits, chosen_labels
-        )
-        outputs["rejected_ce_loss"] = SampleAveragedCrossEntropyLoss(self.cfg)(
-            chosen_logits, chosen_labels
-        )
+        outputs["additional_log_chosen_rewards"] = chosen_rewards
+        outputs["additional_log_rejected_rewards"] = rejected_rewards
+
+        # log sample average cross entropy, perplexity metric is also sample averaged
+        outputs[
+            "additional_log_chosen_cross_entropy_loss"
+        ] = SampleAveragedCrossEntropyLoss(self.cfg)(chosen_logits, chosen_labels)
+        outputs[
+            "additional_log_rejected_cross_entropy_loss"
+        ] = SampleAveragedCrossEntropyLoss(self.cfg)(chosen_logits, chosen_labels)
         # Reward margin should increase over time
-        outputs["reward_margin"] = chosen_rewards - rejected_rewards
+        outputs["additional_log_reward_margin"] = chosen_rewards - rejected_rewards
 
         if not self.training and self.cfg.prediction.metric == "Perplexity":
             outputs["perplexity"] = self.perplexity(chosen_logits, chosen_labels)

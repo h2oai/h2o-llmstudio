@@ -111,27 +111,15 @@ def run_eval(
     val_loss = 0.0
     val_metric = 0.0
     if cfg.environment._local_rank == 0:
-        # Calculate validation loss
-        if "loss" in val_data:
-            assert isinstance(val_data["loss"], torch.Tensor)
-            val_losses = val_data["loss"].float().cpu().numpy()
-            val_loss = np.mean(val_losses)
-            logger.info(f"Mean {mode} loss: {val_loss:.5f}")
-            cfg.logging._logger.log(
-                mode, "loss", val_loss, step=cfg.environment._curr_step
-            )
-        for key in [
-            "chosen_rewards",
-            "rejected_rewards",
-            "reward_margin",
-            "chosen_ce_loss",
-            "rejected_ce_loss",
-        ]:
-            if key in val_data:
+        for key in val_data:
+            if key.startswith("additional_log_") or key == "loss":
+                value = np.mean(val_data[key].float().cpu().numpy())
+                key = key.replace("additional_log_", "")
+                logger.info(f"Mean {mode} {key}: {value:.5f}")
                 cfg.logging._logger.log(
-                    "val",
+                    mode,
                     key,
-                    val_data[key].mean().item(),
+                    value,
                     step=cfg.environment._curr_step,
                 )
 
@@ -353,18 +341,11 @@ def run_train(
                     cfg.environment._curr_step,
                     step=cfg.environment._curr_step,
                 )
-
-                for key in [
-                    "chosen_rewards",
-                    "rejected_rewards",
-                    "reward_margin",
-                    "chosen_ce_loss",
-                    "rejected_ce_loss",
-                ]:
-                    if key in output_dict:
+                for key in output_dict:
+                    if key.startswith("additional_log_"):
                         cfg.logging._logger.log(
                             "train",
-                            key,
+                            key.replace("additional_log_", ""),
                             output_dict[key].item(),
                             step=cfg.environment._curr_step,
                         )
