@@ -114,7 +114,9 @@ class Model(nn.Module):
         outputs: Dict = {}
 
         chosen_logits = None
+        rejected_logits = None
         chosen_labels = None
+        rejected_labels = None
 
         for answer in ["chosen", "rejected"]:
             if padding:
@@ -133,9 +135,16 @@ class Model(nn.Module):
                 input_ids=batch[f"{answer}_input_ids"],
                 attention_mask=batch[f"{answer}_attention_mask"],
             ).logits
+
             chosen_logits = logits.detach() if answer == "chosen" else chosen_logits
+            rejected_logits = (
+                logits.detach() if answer == "rejected" else rejected_logits
+            )
             chosen_labels = (
                 batch[f"{answer}_labels"] if answer == "chosen" else chosen_labels
+            )
+            rejected_labels = (
+                batch[f"{answer}_labels"] if answer == "rejected" else rejected_labels
             )
 
             outputs[f"{answer}_logps"] = get_batch_logps(
@@ -188,6 +197,9 @@ class Model(nn.Module):
 
         if not self.training and self.cfg.prediction.metric == "Perplexity":
             outputs["perplexity"] = self.perplexity(chosen_logits, chosen_labels)
+            outputs["additional_log_rejected_perplexity"] = self.perplexity(
+                rejected_logits, rejected_labels
+            )
 
         # enable cache again if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:
