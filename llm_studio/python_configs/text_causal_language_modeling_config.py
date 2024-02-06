@@ -301,6 +301,8 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
     stop_tokens: str = ""
     top_k: int = 0
     top_p: float = 1.0
+    max_time: int = 0
+    prompt_lookup_num_tokens: int = 0
 
     num_history: int = 4
 
@@ -331,6 +333,8 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._possible_values["repetition_penalty"] = (1, 10, 0.05)
         self._possible_values["top_k"] = (0, 100, 1)
         self._possible_values["top_p"] = (0.5, 1, 0.05)
+        self._possible_values["max_time"] = (0, 600, 30)
+        self._possible_values["prompt_lookup_num_tokens"] = (0, 100, 1)
         self._possible_values["num_history"] = (1, 50, 1)
 
         self._visibility["metric_class"] = -1

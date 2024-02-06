@@ -1030,6 +1030,10 @@ def generate(backbone, batch, cfg, streamer, remove_prompt=True):
         repetition_penalty=(float(cfg.prediction.repetition_penalty)),
         top_k=cfg.prediction.top_k,
         top_p=float(cfg.prediction.top_p),
+        max_time=cfg.prediction.max_time if cfg.prediction.max_time > 0 else None,
+        prompt_lookup_num_tokens=cfg.prediction.prompt_lookup_num_tokens
+        if cfg.prediction.prompt_lookup_num_tokens > 0
+        else None,
         stopping_criteria=stopping_criteria,
         renormalize_logits=True,
         return_dict_in_generate=False,
