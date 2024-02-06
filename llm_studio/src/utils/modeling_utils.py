@@ -661,6 +661,9 @@ def update_backbone_config(config: Any, cfg: Any):
     if "mpt-" in cfg.llm_backbone:
         config.init_device = cfg.environment._device
 
+    if cfg.training.loss_function == "MoECrossEntropy":
+        config.output_router_logits = True
+
     # See: https://github.com/huggingface/transformers/pull/24906
     if hasattr(config, "pretraining_tp") and cfg.training.lora:
         logger.info("Setting pretraining_tp of model config to 1.")

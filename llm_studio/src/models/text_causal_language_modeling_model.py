@@ -43,6 +43,8 @@ class Model(nn.Module):
         if self.cfg.prediction.metric == "Perplexity":
             self.perplexity = Perplexity(self.cfg, reduce=False)
 
+        #self.backbone.model.layers[0].block_sparse_moe.gate = None
+
     def init_deepspeed(self):
         self.backward = self.backbone.backward
         self.save_checkpoint = self.backbone.save_checkpoint
@@ -98,7 +100,7 @@ class Model(nn.Module):
         )
 
         if "labels" in batch:
-            loss = self.loss_fn(output.logits, batch["labels"])
+            loss = self.loss_fn(output, batch["labels"])
             outputs["loss"] = loss
 
         if not self.training and self.cfg.prediction.metric == "Perplexity":

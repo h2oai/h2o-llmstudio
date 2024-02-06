@@ -136,6 +136,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     learning_rate: float = 0.0001
     differential_learning_rate_layers: Tuple[str, ...] = ()
     differential_learning_rate: float = 0.00001
+    router_aux_loss_coef: float = 0.0
 
     use_flash_attention_2: bool = False
     batch_size: int = 2
@@ -177,6 +178,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["differential_learning_rate"] = self._possible_values[
             "learning_rate"
         ]
+        self._possible_values["router_aux_loss_coef"] = (0.01, 2.0, 0.01)
 
         self._possible_values["batch_size"] = (1, 256, 1)
         self._possible_values["epochs"] = (0, 10, 1)
@@ -213,6 +215,10 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._nesting.add(
             ["train_validation_data"],
             [Dependency(key="save_best_checkpoint", value=False, is_set=True)],
+        )
+        self._nesting.add(
+            ["router_aux_loss_coef"],
+            [Dependency(key="loss_function", value="MoECrossEntropy", is_set=True)],
         )
 
 

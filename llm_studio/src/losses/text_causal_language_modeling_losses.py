@@ -15,7 +15,8 @@ class TokenAveragedCrossEntropyLoss(nn.Module):
         self.cfg = cfg
         self.loss_fn = nn.CrossEntropyLoss()
 
-    def forward(self, logits, labels):
+    def forward(self, output, labels):
+        logits = output.logits
         shift_logits = logits[..., :-1, :].contiguous()
         shift_labels = labels[..., 1:].contiguous()
 
@@ -31,7 +32,8 @@ class SampleAveragedCrossEntropyLoss(nn.Module):
         self.cfg = cfg
         self.loss_fn = nn.CrossEntropyLoss()
 
-    def forward(self, logits, labels):
+    def forward(self, output, labels):
+        logits = output.logits
         shift_logits = logits[..., :-1, :].contiguous()
         shift_labels = labels[..., 1:].contiguous()
 
@@ -42,12 +44,33 @@ class SampleAveragedCrossEntropyLoss(nn.Module):
         return loss
 
 
+class MoECrossEntropyLoss(nn.Module):
+    def __init__(self, cfg: Any):
+        super().__init__()
+        self.cfg = cfg
+        self.loss_fn = nn.CrossEntropyLoss()
+
+    def forward(self, output, labels):
+        logits = output.logits
+        shift_logits = logits[..., :-1, :].contiguous()
+        shift_labels = labels[..., 1:].contiguous()
+
+        shift_logits = shift_logits.view(-1, shift_logits.size(-1))
+        shift_labels = shift_labels.view(-1)
+
+        loss = self.loss_fn(shift_logits, shift_labels)
+        loss += self.cfg.training.router_aux_loss_coef * output.aux_loss
+
+        return loss
+
+
 class Losses:
     """Losses factory."""
 
     _losses = {
         "TokenAveragedCrossEntropy": TokenAveragedCrossEntropyLoss,
         "SampleAveragedCrossEntropy": SampleAveragedCrossEntropyLoss,
+        "MoECrossEntropy": MoECrossEntropyLoss,
     }
 
     @classmethod

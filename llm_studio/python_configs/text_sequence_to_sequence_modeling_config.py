@@ -119,4 +119,9 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             errors["message"] += [
                 "Please enable do sample if you want to use temperature > 0."
             ]
+        if self.prediction.temperature == 0 and self.prediction.do_sample:
+            errors["title"] += ["Temperature needs to be > 0 for do sample"]
+            errors["message"] += [
+                "Please increase temperature if you want to use do sample."
+            ]
         return errors
