@@ -340,7 +340,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._possible_values["top_k"] = (0, 100, 1)
         self._possible_values["top_p"] = (0.5, 1, 0.05)
         self._possible_values["max_time"] = (0, 600, 30)
-        self._possible_values["prompt_lookup_num_tokens"] = (0, 100, 1)
+        self._possible_values["prompt_lookup_num_tokens"] = (0, 50, 1)
         self._possible_values["num_history"] = (1, 50, 1)
 
         self._visibility["metric_class"] = -1
