@@ -136,7 +136,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     learning_rate: float = 0.0001
     differential_learning_rate_layers: Tuple[str, ...] = ()
     differential_learning_rate: float = 0.00001
-    router_aux_loss_coef: float = 0.0
+    router_aux_loss_coef: float = 0.02
 
     use_flash_attention_2: bool = False
     batch_size: int = 2

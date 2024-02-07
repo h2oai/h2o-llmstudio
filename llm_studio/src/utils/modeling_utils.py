@@ -663,6 +663,8 @@ def update_backbone_config(config: Any, cfg: Any):
 
     if cfg.training.loss_function == "MoECrossEntropy":
         config.output_router_logits = True
+        cfg.architecture._num_local_experts = config.num_local_experts
+        cfg.architecture._num_experts_per_tok = config.num_experts_per_tok
 
     # See: https://github.com/huggingface/transformers/pull/24906
     if hasattr(config, "pretraining_tp") and cfg.training.lora:

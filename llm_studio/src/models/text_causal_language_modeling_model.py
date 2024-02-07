@@ -43,7 +43,7 @@ class Model(nn.Module):
         if self.cfg.prediction.metric == "Perplexity":
             self.perplexity = Perplexity(self.cfg, reduce=False)
 
-        #self.backbone.model.layers[0].block_sparse_moe.gate = None
+        # self.backbone.model.layers[0].block_sparse_moe.gate = None
 
     def init_deepspeed(self):
         self.backward = self.backbone.backward
