@@ -29,11 +29,17 @@ class ConfigDPODataset(ConfigNLPCausalLMDataset):
     limit_chained_samples: bool = True
     mask_prompt_labels: bool = True
 
+    rejected_prompt_column: str = "None"
     answer_column: str = "chosen_response"
     rejected_answer_column: str = "rejected_response"
 
     def __post_init__(self):
         super().__post_init__()
+        self._possible_values["rejected_prompt_column"] = possible_values.Columns(
+            prefer_with=lambda column: column
+            in ("rejected_input", "rejected_prompt", "rejected_instruction"),
+            add_none=True,
+        )
         self._possible_values["rejected_answer_column"] = possible_values.Columns(
             prefer_with=lambda column: column
             in ("rejected_answer", "rejected_response")
@@ -41,6 +47,7 @@ class ConfigDPODataset(ConfigNLPCausalLMDataset):
 
         self._visibility["limit_chained_samples"] = -1
         self._visibility["mask_prompt_labels"] = -1
+        self._order.insert("rejected_prompt_column", after="prompt_column")
         self._order.insert("rejected_answer_column", after="answer_column")
 
 

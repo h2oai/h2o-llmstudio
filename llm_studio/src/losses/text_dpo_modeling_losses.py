@@ -4,7 +4,7 @@ https://github.com/eric-mitchell/direct-preference-optimization
 """
 
 import logging
-from typing import Any, KeysView, Tuple
+from typing import Any, KeysView
 
 import torch
 import torch.nn.functional as F
@@ -33,7 +33,7 @@ class DPOLoss(nn.Module):
         policy_rejected_logps: torch.FloatTensor,
         reference_chosen_logps: torch.FloatTensor,
         reference_rejected_logps: torch.FloatTensor,
-    ) -> Tuple[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]:
+    ):
         pi_logratios = policy_chosen_logps - policy_rejected_logps
         ref_logratios = reference_chosen_logps - reference_rejected_logps
 
@@ -67,6 +67,53 @@ class DPOLoss(nn.Module):
         return losses
 
 
+class KTOPairLoss(nn.Module):
+    """
+    Implements original paired KTO implementation
+    Adopted from https://github.com/ContextualAI/HALOs
+    and https://github.com/huggingface/trl
+    """
+
+    def __init__(self, cfg: Any):
+        super().__init__()
+        self.cfg = cfg
+
+    def forward(
+        self,
+        policy_chosen_logps: torch.FloatTensor,
+        policy_rejected_logps: torch.FloatTensor,
+        reference_chosen_logps: torch.FloatTensor,
+        reference_rejected_logps: torch.FloatTensor,
+    ):
+        chosen_KL = (policy_chosen_logps - reference_chosen_logps).mean().clamp(min=0)
+        rejected_KL = (
+            (policy_rejected_logps - reference_rejected_logps).mean().clamp(min=0)
+        )
+
+        chosen_logratios = policy_chosen_logps - reference_chosen_logps
+        rejected_logratios = policy_rejected_logps - reference_rejected_logps
+        losses = torch.cat(
+            (
+                1
+                - F.sigmoid(self.cfg.training.beta * (chosen_logratios - rejected_KL)),
+                1
+                - F.sigmoid(self.cfg.training.beta * (chosen_KL - rejected_logratios)),
+            ),
+            0,
+        )
+
+        chosen_rewards = (
+            self.cfg.training.beta
+            * (policy_chosen_logps - reference_chosen_logps).detach()
+        ).float()
+        rejected_rewards = (
+            self.cfg.training.beta
+            * (policy_rejected_logps - reference_rejected_logps).detach()
+        ).float()
+
+        return losses.mean(), chosen_rewards.mean(), rejected_rewards.mean()
+
+
 class HingeLoss(DPOLoss):
     def get_losses(self, logits):
         losses = torch.relu(1 - self.cfg.training.beta * logits)
@@ -95,6 +142,7 @@ class Losses:
         "DPOLoss": DPOLoss,
         "HingeLoss": HingeLoss,
         "IPOLoss": IPOLoss,
+        "KTOPairLoss": KTOPairLoss,
     }
 
     @classmethod
@@ -113,4 +161,9 @@ class Losses:
 
 
 # see https://github.com/huggingface/trl/commit/29d439a2043edf4455b05cae5a1e2ade69d22794
-LOSS_REDUCTION = {"DPOLoss": False, "HingeLoss": True, "IPOLoss": True}
+LOSS_REDUCTION = {
+    "DPOLoss": False,
+    "KTOPairLoss": False,
+    "HingeLoss": True,
+    "IPOLoss": True,
+}

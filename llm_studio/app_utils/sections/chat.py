@@ -190,18 +190,15 @@ def load_cfg_model_tokenizer(
         cfg.architecture.backbone_dtype = "float16"
         cfg.architecture.pretrained = True
 
+    # if "cpu" in device:
+    #     cfg.architecture.backbone_dtype = "float32"
+
     with torch.device(cfg.environment._device):
         model = cfg.architecture.model_class(cfg)
         cfg.architecture.pretrained_weights = os.path.join(
             experiment_path, "checkpoint.pth"
         )
         load_checkpoint(cfg, model, strict=False)
-
-    if merge and cfg.training.lora:
-        # merges the LoRa layers into the base model.
-        # This is needed if one wants to use the base model as a standalone model.
-        logger.info("Merging LORA layers with base model.")
-        model.backbone = model.backbone.merge_and_unload()
 
     if device == "cpu_shard":
         max_memory = get_balanced_memory(
@@ -212,6 +209,16 @@ def load_cfg_model_tokenizer(
             model,
             device_map=device_map,
         )
+
+    if merge and cfg.training.lora:
+        # merges the LoRa layers into the base model.
+        # This is needed if one wants to use the base model as a standalone model.
+        logger.info("Merging LORA layers with base model.")
+        if device == "cpu":
+            model = model.to(torch.float32)
+        model.backbone = model.backbone.merge_and_unload()
+        if device == "cpu":
+            model = model.to(torch.float16)
 
     model = model.eval()
     model.backbone.use_cache = True

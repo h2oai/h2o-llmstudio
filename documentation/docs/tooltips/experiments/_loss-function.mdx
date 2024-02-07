@@ -1,6 +1,1 @@
-Defines the loss function H2O LLM Studio utilizes during model training. The loss function is a differentiable function measuring the prediction error. The model utilizes gradients of the loss function to update the model weights during training.
-
-- **TokenAveragedCrossEntropy**
-    - H2O LLM Studio utilizes Cross Entropy as the loss function and averages over all tokens (excluding padding tokens) of one batch.
-- **SampleAveragedCrossEntropy**
-    - H2O LLM Studio utilizes Cross Entropy as the loss function and averages over samples of one batch.
+Defines the loss function H2O LLM Studio utilizes during model training. The loss function is a differentiable function measuring the prediction error. The model utilizes gradients of the loss function to update the model weights during training. The options depend on the selected Problem Type.
