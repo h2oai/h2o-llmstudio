@@ -96,7 +96,7 @@ test: reports
     tests/* 2>&1 | tee reports/tests.log'
 
 .PHONY: test-ui
-test-ui: reports
+test-ui: reports setup-ui
 	$(PW_DEBUG) $(PIPENV) run pytest \
 	-v \
 	--junitxml=reports/junit_ui.xml \
@@ -107,7 +107,7 @@ test-ui: reports
 	tests/ui/test.py 2>&1 | tee reports/tests_ui.log
 
 .PHONY: test-ui-headed
-test-ui-headed: 
+test-ui-headed: setup-ui
 	$(PW_DEBUG) $(PIPENV) run pytest \
 	-vvs \
 	--headed \

@@ -39,6 +39,7 @@ class LLMStudioPage(BasePage):
     MAX_LENGTH = "experiment/start/cfg/max_length"
     MAX_LENGTH_INFERENCE = "experiment/start/cfg/max_length_inference"
     EXPERIMENT_REFRESH_SELECTOR = "experiment/list/refresh"
+    GPU_WARNING_SELECTOR = "experiment/start/error/proceed"
 
     def assert_dataset_import(self, dataset_name: str):
         dataset = self.page.get_by_role("button", name=dataset_name)
@@ -121,8 +122,7 @@ class LLMStudioPage(BasePage):
         self.get_by_test_id(self.DATASET_DELETE_SELECTOR).click()
 
     def view_datasets(self):
-        locator = self.page.get_by_role("button", name="View datasets")
-        locator.click()
+        self.page.get_by_role("button", name="View datasets").click()
 
     def assert_dataset_deletion(self, dataset_name: str):
         self.view_datasets()
@@ -131,9 +131,7 @@ class LLMStudioPage(BasePage):
         expect(dataset).not_to_be_visible()
 
     def create_experiment(self, name: str):
-        # Get locator element
-        locator = self.page.get_by_role("button", name="Create experiment")
-        locator.click()
+        self.page.get_by_role("button", name="Create experiment").click()
         self.experiment_name(name)
 
     def slider(self, slider_selector, target_value: str):
@@ -164,8 +162,11 @@ class LLMStudioPage(BasePage):
                 i += step
 
     def run_experiment(self):
-        locator = self.get_by_test_id(self.EXPERIMENT_RUN_SELECTOR)
-        locator.click()
+        self.get_by_test_id(self.EXPERIMENT_RUN_SELECTOR).click()
+        self.handle_gpu_error()
+
+    def handle_gpu_error(self):
+        self.get_by_test_id(self.GPU_WARNING_SELECTOR).click()
 
     def experiment_name(self, name: str):
         self.get_by_test_id(self.EXPERIMENT_NAME_SELECTOR).fill(name)
@@ -197,10 +198,11 @@ class LLMStudioPage(BasePage):
         status = self.page.locator(
             f"{self.EXPERIMENT_STATUS_SELECTOR} >> nth={i}"
         ).inner_text()
-
+        self.page.reload()
         while True:
             if status in ["queued", "running"]:
-                self.get_by_test_id(self.EXPERIMENT_REFRESH_SELECTOR).click()
+                self.page.reload()
+                self.view_experiment_page()
                 status = self.page.locator(
                     f"{self.EXPERIMENT_STATUS_SELECTOR} >> nth={i}"
                 ).inner_text()
