@@ -673,9 +673,9 @@ def batch_padding(
             ).float()
             quantile = cfg.tokenizer.padding_quantile
         if cfg.environment._distributed:
-            lengths = sync_across_processes(
+            lengths = sync_across_processes(  # noqa: E501
                 lengths, cfg.environment._world_size
-            )  # noqa: E501
+            )
         idx = int(torch.floor(torch.quantile(lengths, quantile)))
     else:
         if padding_side == "left":
