@@ -131,12 +131,12 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
 class ConfigNLPCausalLMTraining(DefaultConfig):
     loss_class: Any = text_causal_language_modeling_losses.Losses
     loss_function: str = "TokenAveragedCrossEntropy"
+    router_aux_loss_coef: float = 0.0
     optimizer: str = "AdamW"
 
     learning_rate: float = 0.0001
     differential_learning_rate_layers: Tuple[str, ...] = ()
     differential_learning_rate: float = 0.00001
-    router_aux_loss_coef: float = 0.02
 
     use_flash_attention_2: bool = False
     batch_size: int = 2
@@ -218,7 +218,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         )
         self._nesting.add(
             ["router_aux_loss_coef"],
-            [Dependency(key="loss_function", value="MoECrossEntropy", is_set=True)],
+            [Dependency(key="moe_model", value=True, is_set=True)],
         )
 
 
@@ -248,10 +248,14 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
     model_class: Any = text_causal_language_modeling_model.Model
     pretrained: bool = True
 
+    moe_model: bool = False
     backbone_dtype: str = "int4"
     gradient_checkpointing: bool = True
     force_embedding_gradients: bool = False
+    force_gate_gradients: bool = False
     intermediate_dropout: float = 0
+    num_experts_per_tok: int = -1
+    num_experts_per_tok_train: int = -1
     pretrained_weights: str = ""
 
     def __post_init__(self):
@@ -262,10 +266,20 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
             allow_custom=False,
         )
         self._possible_values["intermediate_dropout"] = (0, 0.5, 0.05)
+        self._possible_values["num_experts_per_tok"] = (-1, 8, 1)
+        self._possible_values["num_experts_per_tok_train"] = (-1, 8, 1)
 
         self._nesting.add(
             ["force_embedding_gradients"],
             [Dependency(key="lora", value=False, is_set=False)],
+        )
+        self._nesting.add(
+            [
+                "force_gate_gradients",
+                "num_experts_per_tok",
+                "num_experts_per_tok_train",
+            ],
+            [Dependency(key="moe_model", value=True, is_set=True)],
         )
 
         self._visibility["model_class"] = -1
@@ -278,6 +292,7 @@ class ConfigNLPAugmentation(DefaultConfig):
     token_mask_probability: float = 0.0
     skip_parent_probability: float = 0.0
     random_parent_probability: float = 0.0
+    random_expert_shuffle: float = 0.0
     neftune_noise_alpha: float = 0.0
 
     def __post_init__(self):
@@ -285,8 +300,14 @@ class ConfigNLPAugmentation(DefaultConfig):
         self._possible_values["token_mask_probability"] = (0.0, 0.9, 0.05)
         self._possible_values["skip_parent_probability"] = (0.0, 1.0, 0.05)
         self._possible_values["random_parent_probability"] = (0.0, 1.0, 0.05)
+        self._possible_values["random_expert_shuffle"] = (0.0, 1.0, 0.05)
         self._possible_values["neftune_noise_alpha"] = (0.0, 15, 0.05)
         self._visibility["nlp_augmentations_class"] = -1
+
+        self._nesting.add(
+            ["random_expert_shuffle"],
+            [Dependency(key="moe_model", value=True, is_set=True)],
+        )
 
 
 @dataclass
