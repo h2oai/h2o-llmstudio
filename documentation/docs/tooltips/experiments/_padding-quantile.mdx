@@ -4,3 +4,4 @@ Defines the padding quantile H2O LLM Studio uses to select the maximum token len
 - The setting depends on the batch size and should be adjusted accordingly 
 - No padding is done in inference, and the selected **Max Length** is guaranteed
 - Setting to 0 disables padding
+- In case of distributed training, the quantile will be calculated across all GPUs
