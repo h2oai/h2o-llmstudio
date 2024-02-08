@@ -88,7 +88,7 @@ class MoECrossEntropyLoss(nn.Module):
 
         # Compute the average probability of routing to these experts
         router_prob_per_expert = torch.mean(routing_weights, dim=0)
-        print(router_prob_per_expert)
+        #print(router_prob_per_expert)
 
         overall_loss = torch.sum(
             tokens_per_expert * router_prob_per_expert.unsqueeze(0)
@@ -110,7 +110,7 @@ class MoECrossEntropyLoss(nn.Module):
             self.cfg.architecture._num_local_experts,
             self.cfg.architecture._num_experts_per_tok,
         )
-        print(aux_loss)
+        #print(aux_loss)
         loss += self.cfg.training.router_aux_loss_coef * aux_loss
         return loss
 

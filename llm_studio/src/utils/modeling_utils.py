@@ -306,7 +306,7 @@ def adjust_model_gradients(model: torch.nn.Module, cfg: Any):
         for name, module in model.named_modules():
             if "gate" in name:
                 for param in module.parameters():
-                    param.data = param.data.float()
+                    #param.data = param.data.float()
                     param.requires_grad = True
 
     return model
@@ -727,6 +727,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         quantization_config = BitsAndBytesConfig(
             load_in_8bit=True,
             llm_int8_threshold=0.0,
+            llm_int8_skip_modules=["gate"] if cfg.training.loss_function == "MoECrossEntropy" else None
         )
         # need to force pretrained
         cfg.architecture.pretrained = True
@@ -737,6 +738,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.float16,
             bnb_4bit_quant_type="nf4",
+            llm_int8_skip_modules=["gate"] if cfg.training.loss_function == "MoECrossEntropy" else None
         )
         # need to force pretrained
         cfg.architecture.pretrained = True

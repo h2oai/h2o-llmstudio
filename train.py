@@ -566,6 +566,8 @@ def run(cfg: Any) -> None:
 
     model = adjust_model_gradients(model, cfg)
 
+    print(model)
+
     if cfg.environment._distributed:
         (
             model,
