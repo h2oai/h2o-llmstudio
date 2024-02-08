@@ -20,8 +20,8 @@ endif
 
 PHONY: pipenv
 pipenv:
-	$(PIP) install pip --upgrade
-	$(PIP) install "pipenv>=2023.11.15"
+	$(PIP) install pip==23.3.2
+	$(PIP) install pipenv==2023.11.17
 
 .PHONY: setup
 setup: pipenv
@@ -111,6 +111,9 @@ test-ui-headed:
 	$(PW_DEBUG) $(PIPENV) run pytest \
 	-vvs \
 	--headed \
+	--video=on \
+	--screenshot=on \
+	--slowmo=100 \
 	tests/ui/test.py 2>&1 | tee reports/tests.log
 
 .PHONY: wave

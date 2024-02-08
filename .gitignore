@@ -158,3 +158,6 @@ h2o_wave.state
 
 # IDE
 .vscode
+
+# playwright
+test-results/
