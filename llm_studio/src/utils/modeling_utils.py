@@ -290,6 +290,28 @@ def get_ds_config(cfg: Any):
     return ds_config
 
 
+def adjust_model_gradients(model: torch.nn.Module, cfg: Any):
+    """Adjusts parameter gradients if required"""
+
+    if getattr(cfg.architecture, "force_embedding_gradients"):
+        for module in model.modules():
+            if isinstance(module, torch.nn.Embedding):
+                for param in module.parameters():
+                    param.requires_grad = True
+                    param.data = param.data.float()
+
+    if cfg.training.lora and cfg.training.loss_function == "MoECrossEntropy":
+        if cfg.environment._local_rank == 0:
+            logger.info(f"Enabling gradients for gate layers.")
+        for name, module in model.named_modules():
+            if "gate" in name:
+                for param in module.parameters():
+                    param.data = param.data.float()
+                    param.requires_grad = True
+
+    return model
+
+
 def wrap_model_distributed(
     model: torch.nn.Module,
     optimizer: torch.optim.Optimizer,
@@ -963,12 +985,9 @@ def prepare_lora(cfg, backbone):
     if target_modules is None:
         target_modules = []
         for name, module in backbone.named_modules():
-            if (
-                isinstance(
-                    module, (torch.nn.Linear, torch.nn.Conv1d, Conv1DTransformer)
-                )
-                and "head" not in name
-            ):
+            if isinstance(
+                module, (torch.nn.Linear, torch.nn.Conv1d, Conv1DTransformer)
+            ) and all(substring not in name for substring in ["head", "gate"]):
                 name = name.split(".")[-1]
                 if name not in target_modules:
                     target_modules.append(name)

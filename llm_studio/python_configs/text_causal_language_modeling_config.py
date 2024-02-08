@@ -171,14 +171,14 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values[
             "differential_learning_rate_layers"
         ] = possible_values.String(
-            values=("backbone", "embed"),
+            values=("backbone", "embed", "gate"),
             allow_custom=False,
             placeholder="Select optional layers...",
         )
         self._possible_values["differential_learning_rate"] = self._possible_values[
             "learning_rate"
         ]
-        self._possible_values["router_aux_loss_coef"] = (0.01, 2.0, 0.01)
+        self._possible_values["router_aux_loss_coef"] = (0.0, 2.0, 0.01)
 
         self._possible_values["batch_size"] = (1, 256, 1)
         self._possible_values["epochs"] = (0, 10, 1)

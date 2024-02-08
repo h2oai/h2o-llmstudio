@@ -49,6 +49,7 @@ from llm_studio.src.utils.logging_utils import (
 )
 from llm_studio.src.utils.modeling_utils import (
     activate_neftune,
+    adjust_model_gradients,
     check_disk_space,
     get_ds_config,
     get_number_of_validation_epochs,
@@ -563,12 +564,7 @@ def run(cfg: Any) -> None:
     optimizer = get_optimizer(model=model, cfg=cfg)
     scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
 
-    if getattr(cfg.architecture, "force_embedding_gradients"):
-        for module in model.modules():
-            if isinstance(module, torch.nn.Embedding):
-                for param in module.parameters():
-                    param.requires_grad = True
-                    param.data = param.data.float()
+    model = adjust_model_gradients(model, cfg)
 
     if cfg.environment._distributed:
         (
