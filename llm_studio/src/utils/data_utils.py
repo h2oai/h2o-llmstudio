@@ -663,6 +663,7 @@ def batch_padding(
                     for i in range(batch[mask_key].size(0))
                 ]
             ).float()
+            quantile = 1 - cfg.tokenizer.padding_quantile
         else:
             lengths = torch.stack(
                 [
@@ -670,11 +671,10 @@ def batch_padding(
                     for i in range(batch[mask_key].size(0))
                 ]
             ).float()
+            quantile = cfg.tokenizer.padding_quantile
         if cfg.environment._distributed:
             lengths = sync_across_processes(lengths, cfg.environment._world_size)
-        idx = int(
-            torch.floor(torch.quantile(lengths, 1 - cfg.tokenizer.padding_quantile))
-        )
+        idx = int(torch.floor(torch.quantile(lengths, quantile)))
     else:
         if padding_side == "left":
             idx = int(torch.where(batch[mask_key] == 1)[1].min())
