@@ -17,10 +17,15 @@ def open_llm_studio(page: Page, base_url):
 
 @when("I login to LLM Studio", target_fixture="llm_studio")
 def login_to_llm_studio(logger: logging.Logger, page: Page, base_url: str):
-    if "LOCAL_TEST" not in os.environ:
-        okta_user = os.environ.get("OKTA_USER")
-        okta_password = os.environ.get("OKTA_PASSWORD")
-        login(page, "okta", okta_user, okta_password)
+    okta_user = os.environ.get("OKTA_USER")
+    okta_password = os.environ.get("OKTA_PASSWORD")
+    keycloak_user = os.environ.get("KEYCLOAK_USER")
+    keycloak_password = os.environ.get("KEYCLOAK_PASSWORD")
+    if "LOCAL_LOGIN" not in os.environ:
+        if okta_user and okta_password:
+            login(page, "okta", okta_user, okta_password)
+        elif keycloak_user and keycloak_password:
+            login(page, "keycloak", keycloak_user, keycloak_password)
 
     return LLMStudioPage(logger, page, base_url)
 

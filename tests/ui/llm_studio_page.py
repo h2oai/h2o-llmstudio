@@ -64,7 +64,7 @@ class LLMStudioPage(BasePage):
 
     def import_dataset_from_filesystem(self, filepath: str):
         self.import_dataset("Local")
-        if "LOCAL_TEST" in os.environ:
+        if "LOCAL_LOGIN" in os.environ:
             path = f"{LOCAL_FILESYSTEM_PATH}/{filepath}"
         else:
             path = f"{CLOUD_FILESYSTEM_PATH}/{filepath}"
@@ -163,10 +163,9 @@ class LLMStudioPage(BasePage):
 
     def run_experiment(self):
         self.get_by_test_id(self.EXPERIMENT_RUN_SELECTOR).click()
-        self.handle_gpu_error()
-
-    def handle_gpu_error(self):
-        self.get_by_test_id(self.GPU_WARNING_SELECTOR).click()
+        locator = self.get_by_test_id(self.GPU_WARNING_SELECTOR)
+        if locator.is_visible():
+            locator.click()
 
     def experiment_name(self, name: str):
         self.get_by_test_id(self.EXPERIMENT_NAME_SELECTOR).fill(name)
