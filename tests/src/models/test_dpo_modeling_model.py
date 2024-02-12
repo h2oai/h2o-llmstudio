@@ -189,7 +189,7 @@ def test_dpo_perplexity_metric(tmp_path, df2):
         prediction=ConfigNLPCausalLMPrediction(metric="Perplexity"),
     )
     cfg.architecture.gradient_checkpointing = False
-    cfg.environment._device = device
+    cfg.environment._device = device  # type: ignore
 
     dataset = CustomDataset(df2, cfg, mode="train")
     model = Model(cfg).eval().to(device)
