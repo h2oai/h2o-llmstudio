@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader, Sampler, SequentialSampler
 
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
 from llm_studio.src.utils.exceptions import LLMDataException
+from llm_studio.src.utils.gpu_utils import sync_across_processes
 from llm_studio.src.utils.utils import PatchedAttribute, set_seed
 
 logger = logging.getLogger(__name__)
@@ -656,33 +657,26 @@ def batch_padding(
         return batch
     elif training and cfg.tokenizer.padding_quantile < 1.0:
         if padding_side == "left":
-            idx = int(
-                torch.floor(
-                    torch.quantile(
-                        torch.stack(
-                            [
-                                torch.where(batch[mask_key][i] == 1)[0].min()
-                                for i in range(batch[mask_key].size(0))
-                            ]
-                        ).float(),
-                        1 - cfg.tokenizer.padding_quantile,
-                    )
-                )
-            )
+            lengths = torch.stack(
+                [
+                    torch.where(batch[mask_key][i] == 1)[0].min()
+                    for i in range(batch[mask_key].size(0))
+                ]
+            ).float()
+            quantile = 1 - cfg.tokenizer.padding_quantile
         else:
-            idx = int(
-                torch.ceil(
-                    torch.quantile(
-                        torch.stack(
-                            [
-                                torch.where(batch[mask_key][i] == 1)[0].max()
-                                for i in range(batch[mask_key].size(0))
-                            ]
-                        ).float(),
-                        cfg.tokenizer.padding_quantile,
-                    )
-                )
-            )
+            lengths = torch.stack(
+                [
+                    torch.where(batch[mask_key][i] == 1)[0].max()
+                    for i in range(batch[mask_key].size(0))
+                ]
+            ).float()
+            quantile = cfg.tokenizer.padding_quantile
+        if cfg.environment._distributed:
+            lengths = sync_across_processes(
+                lengths, cfg.environment._world_size
+            )  # type: ignore
+        idx = int(torch.floor(torch.quantile(lengths, quantile)))
     else:
         if padding_side == "left":
             idx = int(torch.where(batch[mask_key] == 1)[1].min())
