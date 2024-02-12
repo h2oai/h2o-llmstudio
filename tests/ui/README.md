@@ -20,7 +20,7 @@ make test-ui-headed
 ### Remote Testing
 You can conduct UI testing for LLM-Studio on a remote machine using the following approaches:
 
-1. Running the App on a Remote Server
+#### 1. **Running the App on a Remote Server**
   - Set up the app on a remote Ubuntu instance:
     ```bash
     make setup-dev
@@ -29,25 +29,25 @@ You can conduct UI testing for LLM-Studio on a remote machine using the followin
   - Obtain the app URL.
   - Run the tests on the local machine:
     ```bash
-    export PYTEST_BASE_URL=localhost:10101
+    export PYTEST_BASE_URL=<insert app url>
     make setup-ui
     make test-ui-headed
     ```
-2. Running the App on HAMC (with Okta Login)
-```bash
-export OKTA_USER=
-export OKTA_PASSWORD=
-export PYTEST_BASE_URL=
-make test-ui
-```
+#### 2. **Running the App on HAMC** _(with Okta Login) https://internal-genai.dedicated.h2o.ai/_
+  ```bash
+  export OKTA_USER=
+  export OKTA_PASSWORD=
+  export PYTEST_BASE_URL=
+  make test-ui
+  ```
 
-3. Running the App on HAIC (with Keycloak Login)
-```bash
-export KEYCLOAK_USER=
-export KEYCLOAK_PASSWORD=
-export PYTEST_BASE_URL=
-make test-ui
-```
+#### 3. **Running the App on HAIC** _(with Keycloak Login) https://cloud-qa.h2o.ai/_
+  ```bash
+  export KEYCLOAK_USER=
+  export KEYCLOAK_PASSWORD=
+  export PYTEST_BASE_URL=
+  make test-ui
+  ```
 
 ### Test Results
 The results of the UI tests are stored in `reports/junit_ui.xml`. These reports provide valuable insights into the success and failure of the tests, aiding in the continuous improvement of the application.
