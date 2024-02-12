@@ -5,6 +5,7 @@ The UI testing framework for LLM-Studio leverages the principles of Behaviour Dr
 ## Design
 The framework is designed to be flexible, capable of running on local and remote machines seamlessly. It is agnostic to the location of the application, making it ideal for release testing across various instances of H2OAI Integrated Cloud (HAIC).
 
+## Execution
 ### Local Machine Setup
 To set up and run UI tests locally, follow these steps:
 
