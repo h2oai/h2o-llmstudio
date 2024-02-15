@@ -1,10 +1,13 @@
+from typing import Optional
+
 import pandas as pd
 from pandas.core.frame import DataFrame
-from sqlalchemy import Column, Integer, String, create_engine
-from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
-from sqlalchemy.orm import Session
+from sqlalchemy import Integer, String, create_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
-Base: DeclarativeMeta = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 class Dataset(Base):
@@ -12,12 +15,14 @@ class Dataset(Base):
 
     __tablename__ = "datasets"
 
-    id = Column("id", Integer, autoincrement=True, primary_key=True)
-    name = Column("name", String, unique=True)
-    path = Column("path", String)
-    config_file = Column("config_file", String)
-    train_rows = Column("train_rows", Integer)
-    validation_rows = Column("validation_rows", Integer)
+    id: Mapped[int] = mapped_column("id", Integer, autoincrement=True, primary_key=True)
+    name: Mapped[str] = mapped_column("name", String, unique=True)
+    path: Mapped[str] = mapped_column("path", String)
+    config_file: Mapped[str] = mapped_column("config_file", String)
+    train_rows: Mapped[int] = mapped_column("train_rows", Integer)
+    validation_rows: Mapped[Optional[int]] = mapped_column(
+        "validation_rows", Integer, nullable=True
+    )
 
 
 class Experiment(Base):
@@ -25,15 +30,15 @@ class Experiment(Base):
 
     __tablename__ = "experiments"
 
-    id = Column("id", Integer, primary_key=True)
-    name = Column("name", String)
-    mode = Column("mode", String)
-    dataset = Column("dataset", String)
-    config_file = Column("config_file", String)
-    path = Column("path", String)
-    seed = Column("seed", Integer)
-    process_id = Column("process_id", Integer)
-    gpu_list = Column("gpu_list", String)
+    id: Mapped[int] = mapped_column("id", Integer, primary_key=True)
+    name: Mapped[str] = mapped_column("name", String)
+    mode: Mapped[str] = mapped_column("mode", String)
+    dataset: Mapped[str] = mapped_column("dataset", String)
+    config_file: Mapped[str] = mapped_column("config_file", String)
+    path: Mapped[str] = mapped_column("path", String)
+    seed: Mapped[int] = mapped_column("seed", Integer)
+    process_id: Mapped[int] = mapped_column("process_id", Integer)
+    gpu_list: Mapped[str] = mapped_column("gpu_list", String)
 
 
 class Database:
