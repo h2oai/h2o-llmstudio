@@ -127,7 +127,7 @@ If you wish to use conda or another virtual environment, you can also install th
 
 ```bash
 pip install -r requirements.txt
-pip install flash-attn==2.3.3 --no-build-isolation  # optional for Flash Attention 2
+pip install flash-attn==2.5.5 --no-build-isolation  # optional for Flash Attention 2
 ```
 
 ## Run H2O LLM Studio GUI
