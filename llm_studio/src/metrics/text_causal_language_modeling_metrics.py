@@ -41,16 +41,19 @@ def sacrebleu_score(
 
 def call_openai_api(template, model, deployment_id=None):
     if os.getenv("OPENAI_API_TYPE", "open_ai") == "azure":
-        client = AzureOpenAI(
+        endpoint = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
+        client: AzureOpenAI | OpenAI = AzureOpenAI(
             api_key=os.getenv("OPENAI_API_KEY", ""),
             azure_deployment=os.getenv("OPENAI_API_DEPLOYMENT_ID"),
             # https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning
             api_version=os.getenv("OPENAI_API_VERSION", "2023-05-15"),
             # https://learn.microsoft.com/en-us/azure/cognitive-services/openai/how-to/create-resource?pivots=web-portal#create-a-resource
-            azure_endpoint=os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1"),
+            azure_endpoint=endpoint,
             max_retries=LLM_RETRY_ATTEMPTS,
             timeout=LLM_TIMEOUT,  # unit is seconds
         )
+        logger.info("Using Microsoft Azure Endpoint for OpenAI API")
+        logger.info(f"Endpoint: {endpoint}")
     else:
         client = OpenAI(
             api_key=os.getenv("OPENAI_API_KEY", ""),
