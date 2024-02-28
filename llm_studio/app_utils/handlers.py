@@ -5,7 +5,8 @@ from typing import List
 import torch
 from h2o_wave import Q
 
-from llm_studio.app_utils.sections.chat import chat_tab, chat_update
+from llm_studio.app_utils.sections.chat import chat_tab
+from llm_studio.app_utils.sections.chat_update import chat_update
 from llm_studio.app_utils.sections.common import delete_dialog
 from llm_studio.app_utils.sections.dataset import (
     dataset_delete_current_datasets,
@@ -61,6 +62,7 @@ async def handle(q: Q) -> None:
     if not (
         q.args["experiment/display/chat/chatbot"]
         or q.args["experiment/display/chat/clear_history"]
+        or q.args["experiment/display/chat/abort_stream"]
     ):
         if "experiment/display/chat/cfg" in q.client:
             del q.client["experiment/display/chat/cfg"]
@@ -162,17 +164,16 @@ async def handle(q: Q) -> None:
         elif q.args["dataset/display/summary"]:
             await dataset_display(q)
 
-        elif q.args["experiment/start/run"]:
+        elif q.args["experiment/start/run"] or q.args["experiment/start/error/proceed"]:
             # add model type to cfg file name here
             q.client["experiment/start/cfg_file"] = add_model_type(
                 q.client["experiment/start/cfg_file"],
                 q.client["experiment/start/cfg_sub"],
             )
             q.client.delete_cards.add("experiment/start")
-            experiment_started = await experiment_run(q, pre="experiment/start")
+            await experiment_run(q, pre="experiment/start")
             q.client["experiment/list/mode"] = "train"
-            if experiment_started:
-                await list_current_experiments(q)
+
         elif q.args["experiment/start_experiment"] or q.args["experiment/list/new"]:
             if q.client["experiment/list/df_experiments"] is not None:
                 selected_idx = int(q.args["experiment/list/new"])

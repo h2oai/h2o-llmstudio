@@ -6,8 +6,8 @@ output/
 output_old/
 tmp/
 data/
-examples/data_oasst1
-examples/output_oasst1
+examples/data_oasst2
+examples/output_oasst2
 data_old/
 tests_tmp/
 subs/
@@ -158,3 +158,6 @@ h2o_wave.state
 
 # IDE
 .vscode
+
+# playwright
+test-results/

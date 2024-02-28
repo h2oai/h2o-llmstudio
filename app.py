@@ -1,7 +1,7 @@
 import logging
 import os
 
-from llm_studio.app_utils.sections.chat import show_chat_is_running_dialog
+from llm_studio.app_utils.sections.chat_update import is_app_blocked_while_streaming
 from llm_studio.src.utils.logging_utils import initialize_logging
 
 os.environ["MKL_THREADING_LAYER"] = "GNU"
@@ -25,10 +25,8 @@ async def serve(q: Q):
     """Serving function."""
 
     # Chat is still being streamed but user clicks on another button.
-    # Wait until streaming has been completed,
-    # as currently there is no stop streaming functionality implemented.
-    if q.client["experiment/display/chat/finished"] is False:
-        await show_chat_is_running_dialog(q)
+    # Wait until streaming has been completed
+    if await is_app_blocked_while_streaming(q):
         return
 
     if not q.app.initialized:

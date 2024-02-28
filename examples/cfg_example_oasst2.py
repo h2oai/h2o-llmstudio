@@ -16,13 +16,13 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
 Configuration file for checking and debugging LLM Studio.
 """
 
-DATA_DIRECTORY = "examples/data_oasst1"
+DATA_DIRECTORY = "examples/data_oasst2"
 
 
 @dataclass
 class Config(ConfigProblemBase):
-    output_directory: str = "examples/output_oasst1/"
-    experiment_name: str = "example_oasst1"
+    output_directory: str = "examples/output_oasst2/"
+    experiment_name: str = "example_oasst2"
     llm_backbone: str = "EleutherAI/pythia-1b"
 
     dataset: ConfigNLPCausalLMDataset = ConfigNLPCausalLMDataset(

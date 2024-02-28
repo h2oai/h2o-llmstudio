@@ -696,13 +696,13 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         config = AutoConfig.from_pretrained(
             cfg.llm_backbone,
             trust_remote_code=cfg.environment.trust_remote_code,
-            use_auth_token=os.getenv("HUGGINGFACE_TOKEN"),
+            token=os.getenv("HUGGINGFACE_TOKEN"),
             revision=cfg.environment.huggingface_branch,
         )
-        kwargs["use_auth_token"] = os.getenv("HUGGINGFACE_TOKEN")
+        kwargs["token"] = os.getenv("HUGGINGFACE_TOKEN")
     except TypeError:
         # TypeError: RWForCausalLM.__init__() got
-        # an unexpected keyword argument 'use_auth_token'
+        # an unexpected keyword argument 'token'
         config = AutoConfig.from_pretrained(
             cfg.llm_backbone,
             trust_remote_code=cfg.environment.trust_remote_code,
@@ -712,7 +712,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     config = update_backbone_config(config, cfg)
 
     quantization_config = None
-    if cfg.architecture.backbone_dtype == "int8":
+    if cfg.architecture.backbone_dtype == "int8" and len(cfg.environment.gpus):
         kwargs["device_map"] = {"": cfg.environment._device}  # type: ignore
         quantization_config = BitsAndBytesConfig(
             load_in_8bit=True,
@@ -721,7 +721,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         # need to force pretrained
         cfg.architecture.pretrained = True
         kwargs["torch_dtype"] = torch.float16  # type: ignore
-    elif cfg.architecture.backbone_dtype == "int4":
+    elif cfg.architecture.backbone_dtype == "int4" and len(cfg.environment.gpus):
         kwargs["device_map"] = {"": cfg.environment._device}  # type: ignore
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -731,6 +731,15 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         # need to force pretrained
         cfg.architecture.pretrained = True
         kwargs["torch_dtype"] = torch.float16  # type: ignore
+    elif len(cfg.environment.gpus) == 0 and cfg.architecture.backbone_dtype in [
+        "int4",
+        "int8",
+    ]:
+        logger.warning(
+            "Quantization is not supported on CPU. "
+            "Please run on GPU or disable quantization."
+        )
+        cfg.architecture.backbone_dtype = "float32"
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
 
@@ -769,7 +778,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         if cfg.environment._local_rank == 0:
             logger.info(f"Loaded {cfg.llm_backbone}.")
     else:
-        kwargs.pop("use_auth_token", None)
+        kwargs.pop("token", None)
         backbone = model_class.from_config(config, **kwargs)
 
     if cfg.tokenizer._vocab_length > config.vocab_size:
@@ -936,6 +945,21 @@ class TokenStoppingCriteria(StoppingCriteria):
         return False
 
 
+class EnvVariableStoppingCriteria(StoppingCriteria):
+    """
+    Stopping criteria based on env variable.
+    Useful to force stopping within the app.
+    """
+
+    stop_streaming_env: str = "STOP_STREAMING"
+
+    def __call__(self, input_ids: torch.Tensor, scores: torch.FloatTensor, **kwargs):
+        should_stop = self.stop_streaming_env in os.environ
+        if should_stop:
+            logger.info("Received signal to stop generating")
+        return should_stop
+
+
 def prepare_lora(cfg, backbone):
     target_modules = (
         [
@@ -1002,7 +1026,8 @@ def generate(backbone, batch, cfg, streamer, remove_prompt=True):
             TokenStoppingCriteria(
                 stop_word_ids=cfg.tokenizer._stop_words_ids,
                 prompt_input_ids_len=input_ids.shape[1],
-            )
+            ),
+            EnvVariableStoppingCriteria(),
         ]
     )
     # force to use cache and disable gradient checkpointing if enabled

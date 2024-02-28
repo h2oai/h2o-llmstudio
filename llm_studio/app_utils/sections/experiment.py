@@ -475,20 +475,23 @@ async def experiment_start(q: Q) -> None:
                         label="Run experiment",
                         primary=True,
                     )
-                ]
+                ],
+                justify="start",
             )
         ],
     )
     q.client.delete_cards.add("experiment/start/footer")
 
 
-async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
+async def experiment_run(q: Q, pre: str = "experiment/start"):
     """Start an experiment.
 
     Args:
         q: Q
         pre: prefix for client key
     """
+    # import here to avoid circular imports
+    from llm_studio.app_utils.sections.project import list_current_experiments
 
     logger.info("Starting experiment")
     logger.info(f"{pre}/cfg_file")
@@ -501,9 +504,8 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
     cfg = parse_ui_elements(cfg=cfg, q=q, pre=f"{pre}/cfg/")
     cfg.experiment_name = cfg.experiment_name.replace("/", "-")
 
-    experiment_started = True
     errors = check_config_for_errors(cfg)
-    if errors["title"]:
+    if errors["title"] and not q.args["experiment/start/error/proceed"]:
         title = (
             errors["title"][0]
             if len(errors["title"]) == 1
@@ -515,20 +517,25 @@ async def experiment_run(q: Q, pre: str = "experiment/start") -> bool:
             name="experiment/start/error/dialog",
             items=error_text
             + [
-                ui.button(
-                    name="experiment/start/error/ok",
-                    label="OK",
-                    primary=True,
-                ),
+                ui.buttons(
+                    [
+                        ui.button(
+                            name="experiment/start/error/ok", label="Ok", primary=True
+                        ),
+                        ui.button(
+                            name="experiment/start/error/proceed",
+                            label="I want to proceed anyhow",
+                            primary=False,
+                        ),
+                    ]
+                )
             ],
             closable=True,
         )
         q.client["keep_meta"] = True
-        await q.page.save()
-        return not experiment_started
-
-    start_experiment(cfg=cfg, q=q, pre=pre)
-    return experiment_started
+    else:
+        start_experiment(cfg=cfg, q=q, pre=pre)
+        await list_current_experiments(q)
 
 
 def get_experiment_table(
@@ -655,7 +662,7 @@ async def experiment_list(
     ]
 
     q.page["dataset/display/footer"] = ui.form_card(
-        box="footer", items=[ui.inline(items=buttons)]
+        box="footer", items=[ui.inline(items=buttons, justify="start")]
     )
     q.client.delete_cards.add("dataset/display/footer")
 
@@ -745,7 +752,7 @@ async def experiment_compare(q: Q, selected_rows: list):
         ui.button(name="experiment/list/current", label="Back", primary=False),
     ]
     q.page["experiment/compare/footer"] = ui.form_card(
-        box="footer", items=[ui.inline(items=buttons)]
+        box="footer", items=[ui.inline(items=buttons, justify="start")]
     )
     q.client.delete_cards.add("experiment/compare/footer")
 
@@ -773,7 +780,7 @@ async def experiment_rename_form(q: Q, error: str = "") -> None:
         ui.button(name="experiment/list/current", label="Abort", primary=False),
     ]
     q.page["dataset/display/footer"] = ui.form_card(
-        box="footer", items=[ui.inline(items=buttons)]
+        box="footer", items=[ui.inline(items=buttons, justify="start")]
     )
     q.client.delete_cards.add("dataset/display/footer")
 
@@ -1020,7 +1027,7 @@ async def experiment_display(q: Q) -> None:
     q.page["experiment/display/footer"] = ui.form_card(
         box="footer",
         items=[
-            ui.inline(items=buttons),
+            ui.inline(items=buttons, justify="start"),
         ],
     )
     q.client.delete_cards.add("experiment/display/footer")
@@ -1676,7 +1683,7 @@ async def experiment_download_model(q: Q):
                 and file_path not in paths_added
                 and file_path != zip_path
             ):
-                add_file_to_zip(zf=zf, path=file)
+                add_file_to_zip(zf=zf, path=file_path)
                 paths_added.append(file_path)
                 logger.info(
                     f"Added {file_path} to zip file as it "
