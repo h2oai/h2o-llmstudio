@@ -4,11 +4,11 @@ from functools import partial
 from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
-from openai import OpenAI, AzureOpenAI
 import pandas as pd
 import torch
 from joblib import Parallel, delayed
 from numpy.typing import NDArray
+from openai import AzureOpenAI, OpenAI
 from sacrebleu import BLEU
 from sacrebleu.metrics.base import Metric
 from torch import nn
@@ -59,7 +59,6 @@ def call_openai_api(template, model, deployment_id=None):
             timeout=LLM_TIMEOUT,  # unit is seconds
         )
     response = client.chat.completions.create(
-        deployment_id=deployment_id,
         model=model,
         messages=[
             {
@@ -75,7 +74,7 @@ def call_openai_api(template, model, deployment_id=None):
         temperature=0.0,
         max_tokens=1024,
     )
-    ret = response["choices"][0]["message"]["content"]
+    ret = response.choices[0].message.content
     try:
         score = float(ret.split("SCORE:")[-1].split()[0].split("/")[0])
     except ValueError:
