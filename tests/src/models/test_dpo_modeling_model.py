@@ -59,7 +59,7 @@ def generate_causal_lm_model_text(df):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     cfg = ConfigCausalLMProblemBase(
-        llm_backbone="MaxJeblick/llama2-0b-unit-test",
+        llm_backbone="h2oai/llama2-0b-unit-test",
         dataset=ConfigNLPCausalLMDataset(
             system_column="system",
             prompt_column=("prompt",),
@@ -101,7 +101,7 @@ def test_generation_is_the_same_as_for_causal_language_modeling(df):
     generated_text_causal_lm = generate_causal_lm_model_text(df)
 
     cfg = ConfigProblemBase(
-        llm_backbone="MaxJeblick/llama2-0b-unit-test",
+        llm_backbone="h2oai/llama2-0b-unit-test",
         dataset=ConfigDPODataset(
             system_column="system",
             prompt_column=("prompt",),

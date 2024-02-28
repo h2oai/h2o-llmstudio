@@ -14,7 +14,7 @@ Feature: LLM Studio
 
     Scenario: Create experiment
         When I create experiment test-experiment
-        And I update LLM Backbone to MaxJeblick/llama2-0b-unit-test
+        And I update LLM Backbone to h2oai/llama2-0b-unit-test
         And I tweak data sampling to 0.5
         And I tweak max length prompt to 128
         And I tweak max length answer to 128
