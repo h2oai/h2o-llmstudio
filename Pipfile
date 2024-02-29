@@ -58,7 +58,7 @@ flake8-black = "==0.3.6"
 flake8-isort = "==6.1.1"
 isort = "==5.13.2"
 mypy = "==1.8.0"
-pytest = "==8.0.2"
+pytest = "==8.0.0"  # >=8.0.1 is not supported by transformers https://github.com/huggingface/transformers/issues/29155
 pytest-cov = "==4.1.0"
 pytest-dependency = "==0.6.0"
 pytest-html = "4.1.1"

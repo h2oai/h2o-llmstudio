@@ -88,6 +88,7 @@ black: pipenv
 test: reports
 	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); \
 	$(PIPENV) run pytest -v --junitxml=reports/junit.xml \
+	--import-mode importlib \
 	--html=./reports/pytest.html \
 	--cov=llm_studio \
 	--cov-report term \
