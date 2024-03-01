@@ -1,3 +1,6 @@
+---
+description: You can view, rename, stop, or delete your experiments once you launch them. You can also create a new experiment based on an experiment you have already launched.
+---
 import Icon from "@material-ui/core/Icon";
 
 # View and manage experiments

@@ -1,3 +1,6 @@
+---
+description: H2O LLM Studio is an open-source, no-code LLM graphical user interface (GUI) designed for fine-tuning state-of-the-art large language models. 
+---
 # What is H2O LLM Studio?
 
 H2O LLM Studio is an open-source, no-code [LLM](../concepts#llm) graphical user interface (GUI) designed for fine-tuning state-of-the-art large language models. 

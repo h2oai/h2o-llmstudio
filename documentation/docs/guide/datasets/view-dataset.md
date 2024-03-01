@@ -1,3 +1,6 @@
+---
+description: You can view, review, edit, or delete your datasets once you have imported them. You can also start a new experiment using a dataset you have imported.
+---
 import Icon from "@material-ui/core/Icon";
 
 # View and manage dataset

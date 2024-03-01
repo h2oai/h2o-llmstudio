@@ -1,3 +1,6 @@
+---
+description: Learn from a collection of videos about LLM Studio.
+---
 import ReactPlayer from 'react-player'
 
 

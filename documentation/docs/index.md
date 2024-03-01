@@ -4,6 +4,7 @@ displayed_sidebar: defaultSidebar
 title: H2O LLM Studio | Docs
 hide_table_of_contents: true
 hide_title: true
+description: 'A framework and no-code GUI designed for fine-tuning state-of-the-art large language models (LLMs)'
 ---
 
 import H2OHome from '@site/src/components/H2OHome';
