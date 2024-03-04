@@ -254,14 +254,9 @@ def get_ds_config(cfg: Any):
         # https://www.deepspeed.ai/docs/config-json/#zero-optimizations-for-fp16-training
         "zero_force_ds_cpu_optimizer": False,
         "zero_optimization": {
-            # "stage": 3,
             "overlap_comm": True,
             "contiguous_gradients": True,
             "reduce_bucket_size": cfg.environment.deepspeed_reduce_bucket_size,
-            # zero3
-            # "stage3_prefetch_bucket_size": cfg.environment.deepspeed_stage3_prefetch_bucket_size,  # noqa: E501
-            # "stage3_param_persistence_threshold": cfg.environment.deepspeed_stage3_param_persistence_threshold,  # noqa: E501
-            # "stage3_gather_16bit_weights_on_model_save": True,
             # zero3 offload cpu
             # "stage3_max_live_parameters": cfg.environment.deepspeed_stage3_max_live_parameters,  # noqa: E501
             # "stage3_max_reuse_distance": cfg.environment.deepspeed_stage3_max_reuse_distance,  # noqa: E501
