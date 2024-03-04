@@ -280,15 +280,17 @@ def get_ds_config(cfg: Any):
     if cfg.environment.use_deepspeed == "ZeRO2":
         ds_config["zero_optimization"]["stage"] = 2
         ds_config["zero_optimization"]["allgather_partitions"] = True
-        ds_config["zero_optimization"]["allgather_bucket_size"] = 5e8
+        ds_config["zero_optimization"][
+            "allgather_bucket_size"
+        ] = cfg.environment.deepspeed_allgather_bucket_size
     elif cfg.environment.use_deepspeed == "ZeRO3":
         ds_config["zero_optimization"]["stage"] = 3
-        ds_config["zero_optimization"]["stage3_prefetch_bucket_size"] = (
-            cfg.environment.deepspeed_stage3_prefetch_bucket_size
-        )
-        ds_config["zero_optimization"]["stage3_param_persistence_threshold"] = (
-            cfg.environment.deepspeed_stage3_param_persistence_threshold
-        )
+        ds_config["zero_optimization"][
+            "stage3_prefetch_bucket_size"
+        ] = cfg.environment.deepspeed_stage3_prefetch_bucket_size
+        ds_config["zero_optimization"][
+            "stage3_param_persistence_threshold"
+        ] = cfg.environment.deepspeed_stage3_param_persistence_threshold
         ds_config["zero_optimization"][
             "stage3_gather_16bit_weights_on_model_save"
         ] = True
