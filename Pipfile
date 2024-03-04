@@ -12,9 +12,9 @@ verify_ssl = false
 python_version = "3.10"
 
 [packages]
-torch = {index = "pytorch", version = "==2.1.2+cu118"}
+torch = {index = "pytorch", version = "==2.2.0+cu118"}
 tqdm = ">=4.65.0, <5.0.0"
-transformers = "==4.37.1"
+transformers = "==4.38.1"
 numpy = ">=1.23.2, <2.0.0"
 pandas = ">=2.1.0, <3.0.0"
 scikit-learn = ">=1.0.2, <2.0.0"
@@ -49,7 +49,7 @@ tiktoken = "==0.5.1"
 hf-transfer = "==0.1.5"
 peft = "==0.5.0"
 azure-storage-file-datalake = ">=12.12.0"
-deepspeed = "==0.11.1"
+deepspeed = "==0.13.2"
 keyring = "==24.2.0"
 
 [dev-packages]
@@ -68,3 +68,6 @@ types-pyyaml = ">=6.0"
 types-requests = ">=2.31"
 types-toml = ">=0.10"
 wheel = "==0.41.0"
+pytest-bdd = "==6.1.1"
+hac-playwright = { file = "http://h2o-public-test-data.s3.amazonaws.com/e2e-testing/hac_playwright-1.38.0-py3-none-any.whl" }
+pytest-base-url = "==2.0.0"
