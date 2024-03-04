@@ -84,13 +84,13 @@ def run_eval(
     Returns:
         Validation loss
     """
-    torch.inference_mode(mode=True)
     with torch.no_grad():
+        is_training = model.training
         model.eval()
         val_data: Dict[str, Any] = run_inference(
             cfg, model, val_dataloader, mode
         )  # type: ignore
-    torch.inference_mode(mode=False)
+        model.train(is_training)
 
     # Sync validation predictions across GPUs
     if cfg.environment._distributed and cfg.environment._distributed_inference:
