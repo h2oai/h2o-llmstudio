@@ -74,12 +74,12 @@ class ConfigNLPCausalClassificationTraining(ConfigNLPCausalLMTraining):
         super().__post_init__()
         self._possible_values["loss_function"] = self.loss_class.names()
 
-        self._possible_values[
-            "differential_learning_rate_layers"
-        ] = possible_values.String(
-            values=("backbone", "embed", "classification_head"),
-            allow_custom=False,
-            placeholder="Select optional layers...",
+        self._possible_values["differential_learning_rate_layers"] = (
+            possible_values.String(
+                values=("backbone", "embed", "classification_head"),
+                allow_custom=False,
+                placeholder="Select optional layers...",
+            )
         )
 
 

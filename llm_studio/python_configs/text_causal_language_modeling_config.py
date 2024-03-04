@@ -167,12 +167,12 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["learning_rate"] = possible_values.Number(
             step=0.000001, min=0.000001
         )
-        self._possible_values[
-            "differential_learning_rate_layers"
-        ] = possible_values.String(
-            values=("backbone", "embed"),
-            allow_custom=False,
-            placeholder="Select optional layers...",
+        self._possible_values["differential_learning_rate_layers"] = (
+            possible_values.String(
+                values=("backbone", "embed"),
+                allow_custom=False,
+                placeholder="Select optional layers...",
+            )
         )
         self._possible_values["differential_learning_rate"] = self._possible_values[
             "learning_rate"
@@ -318,8 +318,10 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
             ),
             allow_custom=True,
         )
+        prompt_template_directory = "prompts"
+
         self._possible_values["metric_gpt_template"] = possible_values.String(
-            values=(f.split(".")[0] for f in os.listdir("prompts"))
+            values=(f.split(".")[0] for f in prompt_template_directory)
         )
 
         self._possible_values["batch_size_inference"] = (0, 512, 1)

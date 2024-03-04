@@ -55,7 +55,7 @@ def test_token_stopping_criteria():
 
 def test_neftune_is_disabled_in_inference():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    cfg = ConfigProblemBase(llm_backbone="MaxJeblick/llama2-0b-unit-test")
+    cfg = ConfigProblemBase(llm_backbone="h2oai/llama2-0b-unit-test")
     cfg.architecture.backbone_dtype = "float32"
     model = Model(cfg).eval().to(device)
 

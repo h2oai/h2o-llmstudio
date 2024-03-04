@@ -50,7 +50,7 @@ environment:
     trust_remote_code: true
     use_deepspeed: NA
 experiment_name: solid-spaniel
-llm_backbone: MaxJeblick/llama2-0b-unit-test
+llm_backbone: h2oai/llama2-0b-unit-test
 logging:
     logger: None
     neptune_project: ''

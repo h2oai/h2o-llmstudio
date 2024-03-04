@@ -169,9 +169,11 @@ async def interface(q: Q) -> None:
                     ],
                 ),
             ],
-            value=default_cfg.start_page
-            if q.client["nav/active"] is None
-            else q.client["nav/active"],
+            value=(
+                default_cfg.start_page
+                if q.client["nav/active"] is None
+                else q.client["nav/active"]
+            ),
         )
     else:
         # Only update menu properties to prevent from flickering

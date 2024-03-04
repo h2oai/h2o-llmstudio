@@ -24,7 +24,9 @@ from llm_studio.src.utils.modeling_utils import generate_experiment_name
 class ConfigRLHFLMDataset(ConfigNLPCausalLMDataset):
     dataset_class: Any = CustomDataset
 
-    text_prompt_start: str = "<s>[INST] <<SYS>>\nYou are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.\n\nIf a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n<</SYS>>\n\n"  # noqa: E501
+    text_prompt_start: str = (
+        "<s>[INST] <<SYS>>\nYou are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.\n\nIf a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.\n<</SYS>>\n\n"  # noqa: E501
+    )
     text_answer_separator: str = " [/INST]"
     add_eos_token_to_prompt: bool = False
     add_eos_token_to_answer: bool = False
@@ -84,12 +86,12 @@ class ConfigRLHFLMTraining(ConfigNLPCausalLMTraining):
     def __post_init__(self):
         super().__post_init__()
         self.lora = True
-        self._possible_values[
-            "differential_learning_rate_layers"
-        ] = possible_values.String(
-            values=("backbone", "value_head"),
-            allow_custom=False,
-            placeholder="Select optional layers...",
+        self._possible_values["differential_learning_rate_layers"] = (
+            possible_values.String(
+                values=("backbone", "value_head"),
+                allow_custom=False,
+                placeholder="Select optional layers...",
+            )
         )
         self._possible_values["grad_accumulation"] = (1, 128, 1)
 
