@@ -53,7 +53,7 @@ def unwrap_model(model: torch.nn.Module):
     return model
 
 
-def check_disk_space(model: torch.nn.Module, path: str, use_deepspeed: bool = False):
+def check_disk_space(model: torch.nn.Module, path: str):
     total, used, free = shutil.disk_usage(path)
 
     model_size_in_bytes = 0
@@ -96,7 +96,7 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
         Dictionary with all the keys to save
     """
 
-    if cfg.environment.use_deepspeed:
+    if cfg.environment.use_deepspeed != "NA":
         if path is not None:
             # gather model params from all ranks when using Deepspeed
             status = model.save_16bit_model(path, "checkpoint.pth")  # type: ignore
@@ -219,7 +219,7 @@ def load_checkpoint(
     if "model" in model_weights.keys():
         model_weights = model_weights["model"]
 
-    if cfg.environment.use_deepspeed:
+    if cfg.environment.use_deepspeed != "NA":
         if cfg.training.lora:
             model.backbone.base_model.model = load_model_weights(  # type: ignore
                 model.backbone.base_model.model,  # type: ignore
@@ -277,9 +277,11 @@ def get_ds_config(cfg: Any):
         "wall_clock_breakdown": False,
     }
 
-    if cfg.environment.use_zero2:
+    if cfg.environment.use_deepspeed == "ZeRO2":
         ds_config["zero_optimization"]["stage"] = 2
-    elif cfg.environment.use_zero3:
+        ds_config["zero_optimization"]["allgather_partitions"] = True
+        ds_config["zero_optimization"]["allgather_bucket_size"] = 5e8
+    elif cfg.environment.use_deepspeed == "ZeRO3":
         ds_config["zero_optimization"]["stage"] = 3
         ds_config["zero_optimization"]["stage3_prefetch_bucket_size"] = (
             cfg.environment.deepspeed_stage3_prefetch_bucket_size
@@ -315,7 +317,7 @@ def wrap_model_distributed(
     val_dataloader: torch.utils.data.DataLoader,
     cfg: Any,
 ):
-    if cfg.environment.use_deepspeed:
+    if cfg.environment.use_deepspeed != "NA":
         ds_config = get_ds_config(cfg)
         if not cfg.training.lora:
             ds_engine, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
@@ -559,7 +561,7 @@ def run_inference(
 
         batch = cfg.dataset.dataset_class.batch_to_device(data, cfg.environment._device)
 
-        if cfg.environment.use_deepspeed:
+        if cfg.environment.use_deepspeed != "NA":
             if (
                 cfg.prediction.metric != "Perplexity"
                 and cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES

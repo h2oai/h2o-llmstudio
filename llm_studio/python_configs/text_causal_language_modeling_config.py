@@ -350,9 +350,8 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     mixed_precision: bool = True
 
     compile_model: bool = False
-    use_deepspeed: bool = False
-    use_zero2: bool = False
-    use_zero3: bool = False
+    use_deepspeed: str = "NA"
+    deepspeed_allgather_bucket_size: int = int(5e8)
     deepspeed_reduce_bucket_size: int = int(1e6)
     deepspeed_stage3_prefetch_bucket_size: int = int(1e6)
     deepspeed_stage3_param_persistence_threshold: int = int(1e6)
@@ -392,6 +391,10 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
         self._possible_values["number_of_workers"] = (1, multiprocessing.cpu_count(), 1)
         self._possible_values["seed"] = possible_values.Number(step=1, min=-1)
+        self._possible_values["use_deepspeed"] = ["NA", "ZeRO2", "ZeRO3"]
+        self._possible_values["deepspeed_allgather_bucket_size"] = possible_values.Number(
+            step=1, min=1e6
+        )
         self._possible_values["deepspeed_reduce_bucket_size"] = possible_values.Number(
             step=1, min=1e6
         )
@@ -408,8 +411,8 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
             "deepspeed_stage3_max_reuse_distance"
         ] = possible_values.Number(step=1, min=1e6)
         self._nesting.add(
-            ["use_zero2", "use_zero3"],
-            [Dependency(key="use_deepspeed", value=False, is_set=False)],
+            ["deepspeed_allgather_bucket_size"],
+            [Dependency(key="use_deepspeed", value="ZeRO2", is_set=True)],
         )
         self._nesting.add(
             [
@@ -418,7 +421,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
                 "deepspeed_stage3_param_persistence_threshold",
                 # "deepspeed_offload_optimizer",
             ],
-            [Dependency(key="use_zero3", value=False, is_set=False)],
+            [Dependency(key="use_deepspeed", value="ZeRO3", is_set=True)],
         )
         # self._nesting.add(
         #     [

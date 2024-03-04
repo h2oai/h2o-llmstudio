@@ -156,6 +156,18 @@ endif
 		-v `pwd`/output:/workspace/output \
 		gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
 
+.PHONY: docker-stop
+docker-stop:
+	@CONTAINERS=$$(docker ps -a -q --filter ancestor=gcr.io/vorvan/h2oai/h2o-llmstudio:nightly); \
+	if [ -n "$$CONTAINERS" ]; then \
+		docker stop $$CONTAINERS; \
+		docker rm $$CONTAINERS; \
+	fi
+
+.PHONY: docker-clean-all
+docker-clean-all: docker-stop
+	docker rmi gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+
 .PHONY: shell
 shell:
 	$(PIPENV) shell

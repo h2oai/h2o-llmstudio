@@ -1713,7 +1713,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
         )
         experiment_path = q.client["experiment/display/experiment_path"]
         cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
-        if num_running_queued > 0 or cfg.environment.use_deepspeed:
+        if num_running_queued > 0 or cfg.environment.use_deepspeed != "NA":
             default_device = "cpu"
 
         try:

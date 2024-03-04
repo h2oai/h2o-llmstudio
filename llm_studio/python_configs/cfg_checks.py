@@ -104,7 +104,7 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
                 "Please use LORA or set Backbone Dtype to float32."
             ]
 
-    if cfg.environment.use_deepspeed and cfg.architecture.backbone_dtype in [
+    if cfg.environment.use_deepspeed != "NA" and cfg.architecture.backbone_dtype in [
         "int8",
         "int4",
     ]:
@@ -114,7 +114,7 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             f"{cfg.architecture.backbone_dtype}. "
             "Please set backbone type to float16 or bfloat16 for using deepspeed."
         ]
-    if cfg.environment.use_deepspeed and len(cfg.environment.gpus) < 2:
+    if cfg.environment.use_deepspeed != "NA" and len(cfg.environment.gpus) < 2:
         errors["title"] += ["Deepspeed not supported for single GPU."]
         errors["message"] += [
             "Deepspeed does not support single GPU training. "

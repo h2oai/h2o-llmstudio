@@ -132,7 +132,7 @@ def start_process(
     #     ]
     else:
         free_port = find_free_port()
-        if cfg.environment.use_deepspeed:
+        if cfg.environment.use_deepspeed != "NA":
             logger.info("Starting deepspeed...")
             cmd = [
                 "env",
