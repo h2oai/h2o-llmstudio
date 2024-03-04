@@ -395,9 +395,9 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
         self._possible_values[
             "deepspeed_allgather_bucket_size"
         ] = possible_values.Number(step=1, min=1e6)
-        self._possible_values["deepspeed_reduce_bucket_size"] = possible_values.Number(
-            step=1, min=1e6
-        )
+        self._possible_values[
+            "deepspeed_reduce_bucket_size"
+        ] = possible_values.Number(step=1, min=1e6)
         self._possible_values[
             "deepspeed_stage3_prefetch_bucket_size"
         ] = possible_values.Number(step=1, min=1e6)
