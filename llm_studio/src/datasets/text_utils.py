@@ -55,6 +55,8 @@ def get_tokenizer(cfg: Any):
             # https://github.com/h2oai/h2o-llmstudio/issues/623
             kwargs.pop("add_prefix_space")
             tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
+        else:
+            raise e
 
     tokenizer.padding_side = getattr(
         cfg.tokenizer, "_padding_side", tokenizer.padding_side
