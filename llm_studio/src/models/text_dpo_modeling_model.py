@@ -174,16 +174,16 @@ class Model(nn.Module):
         ).detach()
 
         # log sample average cross entropy, perplexity metric is also sample averaged
-        outputs[
-            "additional_log_chosen_cross_entropy_loss"
-        ] = SampleAveragedCrossEntropyLoss(self.cfg)(
-            logits_dict["chosen"], labels_dict["chosen"]
-        ).detach()
-        outputs[
-            "additional_log_rejected_cross_entropy_loss"
-        ] = SampleAveragedCrossEntropyLoss(self.cfg)(
-            logits_dict["rejected"], labels_dict["rejected"]
-        ).detach()
+        outputs["additional_log_chosen_cross_entropy_loss"] = (
+            SampleAveragedCrossEntropyLoss(self.cfg)(
+                logits_dict["chosen"], labels_dict["chosen"]
+            ).detach()
+        )
+        outputs["additional_log_rejected_cross_entropy_loss"] = (
+            SampleAveragedCrossEntropyLoss(self.cfg)(
+                logits_dict["rejected"], labels_dict["rejected"]
+            ).detach()
+        )
 
         if not self.training and self.cfg.prediction.metric == "Perplexity":
             outputs["perplexity"] = self.perplexity(

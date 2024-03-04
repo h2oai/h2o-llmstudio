@@ -151,12 +151,14 @@ def load_model_weights(
 
     # needed to load models trained in int4/int8 with other dtypes
     model_weights = {
-        k: v
-        if not (
-            cfg.architecture.backbone_dtype not in ("int4", "int8")
-            and (v.dtype is torch.int8 or v.dtype is torch.uint8)
+        k: (
+            v
+            if not (
+                cfg.architecture.backbone_dtype not in ("int4", "int8")
+                and (v.dtype is torch.int8 or v.dtype is torch.uint8)
+            )
+            else model_state_dict[k]
         )
-        else model_state_dict[k]
         for k, v in model_weights.items()
         if not (
             ("SCB" in k or "weight_format" in k)

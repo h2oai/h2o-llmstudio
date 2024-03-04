@@ -355,9 +355,9 @@ async def experiment_start(q: Q) -> None:
                 "checkpoint.pth",
             )
             if os.path.exists(prev_weights):
-                q.client[
-                    "experiment/start/cfg"
-                ].architecture.pretrained_weights = prev_weights
+                q.client["experiment/start/cfg"].architecture.pretrained_weights = (
+                    prev_weights
+                )
                 q.client["experiment/start/cfg"].architecture._visibility[
                     "pretrained_weights"
                 ] = -1
@@ -908,9 +908,9 @@ async def experiment_display(q: Q) -> None:
     if q.args["experiment/display/train_data_insights"] is not None:
         q.client["experiment/display/tab"] = "experiment/display/train_data_insights"
     if q.args["experiment/display/validation_prediction_insights"] is not None:
-        q.client[
-            "experiment/display/tab"
-        ] = "experiment/display/validation_prediction_insights"
+        q.client["experiment/display/tab"] = (
+            "experiment/display/validation_prediction_insights"
+        )
     if q.args["experiment/display/config"] is not None:
         q.client["experiment/display/tab"] = "experiment/display/config"
     if q.args["experiment/display/deployment"] is not None:
@@ -1156,9 +1156,11 @@ async def summary_tab(experiment_id, q):
             ui.stats(
                 [
                     ui.stat(
-                        value="-"
-                        if cfg.dataset.validation_dataframe in ["", "None", None]
-                        else Path(cfg.dataset.validation_dataframe).stem,
+                        value=(
+                            "-"
+                            if cfg.dataset.validation_dataframe in ["", "None", None]
+                            else Path(cfg.dataset.validation_dataframe).stem
+                        ),
                         label="Validation Dataset",
                     ),
                 ],
@@ -1188,9 +1190,11 @@ async def summary_tab(experiment_id, q):
             ui.stats(
                 [
                     ui.stat(
-                        value="-"
-                        if input_dict["val metric"] in ["", "None", None]
-                        else str(input_dict["val metric"]),
+                        value=(
+                            "-"
+                            if input_dict["val metric"] in ["", "None", None]
+                            else str(input_dict["val metric"])
+                        ),
                         label="Validation Score",
                     ),
                 ],

@@ -6,7 +6,6 @@ import zipfile
 from typing import Any
 
 import numpy as np
-import openai
 import psutil
 import torch
 
@@ -34,16 +33,6 @@ def set_environment(cfg):
     if "GPT" in cfg.prediction.metric and os.getenv("OPENAI_API_KEY", "") == "":
         logger.warning("No OpenAI API Key set. Setting metric to BLEU. ")
         cfg.prediction.metric = "BLEU"
-    else:
-        openai.api_key = os.getenv("OPENAI_API_KEY", "")
-        openai_api_type = os.getenv("OPENAI_API_TYPE", "open_ai")
-        if openai_api_type == "azure":
-            openai.api_type = openai_api_type
-            openai.api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
-            openai.api_version = os.getenv("OPENAI_API_VERSION", "2023-05-15")
-            logger.info("Using Microsoft Azure Endpoint for OpenAI API")
-            logger.info(f"Endpoint: {openai.api_base}")
-
     return cfg
 
 

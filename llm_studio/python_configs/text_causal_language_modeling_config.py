@@ -167,12 +167,12 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["learning_rate"] = possible_values.Number(
             step=0.000001, min=0.000001
         )
-        self._possible_values[
-            "differential_learning_rate_layers"
-        ] = possible_values.String(
-            values=("backbone", "embed"),
-            allow_custom=False,
-            placeholder="Select optional layers...",
+        self._possible_values["differential_learning_rate_layers"] = (
+            possible_values.String(
+                values=("backbone", "embed"),
+                allow_custom=False,
+                placeholder="Select optional layers...",
+            )
         )
         self._possible_values["differential_learning_rate"] = self._possible_values[
             "learning_rate"
@@ -395,18 +395,18 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
         self._possible_values["deepspeed_reduce_bucket_size"] = possible_values.Number(
             step=1, min=1e6
         )
-        self._possible_values[
-            "deepspeed_stage3_prefetch_bucket_size"
-        ] = possible_values.Number(step=1, min=1e6)
-        self._possible_values[
-            "deepspeed_stage3_param_persistence_threshold"
-        ] = possible_values.Number(step=1, min=1e6)
-        self._possible_values[
-            "deepspeed_stage3_max_live_parameters"
-        ] = possible_values.Number(step=1, min=1e6)
-        self._possible_values[
-            "deepspeed_stage3_max_reuse_distance"
-        ] = possible_values.Number(step=1, min=1e6)
+        self._possible_values["deepspeed_stage3_prefetch_bucket_size"] = (
+            possible_values.Number(step=1, min=1e6)
+        )
+        self._possible_values["deepspeed_stage3_param_persistence_threshold"] = (
+            possible_values.Number(step=1, min=1e6)
+        )
+        self._possible_values["deepspeed_stage3_max_live_parameters"] = (
+            possible_values.Number(step=1, min=1e6)
+        )
+        self._possible_values["deepspeed_stage3_max_reuse_distance"] = (
+            possible_values.Number(step=1, min=1e6)
+        )
         self._nesting.add(
             [
                 "deepspeed_reduce_bucket_size",
