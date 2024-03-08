@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 async def handle(q: Q) -> None:
     """Handles all requests in application and calls according functions."""
 
-    logger.info(f"args: {q.args}")
+    # logger.info(f"args: {q.args}")
 
     if not (
         q.args.__wave_submission_name__ == "experiment/display/chat/chatbot"
