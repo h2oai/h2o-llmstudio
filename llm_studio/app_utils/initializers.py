@@ -139,7 +139,7 @@ async def initialize_client(q: Q) -> None:
         await interface(q)
 
         await import_default_data(q)
-        q.args[default_cfg.start_page] = True
+        q.args.__wave_submission_name__ = default_cfg.start_page
 
     return
 
