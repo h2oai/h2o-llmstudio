@@ -44,11 +44,20 @@ def get_tokenizer(cfg: Any):
 
     try:
         tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
-    except TypeError:
-        # TypeError: RWForCausalLM.__init__() got
-        # an unexpected keyword argument 'token'
-        kwargs.pop("token")
-        tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
+    except TypeError as e:
+        error_message = str(e)
+        if "token" in error_message:
+            # TypeError: RWForCausalLM.__init__() got
+            # an unexpected keyword argument 'token'
+            kwargs.pop("token")
+            tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
+        elif "not a string" in error_message:
+            # https://github.com/h2oai/h2o-llmstudio/issues/623
+            kwargs.pop("add_prefix_space")
+            tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
+        else:
+            raise e
+
     tokenizer.padding_side = getattr(
         cfg.tokenizer, "_padding_side", tokenizer.padding_side
     )
