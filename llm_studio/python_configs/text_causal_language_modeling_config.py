@@ -479,6 +479,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
+                "h2oai/h2o-danube-1.8b-base",
+                "h2oai/h2o-danube-1.8b-chat",
                 "h2oai/h2ogpt-4096-llama2-7b",
                 "h2oai/h2ogpt-4096-llama2-7b-chat",
                 "h2oai/h2ogpt-4096-llama2-13b",
