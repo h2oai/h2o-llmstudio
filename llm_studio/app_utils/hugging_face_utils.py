@@ -38,9 +38,9 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
         text_prompt_start=cfg.dataset.text_prompt_start,
         text_answer_separator=cfg.dataset.text_answer_separator,
         trust_remote_code=cfg.environment.trust_remote_code,
-        end_of_sentence=cfg._tokenizer_eos_token
-        if cfg.dataset.add_eos_token_to_prompt
-        else "",
+        end_of_sentence=(
+            cfg._tokenizer_eos_token if cfg.dataset.add_eos_token_to_prompt else ""
+        ),
     )
     if cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES:
         cfg_kwargs.update(

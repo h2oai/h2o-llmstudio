@@ -5,6 +5,9 @@ import torch
 from torch import nn
 from transformers import AutoModelForCausalLM
 
+from llm_studio.src.losses.text_causal_language_modeling_losses import (
+    SampleAveragedCrossEntropyLoss,
+)
 from llm_studio.src.losses.text_dpo_modeling_losses import LOSS_REDUCTION
 from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplexity
 from llm_studio.src.utils.data_utils import batch_padding
@@ -110,8 +113,8 @@ class Model(nn.Module):
 
         outputs: Dict = {}
 
-        chosen_logits = None
-        chosen_labels = None
+        logits_dict = {}
+        labels_dict = {}
 
         for answer in ["chosen", "rejected"]:
             if padding:
@@ -130,10 +133,9 @@ class Model(nn.Module):
                 input_ids=batch[f"{answer}_input_ids"],
                 attention_mask=batch[f"{answer}_attention_mask"],
             ).logits
-            chosen_logits = logits.detach() if answer == "chosen" else chosen_logits
-            chosen_labels = (
-                batch[f"{answer}_labels"] if answer == "chosen" else chosen_labels
-            )
+
+            logits_dict[answer] = logits
+            labels_dict[answer] = batch[f"{answer}_labels"]
 
             outputs[f"{answer}_logps"] = get_batch_logps(
                 logits,
@@ -163,14 +165,33 @@ class Model(nn.Module):
         )
         outputs["loss"] = loss
 
-        # These values will be logged to Neptune, if enabled, see train.py
-        outputs["chosen_rewards"] = chosen_rewards
-        outputs["rejected_rewards"] = rejected_rewards
+        # These values will be logged to Neptune if enabled, see train.py
+        outputs["additional_log_chosen_rewards"] = chosen_rewards.detach()
+        outputs["additional_log_rejected_rewards"] = rejected_rewards.detach()
         # Reward margin should increase over time
-        outputs["reward_margin"] = chosen_rewards - rejected_rewards
+        outputs["additional_log_reward_margin"] = (
+            chosen_rewards - rejected_rewards
+        ).detach()
+
+        # log sample average cross entropy, perplexity metric is also sample averaged
+        outputs["additional_log_chosen_cross_entropy_loss"] = (
+            SampleAveragedCrossEntropyLoss(self.cfg)(
+                logits_dict["chosen"], labels_dict["chosen"]
+            ).detach()
+        )
+        outputs["additional_log_rejected_cross_entropy_loss"] = (
+            SampleAveragedCrossEntropyLoss(self.cfg)(
+                logits_dict["rejected"], labels_dict["rejected"]
+            ).detach()
+        )
 
         if not self.training and self.cfg.prediction.metric == "Perplexity":
-            outputs["perplexity"] = self.perplexity(chosen_logits, chosen_labels)
+            outputs["perplexity"] = self.perplexity(
+                logits_dict["chosen"], labels_dict["chosen"]
+            )
+            outputs["additional_log_rejected_perplexity"] = self.perplexity(
+                logits_dict["rejected"], labels_dict["rejected"]
+            )
 
         # enable cache again if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:

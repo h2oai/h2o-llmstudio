@@ -128,9 +128,9 @@ def ui_table_from_df(
             sortable=True if col in sortables else False,
             filterable=True if col in filterables else False,
             searchable=True if col in searchables else False,
-            data_type="number"
-            if col in numerics
-            else ("time" if col in times else "string"),
+            data_type=(
+                "number" if col in numerics else ("time" if col in times else "string")
+            ),
             cell_type=cell_types[col] if col in cell_types else None,
             min_width=min_widths[col] if col in min_widths else None,
             max_width=max_widths[col] if col in max_widths else None,

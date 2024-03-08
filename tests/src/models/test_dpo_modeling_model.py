@@ -1,8 +1,15 @@
+import random
+from contextlib import contextmanager
+from dataclasses import dataclass
+from unittest.mock import patch
+
 import pandas as pd
 import pytest
 import torch
+import torch.nn as nn
 
 from llm_studio.python_configs.text_causal_language_modeling_config import (
+    ConfigNLPCausalLMPrediction,
     ConfigNLPCausalLMTokenizer,
 )
 from llm_studio.python_configs.text_dpo_modeling_config import (
@@ -12,6 +19,7 @@ from llm_studio.python_configs.text_dpo_modeling_config import (
 from llm_studio.src.datasets.text_dpo_modeling_ds import CustomDataset
 from llm_studio.src.models.text_dpo_modeling_model import Model
 from llm_studio.src.utils.data_utils import batch_padding
+from train import run_eval
 
 
 @pytest.fixture
@@ -138,3 +146,117 @@ def test_generation_is_the_same_as_for_causal_language_modeling(df):
     ), "Generated text is not the same as from causal LM model:" "{}\n{}".format(
         generated_text, generated_text_causal_lm
     )
+
+
+@pytest.fixture
+def df2():
+    # create a list of all lowercase letters
+    alphabet = [chr(i) for i in range(97, 123)]
+
+    # create random strings from the alphabet
+    prompts = ["".join(random.choice(alphabet) for _ in range(10)) for _ in range(10)]
+    systems = ["".join(random.choice(alphabet) for _ in range(10)) for _ in range(10)]
+    answers = ["".join(random.choice(alphabet) for _ in range(10)) for _ in range(10)]
+    rejected_answers = [
+        "".join(random.choice(alphabet) for _ in range(10)) for _ in range(10)
+    ]
+
+    return pd.DataFrame(
+        {
+            "prompt": prompts,
+            "system": systems,
+            "answer": answers,
+            "rejected_answer": rejected_answers,
+        }
+    )
+
+
+def test_dpo_perplexity_metric(tmp_path, df2):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    cfg = ConfigProblemBase(
+        output_directory=str(tmp_path),
+        llm_backbone="MaxJeblick/llama2-0b-unit-test",
+        dataset=ConfigDPODataset(
+            system_column="system",
+            prompt_column=("prompt",),
+            answer_column="answer_column",
+            rejected_answer_column="answer_column",
+        ),
+        tokenizer=ConfigNLPCausalLMTokenizer(
+            max_length_prompt=256, max_length_answer=256, max_length=512
+        ),
+        prediction=ConfigNLPCausalLMPrediction(metric="Perplexity"),
+    )
+    cfg.architecture.gradient_checkpointing = False
+    cfg.environment._device = device  # type: ignore
+
+    dataset = CustomDataset(df2, cfg, mode="train")
+    model = Model(cfg).eval().to(device)
+    vocab_size = model.backbone.config.vocab_size
+
+    class MockBackbone(nn.Module):
+        """
+        Chosen and rejected logits are the same
+        Chosen reference and rejected reference logits are the same,
+        but different from chosen and rejected logits.
+        As answer_column and rejected_answer_column are the same,
+
+          -> perplexity and rejection_perplexity should be the same
+          -> chosen_rewards and rejected_rewards should be the same
+          -> chosen_cross_entropy and rejected_cross_entropy should be the same
+          -> reward margin should be 0
+        """
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.seed = 0
+
+        def disable_adapter(self):
+            # mock lora adapter
+            @contextmanager
+            def flip_seed():
+                self.seed = 1
+                yield None
+                self.seed = 0
+
+            return flip_seed()
+
+        def forward(self, input_ids, attention_mask):
+            @dataclass
+            class Result:
+                bs, seq_len = input_ids.shape
+                torch.manual_seed(self.seed)
+                logits = torch.rand((bs, seq_len, vocab_size)).to(input_ids.device)
+
+            result = Result()
+            return result
+
+    class ListLogger:
+        def __init__(self):
+            self.logs = {}
+
+        def log(self, subset: str, name: str, value: str | float, step: float = None):
+            self.logs[name] = self.logs.get(name, []) + [value]
+
+    with patch.object(target=model, attribute="backbone", new_callable=MockBackbone):
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True)
+
+        # mock cfg.logging._logger.log
+        cfg.logging._logger = ListLogger()
+
+        run_eval(
+            cfg,
+            model=model,
+            val_dataloader=dataloader,
+            val_df=df2,
+            mode="validation",
+        )
+
+    log_dict = cfg.logging._logger.logs
+    assert log_dict["Perplexity"] == log_dict["rejected_perplexity"]
+    assert log_dict["chosen_rewards"] == log_dict["rejected_rewards"]
+    assert (
+        log_dict["chosen_cross_entropy_loss"] == log_dict["rejected_cross_entropy_loss"]
+    )
+    assert log_dict["reward_margin"] == [0] * len(log_dict["reward_margin"])
