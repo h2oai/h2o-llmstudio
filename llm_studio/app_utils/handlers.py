@@ -164,7 +164,10 @@ async def handle(q: Q) -> None:
         elif q.args["dataset/display/summary"]:
             await dataset_display(q)
 
-        elif q.args.__wave_submission_name__ == "experiment/start/run" or q.args.__wave_submission_name__ == "experiment/start/error/proceed":
+        elif (
+            q.args.__wave_submission_name__ == "experiment/start/run"
+            or q.args.__wave_submission_name__ == "experiment/start/error/proceed"
+        ):
             # add model type to cfg file name here
             q.client["experiment/start/cfg_file"] = add_model_type(
                 q.client["experiment/start/cfg_file"],
@@ -174,7 +177,10 @@ async def handle(q: Q) -> None:
             await experiment_run(q, pre="experiment/start")
             q.client["experiment/list/mode"] = "train"
 
-        elif q.args.__wave_submission_name__ == "experiment/start_experiment" or q.args.__wave_submission_name__ == "experiment/list/new":
+        elif (
+            q.args.__wave_submission_name__ == "experiment/start_experiment"
+            or q.args.__wave_submission_name__ == "experiment/list/new"
+        ):
             if q.client["experiment/list/df_experiments"] is not None:
                 selected_idx = int(q.args["experiment/list/new"])
                 experiment_id = q.client["experiment/list/df_experiments"]["id"].iloc[
@@ -198,7 +204,9 @@ async def handle(q: Q) -> None:
 
         elif q.args.__wave_submission_name__ == "experiment/display/download_logs":
             await experiment_download_logs(q)
-        elif q.args.__wave_submission_name__ == "experiment/display/download_predictions":
+        elif (
+            q.args.__wave_submission_name__ == "experiment/display/download_predictions"
+        ):
             await experiment_download_predictions(q)
 
         elif q.args.__wave_submission_name__ == "experiment/list":
@@ -220,7 +228,10 @@ async def handle(q: Q) -> None:
             await experiment_rename_ui_workflow(q)
         elif q.args.__wave_submission_name__ == "experiment/list/compare":
             await current_experiment_list_compare(q)
-        elif q.args.__wave_submission_name__ == "experiment/stop" or q.args.__wave_submission_name__ == "experiment/list/stop/table":
+        elif (
+            q.args.__wave_submission_name__ == "experiment/stop"
+            or q.args.__wave_submission_name__ == "experiment/list/stop/table"
+        ):
             if q.args["experiment/list/stop/table"]:
                 idx = int(q.args["experiment/list/stop/table"])
                 selected_id = q.client["experiment/list/df_experiments"]["id"].iloc[idx]
@@ -261,7 +272,10 @@ async def handle(q: Q) -> None:
                 experiment_ids = list(exp_df["id"].iloc[list(map(int, selected_idxs))])
                 await experiment_delete_all_artifacts(q, experiment_ids)
 
-        elif q.args.__wave_submission_name__ == "experiment/delete" or q.args.__wave_submission_name__ == "experiment/list/delete/table":
+        elif (
+            q.args.__wave_submission_name__ == "experiment/delete"
+            or q.args.__wave_submission_name__ == "experiment/list/delete/table"
+        ):
             if q.args["experiment/list/delete/table"]:
                 selected_id = q.client["experiment/delete/single/id"]
                 experiment_ids = [selected_id]
@@ -301,15 +315,25 @@ async def handle(q: Q) -> None:
             await experiment_display(q)
         elif q.args.__wave_submission_name__ == "experiment/display/summary":
             await experiment_display(q)
-        elif q.args.__wave_submission_name__ == "experiment/display/train_data_insights":
+        elif (
+            q.args.__wave_submission_name__ == "experiment/display/train_data_insights"
+        ):
             await experiment_display(q)
-        elif q.args.__wave_submission_name__ == "experiment/display/validation_prediction_insights":
+        elif (
+            q.args.__wave_submission_name__
+            == "experiment/display/validation_prediction_insights"
+        ):
             await experiment_display(q)
-        elif q.args.__wave_submission_name__ == "experiment/display/push_to_huggingface":
+        elif (
+            q.args.__wave_submission_name__ == "experiment/display/push_to_huggingface"
+        ):
             await experiment_push_to_huggingface_dialog(q)
         elif q.args.__wave_submission_name__ == "experiment/display/download_model":
             await experiment_download_model(q)
-        elif q.args.__wave_submission_name__ == "experiment/display/push_to_huggingface_submit":
+        elif (
+            q.args.__wave_submission_name__
+            == "experiment/display/push_to_huggingface_submit"
+        ):
             await experiment_push_to_huggingface_dialog(q)
 
         elif q.args.__wave_submission_name__ == "experiment/display/config":
@@ -338,7 +362,10 @@ async def handle(q: Q) -> None:
             await dataset_import(q, step=4, edit=True)
         elif q.args.__wave_submission_name__ == "dataset/import/6":
             await dataset_import(q, step=6)
-        elif q.args.__wave_submission_name__ == "dataset/import/source" and not q.args["dataset/list"]:
+        elif (
+            q.args.__wave_submission_name__ == "dataset/import/source"
+            and not q.args["dataset/list"]
+        ):
             await dataset_import(q, step=1)
         elif q.args.__wave_submission_name__ == "dataset/merge":
             await dataset_merge(q, step=1)
