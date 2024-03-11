@@ -115,9 +115,11 @@ async def dataset_import(
             ui.dropdown(
                 name="dataset/import/source",
                 label="Source",
-                value="Upload"
-                if q.client["dataset/import/source"] is None
-                else q.client["dataset/import/source"],
+                value=(
+                    "Upload"
+                    if q.client["dataset/import/source"] is None
+                    else q.client["dataset/import/source"]
+                ),
                 choices=import_choices,
                 trigger=True,
                 tooltip="Source of dataset import",
@@ -1225,13 +1227,13 @@ async def show_statistics_tab(q, dataset_filename, config_filename):
     q.client.delete_cards.add("dataset/display/statistics/full_conversation_histogram")
 
     if len(set(stats_dict["number_of_prompts"])) > 1:
-        q.page[
-            "dataset/display/statistics/parent_id_length_histogram"
-        ] = histogram_card(
-            x=stats_dict["number_of_prompts"],
-            x_axis_description="number_of_prompts",
-            title="Distribution of number of prompt-answer turns per conversation.",
-            histogram_box="second",
+        q.page["dataset/display/statistics/parent_id_length_histogram"] = (
+            histogram_card(
+                x=stats_dict["number_of_prompts"],
+                x_axis_description="number_of_prompts",
+                title="Distribution of number of prompt-answer turns per conversation.",
+                histogram_box="second",
+            )
         )
         q.client.delete_cards.add(
             "dataset/display/statistics/parent_id_length_histogram"

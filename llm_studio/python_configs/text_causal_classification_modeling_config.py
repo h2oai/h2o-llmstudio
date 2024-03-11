@@ -74,12 +74,12 @@ class ConfigNLPCausalClassificationTraining(ConfigNLPCausalLMTraining):
         super().__post_init__()
         self._possible_values["loss_function"] = self.loss_class.names()
 
-        self._possible_values[
-            "differential_learning_rate_layers"
-        ] = possible_values.String(
-            values=("backbone", "embed", "classification_head"),
-            allow_custom=False,
-            placeholder="Select optional layers...",
+        self._possible_values["differential_learning_rate_layers"] = (
+            possible_values.String(
+                values=("backbone", "embed", "classification_head"),
+                allow_custom=False,
+                placeholder="Select optional layers...",
+            )
         )
 
 
@@ -172,6 +172,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
+                "h2oai/h2o-danube-1.8b-base",
+                "h2oai/h2o-danube-1.8b-chat",
                 "h2oai/h2ogpt-4096-llama2-7b",
                 "h2oai/h2ogpt-4096-llama2-7b-chat",
                 "h2oai/h2ogpt-4096-llama2-13b",

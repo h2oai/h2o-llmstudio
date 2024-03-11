@@ -4,14 +4,13 @@ from functools import partial
 from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
-import openai
 import pandas as pd
 import torch
 from joblib import Parallel, delayed
 from numpy.typing import NDArray
+from openai import AzureOpenAI, OpenAI
 from sacrebleu import BLEU
 from sacrebleu.metrics.base import Metric
-from tenacity import retry, stop_after_attempt, wait_random_exponential
 from torch import nn
 from tqdm import tqdm
 
@@ -19,6 +18,10 @@ from llm_studio.src.datasets.text_utils import get_texts
 from llm_studio.src.utils.logging_utils import TqdmToLogger
 
 logger = logging.getLogger(__name__)
+
+
+LLM_RETRY_ATTEMPTS = int(os.getenv("LLM_RETRY_ATTEMPTS", 3))
+LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", 60))
 
 
 def sacrebleu_score(
@@ -36,14 +39,29 @@ def sacrebleu_score(
     return np.array(scores)
 
 
-@retry(
-    reraise=True,
-    wait=wait_random_exponential(multiplier=1, max=60),
-    stop=stop_after_attempt(3),
-)
 def call_openai_api(template, model, deployment_id=None):
-    response = openai.ChatCompletion.create(
-        deployment_id=deployment_id,
+    if os.getenv("OPENAI_API_TYPE", "open_ai") == "azure":
+        endpoint = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
+        client: AzureOpenAI | OpenAI = AzureOpenAI(
+            api_key=os.getenv("OPENAI_API_KEY", ""),
+            azure_deployment=os.getenv("OPENAI_API_DEPLOYMENT_ID"),
+            # https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning
+            api_version=os.getenv("OPENAI_API_VERSION", "2023-05-15"),
+            # https://learn.microsoft.com/en-us/azure/cognitive-services/openai/how-to/create-resource?pivots=web-portal#create-a-resource
+            azure_endpoint=endpoint,
+            max_retries=LLM_RETRY_ATTEMPTS,
+            timeout=LLM_TIMEOUT,  # unit is seconds
+        )
+        logger.info("Using Microsoft Azure Endpoint for OpenAI API")
+        logger.info(f"Endpoint: {endpoint}")
+    else:
+        client = OpenAI(
+            api_key=os.getenv("OPENAI_API_KEY", ""),
+            base_url=os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1"),
+            max_retries=LLM_RETRY_ATTEMPTS,
+            timeout=LLM_TIMEOUT,  # unit is seconds
+        )
+    response = client.chat.completions.create(
         model=model,
         messages=[
             {
@@ -59,7 +77,7 @@ def call_openai_api(template, model, deployment_id=None):
         temperature=0.0,
         max_tokens=1024,
     )
-    ret = response["choices"][0]["message"]["content"]
+    ret = response.choices[0].message.content
     try:
         score = float(ret.split("SCORE:")[-1].split()[0].split("/")[0])
     except ValueError:
@@ -67,9 +85,9 @@ def call_openai_api(template, model, deployment_id=None):
     return score, ret
 
 
-def rate_reply(filled_eval_template, model, deployment_id=None):
+def rate_reply(filled_eval_template, model):
     try:
-        return call_openai_api(filled_eval_template, model, deployment_id)
+        return call_openai_api(filled_eval_template, model)
     except Exception as e:
         logger.warning(f"Exception caught in api call: {e}")
         return 0.0, ""
@@ -85,11 +103,6 @@ def gpt_score(
     vdf["_PROMPT"] = get_texts(val_df, cfg, separator="")
     vdf["_PREDICTED_TEXT"] = results["predicted_text"]
     vdf["_TARGET_TEXT"] = results["target_text"]
-
-    if os.getenv("OPENAI_API_TYPE", "open_ai") == "azure":
-        deployment_id = os.getenv("OPENAI_API_DEPLOYMENT_ID")
-    else:
-        deployment_id = None
 
     model = cfg.prediction.metric_gpt_model
     template_name = cfg.prediction.metric_gpt_template
@@ -113,7 +126,6 @@ def gpt_score(
         delayed(rate_reply)(
             filled_eval_template,
             model,
-            deployment_id=deployment_id,
         )
         for filled_eval_template in tqdm(
             vdf["filled_eval_template"].values,

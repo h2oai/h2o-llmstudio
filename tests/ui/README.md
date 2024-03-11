@@ -1,12 +1,17 @@
 # UI Testing for LLM-Studio
+
 ## Overview
+
 The UI testing framework for LLM-Studio leverages the principles of Behaviour Driven Development (BDD), combining the power of Playwright for automation and Behave for writing UI tests. This approach offers the best of both worlds, as it makes the tests easily understandable for humans while remaining straightforward for machines to execute. By adopting this framework, it eliminates the complexities associated with using Selenium.
 
 ## Design
+
 The framework is designed to be flexible, capable of running on local and remote machines seamlessly. It is agnostic to the location of the application, making it ideal for release testing across various instances of H2OAI Integrated Cloud (HAIC).
 
 ## Execution
+
 ### Local Machine Setup
+
 To set up and run UI tests locally, follow these steps:
 
 ```bash
@@ -19,22 +24,29 @@ make test-ui-headed
 ```
 
 ### Remote Testing
+
 You can conduct UI testing for LLM-Studio on a remote machine using the following approaches:
 
 #### 1. **Running the App on a Remote Server**
-  - Set up the app on a remote Ubuntu instance:
+
+- Set up the app on a remote Ubuntu instance:
+
     ```bash
     make setup-dev
     make llmstudio
     ```
-  - Obtain the app URL.
-  - Run the tests on the local machine:
+
+- Obtain the app URL.
+- Run the tests on the local machine:
+
     ```bash
     export PYTEST_BASE_URL=<insert app url>
     make setup-ui
     make test-ui-headed
     ```
-#### 2. **Running the App on HAMC** _(with Okta Login) https://internal-genai.dedicated.h2o.ai/_
+
+#### 2. **Running the App on HAMC** _(with Okta Login) <https://internal-genai.dedicated.h2o.ai/>_
+
   ```bash
   export OKTA_USER=
   export OKTA_PASSWORD=
@@ -42,7 +54,8 @@ You can conduct UI testing for LLM-Studio on a remote machine using the followin
   make test-ui
   ```
 
-#### 3. **Running the App on HAIC** _(with Keycloak Login) https://cloud-qa.h2o.ai/_
+#### 3. **Running the App on HAIC** _(with Keycloak Login) <https://cloud-qa.h2o.ai/>_
+
   ```bash
   export KEYCLOAK_USER=
   export KEYCLOAK_PASSWORD=
@@ -51,4 +64,5 @@ You can conduct UI testing for LLM-Studio on a remote machine using the followin
   ```
 
 ### Test Results
+
 The results of the UI tests are stored in `reports/junit_ui.xml`. These reports provide valuable insights into the success and failure of the tests, aiding in the continuous improvement of the application.
