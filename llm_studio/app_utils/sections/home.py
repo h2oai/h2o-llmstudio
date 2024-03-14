@@ -105,9 +105,9 @@ async def home(q: Q) -> None:
     df_viz = df_viz[df_viz.columns.intersection(["name", "problem type"])]
 
     if torch.cuda.is_available():
-        table_height = "max(calc(100vh - 650px), 400px)"
+        table_height = "max(calc(100vh - 660px), 400px)"
     else:
-        table_height = "max(calc(100vh - 540px), 400px)"
+        table_height = "max(calc(100vh - 550px), 400px)"
 
     q.page["dataset/list"] = ui.form_card(
         box="datasets",
