@@ -5,6 +5,7 @@ PIPENV ?= $(PYTHON) -m pipenv
 PIPENV_PYTHON = $(PIPENV) run python
 PIPENV_PIP = $(PIPENV_PYTHON) -m pip
 PWD = $(shell pwd)
+DOCKER_IMAGE ?= gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
 
 ifeq ($(origin H2O_LLM_STUDIO_WORKDIR), environment)
     WORKDIR := $(H2O_LLM_STUDIO_WORKDIR)
@@ -136,7 +137,7 @@ llmstudio:
 
 .PHONY: docker-build-nightly
 docker-build-nightly:
-	docker build -t gcr.io/vorvan/h2oai/h2o-llmstudio:nightly .
+	docker build -t $(DOCKER_IMAGE) .
 
 .PHONY: docker-run-nightly
 docker-run-nightly:
@@ -155,19 +156,16 @@ endif
 		-p 10101:10101 \
 		-v `pwd`/data:/workspace/data \
 		-v `pwd`/output:/workspace/output \
-		gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+		$(DOCKER_IMAGE)
 
-.PHONY: docker-stop
-docker-stop:
-	@CONTAINERS=$$(docker ps -a -q --filter ancestor=gcr.io/vorvan/h2oai/h2o-llmstudio:nightly); \
+.PHONY: docker-clean-all
+docker-clean-all:
+	@CONTAINERS=$$(docker ps -a -q --filter ancestor=$(DOCKER_IMAGE)); \
 	if [ -n "$$CONTAINERS" ]; then \
 		docker stop $$CONTAINERS; \
 		docker rm $$CONTAINERS; \
 	fi
-
-.PHONY: docker-clean-all
-docker-clean-all: docker-stop
-	docker rmi gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+	docker rmi $(DOCKER_IMAGE)
 
 .PHONY: shell
 shell:
