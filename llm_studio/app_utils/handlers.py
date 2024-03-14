@@ -60,9 +60,9 @@ async def handle(q: Q) -> None:
     # logger.info(f"args: {q.args}")
 
     if not (
-        q.args["experiment/display/chat/chatbot"]
-        or q.args["experiment/display/chat/clear_history"]
-        or q.args["experiment/display/chat/abort_stream"]
+        q.args.__wave_submission_name__ == "experiment/display/chat/chatbot"
+        or q.args.__wave_submission_name__ == "experiment/display/chat/clear_history"
+        or q.args.__wave_submission_name__ == "experiment/display/chat/abort_stream"
     ):
         if "experiment/display/chat/cfg" in q.client:
             del q.client["experiment/display/chat/cfg"]
@@ -74,41 +74,41 @@ async def handle(q: Q) -> None:
         gc.collect()
 
     try:
-        if q.args["home"]:
+        if q.args.__wave_submission_name__ == "home":
             await home(q)
-        elif q.args["settings"]:
+        elif q.args.__wave_submission_name__ == "settings":
             await settings(q)
-        elif q.args["save_settings"]:
+        elif q.args.__wave_submission_name__ == "save_settings":
             logger.info("Saving user settings")
             await save_user_settings_and_secrets(q)
             await settings(q)
-        elif q.args["load_settings"]:
+        elif q.args.__wave_submission_name__ == "load_settings":
             load_user_settings_and_secrets(q)
             await settings(q)
-        elif q.args["restore_default_settings"]:
+        elif q.args.__wave_submission_name__ == "restore_default_settings":
             load_default_user_settings(q)
             await settings(q)
 
-        elif q.args["report_error"]:
+        elif q.args.__wave_submission_name__ == "report_error":
             await report_error(q)
 
-        elif q.args["dataset/import"]:
+        elif q.args.__wave_submission_name__ == "dataset/import":
             await dataset_import(q, step=1)
-        elif q.args["dataset/list"]:
+        elif q.args.__wave_submission_name__ == "dataset/list":
             await dataset_list(q)
-        elif q.args["dataset/list/delete/abort"]:
+        elif q.args.__wave_submission_name__ == "dataset/list/delete/abort":
             q.page["dataset/list"].items[0].table.multiple = False
             await dataset_list(q, reset=True)
-        elif q.args["dataset/list/abort"]:
+        elif q.args.__wave_submission_name__ == "dataset/list/abort":
             q.page["dataset/list"].items[0].table.multiple = False
             await dataset_list(q, reset=True)
-        elif q.args["dataset/list/delete"]:
+        elif q.args.__wave_submission_name__ == "dataset/list/delete":
             await dataset_list_delete(q)
-        elif q.args["dataset/delete/single"]:
+        elif q.args.__wave_submission_name__ == "dataset/delete/single":
             dataset_id = q.client["dataset/delete/single/id"]
             dataset_id = q.client["dataset/list/df_datasets"]["id"].iloc[dataset_id]
             await dataset_delete_single(q, int(dataset_id))
-        elif q.args["dataset/delete/dialog/single"]:
+        elif q.args.__wave_submission_name__ == "dataset/delete/dialog/single":
             dataset_id = int(q.args["dataset/delete/dialog/single"])
             q.client["dataset/delete/single/id"] = dataset_id
             name = q.client["dataset/list/df_datasets"]["name"].iloc[dataset_id]
@@ -134,37 +134,40 @@ async def handle(q: Q) -> None:
             else:
                 await dataset_delete_current_datasets(q)
 
-        elif q.args["dataset/delete"]:
+        elif q.args.__wave_submission_name__ == "dataset/delete":
             await dataset_delete_current_datasets(q)
-        elif q.args["dataset/edit"]:
+        elif q.args.__wave_submission_name__ == "dataset/edit":
             if q.client["dataset/list/df_datasets"] is not None:
                 dataset_id = int(q.args["dataset/edit"])
                 dataset_id = q.client["dataset/list/df_datasets"]["id"].iloc[dataset_id]
                 await dataset_edit(q, int(dataset_id))
-        elif q.args["dataset/newexperiment"]:
+        elif q.args.__wave_submission_name__ == "dataset/newexperiment":
             if q.client["dataset/list/df_datasets"] is not None:
                 dataset_id = int(q.args["dataset/newexperiment"])
                 dataset_id = q.client["dataset/list/df_datasets"]["id"].iloc[dataset_id]
                 await dataset_newexperiment(q, int(dataset_id))
-        elif q.args["dataset/newexperiment/from_current"]:
+        elif q.args.__wave_submission_name__ == "dataset/newexperiment/from_current":
             idx = q.client["dataset/display/id"]
             dataset_id = q.client["dataset/list/df_datasets"]["id"].iloc[idx]
             await dataset_newexperiment(q, dataset_id)
 
-        elif q.args["dataset/list/table"]:
+        elif q.args.__wave_submission_name__ == "dataset/list/table":
             q.client["dataset/display/id"] = int(q.args["dataset/list/table"][0])
             await dataset_display(q)
 
-        elif q.args["dataset/display/visualization"]:
+        elif q.args.__wave_submission_name__ == "dataset/display/visualization":
             await dataset_display(q)
-        elif q.args["dataset/display/data"]:
+        elif q.args.__wave_submission_name__ == "dataset/display/data":
             await dataset_display(q)
-        elif q.args["dataset/display/statistics"]:
+        elif q.args.__wave_submission_name__ == "dataset/display/statistics":
             await dataset_display(q)
         elif q.args["dataset/display/summary"]:
             await dataset_display(q)
 
-        elif q.args["experiment/start/run"] or q.args["experiment/start/error/proceed"]:
+        elif (
+            q.args.__wave_submission_name__ == "experiment/start/run"
+            or q.args.__wave_submission_name__ == "experiment/start/error/proceed"
+        ):
             # add model type to cfg file name here
             q.client["experiment/start/cfg_file"] = add_model_type(
                 q.client["experiment/start/cfg_file"],
@@ -174,7 +177,10 @@ async def handle(q: Q) -> None:
             await experiment_run(q, pre="experiment/start")
             q.client["experiment/list/mode"] = "train"
 
-        elif q.args["experiment/start_experiment"] or q.args["experiment/list/new"]:
+        elif (
+            q.args.__wave_submission_name__ == "experiment/start_experiment"
+            or q.args.__wave_submission_name__ == "experiment/list/new"
+        ):
             if q.client["experiment/list/df_experiments"] is not None:
                 selected_idx = int(q.args["experiment/list/new"])
                 experiment_id = q.client["experiment/list/df_experiments"]["id"].iloc[
@@ -186,7 +192,7 @@ async def handle(q: Q) -> None:
                 q.client["experiment/start/cfg_experiment"] = str(experiment_id)
 
             await experiment_start(q)
-        elif q.args["experiment/start"]:
+        elif q.args.__wave_submission_name__ == "experiment/start":
             q.client["experiment/start/cfg_category"] = None
             q.client["experiment/start/cfg_file"] = None
             datasets_df = q.client.app_db.get_datasets_df()
@@ -196,31 +202,36 @@ async def handle(q: Q) -> None:
             else:
                 await experiment_start(q)
 
-        elif q.args["experiment/display/download_logs"]:
+        elif q.args.__wave_submission_name__ == "experiment/display/download_logs":
             await experiment_download_logs(q)
-        elif q.args["experiment/display/download_predictions"]:
+        elif (
+            q.args.__wave_submission_name__ == "experiment/display/download_predictions"
+        ):
             await experiment_download_predictions(q)
 
-        elif q.args["experiment/list"]:
+        elif q.args.__wave_submission_name__ == "experiment/list":
             q.client["experiment/list/mode"] = "train"
             await experiment_list(q)
-        elif q.args["experiment/list/current"]:
+        elif q.args.__wave_submission_name__ == "experiment/list/current":
             await list_current_experiments(q)
-        elif q.args["experiment/list/current/noreset"]:
+        elif q.args.__wave_submission_name__ == "experiment/list/current/noreset":
             await list_current_experiments(q, reset=False)
-        elif q.args["experiment/list/refresh"]:
+        elif q.args.__wave_submission_name__ == "experiment/list/refresh":
             await experiment_list(q)
-        elif q.args["experiment/list/abort"]:
+        elif q.args.__wave_submission_name__ == "experiment/list/abort":
             await list_current_experiments(q)
-        elif q.args["experiment/list/stop"]:
+        elif q.args.__wave_submission_name__ == "experiment/list/stop":
             await current_experiment_list_stop(q)
-        elif q.args["experiment/list/delete"]:
+        elif q.args.__wave_submission_name__ == "experiment/list/delete":
             await current_experiment_list_delete(q)
-        elif q.args["experiment/list/rename"]:
+        elif q.args.__wave_submission_name__ == "experiment/list/rename":
             await experiment_rename_ui_workflow(q)
-        elif q.args["experiment/list/compare"]:
+        elif q.args.__wave_submission_name__ == "experiment/list/compare":
             await current_experiment_list_compare(q)
-        elif q.args["experiment/stop"] or q.args["experiment/list/stop/table"]:
+        elif (
+            q.args.__wave_submission_name__ == "experiment/stop"
+            or q.args.__wave_submission_name__ == "experiment/list/stop/table"
+        ):
             if q.args["experiment/list/stop/table"]:
                 idx = int(q.args["experiment/list/stop/table"])
                 selected_id = q.client["experiment/list/df_experiments"]["id"].iloc[idx]
@@ -235,7 +246,7 @@ async def handle(q: Q) -> None:
 
             await experiment_stop(q, experiment_ids)
             await list_current_experiments(q)
-        elif q.args["experiment/list/delete/table/dialog"]:
+        elif q.args.__wave_submission_name__ == "experiment/list/delete/table/dialog":
             idx = int(q.args["experiment/list/delete/table/dialog"])
             names = [q.client["experiment/list/df_experiments"]["name"].iloc[idx]]
             selected_id = q.client["experiment/list/df_experiments"]["id"].iloc[idx]
@@ -247,7 +258,7 @@ async def handle(q: Q) -> None:
             else:
                 await experiment_delete_all_artifacts(q, [selected_id])
 
-        elif q.args["experiment/delete/dialog"]:
+        elif q.args.__wave_submission_name__ == "experiment/delete/dialog":
             selected_idxs = q.client["experiment/list/table"]
             exp_df = q.client["experiment/list/df_experiments"]
             names = list(exp_df["name"].iloc[list(map(int, selected_idxs))])
@@ -261,7 +272,10 @@ async def handle(q: Q) -> None:
                 experiment_ids = list(exp_df["id"].iloc[list(map(int, selected_idxs))])
                 await experiment_delete_all_artifacts(q, experiment_ids)
 
-        elif q.args["experiment/delete"] or q.args["experiment/list/delete/table"]:
+        elif (
+            q.args.__wave_submission_name__ == "experiment/delete"
+            or q.args.__wave_submission_name__ == "experiment/list/delete/table"
+        ):
             if q.args["experiment/list/delete/table"]:
                 selected_id = q.client["experiment/delete/single/id"]
                 experiment_ids = [selected_id]
@@ -272,92 +286,105 @@ async def handle(q: Q) -> None:
 
             await experiment_delete_all_artifacts(q, experiment_ids)
 
-        elif q.args["experiment/rename/action"]:
+        elif q.args.__wave_submission_name__ == "experiment/rename/action":
             await experiment_rename_action_workflow(q)
 
-        elif q.args["experiment/compare"]:
+        elif q.args.__wave_submission_name__ == "experiment/compare":
             await current_experiment_compare(q)
-        elif q.args["experiment/compare/charts"]:
+        elif q.args.__wave_submission_name__ == "experiment/compare/charts":
             await current_experiment_compare(q)
-        elif q.args["experiment/compare/config"]:
+        elif q.args.__wave_submission_name__ == "experiment/compare/config":
             await current_experiment_compare(q)
-        elif q.args["experiment/compare/diff_toggle"] is not None:
+        elif q.args.__wave_submission_name__ == "experiment/compare/diff_toggle":
             q.client["experiment/compare/diff_toggle"] = q.args[
                 "experiment/compare/diff_toggle"
             ]
             await current_experiment_compare(q)
 
-        elif q.args["experiment/list/table"]:
+        elif q.args.__wave_submission_name__ == "experiment/list/table":
             q.client["experiment/display/id"] = int(q.args["experiment/list/table"][0])
             q.client["experiment/display/logs_path"] = None
             q.client["experiment/display/preds_path"] = None
             q.client["experiment/display/tab"] = None
             await experiment_display(q)
 
-        elif q.args["experiment/display/refresh"]:
+        elif q.args.__wave_submission_name__ == "experiment/display/refresh":
             await experiment_display(q)
 
-        elif q.args["experiment/display/charts"]:
+        elif q.args.__wave_submission_name__ == "experiment/display/charts":
             await experiment_display(q)
-        elif q.args["experiment/display/summary"]:
+        elif q.args.__wave_submission_name__ == "experiment/display/summary":
             await experiment_display(q)
-        elif q.args["experiment/display/train_data_insights"]:
+        elif (
+            q.args.__wave_submission_name__ == "experiment/display/train_data_insights"
+        ):
             await experiment_display(q)
-        elif q.args["experiment/display/validation_prediction_insights"]:
+        elif (
+            q.args.__wave_submission_name__
+            == "experiment/display/validation_prediction_insights"
+        ):
             await experiment_display(q)
-        elif q.args["experiment/display/push_to_huggingface"]:
+        elif (
+            q.args.__wave_submission_name__ == "experiment/display/push_to_huggingface"
+        ):
             await experiment_push_to_huggingface_dialog(q)
-        elif q.args["experiment/display/download_model"]:
+        elif q.args.__wave_submission_name__ == "experiment/display/download_model":
             await experiment_download_model(q)
-        elif q.args["experiment/display/push_to_huggingface_submit"]:
+        elif (
+            q.args.__wave_submission_name__
+            == "experiment/display/push_to_huggingface_submit"
+        ):
             await experiment_push_to_huggingface_dialog(q)
 
-        elif q.args["experiment/display/config"]:
+        elif q.args.__wave_submission_name__ == "experiment/display/config":
             await experiment_display(q)
-        elif q.args["experiment/display/logs"]:
+        elif q.args.__wave_submission_name__ == "experiment/display/logs":
             await experiment_display(q)
-        elif q.args["experiment/display/chat"]:
+        elif q.args.__wave_submission_name__ == "experiment/display/chat":
             await experiment_display(q)
 
-        elif q.args["experiment/display/chat/chatbot"]:
+        elif q.args.__wave_submission_name__ == "experiment/display/chat/chatbot":
             await chat_update(q)
-        elif q.args["experiment/display/chat/clear_history"]:
+        elif q.args.__wave_submission_name__ == "experiment/display/chat/clear_history":
             await chat_tab(q, load_model=False)
 
-        elif q.args["dataset/import/local_upload"]:
+        elif q.args.__wave_submission_name__ == "dataset/import/local_upload":
             await dataset_import_uploaded_file(q)
-        elif q.args["dataset/import/2"]:
+        elif q.args.__wave_submission_name__ == "dataset/import/2":
             await dataset_import(q, step=2)
-        elif q.args["dataset/import/3"]:
+        elif q.args.__wave_submission_name__ == "dataset/import/3":
             await dataset_import(q, step=3)
-        elif q.args["dataset/import/3/edit"]:
+        elif q.args.__wave_submission_name__ == "dataset/import/3/edit":
             await dataset_import(q, step=3, edit=True)
-        elif q.args["dataset/import/4"]:
+        elif q.args.__wave_submission_name__ == "dataset/import/4":
             await dataset_import(q, step=4)
-        elif q.args["dataset/import/4/edit"]:
+        elif q.args.__wave_submission_name__ == "dataset/import/4/edit":
             await dataset_import(q, step=4, edit=True)
-        elif q.args["dataset/import/6"]:
+        elif q.args.__wave_submission_name__ == "dataset/import/6":
             await dataset_import(q, step=6)
-        elif q.args["dataset/import/source"] and not q.args["dataset/list"]:
+        elif (
+            q.args.__wave_submission_name__ == "dataset/import/source"
+            and not q.args["dataset/list"]
+        ):
             await dataset_import(q, step=1)
-        elif q.args["dataset/merge"]:
+        elif q.args.__wave_submission_name__ == "dataset/merge":
             await dataset_merge(q, step=1)
-        elif q.args["dataset/merge/action"]:
+        elif q.args.__wave_submission_name__ == "dataset/merge/action":
             await dataset_merge(q, step=2)
 
-        elif q.args["dataset/import/cfg_file"]:
+        elif q.args.__wave_submission_name__ == "dataset/import/cfg_file":
             await dataset_import(q, step=3)
 
         # leave at the end of dataset import routing,
         # would also be triggered if user clicks on
         # a continue button in the dataset import wizard
-        elif q.args["dataset/import/cfg/train_dataframe"]:
+        elif q.args.__wave_submission_name__ == "dataset/import/cfg/train_dataframe":
             await dataset_import(q, step=3)
 
-        elif q.args["experiment/start/cfg_file"]:
+        elif q.args.__wave_submission_name__ == "experiment/start/cfg_file":
             q.client["experiment/start/cfg_file"] = q.args["experiment/start/cfg_file"]
             await experiment_start(q)
-        elif q.args["experiment/start/dataset"]:
+        elif q.args.__wave_submission_name__ == "experiment/start/dataset":
             await experiment_start(q)
 
         elif q.client["nav/active"] == "experiment/start":
