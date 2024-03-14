@@ -6,6 +6,7 @@ module.exports = {
   projectName: "h2o-llmstudio", // Usually your repo name
   feedbackAssignee: "sherenem", // Should be a github username
   feedbackLabels: ["llmstudio"],
+  searchFilter: "h2o-llmstudio",
   showLastUpdateAuthor: false,
   includeCurrentVersion: true,
   versions: {
