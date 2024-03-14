@@ -1,5 +1,5 @@
 ---
-description: The flow of creating and fine-tuning large language models using H2O LLM Studio can be summarized in five sequential steps.
+description: The flow of creating and fine-tuning large language models using H2O LLM Studio.
 ---
 # Model flow
 
