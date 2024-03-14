@@ -318,10 +318,8 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
             ),
             allow_custom=True,
         )
-        prompt_template_directory = "prompts"
-
         self._possible_values["metric_gpt_template"] = possible_values.String(
-            values=(f.split(".")[0] for f in prompt_template_directory)
+            values=(f.split(".")[0] for f in os.listdir("prompts"))
         )
 
         self._possible_values["batch_size_inference"] = (0, 512, 1)
@@ -505,6 +503,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
+                "h2oai/h2o-danube-1.8b-base",
+                "h2oai/h2o-danube-1.8b-chat",
                 "h2oai/h2ogpt-4096-llama2-7b",
                 "h2oai/h2ogpt-4096-llama2-7b-chat",
                 "h2oai/h2ogpt-4096-llama2-13b",

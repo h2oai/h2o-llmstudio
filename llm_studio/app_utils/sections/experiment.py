@@ -82,11 +82,11 @@ async def experiment_start(q: Q) -> None:
     is_create_experiment = False
     # reset certain configs if new experiment start session
     if (
-        q.args["experiment/start"]
-        or q.args["experiment/start_experiment"]
-        or q.args["dataset/newexperiment"]
-        or q.args["dataset/newexperiment/from_current"]
-        or q.args["experiment/list/new"]
+        q.args.__wave_submission_name__ == "experiment/start"
+        or q.args.__wave_submission_name__ == "experiment/start_experiment"
+        or q.args.__wave_submission_name__ == "dataset/newexperiment"
+        or q.args.__wave_submission_name__ == "dataset/newexperiment/from_current"
+        or q.args.__wave_submission_name__ == "experiment/list/new"
     ):
         q.client["experiment/start/cfg_experiment_prev"] = None
         q.client["experiment/start/cfg_file_prev"] = None
