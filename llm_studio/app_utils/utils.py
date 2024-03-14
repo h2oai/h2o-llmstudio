@@ -132,7 +132,7 @@ def start_process(
     #     ]
     else:
         free_port = find_free_port()
-        if cfg.environment.use_deepspeed != "NA":
+        if cfg.environment.use_deepspeed:
             logger.info("Starting deepspeed...")
             cmd = [
                 "env",
@@ -1086,7 +1086,7 @@ def check_dependencies(cfg: Any, pre: str, k: str, q: Q, dataset_import: bool = 
                 dependency_values = [q.client[f"{pre}/cfg/{d.key}"]]
 
             all_deps += d.check(dependency_values)
-        return all_deps > 0
+        return all_deps == len(dependencies)
 
     return True
 

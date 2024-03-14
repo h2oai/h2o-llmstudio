@@ -59,7 +59,7 @@ class Model(nn.Module):
             self.backbone.generation_config = self.backbone.module.generation_config
 
     def generate(self, batch: Dict, cfg: Any, streamer=None):
-        if cfg.environment.use_deepspeed != "NA" and cfg.training.lora:
+        if cfg.environment.use_deepspeed and cfg.training.lora:
             return generate(self.backbone.base_model.model, batch, cfg, streamer)
         else:
             return generate(self.backbone, batch, cfg, streamer)

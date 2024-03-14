@@ -217,7 +217,7 @@ def run_train(
 
         if (
             cfg.environment._distributed
-            and not cfg.environment.use_deepspeed != "NA"
+            and not cfg.environment.use_deepspeed
             and hasattr(train_dataloader.sampler, "set_epoch")
         ):
             train_dataloader.sampler.set_epoch(epoch)  # type: ignore
@@ -284,7 +284,7 @@ def run_train(
             if (
                 cfg.environment.mixed_precision
                 and len(cfg.environment.gpus)
-                and not cfg.environment.use_deepspeed != "NA"
+                and not cfg.environment.use_deepspeed
             ):
                 scaler.scale(loss).backward()  # type: ignore
                 if itr % cfg.training.grad_accumulation == 0:
@@ -297,7 +297,7 @@ def run_train(
                     scaler.update()
                     optimizer.zero_grad(set_to_none=True)
             else:
-                if cfg.environment.use_deepspeed != "NA":
+                if cfg.environment.use_deepspeed:
                     model.backward(loss)  # type: ignore[operator]
                 else:
                     loss.backward()
@@ -439,7 +439,7 @@ def run(cfg: Any) -> None:
 
     if (
         cfg.architecture.backbone_dtype in ["int8", "int4"]
-        and cfg.environment.use_deepspeed != "NA"
+        and cfg.environment.use_deepspeed
     ):
         raise ValueError(
             f"Deepspeed do not support backbone type {cfg.architecture.backbone_dtype}."
@@ -455,7 +455,7 @@ def run(cfg: Any) -> None:
     if cfg.environment._distributed:
         cfg.environment._local_rank = int(os.environ["LOCAL_RANK"])
         cfg.environment._device = "cuda:%d" % cfg.environment._local_rank
-        if cfg.environment.use_deepspeed != "NA":
+        if cfg.environment.use_deepspeed:
             deepspeed.init_distributed()
         else:
             torch.distributed.init_process_group(backend="nccl", init_method="env://")
@@ -543,7 +543,7 @@ def run(cfg: Any) -> None:
         )
 
     # Prepare model and optimizer
-    if cfg.environment.use_deepspeed != "NA":
+    if cfg.environment.use_deepspeed:
         ds_config = get_ds_config(cfg)
         # keep this object alive.
         dschf = HfDeepSpeedConfig(ds_config)  # noqa: F841
@@ -586,7 +586,7 @@ def run(cfg: Any) -> None:
 
     if cfg.environment.compile_model:
         # deepspeed do not support torch.compile
-        if cfg.environment.use_deepspeed != "NA":
+        if cfg.environment.use_deepspeed:
             logger.warning(
                 "Deepspeed is active, but it doesn't support torch.compile."
                 "Skipping compilation for this experiment."

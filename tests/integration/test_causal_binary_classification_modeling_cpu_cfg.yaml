@@ -48,7 +48,7 @@ environment:
     number_of_workers: 8
     seed: -1
     trust_remote_code: true
-    use_deepspeed: NA
+    use_deepspeed: false
 experiment_name: solid-spaniel
 llm_backbone: h2oai/llama2-0b-unit-test
 logging:
