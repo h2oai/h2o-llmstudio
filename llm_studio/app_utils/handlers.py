@@ -350,6 +350,8 @@ async def handle(q: Q) -> None:
 
         elif q.args.__wave_submission_name__ == "dataset/import/local_upload":
             await dataset_import_uploaded_file(q)
+        elif q.args.__wave_submission_name__ == "dataset/import/local_path_list":
+            await dataset_import(q, step=1)
         elif q.args.__wave_submission_name__ == "dataset/import/2":
             await dataset_import(q, step=2)
         elif q.args.__wave_submission_name__ == "dataset/import/3":
