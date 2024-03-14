@@ -22,8 +22,8 @@ async def settings(q: Q) -> None:
                 type="info",
                 text="Setting changes are directly applied for the \
                 current session and can be made persistent by using the \
-                'Save settings persistently' button below. To reload \
-                the persistently saved settings, use the 'Load settings' button.",
+                ***Save settings persistently*** button below. To reload \
+                the persistently saved settings, use the ***Load settings*** button.",
             ),
             ui.separator("Credential Storage"),
             ui.inline(
@@ -41,16 +41,16 @@ async def settings(q: Q) -> None:
             ui.message_bar(
                 type="info",
                 text="""Method used to save credentials (passwords) \
-                for 'Save settings persistently'. \
+                for ***Save settings persistently***. \
                 The recommended approach for saving credentials (passwords) is to \
                 use either Keyring or to avoid permanent storage \
                 (requiring re-entry upon app restart). \
                 Keyring will be disabled if it is not set up on the host machine. \
                 Only resort to local .env if your machine's \
                 accessibility is restricted to you.\n\
-                When you select 'Save settings persistently', \
+                When you select ***Save settings persistently***, \
                 credentials will be removed from all non-selected methods. \
-                'Restore Default Settings' will clear credentials from all methods.
+                ***Restore Default Settings*** will clear credentials from all methods.
                 """,
             ),
             ui.separator("Appearance"),
@@ -463,7 +463,7 @@ async def settings(q: Q) -> None:
             ui.separator("Default Chat Settings"),
             ui.inline(
                 items=[
-                    ui.label("Gpu used for Chat", width=label_width),
+                    ui.label("GPU used for Chat", width=label_width),
                     ui.spinbox(
                         name="gpu_used_for_chat",
                         label=None,
