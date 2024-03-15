@@ -1,3 +1,6 @@
+---
+description: Once the model has been fine-tuned using H2O LLM Studio, you can then use h2oGPT to query, summarize, and chat with your model.
+---
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 

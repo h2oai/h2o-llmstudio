@@ -1,3 +1,6 @@
+---
+description: H2O LLM Studio uses several key terms across its documentation. 
+---
 # Key terms 
 
 H2O LLM Studio uses several key terms across its documentation, and each, in turn, is explained in the sections below.

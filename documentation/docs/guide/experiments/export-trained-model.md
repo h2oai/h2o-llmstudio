@@ -1,3 +1,6 @@
+---
+description: If you’re ready to share your trained model with a broader community, H2O LLM Studio allows you to export the fine-tuned model to Hugging Face with a single click.
+---
 # Publish model to HuggingFace
 
 If you’re ready to share your trained model with a broader community, H2O LLM Studio allows you to export the fine-tuned model to [Hugging Face](https://huggingface.co/) with a single click.

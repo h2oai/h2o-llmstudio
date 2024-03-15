@@ -1,3 +1,6 @@
+---
+description: Learn about concepts around H2O LLM Studio.
+---
 # Concepts
 
 H2O LLM Studio is based on a few key concepts and uses several key terms across its documentation. Each, in turn, is explained within the sections below.
