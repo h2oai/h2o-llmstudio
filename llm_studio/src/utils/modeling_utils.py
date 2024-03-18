@@ -16,6 +16,7 @@ from peft import LoraConfig, PeftModel, get_peft_model
 from torch.cuda.amp import autocast
 from torch.nn.parallel import DistributedDataParallel
 from tqdm import tqdm
+import transformers
 from transformers import (
     AutoConfig,
     AutoModel,
@@ -818,6 +819,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable()
 
+    # initialize the generation config
     if backbone.generation_config.eos_token_id != config.eos_token_id:
         logger.warning(
             "EOS token id not matching between generation config and tokenizer. "
@@ -833,6 +835,17 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     # no warning needed as not used
     if backbone.generation_config.bos_token_id != config.bos_token_id:
         backbone.generation_config.bos_token_id = config.bos_token_id
+
+    backbone.generation_config.min_new_tokens = cfg.prediction.min_length_inference
+    backbone.generation_config.max_new_tokens = cfg.prediction.max_length_inference
+    backbone.generation_config.max_time = cfg.prediction.max_time
+    backbone.generation_config.do_sample = cfg.prediction.do_sample
+    backbone.generation_config.num_beams = cfg.prediction.num_beams
+    backbone.generation_config.temperature = cfg.prediction.temperature if cfg.prediction.do_sample else None
+    backbone.generation_config.top_k = cfg.prediction.top_k if cfg.prediction.do_sample else None
+    backbone.generation_config.top_p = cfg.prediction.top_p if cfg.prediction.do_sample else None
+    backbone.generation_config.repetition_penalty = cfg.prediction.repetition_penalty
+    backbone.generation_config.transformers_version = transformers.__version__
 
     return backbone, config
 
@@ -1040,14 +1053,6 @@ def generate(backbone, batch, cfg, streamer, remove_prompt=True):
         inputs=input_ids,
         attention_mask=attention_mask,
         generation_config=backbone.generation_config,
-        min_new_tokens=cfg.prediction.min_length_inference,
-        max_new_tokens=cfg.prediction.max_length_inference,
-        do_sample=cfg.prediction.do_sample,
-        num_beams=cfg.prediction.num_beams,
-        temperature=(float(cfg.prediction.temperature)),
-        repetition_penalty=(float(cfg.prediction.repetition_penalty)),
-        top_k=cfg.prediction.top_k,
-        top_p=float(cfg.prediction.top_p),
         stopping_criteria=stopping_criteria,
         renormalize_logits=True,
         return_dict_in_generate=False,

@@ -168,6 +168,13 @@ def publish_model_to_hugging_face(
         safe_serialization=safe_serialization,
     )
 
+    # push generation_config to hub
+    model.generation_config.push_to_hub(
+        repo_id=repo_id,
+        private=True,
+        commit_message="Upload generation config"
+    )
+
     # Storing HF attributes
     output_directory = cfg.output_directory
     save_hf_yaml(
