@@ -1086,7 +1086,7 @@ def check_dependencies(cfg: Any, pre: str, k: str, q: Q, dataset_import: bool = 
                 dependency_values = [q.client[f"{pre}/cfg/{d.key}"]]
 
             all_deps += d.check(dependency_values)
-        return all_deps > 0
+        return all_deps == len(dependencies)
 
     return True
 

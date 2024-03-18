@@ -549,7 +549,7 @@ def run(cfg: Any) -> None:
         dschf = HfDeepSpeedConfig(ds_config)  # noqa: F841
     with torch.device(cfg.environment._device):
         model = cfg.architecture.model_class(cfg)
-        check_disk_space(model, cfg.output_directory, cfg.environment.use_deepspeed)
+        check_disk_space(model, cfg.output_directory)
 
         # load model weights
         if cfg.architecture.pretrained_weights != "":
