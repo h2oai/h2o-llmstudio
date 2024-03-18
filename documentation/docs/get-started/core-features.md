@@ -1,3 +1,6 @@
+---
+description: Learn about the core features of LLM Studio.
+---
 # Core features
 
 ## No-code fine-tuning

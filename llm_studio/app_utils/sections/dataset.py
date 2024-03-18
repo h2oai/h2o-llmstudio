@@ -277,7 +277,7 @@ async def dataset_import(
                 else os.path.expanduser("~")
             )
 
-            if q.args["dataset/import/local_path_list"]:
+            if q.args.__wave_submission_name__ == "dataset/import/local_path_list":
                 idx = int(q.args["dataset/import/local_path_list"][0])
                 options = q.client["dataset/import/local_path_list_last"]
                 new_path = os.path.abspath(os.path.join(current_path, options[idx]))

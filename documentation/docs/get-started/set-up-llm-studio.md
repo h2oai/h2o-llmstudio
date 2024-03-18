@@ -1,3 +1,6 @@
+---
+description: Learn how to set up LLM Studio.
+---
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 

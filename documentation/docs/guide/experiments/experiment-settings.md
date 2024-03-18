@@ -1,3 +1,6 @@
+---
+description: All the settings needed for creating an experiment are explored in this page.
+---
 import GeneralSettingsDataset from '../../tooltips/experiments/_dataset.mdx';
 import GeneralSettingsProblemType from '../../tooltips/experiments/_problem-type.mdx';
 import GSImportConfigFromYaml from '../../tooltips/experiments/_import-config-from-yaml.mdx';

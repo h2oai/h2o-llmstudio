@@ -94,7 +94,7 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
             header_zone(),
             ui.zone(
                 "body",
-                size="1",
+                size="calc(100vh - 80px)",
                 direction=ui.ZoneDirection.ROW,
                 zones=[
                     navigation_zone(),

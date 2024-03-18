@@ -1,3 +1,6 @@
+---
+description: Learn about frequently asked questions. 
+---
 import Icon from "@material-ui/core/Icon";
 
 # FAQs

@@ -161,7 +161,7 @@ def load_model_weights(
         )
         for k, v in model_weights.items()
         if not (
-            ("SCB" in k or "weight_format" in k)
+            ("SCB" in k or "weight_format" in k or "quant_state" in k)
             and cfg.architecture.backbone_dtype not in ("int4", "int8")
         )
     }
