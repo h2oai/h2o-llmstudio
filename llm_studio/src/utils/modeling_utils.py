@@ -10,13 +10,13 @@ import coolname
 import deepspeed
 import numpy as np
 import torch
+import transformers
 from deepspeed.runtime.dataloader import DeepSpeedDataLoader
 from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
 from peft import LoraConfig, PeftModel, get_peft_model
 from torch.cuda.amp import autocast
 from torch.nn.parallel import DistributedDataParallel
 from tqdm import tqdm
-import transformers
 from transformers import (
     AutoConfig,
     AutoModel,
@@ -841,9 +841,15 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     backbone.generation_config.max_time = cfg.prediction.max_time
     backbone.generation_config.do_sample = cfg.prediction.do_sample
     backbone.generation_config.num_beams = cfg.prediction.num_beams
-    backbone.generation_config.temperature = cfg.prediction.temperature if cfg.prediction.do_sample else None
-    backbone.generation_config.top_k = cfg.prediction.top_k if cfg.prediction.do_sample else None
-    backbone.generation_config.top_p = cfg.prediction.top_p if cfg.prediction.do_sample else None
+    backbone.generation_config.temperature = (
+        cfg.prediction.temperature if cfg.prediction.do_sample else None
+    )
+    backbone.generation_config.top_k = (
+        cfg.prediction.top_k if cfg.prediction.do_sample else None
+    )
+    backbone.generation_config.top_p = (
+        cfg.prediction.top_p if cfg.prediction.do_sample else None
+    )
     backbone.generation_config.repetition_penalty = cfg.prediction.repetition_penalty
     backbone.generation_config.transformers_version = transformers.__version__
 

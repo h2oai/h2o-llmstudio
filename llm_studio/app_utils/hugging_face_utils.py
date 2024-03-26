@@ -170,9 +170,7 @@ def publish_model_to_hugging_face(
 
     # push generation_config to hub
     model.backbone.generation_config.push_to_hub(
-        repo_id=repo_id,
-        private=True,
-        commit_message="Upload generation_config.json"
+        repo_id=repo_id, private=True, commit_message="Upload generation_config.json"
     )
 
     # Storing HF attributes
