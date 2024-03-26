@@ -836,22 +836,25 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     if backbone.generation_config.bos_token_id != config.bos_token_id:
         backbone.generation_config.bos_token_id = config.bos_token_id
 
-    backbone.generation_config.min_new_tokens = cfg.prediction.min_length_inference
-    backbone.generation_config.max_new_tokens = cfg.prediction.max_length_inference
-    backbone.generation_config.max_time = cfg.prediction.max_time
-    backbone.generation_config.do_sample = cfg.prediction.do_sample
-    backbone.generation_config.num_beams = cfg.prediction.num_beams
-    backbone.generation_config.temperature = (
-        cfg.prediction.temperature if cfg.prediction.do_sample else None
-    )
-    backbone.generation_config.top_k = (
-        cfg.prediction.top_k if cfg.prediction.do_sample else None
-    )
-    backbone.generation_config.top_p = (
-        cfg.prediction.top_p if cfg.prediction.do_sample else None
-    )
-    backbone.generation_config.repetition_penalty = cfg.prediction.repetition_penalty
-    backbone.generation_config.transformers_version = transformers.__version__
+    if cfg.problem_typ not in NON_GENERATION_PROBLEM_TYPES:
+        backbone.generation_config.min_new_tokens = cfg.prediction.min_length_inference
+        backbone.generation_config.max_new_tokens = cfg.prediction.max_length_inference
+        backbone.generation_config.max_time = cfg.prediction.max_time
+        backbone.generation_config.do_sample = cfg.prediction.do_sample
+        backbone.generation_config.num_beams = cfg.prediction.num_beams
+        backbone.generation_config.temperature = (
+            cfg.prediction.temperature if cfg.prediction.do_sample else None
+        )
+        backbone.generation_config.top_k = (
+            cfg.prediction.top_k if cfg.prediction.do_sample else None
+        )
+        backbone.generation_config.top_p = (
+            cfg.prediction.top_p if cfg.prediction.do_sample else None
+        )
+        backbone.generation_config.repetition_penalty = (
+            cfg.prediction.repetition_penalty
+        )
+        backbone.generation_config.transformers_version = transformers.__version__
 
     return backbone, config
 
