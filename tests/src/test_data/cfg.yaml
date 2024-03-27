@@ -42,6 +42,7 @@ prediction:
     batch_size_inference: 0
     do_sample: false
     max_length_inference: 256
+    max_time: 120.0
     metric: GPT3.5
     min_length_inference: 2
     num_beams: 2
