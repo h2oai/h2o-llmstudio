@@ -842,18 +842,13 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         backbone.generation_config.max_time = cfg.prediction.max_time
         backbone.generation_config.do_sample = cfg.prediction.do_sample
         backbone.generation_config.num_beams = cfg.prediction.num_beams
-        backbone.generation_config.temperature = (
-            cfg.prediction.temperature if cfg.prediction.do_sample else None
-        )
-        backbone.generation_config.top_k = (
-            cfg.prediction.top_k if cfg.prediction.do_sample else None
-        )
-        backbone.generation_config.top_p = (
-            cfg.prediction.top_p if cfg.prediction.do_sample else None
-        )
         backbone.generation_config.repetition_penalty = (
             cfg.prediction.repetition_penalty
         )
+        if cfg.prediction.do_sample:
+            backbone.generation_config.temperature = cfg.prediction.temperature
+            backbone.generation_config.top_k = cfg.prediction.top_k
+            backbone.generation_config.top_p = cfg.prediction.top_p
         backbone.generation_config.transformers_version = transformers.__version__
 
     return backbone, config
