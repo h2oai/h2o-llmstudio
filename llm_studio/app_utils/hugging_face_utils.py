@@ -168,14 +168,6 @@ def publish_model_to_hugging_face(
         safe_serialization=safe_serialization,
     )
 
-    # push generation_config to hub
-    if cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES:
-        model.backbone.generation_config.push_to_hub(
-            repo_id=repo_id,
-            private=True,
-            commit_message="Upload generation_config.json",
-        )
-
     # Storing HF attributes
     output_directory = cfg.output_directory
     save_hf_yaml(
