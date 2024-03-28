@@ -11,6 +11,7 @@ import DSvalidationStrategy from '../../tooltips/experiments/_validation-strateg
 import DSvalidationSize from '../../tooltips/experiments/_validation-size.mdx';
 import DSdataSample from '../../tooltips/experiments/_data-sample.mdx';
 import DSpromptColumn from '../../tooltips/experiments/_prompt-column.mdx';
+import DSsystemColumn from '../../tooltips/experiments/_system-column.mdx';
 import DSanswerColumn from '../../tooltips/experiments/_answer-column.mdx';
 import DSparentIdColumn from '../../tooltips/experiments/_parent-id-column.mdx';
 import DStextPromptStart from '../../tooltips/experiments/_text-prompt-start.mdx';
@@ -31,6 +32,7 @@ import ASforceEmbeddingGradients from '../../tooltips/experiments/_force-embeddi
 import ASintermediateDropout from '../../tooltips/experiments/_intermediate-dropout.mdx';
 import ASpretrainedWeights from '../../tooltips/experiments/_pretrained-weights.mdx';
 import TSoptimizer from '../../tooltips/experiments/_optimizer.mdx';
+import TSlossfunction from '../../tooltips/experiments/_loss-function.mdx';
 import TSlearningRate from '../../tooltips/experiments/_learning-rate.mdx';
 import TSuseflashattention2 from '../../tooltips/experiments/_use-flash-attention-2.mdx';
 import TSbatchSize from '../../tooltips/experiments/_batch-size.mdx';
@@ -66,7 +68,10 @@ import TSoffloadRewardModel from '../../tooltips/experiments/_offload-reward-mod
 import AStokenmaskprobability from '../../tooltips/experiments/_token-mask-probability.mdx';
 import ASskipParentprobability from '../../tooltips/experiments/_skip-parent-probability.mdx';
 import ASrandomparentprobability from '../../tooltips/experiments/_random-parent-probability.mdx';
+import ASneftunenoisealpha from '../../tooltips/experiments/_neftune_noise_alpha.mdx';
 import PSmetric from '../../tooltips/experiments/_metric.mdx';
+import PSmetricgptmodel from '../../tooltips/experiments/_metric-gpt-model.mdx';
+import PSmetricgpttemplate from '../../tooltips/experiments/_metric-gpt-template.mdx';
 import PSminlengthinference from '../../tooltips/experiments/_min-length-inference.mdx';
 import PSmaxlengthinference from '../../tooltips/experiments/_max-length-inference.mdx';
 import PSbatchsizeinference from '../../tooltips/experiments/_batch-size-inference.mdx';
@@ -82,9 +87,11 @@ import ESmixedprecision from '../../tooltips/experiments/_mixed-precision.mdx';
 import EScompilemodel from '../../tooltips/experiments/_compile-model.mdx';
 import ESfindunusedparameters from '../../tooltips/experiments/_find-unused-parameters.mdx';
 import EStrustremotecode from '../../tooltips/experiments/_trust-remote-code.mdx';
+import EShuggingfacebranch from '../../tooltips/experiments/_huggingface-branch.mdx';
 import ESnumofworkers from '../../tooltips/experiments/_number-of-workers.mdx';
 import ESseed from '../../tooltips/experiments/_seed.mdx';
 import LSlogger from '../../tooltips/experiments/_logger.mdx';
+import LSneptuneproject from '../../tooltips/experiments/_neptune-project.mdx';
 
 # Experiment settings
 
@@ -140,6 +147,10 @@ The settings under each category are listed and described below.
 ### Data sample
 
 <DSdataSample/>
+
+### System column
+
+<DSsystemColumn/>
 
 ### Prompt column
 
@@ -226,6 +237,10 @@ The settings under each category are listed and described below.
 <ASpretrainedWeights/>
 
 ## Training settings
+
+### Loss function
+
+<TSlossfunction/>
 
 ### Optimizer
 
@@ -377,11 +392,23 @@ The settings under each category are listed and described below.
 
 <ASrandomparentprobability/>
 
+### Neftune noise alpha
+
+<ASneftunenoisealpha/>
+
 ## Prediction settings
 
 ### Metric
 
 <PSmetric/>
+
+### Metric GPT model
+
+<PSmetricgptmodel/>
+
+### Metric GPT template
+
+<PSmetricgpttemplate/>
 
 ### Min length inference
 
@@ -445,6 +472,10 @@ The settings under each category are listed and described below.
 
 <EStrustremotecode/>
 
+### Huggingface branch
+
+<EShuggingfacebranch/>
+
 ### Number of workers
 
 <ESnumofworkers/>
@@ -459,6 +490,7 @@ The settings under each category are listed and described below.
 
 <LSlogger/>
 
-### Number of texts
+### Neptune project
 
-<LSnumoftexts/>
+<LSneptuneproject/>
+
