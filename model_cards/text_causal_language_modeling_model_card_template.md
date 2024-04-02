@@ -45,14 +45,16 @@ generate_text = pipeline(
     token=True,
 )
 
+# generate configuration can be modified to your needs
+# generate_text.model.generation_config.min_new_tokens = {{min_new_tokens}}
+# generate_text.model.generation_config.max_new_tokens = {{max_new_tokens}}
+# generate_text.model.generation_config.do_sample = {{do_sample}}
+# generate_text.model.generation_config.num_beams = {{num_beams}}
+# generate_text.model.generation_config.temperature = float({{temperature}})
+# generate_text.model.generation_config.repetition_penalty = float({{repetition_penalty}})
+
 res = generate_text(
     "Why is drinking water so healthy?",
-    min_new_tokens={{min_new_tokens}},
-    max_new_tokens={{max_new_tokens}},
-    do_sample={{do_sample}},
-    num_beams={{num_beams}},
-    temperature=float({{temperature}}),
-    repetition_penalty=float({{repetition_penalty}}),
     renormalize_logits=True
 )
 print(res[0]["generated_text"])
@@ -88,14 +90,16 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 generate_text = H2OTextGenerationPipeline(model=model, tokenizer=tokenizer)
 
+# generate configuration can be modified to your needs
+# generate_text.model.generation_config.min_new_tokens = {{min_new_tokens}}
+# generate_text.model.generation_config.max_new_tokens = {{max_new_tokens}}
+# generate_text.model.generation_config.do_sample = {{do_sample}}
+# generate_text.model.generation_config.num_beams = {{num_beams}}
+# generate_text.model.generation_config.temperature = float({{temperature}})
+# generate_text.model.generation_config.repetition_penalty = float({{repetition_penalty}})
+
 res = generate_text(
     "Why is drinking water so healthy?",
-    min_new_tokens={{min_new_tokens}},
-    max_new_tokens={{max_new_tokens}},
-    do_sample={{do_sample}},
-    num_beams={{num_beams}},
-    temperature=float({{temperature}}),
-    repetition_penalty=float({{repetition_penalty}}),
     renormalize_logits=True
 )
 print(res[0]["generated_text"])
@@ -127,15 +131,16 @@ model.cuda().eval()
 inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
 
 # generate configuration can be modified to your needs
+# model.generation_config.min_new_tokens = {{min_new_tokens}}
+# model.generation_config.max_new_tokens = {{max_new_tokens}}
+# model.generation_config.do_sample = {{do_sample}}
+# model.generation_config.num_beams = {{num_beams}}
+# model.generation_config.temperature = float({{temperature}})
+# model.generation_config.repetition_penalty = float({{repetition_penalty}})
+
 tokens = model.generate(
     input_ids=inputs["input_ids"],
     attention_mask=inputs["attention_mask"],
-    min_new_tokens={{min_new_tokens}},
-    max_new_tokens={{max_new_tokens}},
-    do_sample={{do_sample}},
-    num_beams={{num_beams}},
-    temperature=float({{temperature}}),
-    repetition_penalty=float({{repetition_penalty}}),
     renormalize_logits=True
 )[0]
 
