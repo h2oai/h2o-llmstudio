@@ -5,7 +5,7 @@ description: Learn about the core features of LLM Studio.
 
 ## No-code fine-tuning
 
-NLP practioners can easily create and train models as well as fine-tune those models without the need for code expertise. The user interface, which is specifically designed for LLMs, allows users to upload large datasets easily and configure [hyperparameters](../concepts#parameters-and-hyperparameters) to fine-tune the model. 
+NLP practioners can easily fine-tune models without the need for code expertise. The user interface, which is specifically designed for LLMs, allows users to upload large datasets easily and configure [hyperparameters](../concepts#parameters-and-hyperparameters) to fine-tune the model. 
 
 ## Highly customizable (wide range of hyperparameters)
 
