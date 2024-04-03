@@ -224,7 +224,6 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
     add_prompt_answer_tokens: bool = False
     padding_quantile: float = 1.0
     use_fast: bool = True
-    add_prefix_space: bool = False
 
     def __post_init__(self):
         super().__post_init__()
@@ -233,8 +232,6 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
         self._possible_values["max_length"] = (32, 1024 * 16, 32)
         self._possible_values["padding_quantile"] = (0, 1, 0.01)
         self._padding_side = "left"
-
-        self._visibility["add_prefix_space"] = -1
 
 
 @dataclass
