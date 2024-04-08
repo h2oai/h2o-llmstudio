@@ -1886,4 +1886,27 @@ def get_experiment_summary_code_card(cfg) -> str:
             "{{repetition_penalty}}", str(cfg.prediction.repetition_penalty)
         )
 
+    if cfg.dataset.system_column != "None":
+        text = text.replace(
+            "{{sample_messages}}",
+            """[
+    {
+        "role": "system",
+        "content": "You are a friendly chatbot who always responds in the style of a pirate",
+    },
+    {"role": "user", "content": "Hi, how are you?"},
+    {"role": "assistant", "content": "I'm doing great, how about you?"},
+    {"role": "user", "content": "Why is drinking water so healthy?"},
+]""",
+        )
+    else:
+        text = text.replace(
+            "{{sample_messages}}",
+            """[
+    {"role": "user", "content": "Hi, how are you?"},
+    {"role": "assistant", "content": "I'm doing great, how about you?"},
+    {"role": "user", "content": "Why is drinking water so healthy?"},
+]""",
+        )
+
     return text
