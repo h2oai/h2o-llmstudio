@@ -165,7 +165,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["optimizer"] = Optimizers.names()
 
         self._possible_values["learning_rate"] = possible_values.Number(
-            step=0.000001, min=0.000001
+            step=1e-9, min=1e-9
         )
         self._possible_values["differential_learning_rate_layers"] = (
             possible_values.String(
