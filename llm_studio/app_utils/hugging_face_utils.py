@@ -5,7 +5,6 @@ import einops
 import huggingface_hub
 import torch
 import transformers
-from jinja2 import Environment, FileSystemLoader
 
 from llm_studio.app_utils.sections.chat import load_cfg_model_tokenizer
 from llm_studio.app_utils.utils import hf_repo_friendly_name, save_hf_yaml, set_env
@@ -59,7 +58,7 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
             ] = """[
     {
         "role": "system",
-        "content": "You are a friendly chatbot who always responds in the style of a pirate",
+        "content": "You are a friendly and polite chatbot.",
     },
     {"role": "user", "content": "Hi, how are you?"},
     {"role": "assistant", "content": "I'm doing great, how about you?"},
@@ -114,7 +113,7 @@ chat_template_for_system
             "chat_template_for_checking_alternating_roles",
             """
 {% if message['role'] == 'user' == (loop.index0 % 2 == 0) or messages[0]['role'] != 'system' %}
-{{ raise_exception('Conversation roles must alternate system/user/assistant/user/assistant/...') }}{% endif %}""",
+{{ raise_exception('Conversation roles must alternate system/user/assistant/user/assistant/...') }}{% endif %}""",  # noqa
         )
         chat_template = chat_template.replace(
             "chat_template_for_system",
@@ -139,7 +138,7 @@ chat_template_for_system
             "chat_template_for_checking_alternating_roles",
             """
 {% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}
-{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}{% endif %}""",
+{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}{% endif %}""",  # noqa
         )
         chat_template = chat_template.replace("chat_template_for_system", "")
 

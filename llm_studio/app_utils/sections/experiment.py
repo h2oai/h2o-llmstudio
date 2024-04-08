@@ -1892,7 +1892,7 @@ def get_experiment_summary_code_card(cfg) -> str:
             """[
     {
         "role": "system",
-        "content": "You are a friendly chatbot who always responds in the style of a pirate",
+        "content": "You are a friendly and polite chatbot.",
     },
     {"role": "user", "content": "Hi, how are you?"},
     {"role": "assistant", "content": "I'm doing great, how about you?"},

@@ -1,10 +1,11 @@
 import os
+
 import pytest
 from jinja2.exceptions import TemplateError
 
-from llm_studio.src.utils.config_utils import load_config_yaml
-from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.app_utils.hugging_face_utils import get_chat_template
+from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.utils.config_utils import load_config_yaml
 
 
 def test_chat_template_no_system_prompt():
@@ -27,7 +28,7 @@ def test_chat_template_no_system_prompt():
         tokenize=False,
         add_generation_prompt=True,
     )
-    expected = "<|prompt|>[user prompt]</s><|answer|>[assistant response]</s><|prompt|>[user prompt2]</s><|answer|>"
+    expected = "<|prompt|>[user prompt]</s><|answer|>[assistant response]</s><|prompt|>[user prompt2]</s><|answer|>"  # noqa
     assert input == expected
 
     chat = [
@@ -84,7 +85,7 @@ def test_chat_template_with_system_prompt():
         tokenize=False,
         add_generation_prompt=True,
     )
-    expected = "<|system|>[system prompt]</s><|prompt|>[user prompt]</s><|answer|>[assistant response]</s><|prompt|>[user prompt2]</s><|answer|>"
+    expected = "<|system|>[system prompt]</s><|prompt|>[user prompt]</s><|answer|>[assistant response]</s><|prompt|>[user prompt2]</s><|answer|>"  # noqa
     assert input == expected
 
     chat = [
@@ -131,7 +132,7 @@ def test_chat_template_custom_special_tokens():
         tokenize=False,
         add_generation_prompt=True,
     )
-    expected = "[SYS][system prompt]</s>[USR][user prompt]</s>[ANS][assistant response]</s>[USR][user prompt2]</s>[ANS]"
+    expected = "[SYS][system prompt]</s>[USR][user prompt]</s>[ANS][assistant response]</s>[USR][user prompt2]</s>[ANS]"  # noqa
     assert input == expected
 
 
@@ -160,7 +161,7 @@ def test_chat_template_no_eos_token():
         tokenize=False,
         add_generation_prompt=True,
     )
-    expected = "<|system|>[system prompt]<|prompt|>[user prompt]<|answer|>[assistant response]<|prompt|>[user prompt2]<|answer|>"
+    expected = "<|system|>[system prompt]<|prompt|>[user prompt]<|answer|>[assistant response]<|prompt|>[user prompt2]<|answer|>"  # noqa
     assert input == expected
 
 
