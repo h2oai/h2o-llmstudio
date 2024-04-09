@@ -502,8 +502,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
-                "h2oai/h2o-danube-1.8b-base",
-                "h2oai/h2o-danube-1.8b-chat",
+                "h2oai/h2o-danube2-1.8b-base",
+                "h2oai/h2o-danube2-1.8b-chat",
                 "h2oai/h2ogpt-4096-llama2-7b",
                 "h2oai/h2ogpt-4096-llama2-7b-chat",
                 "h2oai/h2ogpt-4096-llama2-13b",
@@ -511,10 +511,12 @@ class ConfigProblemBase(DefaultConfigProblemBase):
                 "h2oai/h2ogpt-4096-llama2-70b",
                 "h2oai/h2ogpt-4096-llama2-70b-chat",
                 "tiiuae/falcon-7b",
-                "tiiuae/falcon-40b",
                 "mistralai/Mistral-7B-v0.1",
                 "HuggingFaceH4/zephyr-7b-beta",
+                "google/gemma-2b",
+                "google/gemma-7b",
                 "stabilityai/stablelm-3b-4e1t",
+                "microsoft/phi-2",
                 "facebook/opt-125m",
             ),
             allow_custom=True,
