@@ -289,7 +289,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
 
     min_length_inference: int = 2
     max_length_inference: int = 256
-    max_time: float = 120.0
+    max_time: float = 0
     batch_size_inference: int = 0
 
     do_sample: bool = False
@@ -323,7 +323,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._possible_values["batch_size_inference"] = (0, 512, 1)
         self._possible_values["min_length_inference"] = (0, 1024, 1)
         self._possible_values["max_length_inference"] = (1, 4096, 1)
-        self._possible_values["max_time"] = (1.0, 600.0, 1.0)
+        self._possible_values["max_time"] = (0.0, 600.0, 1.0)
 
         self._possible_values["num_beams"] = (1, 4, 1)
         self._possible_values["temperature"] = (0, 10, 0.05)
@@ -347,6 +347,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     gpus: Tuple[str, ...] = tuple(str(x) for x in range(torch.cuda.device_count()))
 
     mixed_precision: bool = True
+    mixed_precision_dtype: str = "bfloat16"
 
     compile_model: bool = False
     use_deepspeed: bool = False
@@ -389,6 +390,11 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
             allow_custom=False,
         )
 
+        self._possible_values["mixed_precision_dtype"] = possible_values.String(
+            values=("bfloat16", "float16"),
+            allow_custom=False,
+        )
+
         self._possible_values["number_of_workers"] = (1, multiprocessing.cpu_count(), 1)
         self._possible_values["seed"] = possible_values.Number(step=1, min=-1)
         self._possible_values["deepspeed_method"] = ["ZeRO2", "ZeRO3"]
@@ -409,6 +415,13 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
         )
         self._possible_values["deepspeed_stage3_max_reuse_distance"] = (
             possible_values.Number(step=1, min=1e6)
+        )
+
+        self._nesting.add(
+            [
+                "mixed_precision_dtype",
+            ],
+            [Dependency(key="mixed_precision", value=True, is_set=True)],
         )
         self._nesting.add(
             [

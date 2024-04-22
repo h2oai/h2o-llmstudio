@@ -573,7 +573,10 @@ def run_inference(
             else:
                 output = model.forward(batch)
         else:
-            with autocast(enabled=cfg.environment.mixed_precision):
+            with autocast(
+                enabled=cfg.environment.mixed_precision,
+                dtype=get_torch_dtype(cfg.environment.mixed_precision_dtype),
+            ):
                 if (
                     cfg.prediction.metric != "Perplexity"
                     and cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES
@@ -839,7 +842,9 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     if cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES:
         backbone.generation_config.min_new_tokens = cfg.prediction.min_length_inference
         backbone.generation_config.max_new_tokens = cfg.prediction.max_length_inference
-        backbone.generation_config.max_time = cfg.prediction.max_time
+        backbone.generation_config.max_time = (
+            cfg.prediction.max_time if cfg.prediction.max_time > 0 else None
+        )
         backbone.generation_config.do_sample = cfg.prediction.do_sample
         backbone.generation_config.num_beams = cfg.prediction.num_beams
         backbone.generation_config.repetition_penalty = (
@@ -1070,3 +1075,12 @@ def generate(backbone, batch, cfg, streamer, remove_prompt=True):
     if remove_prompt:
         output = output[:, input_ids.shape[1] :]
     return output
+
+
+def get_torch_dtype(dtype):
+    if dtype == "float16":
+        return torch.float16
+    elif dtype == "bfloat16":
+        return torch.bfloat16
+    else:
+        return torch.float32
