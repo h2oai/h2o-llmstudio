@@ -289,7 +289,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
 
     min_length_inference: int = 2
     max_length_inference: int = 256
-    max_time: float = 120.0
+    max_time: float = 0
     batch_size_inference: int = 0
 
     do_sample: bool = False
@@ -323,7 +323,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
         self._possible_values["batch_size_inference"] = (0, 512, 1)
         self._possible_values["min_length_inference"] = (0, 1024, 1)
         self._possible_values["max_length_inference"] = (1, 4096, 1)
-        self._possible_values["max_time"] = (1.0, 600.0, 1.0)
+        self._possible_values["max_time"] = (0.0, 600.0, 1.0)
 
         self._possible_values["num_beams"] = (1, 4, 1)
         self._possible_values["temperature"] = (0, 10, 0.05)
