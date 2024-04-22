@@ -44,7 +44,7 @@ def _scan_files(
         if any(map(filename.__contains__, extensions))
         and not filename.startswith("__meta_info__")
     ]
-    return path_list
+    return sorted(path_list)
 
 
 def strip_prefix(paths: Sequence[str], ignore_set: Set[str] = set()) -> Tuple[str, ...]:
