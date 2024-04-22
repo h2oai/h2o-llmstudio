@@ -819,11 +819,6 @@ async def experiment_rename_action(q, experiment, new_name):
                     charts[k1] = df
                     charts.commit()
 
-        with SqliteDict(os.path.join(new_path, "charts.db")) as charts:
-            for k1 in PLOT_ENCODINGS:
-                if k1 == "df":
-                    print(charts[k1])
-
         for config_file in ["cfg.yaml"]:
             config_path = os.path.join(exp_path, config_file)
             if os.path.exists(config_path):
