@@ -259,6 +259,11 @@ def run_train(
                 plot = cfg.logging.plots_class.plot_batch(batch=batch, cfg=cfg)
                 log_plot(cfg, plot, "train_data")
 
+            # only need to sync gradients at last step of grad accumulation
+            model.require_backward_grad_sync = (
+                itr % cfg.training.grad_accumulation == 0
+            )
+
             # Forward pass
             with autocast(enabled=cfg.environment.mixed_precision):
                 output_dict = model.forward(batch)
