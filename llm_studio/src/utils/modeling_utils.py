@@ -842,7 +842,9 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     if cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES:
         backbone.generation_config.min_new_tokens = cfg.prediction.min_length_inference
         backbone.generation_config.max_new_tokens = cfg.prediction.max_length_inference
-        backbone.generation_config.max_time = cfg.prediction.max_time
+        backbone.generation_config.max_time = (
+            cfg.prediction.max_time if cfg.prediction.max_time > 0 else None
+        )
         backbone.generation_config.do_sample = cfg.prediction.do_sample
         backbone.generation_config.num_beams = cfg.prediction.num_beams
         backbone.generation_config.repetition_penalty = (
