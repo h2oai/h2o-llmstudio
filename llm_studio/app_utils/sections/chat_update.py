@@ -12,7 +12,10 @@ from transformers import AutoTokenizer, TextStreamer
 
 from llm_studio.app_utils.utils import parse_ui_elements
 from llm_studio.src.models.text_causal_language_modeling_model import Model
-from llm_studio.src.utils.modeling_utils import EnvVariableStoppingCriteria
+from llm_studio.src.utils.modeling_utils import (
+    EnvVariableStoppingCriteria,
+    get_torch_dtype,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -218,7 +221,9 @@ class WaveChatStreamer(TextStreamer):
 
 
 def generate(model: Model, inputs: Dict, cfg: Any, streamer: TextStreamer = None):
-    with torch.cuda.amp.autocast():
+    with torch.cuda.amp.autocast(
+        dtype=get_torch_dtype(cfg.environment.mixed_precision_dtype)
+    ):
         output = model.generate(batch=inputs, cfg=cfg, streamer=streamer).detach().cpu()
     return output
 

@@ -54,6 +54,7 @@ from llm_studio.src.utils.modeling_utils import (
     get_number_of_validation_epochs,
     get_optimizer,
     get_scheduler,
+    get_torch_dtype,
     load_checkpoint,
     run_inference,
     save_checkpoint,
@@ -181,7 +182,9 @@ def run_train(
 
     scaler: GradScaler | None = None
     if cfg.environment.mixed_precision:
-        scaler = GradScaler()
+        scaler = GradScaler(
+            enabled=(cfg.environment.mixed_precision_dtype == "float16")
+        )
 
     optimizer.zero_grad(set_to_none=True)
 
@@ -260,12 +263,13 @@ def run_train(
                 log_plot(cfg, plot, "train_data")
 
             # only need to sync gradients at last step of grad accumulation
-            model.require_backward_grad_sync = (
-                itr % cfg.training.grad_accumulation == 0
-            )
+            model.require_backward_grad_sync = itr % cfg.training.grad_accumulation == 0
 
             # Forward pass
-            with autocast(enabled=cfg.environment.mixed_precision):
+            with autocast(
+                enabled=cfg.environment.mixed_precision,
+                dtype=get_torch_dtype(cfg.environment.mixed_precision_dtype),
+            ):
                 output_dict = model.forward(batch)
 
             loss = output_dict["loss"]

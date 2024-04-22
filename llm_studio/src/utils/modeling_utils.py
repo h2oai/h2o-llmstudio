@@ -573,7 +573,10 @@ def run_inference(
             else:
                 output = model.forward(batch)
         else:
-            with autocast(enabled=cfg.environment.mixed_precision):
+            with autocast(
+                enabled=cfg.environment.mixed_precision,
+                dtype=get_torch_dtype(cfg.environment.mixed_precision_dtype),
+            ):
                 if (
                     cfg.prediction.metric != "Perplexity"
                     and cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES
@@ -1070,3 +1073,12 @@ def generate(backbone, batch, cfg, streamer, remove_prompt=True):
     if remove_prompt:
         output = output[:, input_ids.shape[1] :]
     return output
+
+
+def get_torch_dtype(dtype):
+    if dtype == "float16":
+        return torch.float16
+    elif dtype == "bfloat16":
+        return torch.bfloat16
+    else:
+        return torch.float32
