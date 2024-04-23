@@ -153,12 +153,18 @@ wave run app
 
 ## Run H2O LLM Studio GUI using Docker from a nightly build
 
-Install Docker first by following instructions from [NVIDIA Containers](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker).
+Install Docker first by following instructions from [NVIDIA Containers](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker). Make sure to have `nvidia-container-toolkit` installed on your machine as outlined in the instructions.
+
 H2O LLM Studio images are stored in the h2oai GCR vorvan container repository.
 
 ```bash
 mkdir -p `pwd`/data
 mkdir -p `pwd`/output
+
+# make sure to pull latest image if you still have a prior version cached
+docker pull gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+
+# run the container
 docker run \
     --runtime=nvidia \
     --shm-size=64g \
@@ -180,6 +186,10 @@ Navigate to <http://localhost:10101/> (we recommend using Chrome) to access H2O 
 
 ```bash
 docker build -t h2o-llmstudio .
+
+mkdir -p `pwd`/data
+mkdir -p `pwd`/output
+
 docker run \
     --runtime=nvidia \
     --shm-size=64g \
