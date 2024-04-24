@@ -299,18 +299,18 @@ docker run \
 
 ### Run with command line interface (CLI)
 
-You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`.
+You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration .yaml file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`.
 
 To specify the path to the configuration file that contains the experiment parameters, run:
 
 ```sh
-python train.py -C {path_to_config_file}
+python train.py -Y {path_to_config_yaml_file}
 ```
 
 To run on multiple GPUs in DDP mode, run:
 
 ```sh
-bash distributed_train.sh {NR_OF_GPUS} -C {path_to_config_file}
+bash distributed_train.sh {NR_OF_GPUS} -Y {path_to_config_yaml_file}
 ```
 
 :::info

@@ -49,7 +49,7 @@ We offer several ways of getting started quickly.
 
 Using CLI for fine-tuning LLMs:
 
-[![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/ilu000/h2o-llm-studio-cli/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1-OYccyTvmfa3r7cAquw8sioFFPJcn4R9?usp=sharing)
+[![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/ilu000/h2o-llm-studio-cli/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1soqfJjwDJwjjH-VzZYO_pUeLx5xY4N1K?usp=sharing)
 
 ## What's New
 
@@ -153,12 +153,18 @@ wave run app
 
 ## Run H2O LLM Studio GUI using Docker from a nightly build
 
-Install Docker first by following instructions from [NVIDIA Containers](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker).
+Install Docker first by following instructions from [NVIDIA Containers](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker). Make sure to have `nvidia-container-toolkit` installed on your machine as outlined in the instructions.
+
 H2O LLM Studio images are stored in the h2oai GCR vorvan container repository.
 
 ```bash
 mkdir -p `pwd`/data
 mkdir -p `pwd`/output
+
+# make sure to pull latest image if you still have a prior version cached
+docker pull gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+
+# run the container
 docker run \
     --runtime=nvidia \
     --shm-size=64g \
@@ -180,6 +186,10 @@ Navigate to <http://localhost:10101/> (we recommend using Chrome) to access H2O 
 
 ```bash
 docker build -t h2o-llmstudio .
+
+mkdir -p `pwd`/data
+mkdir -p `pwd`/output
+
 docker run \
     --runtime=nvidia \
     --shm-size=64g \
@@ -197,16 +207,16 @@ Alternatively, you can run H2O LLM Studio GUI by using our self-hosted Docker im
 
 ## Run H2O LLM Studio with command line interface (CLI)
 
-You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`, and then use the following command:
+You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration .yaml file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`, and then use the following command:
 
 ```bash
-python train.py -C {path_to_config_file}
+python train.py -Y {path_to_config_yaml_file}
 ```
 
 To run on multiple GPUs in DDP mode, run the following command:
 
 ```bash
-bash distributed_train.sh {NR_OF_GPUS} -C {path_to_config_file}
+bash distributed_train.sh {NR_OF_GPUS} -Y {path_to_config_yaml_file}
 ```
 
 By default, the framework will run on the first `k` GPUs. If you want to specify specific GPUs to run on, use the `CUDA_VISIBLE_DEVICES` environment variable before the command.
