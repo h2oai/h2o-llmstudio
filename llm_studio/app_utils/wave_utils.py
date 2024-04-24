@@ -105,7 +105,7 @@ def ui_table_from_df(
     max_widths = max_widths or {}
 
     if numerics == []:
-        numerics = df.select_dtypes(include=['float64', 'float32']).columns.tolist()
+        numerics = df.select_dtypes(include=["float64", "float32"]).columns.tolist()
 
     cell_types = {}
     for col in tags:
