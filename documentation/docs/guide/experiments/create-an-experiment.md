@@ -51,7 +51,7 @@ The steps below provide an example of how to to run an experiment on [OASST](htt
 3. Run the following command to run the experiment. 
 
  ```bash
- python train.py -C examples/cfg_example_oasst2.py
+ python train.py -Y examples/example_oasst2.yaml
  ```
 
 After the experiment is completed, you can find all output artifacts in the `examples/output_oasst2` folder.

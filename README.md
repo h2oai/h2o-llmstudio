@@ -49,7 +49,7 @@ We offer several ways of getting started quickly.
 
 Using CLI for fine-tuning LLMs:
 
-[![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/ilu000/h2o-llm-studio-cli/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1-OYccyTvmfa3r7cAquw8sioFFPJcn4R9?usp=sharing)
+[![Kaggle](https://kaggle.com/static/images/open-in-kaggle.svg)](https://www.kaggle.com/code/ilu000/h2o-llm-studio-cli/) [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1soqfJjwDJwjjH-VzZYO_pUeLx5xY4N1K?usp=sharing)
 
 ## What's New
 
@@ -207,16 +207,16 @@ Alternatively, you can run H2O LLM Studio GUI by using our self-hosted Docker im
 
 ## Run H2O LLM Studio with command line interface (CLI)
 
-You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`, and then use the following command:
+You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration .yaml file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`, and then use the following command:
 
 ```bash
-python train.py -C {path_to_config_file}
+python train.py -Y {path_to_config_yaml_file}
 ```
 
 To run on multiple GPUs in DDP mode, run the following command:
 
 ```bash
-bash distributed_train.sh {NR_OF_GPUS} -C {path_to_config_file}
+bash distributed_train.sh {NR_OF_GPUS} -Y {path_to_config_yaml_file}
 ```
 
 By default, the framework will run on the first `k` GPUs. If you want to specify specific GPUs to run on, use the `CUDA_VISIBLE_DEVICES` environment variable before the command.
