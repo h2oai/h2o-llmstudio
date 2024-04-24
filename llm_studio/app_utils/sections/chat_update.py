@@ -35,6 +35,8 @@ async def chat_update(q: Q) -> None:
         await update_chat_window(q)
     finally:
         q.client["experiment/display/chat/finished"] = True
+        # Hide the "Stop generating" button
+        q.page["experiment/display/chat"].generating = False
 
 
 async def update_chat_window(q):
@@ -64,7 +66,10 @@ async def update_chat_window(q):
 
     # populate chat window with user message
     logger.info(f"Using chatbot config: {cfg_prediction}")
-    prompt = q.client["experiment/display/chat/chatbot"]
+    if q.events["experiment/display/chat/chatbot"]:
+        prompt = q.events["experiment/display/chat/chatbot"]["suggestion"]
+    else:
+        prompt = q.client["experiment/display/chat/chatbot"]
     message = [prompt, USER]
     q.client["experiment/display/chat/messages"].append(message)
     q.page["experiment/display/chat"].data += message
@@ -125,6 +130,11 @@ async def answer_chat(q: Q) -> str:
             kwargs=dict(model=model, inputs=inputs, cfg=cfg, streamer=streamer),
         )
         q.client["currently_chat_streaming"] = True
+        # Show the "Stop generating" button
+        q.page["experiment/display/chat"].generating = True
+        # Hide suggestions
+        q.page["experiment/display/chat"].suggestions = None
+
         try:
             thread.start()
             max_wait_time_in_seconds = 60 * 3
@@ -257,9 +267,11 @@ async def is_app_blocked_while_streaming(q: Q):
     Check whether the app is blocked with current answer generation.
     """
     if (
-        q.args["experiment/display/chat/abort_stream"]
+        q.events["experiment/display/chat/chatbot"] is not None
+        and q.events["experiment/display/chat/chatbot"]["stop"]
         and q.client["currently_chat_streaming"]
     ):
+        # Cancel the streaming task.
         try:
             # User clicks abort button while the chat is currently streaming
             logger.info("Stopping Chat Stream")
@@ -279,6 +291,8 @@ async def is_app_blocked_while_streaming(q: Q):
         finally:
             if EnvVariableStoppingCriteria.stop_streaming_env in os.environ:
                 del os.environ[EnvVariableStoppingCriteria.stop_streaming_env]
+            # Hide the "Stop generating" button.
+            q.page["experiment/display/chat"].generating = False
 
     elif q.client["experiment/display/chat/finished"] is False:
         await show_chat_is_running_dialog(q)

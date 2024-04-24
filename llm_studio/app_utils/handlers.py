@@ -58,11 +58,11 @@ async def handle(q: Q) -> None:
     """Handles all requests in application and calls according functions."""
 
     # logger.info(f"args: {q.args}")
+    # logger.info(f"events: {q.events}")
 
     if not (
         q.args.__wave_submission_name__ == "experiment/display/chat/chatbot"
         or q.args.__wave_submission_name__ == "experiment/display/chat/clear_history"
-        or q.args.__wave_submission_name__ == "experiment/display/chat/abort_stream"
     ):
         if "experiment/display/chat/cfg" in q.client:
             del q.client["experiment/display/chat/cfg"]

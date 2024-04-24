@@ -78,6 +78,33 @@ async def chat_tab(q: Q, load_model=True):
         box="first",
         data=chat_data(fields="content from_user", t="list"),  # type: ignore
         name="experiment/display/chat/chatbot",
+        events=["stop", "suggestion"],
+        suggestions=[
+            ui.chat_suggestion(
+                "Write a poem about H2O LLM Studio",
+                label="Write a poem",
+                caption="about H2O LLM Studio",
+                icon="Edit",
+            ),
+            ui.chat_suggestion(
+                "Plan a trip to Europe",
+                label="Plan a trip",
+                caption="to Europe",
+                icon="Airplane",
+            ),
+            ui.chat_suggestion(
+                "Give me ideas for a new project",
+                label="Give me ideas",
+                caption="for a new project",
+                icon="Lightbulb",
+            ),
+            ui.chat_suggestion(
+                "Explain me CSS preprocessors",
+                label="Explain me",
+                caption="CSS preprocessors",
+                icon="Code",
+            ),
+        ],
     )
     q.page["experiment/display/chat"].data += [initial_message, False]
 
@@ -94,11 +121,6 @@ async def chat_tab(q: Q, load_model=True):
                     ui.button(
                         name="experiment/display/chat/clear_history",
                         label="Clear History",
-                        primary=True,
-                    ),
-                    ui.button(
-                        name="experiment/display/chat/abort_stream",
-                        label="Stop Streaming",
                         primary=True,
                     ),
                 ]
