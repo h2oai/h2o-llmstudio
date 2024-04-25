@@ -114,6 +114,7 @@ if __name__ == "__main__":
 
             if prompt.lower().startswith("--"):
                 cfg = parse_param(cfg, prompt)
+                model.backbone = set_generation_config(model.backbone, cfg.prediction)
                 continue
 
             prompt = cfg.dataset.dataset_class.parse_prompt(cfg, prompt)
