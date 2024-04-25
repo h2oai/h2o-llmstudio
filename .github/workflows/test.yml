@@ -2,12 +2,12 @@ name: Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ runnertest ]
   pull_request:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: mr-dl12
     steps:
       - uses: actions/checkout@v3
       - name: Setup Python
