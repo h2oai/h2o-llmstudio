@@ -15,6 +15,7 @@ from llm_studio.src.models.text_causal_language_modeling_model import Model
 from llm_studio.src.utils.modeling_utils import (
     EnvVariableStoppingCriteria,
     get_torch_dtype,
+    set_generation_config,
 )
 
 logger = logging.getLogger(__name__)
@@ -45,29 +46,8 @@ async def update_chat_window(q):
     )
     q.client["experiment/display/chat/cfg"].prediction = cfg_prediction
     # Update generation config
-    q.client[
-        "experiment/display/chat/model"
-    ].backbone.generation_config.max_new_tokens = cfg_prediction.max_length_inference
-    q.client["experiment/display/chat/model"].backbone.generation_config.max_time = (
-        cfg_prediction.max_time
-    )
-    q.client["experiment/display/chat/model"].backbone.generation_config.do_sample = (
-        cfg_prediction.do_sample
-    )
-    q.client["experiment/display/chat/model"].backbone.generation_config.num_beams = (
-        cfg_prediction.num_beams
-    )
-    q.client["experiment/display/chat/model"].backbone.generation_config.temperature = (
-        cfg_prediction.temperature
-    )
-    q.client[
-        "experiment/display/chat/model"
-    ].backbone.generation_config.repetition_penalty = cfg_prediction.repetition_penalty
-    q.client["experiment/display/chat/model"].backbone.generation_config.top_k = (
-        cfg_prediction.top_k
-    )
-    q.client["experiment/display/chat/model"].backbone.generation_config.top_p = (
-        cfg_prediction.top_p
+    q.client["experiment/display/chat/model"].backbone = set_generation_config(
+        q.client["experiment/display/chat/model"].backbone, cfg_prediction
     )
 
     # could also invoke cfg.check() here, but leave it explicit as cfg.check()
