@@ -54,11 +54,12 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
         return sample
 
     def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
+        output["logits"] = output["logits"].float()
         if cfg.dataset.num_classes == 1:
-            preds = output["logits"].float()
+            preds = output["logits"]
             preds = np.array((preds > 0.0)).astype(int).astype(str).reshape(-1)
         else:
-            preds = output["logits"].float()
+            preds = output["logits"]
             preds = (
                 np.array(torch.argmax(preds, dim=1))  # type: ignore[arg-type]
                 .astype(str)
