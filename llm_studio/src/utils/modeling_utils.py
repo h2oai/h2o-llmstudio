@@ -691,6 +691,23 @@ def update_backbone_config(config: Any, cfg: Any):
     return config
 
 
+def set_generation_config(backbone: torch.nn.Module, cfg_prediction: Any):
+    backbone.generation_config.min_new_tokens = cfg_prediction.min_length_inference
+    backbone.generation_config.max_new_tokens = cfg_prediction.max_length_inference
+    backbone.generation_config.max_time = (
+        cfg_prediction.max_time if cfg_prediction.max_time > 0 else None
+    )
+    backbone.generation_config.do_sample = cfg_prediction.do_sample
+    backbone.generation_config.num_beams = cfg_prediction.num_beams
+    backbone.generation_config.repetition_penalty = cfg_prediction.repetition_penalty
+    if cfg_prediction.do_sample:
+        backbone.generation_config.temperature = cfg_prediction.temperature
+        backbone.generation_config.top_k = cfg_prediction.top_k
+        backbone.generation_config.top_p = cfg_prediction.top_p
+    backbone.generation_config.transformers_version = transformers.__version__
+    return backbone
+
+
 def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     """
     Creates a backbone model for NLP tasks.
@@ -840,21 +857,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         backbone.generation_config.bos_token_id = config.bos_token_id
 
     if cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES:
-        backbone.generation_config.min_new_tokens = cfg.prediction.min_length_inference
-        backbone.generation_config.max_new_tokens = cfg.prediction.max_length_inference
-        backbone.generation_config.max_time = (
-            cfg.prediction.max_time if cfg.prediction.max_time > 0 else None
-        )
-        backbone.generation_config.do_sample = cfg.prediction.do_sample
-        backbone.generation_config.num_beams = cfg.prediction.num_beams
-        backbone.generation_config.repetition_penalty = (
-            cfg.prediction.repetition_penalty
-        )
-        if cfg.prediction.do_sample:
-            backbone.generation_config.temperature = cfg.prediction.temperature
-            backbone.generation_config.top_k = cfg.prediction.top_k
-            backbone.generation_config.top_p = cfg.prediction.top_p
-        backbone.generation_config.transformers_version = transformers.__version__
+        backbone = set_generation_config(backbone, cfg.prediction)
 
     return backbone, config
 

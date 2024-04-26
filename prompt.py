@@ -17,7 +17,7 @@ import numpy as np
 import torch
 
 from llm_studio.src.datasets.text_utils import get_tokenizer
-from llm_studio.src.utils.modeling_utils import load_checkpoint
+from llm_studio.src.utils.modeling_utils import load_checkpoint, set_generation_config
 
 
 def parse_param(cfg, prompt):
@@ -94,6 +94,7 @@ if __name__ == "__main__":
 
     model = model.to(DEVICE).eval()
     model.backbone.use_cache = True
+    model.backbone = set_generation_config(model.backbone, cfg.prediction)
 
     print()
     print("=============")
@@ -113,6 +114,7 @@ if __name__ == "__main__":
 
             if prompt.lower().startswith("--"):
                 cfg = parse_param(cfg, prompt)
+                model.backbone = set_generation_config(model.backbone, cfg.prediction)
                 continue
 
             prompt = cfg.dataset.dataset_class.parse_prompt(cfg, prompt)
