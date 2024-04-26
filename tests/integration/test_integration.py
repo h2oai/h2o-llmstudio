@@ -5,7 +5,6 @@ import sys
 import numpy as np
 import pandas as pd
 import pytest
-import torch
 import yaml
 from transformers.testing_utils import execute_subprocess_async
 
