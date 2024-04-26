@@ -15,6 +15,7 @@ from llm_studio.src.models.text_causal_language_modeling_model import Model
 from llm_studio.src.utils.modeling_utils import (
     EnvVariableStoppingCriteria,
     get_torch_dtype,
+    set_generation_config,
 )
 
 logger = logging.getLogger(__name__)
@@ -46,6 +47,10 @@ async def update_chat_window(q):
         pre="chat/cfg_predictions/cfg/",
     )
     q.client["experiment/display/chat/cfg"].prediction = cfg_prediction
+    # Update generation config
+    q.client["experiment/display/chat/model"].backbone = set_generation_config(
+        q.client["experiment/display/chat/model"].backbone, cfg_prediction
+    )
 
     # could also invoke cfg.check() here, but leave it explicit as cfg.check()
     # may raise other issues not related to the chatbot
