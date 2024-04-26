@@ -1,5 +1,5 @@
 architecture:
-    backbone_dtype: int4
+    backbone_dtype: bfloat16
     force_embedding_gradients: false
     gradient_checkpointing: true
     intermediate_dropout: 0.0
@@ -40,8 +40,7 @@ environment:
     gpus:
     - '0'
     huggingface_branch: main
-    mixed_precision: true
-    mixed_precision_dtype: float16
+    mixed_precision: false
     number_of_workers: 8
     seed: -1
     trust_remote_code: true
