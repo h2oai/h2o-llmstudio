@@ -13,9 +13,6 @@ from llm_studio.app_utils.default_datasets import (
     prepare_default_dataset_causal_language_modeling,
 )
 
-need_gpus = pytest.mark.skipif(not torch.cuda.is_available(), reason="GPU only test")
-has_no_gpus = pytest.mark.skipif(torch.cuda.is_available(), reason="CPU only test")
-
 
 def get_experiment_status(path: str) -> str:
     """Get status information from experiment.
@@ -38,7 +35,6 @@ def get_experiment_status(path: str) -> str:
         return "none"
 
 
-@need_gpus
 @pytest.mark.parametrize(
     "config_name",
     [
@@ -57,7 +53,6 @@ def test_oasst_training_gpu(tmp_path, config_name, metric):
     run_oasst(tmp_path, config_name, metric)
 
 
-@need_gpus
 @pytest.mark.parametrize(
     "settings",
     [
@@ -74,7 +69,6 @@ def test_oasst_classification_training_gpu(tmp_path, settings):
     )
 
 
-@has_no_gpus
 @pytest.mark.parametrize(
     "settings",
     [
@@ -91,7 +85,6 @@ def test_oasst_classification_training_cpu(tmp_path, settings):
     )
 
 
-@has_no_gpus
 @pytest.mark.parametrize(
     "config_name",
     [
