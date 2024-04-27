@@ -41,11 +41,12 @@ environment:
     - '0'
     huggingface_branch: main
     mixed_precision: true
+    mixed_precision_dtype: float16
     number_of_workers: 8
     seed: -1
     trust_remote_code: true
 experiment_name: test-causal-language-modeling-oasst
-llm_backbone: h2oai/h2ogpt-4096-llama2-7b
+llm_backbone: facebook/opt-125m
 logging:
     logger: None
     neptune_project: test_org/test_project

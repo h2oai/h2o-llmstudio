@@ -45,15 +45,16 @@ environment:
     - '0'
     huggingface_branch: main
     mixed_precision: true
+    mixed_precision_dtype: float16
     number_of_workers: 8
     seed: -1
     trust_remote_code: true
     use_deepspeed: false
-experiment_name: solid-spaniel
+experiment_name: test-classification-modeling
 llm_backbone: facebook/opt-125m
 logging:
     logger: None
-    neptune_project: ''
+    neptune_project: test_org/test_project
 output_directory: /tmp/output
 prediction:
     batch_size_inference: 0
