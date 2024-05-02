@@ -1025,7 +1025,13 @@ def prepare_lora(cfg, backbone):
     if cfg.architecture.gradient_checkpointing:
         backbone.enable_input_require_grads()
     backbone = get_peft_model(backbone, lora_config)
-    backbone.print_trainable_parameters()
+
+    trainable_params, all_param = backbone.get_nb_trainable_parameters()
+    if cfg.environment._local_rank == 0:
+        logger.info(f"Trainable parameters count: {trainable_params}")
+        logger.info(f"Total parameters count: {all_param}")
+        logger.info(f"Trainable %: {100 * trainable_params / all_param:.4f}%")
+
     return backbone
 
 
