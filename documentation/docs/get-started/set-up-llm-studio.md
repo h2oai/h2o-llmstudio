@@ -6,6 +6,10 @@ import TabItem from "@theme/TabItem";
 
 # Set up H2O LLM Studio
 
+This page guides you through setting up and installing H2O LLM Studio on your local system. 
+
+First, download the H2O LLM Studio package from the [H2O LLM Studio Github repository](https://github.com/h2oai/h2o-llmstudio). You can use `git clone` or navigate to the [releases page](https://github.com/h2oai/h2o-llmstudio/releases) and download the `.zip` file found within the **Assets** of the relevant release. 
+
 ## Prerequisites
 
 H2O LLM Studio requires the following minimum requirements:
@@ -21,11 +25,10 @@ H2O LLM Studio requires the following minimum requirements:
   - cdn-lfs.huggingface.co
 
 :::info Notes
-
 - Atleast 24GB of GPU memory is recommended for larger models.
 - For more information on performance benchmarks based on the hardware setup, see [H2O LLM Studio performance](llm-studio-performance.md).
 - The required URLs are accessible by default when you start a GCP instance, however, if you have network rules or custom firewalls in place, it is recommended to confirm that the URLs are accessible before running `make setup`.
-  :::
+:::
 
 ## Installation
 
