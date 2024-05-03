@@ -93,7 +93,7 @@ training:
     lora_target_modules: ''
     loss_function: TokenAveragedCrossEntropy
     optimizer: AdamW
-    save_best_checkpoint: false
+    save_checkpoint: "last"
     schedule: Cosine
     train_validation_data: false
     warmup_epochs: 0.0

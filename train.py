@@ -375,7 +375,7 @@ def run_train(
                     progress_bar.close()
 
                 # TODO: Move back after fixing slow generation of deepspeed.
-                if not cfg.training.save_best_checkpoint:
+                if cfg.training.save_checkpoint == "last":
                     checkpoint_path = cfg.output_directory
                     if cfg.environment._local_rank == 0:
                         logger.info(
@@ -387,7 +387,7 @@ def run_train(
                     cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
                 )
 
-                if cfg.training.save_best_checkpoint:
+                if cfg.training.save_checkpoint == "best":
                     if objective_op(val_metric, best_val_metric):
                         checkpoint_path = cfg.output_directory
                         if cfg.environment._local_rank == 0:
@@ -606,10 +606,6 @@ def run(cfg: Any) -> None:
             else:
                 model.backbone = torch.compile(model.backbone)
 
-    # Force settings when saving best checkpoint
-    if cfg.training.save_best_checkpoint:
-        cfg.training.train_validation_data = False
-
     # reset steps
     cfg.environment._curr_step = 0
     cfg.environment._curr_val_step = 0
@@ -657,7 +653,7 @@ def run(cfg: Any) -> None:
 
     experiment_path = f"{cfg.output_directory}"
 
-    if cfg.training.epochs == 0:
+    if cfg.training.epochs == 0 and cfg.training.save_checkpoint != "disable":
         checkpoint_path = cfg.output_directory
         if cfg.environment._local_rank == 0:
             logger.info(f"Saving last model checkpoint to {checkpoint_path}")

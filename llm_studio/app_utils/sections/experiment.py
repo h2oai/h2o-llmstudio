@@ -903,6 +903,9 @@ async def experiment_display(q: Q) -> None:
 
     q.client["experiment/display/experiment_path"] = experiment.path
 
+    checkpoints_exists = os.path.exists(
+        os.path.join(q.client["experiment/display/experiment_path"], "checkpoint.pth")
+    )
     status, _ = get_experiment_status(experiment.path)
 
     charts = load_charts(q.client["experiment/display/experiment_path"])
@@ -973,7 +976,7 @@ async def experiment_display(q: Q) -> None:
         ui.tab(name="experiment/display/config", label="Config"),
     ]
 
-    if status == "finished":
+    if status == "finished" and checkpoints_exists:
         tabs += [ui.tab(name="experiment/display/chat", label="Chat")]
 
     q.page["experiment/display/tab"] = ui.tab_card(
@@ -1019,22 +1022,26 @@ async def experiment_display(q: Q) -> None:
                 primary=False,
                 disabled=False,
                 tooltip=None,
-            ),
-            ui.button(
-                name="experiment/display/download_model",
-                label="Download model",
-                primary=False,
-                disabled=False,
-                tooltip=None,
-            ),
-            ui.button(
-                name="experiment/display/push_to_huggingface",
-                label="Push checkpoint to huggingface",
-                primary=False,
-                disabled=False,
-                tooltip=None,
-            ),
+            )
         ]
+
+        if checkpoints_exists:
+            buttons += [
+                ui.button(
+                    name="experiment/display/download_model",
+                    label="Download model",
+                    primary=False,
+                    disabled=False,
+                    tooltip=None,
+                ),
+                ui.button(
+                    name="experiment/display/push_to_huggingface",
+                    label="Push checkpoint to huggingface",
+                    primary=False,
+                    disabled=False,
+                    tooltip=None,
+                ),
+            ]
 
     buttons += [ui.button(name="experiment/list/current", label="Back", primary=False)]
 

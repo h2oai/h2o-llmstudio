@@ -1,5 +1,0 @@
-Determines if H2O LLM Studio should save the model weights of the epoch exhibiting the best validation metric. When turned **On**, H2O LLM Studio saves the model weights for the epoch exhibiting the best validation metric. When turned **Off**, H2O LLM Studio saves the model weights after the last epoch is executed.
-
-- This setting should be turned **On** with care as it has the potential to lead to overfitting of the validation data. 
-- The default goal should be to attempt to tune models so that the last or very last epoch is the best epoch.  
-- Suppose an evident decline for later epochs is observed in logging. In that case, it is usually better to adjust hyperparameters, such as reducing the number of epochs or increasing regularization, instead of turning this setting **On**.

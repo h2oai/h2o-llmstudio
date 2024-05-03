@@ -154,7 +154,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     lora_dropout: float = 0.05
     lora_target_modules: str = ""
 
-    save_best_checkpoint: bool = False
+    save_checkpoint: str = "last"
     evaluation_epochs: float = 1.0
     evaluate_before_training: bool = False
     train_validation_data: bool = False
@@ -191,6 +191,15 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["lora_alpha"] = (1, 256, 1)
         self._possible_values["lora_dropout"] = (0.0, 0.5, 0.01)
 
+        self._possible_values["save_checkpoint"] = possible_values.String(
+            values=(
+                ("last", "Last"),
+                ("best", "Best"),
+                ("disable", "Disable"),
+            ),
+            allow_custom=False,
+        )
+
         self._possible_values["evaluation_epochs"] = (0.01, 1, 0.01)
 
         self._visibility["loss_class"] = -1
@@ -209,10 +218,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._nesting.add(
             ["lora_r", "lora_alpha", "lora_dropout", "lora_target_modules"],
             [Dependency(key="lora", value=False, is_set=False)],
-        )
-        self._nesting.add(
-            ["train_validation_data"],
-            [Dependency(key="save_best_checkpoint", value=False, is_set=True)],
         )
 
 
