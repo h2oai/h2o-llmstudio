@@ -1,9 +1,9 @@
 ---
-description: The H2O LLM studio provides a useful feature to compare experiments which allow comparing multiple experiments and analyzing how different model parameters affect model performance. 
+description: Using H2O LLM Studio, you can compare experiments and analyze how different model parameters affect model performance. 
 ---
 # Compare experiments
 
-The H2O LLM studio provides a useful feature to compare experiments which allow comparing multiple experiments and analyzing how different model parameters affect model performance. 
+Using H2O LLM Studio, you can compare experiments and analyze how different model parameters affect model performance. 
 
 Follow the relevant steps below to compare experiments in H2O LLM Studio.
 

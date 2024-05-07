@@ -1,9 +1,9 @@
 ---
-description: If you’re ready to share your trained model with a broader community, H2O LLM Studio allows you to export the fine-tuned model to Hugging Face with a single click.
+description: If you are ready to share your trained model with a broader community, H2O LLM Studio allows you to export the fine-tuned model to Hugging Face Hub with a single click.
 ---
 # Publish model to HuggingFace
 
-If you’re ready to share your trained model with a broader community, H2O LLM Studio allows you to export the fine-tuned model to [Hugging Face](https://huggingface.co/) with a single click.
+If you are ready to share your trained model with a broader community, H2O LLM Studio allows you to export the fine-tuned model to [Hugging Face](https://huggingface.co/) with a single click.
 
 :::info note
 Before publishing your model to the Hugging Face Hub, you need to have an API key with write access. To obtain an API token with write access, follow the [instructions provided by Hugging Face](https://huggingface.co/docs/hub/security-tokens), which involve creating an account, logging in, and generating an access token with the appropriate permission.
