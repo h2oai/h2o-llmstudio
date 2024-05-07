@@ -11,8 +11,6 @@ The flow of creating and fine-tuning large language models using H2O LLM Studio 
 - [Step 4: Compare experiments](#step-4-compare-experiments)
 - [Step 5: Export a model to Hugging Face Hub](#step-5-export-a-model-to-hugging-face-hub)
 
-In the below sections, each step above, in turn, is summarized.
-
 ## Step 1: Import a dataset
 
 As the first step in the experiment flow, prep your data and import your dataset to H2O LLM Studio. 
