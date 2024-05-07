@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 PYTHON_VERSION ?= 3.10
 PYTHON ?= python$(PYTHON_VERSION)
 PIP ?= $(PYTHON) -m pip
@@ -134,6 +136,10 @@ llmstudio:
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
 	$(PIPENV) run wave run --no-reload app
+
+.PHONY: stop-llmstudio
+stop-llmstudio:
+	@kill $$(lsof -ti :10101)
 
 .PHONY: docker-build-nightly
 docker-build-nightly:
