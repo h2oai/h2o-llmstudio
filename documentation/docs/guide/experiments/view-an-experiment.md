@@ -60,7 +60,7 @@ Once you click the name of the experiment, you will see the following tabs that 
 
 ## Stop an experiment
 
-You can stop a running experiment if you no longer need it to be complted. 
+You can stop a running experiment if you no longer need it to be completed. 
 
 1. On the H2O LLM Studio left-navigation pane, click **View experiments**.
 2. Click **Stop experiments**.
