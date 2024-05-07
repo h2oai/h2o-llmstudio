@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  test-ui:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
@@ -16,4 +16,5 @@ jobs:
           python-version: 3.10.11
       - run: nvidia-smi
       - run: make setup-dev
+      - run: sudo apt-get install -y libxkbcommon0 libxdamage1 libgbm1
       - run: make test-ui-github-actions
