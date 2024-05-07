@@ -120,6 +120,21 @@ test-ui-headed: setup-ui
 	--slowmo=100 \
 	tests/ui/test.py 2>&1 | tee reports/tests.log
 
+.PHONY: test-ui-github-actions  # Run UI tests in GitHub Actions. Starts the Wave server and runs the tests locally.
+test-ui-github-actions: reports setup-ui
+	@echo "Starting the server..."
+	make llmstudio &
+	@echo "Server started in background."
+	@echo "Waiting 10s for the server to start..."
+	sleep 10
+	@echo "Running the tests..."
+	LOCAL_LOGIN=True \
+	PYTEST_BASE_URL=localhost:10101 \
+	make test-ui
+	@echo "Stopping the server..."
+	make stop-llmstudio
+	@echo "Server stopped."
+
 .PHONY: wave
 wave:
 	HF_HUB_ENABLE_HF_TRANSFER=True \
