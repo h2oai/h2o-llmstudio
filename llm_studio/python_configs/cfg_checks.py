@@ -50,15 +50,6 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             "select the GPUs you want to use again. "
         ]
 
-    if cfg.training.save_best_checkpoint and cfg.training.train_validation_data:
-        errors["title"] += ["Save Best Checkpoint incompatible settings."]
-        errors["message"] += [
-            "Save Best Checkpoint is not compatible with "
-            "Train Validation Data. "
-            "Please set Save Best Checkpoint to False or disable "
-            "Train Validation Data. "
-        ]
-
     stats = os.statvfs(".")
     available_size = stats.f_frsize * stats.f_bavail
     if available_size < default_cfg.min_experiment_disk_space:

@@ -70,7 +70,7 @@ def test_load_config_yaml():
     assert cfg.training.lora_r == 4
     assert cfg.training.lora_target_modules == ""
     assert cfg.training.optimizer == "AdamW"
-    assert cfg.training.save_best_checkpoint is False
+    assert cfg.training.save_checkpoint == "last"
     assert cfg.training.schedule == "Cosine"
     assert cfg.training.train_validation_data is False
     assert cfg.training.warmup_epochs == 0.0
