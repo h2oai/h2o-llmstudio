@@ -102,4 +102,14 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             "Deepspeed does not support single GPU training. "
             "Please select more than one GPU or disable deepspeed."
         ]
+
+    # Check if learning rate is accidentally a string
+    # (for example, setting the LR to 3e-4, the yaml considers that a string)
+    if isinstance(cfg.training.learning_rate, str) or isinstance(cfg.training.differential_learning_rate, str):
+        errors["title"] += ["Learning rate in config must be float; e notation is not supported"]
+        errors["message"] += [
+            "Learning rate in config must be float. "
+            "Please convert the learning rate into a purely decimal number."
+        ]
+
     return errors
