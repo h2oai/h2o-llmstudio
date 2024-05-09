@@ -68,7 +68,6 @@ prediction:
     top_p: 1.0
 problem_type: text_sequence_to_sequence_modeling
 tokenizer:
-    add_prefix_space: false
     add_prompt_answer_tokens: false
     max_length: 32
     max_length_answer: 16
