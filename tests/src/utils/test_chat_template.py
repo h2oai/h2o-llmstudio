@@ -8,32 +8,18 @@ from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.utils.config_utils import load_config_yaml
 
 
-def build_expected(cfg, eos_token, chat):
-    expected = ""
-    for msg in chat:
-        if msg["role"] == "user":
-            expected += f"{cfg.dataset.text_prompt_start}{msg['content']}"
-            if cfg.dataset.add_eos_token_to_prompt:
-                expected += eos_token
-        elif msg["role"] == "assistant":
-            expected += f"{cfg.dataset.text_answer_separator}{msg['content']}"
-            if cfg.dataset.add_eos_token_to_answer:
-                expected += eos_token
-        elif msg["role"] == "system":
-            expected += f"{cfg.dataset.text_system_start}{msg['content']}"
-            if cfg.dataset.add_eos_token_to_system:
-                expected += eos_token
-    expected += cfg.dataset.text_answer_separator
-    return expected.replace("\\n", "\n")
-
-
 def test_chat_template_no_system_prompt():
 
     test_directory = os.path.abspath(os.path.dirname(__file__))
     cfg_path = os.path.join(test_directory, "../test_data/cfg.yaml")
     cfg = load_config_yaml(cfg_path)
+    cfg.dataset.text_prompt_start = "<|prompt|>"
+    cfg.dataset.text_answer_separator = "<|answer|>"
+    cfg.dataset.add_eos_token_to_prompt = True
+    cfg.dataset.add_eos_token_to_answer = True
 
     tokenizer = get_tokenizer(cfg)
+    tokenizer.eos_token = '</s>'
     tokenizer.chat_template = get_chat_template(cfg)
 
     chat = [
@@ -47,7 +33,7 @@ def test_chat_template_no_system_prompt():
         tokenize=False,
         add_generation_prompt=True,
     )
-    expected = build_expected(cfg, tokenizer.eos_token, chat)
+    expected = "<|prompt|>[user prompt]</s><|answer|>[assistant response]</s><|prompt|>[user prompt2]</s><|answer|>"  # noqa
     assert input == expected
 
     # raise error test
@@ -107,9 +93,16 @@ def test_chat_template_with_system_prompt():
     test_directory = os.path.abspath(os.path.dirname(__file__))
     cfg_path = os.path.join(test_directory, "../test_data/cfg.yaml")
     cfg = load_config_yaml(cfg_path)
+    cfg.dataset.text_prompt_start = "<|prompt|>"
+    cfg.dataset.text_answer_separator = "<|answer|>"
+    cfg.dataset.text_system_start = "<|system|>"
+    cfg.dataset.add_eos_token_to_prompt = True
+    cfg.dataset.add_eos_token_to_answer = True
+    cfg.dataset.add_eos_token_to_system = True
     cfg.dataset.system_column = "system"
 
     tokenizer = get_tokenizer(cfg)
+    tokenizer.eos_token = '</s>'
     tokenizer.chat_template = get_chat_template(cfg)
 
     chat = [
@@ -124,7 +117,7 @@ def test_chat_template_with_system_prompt():
         tokenize=False,
         add_generation_prompt=True,
     )
-    expected = build_expected(cfg, tokenizer.eos_token, chat)
+    expected = "<|system|>[system prompt]</s><|prompt|>[user prompt]</s><|answer|>[assistant response]</s><|prompt|>[user prompt2]</s><|answer|>"  # noqa
     assert input == expected
 
     # works w/o system prompt as well
@@ -139,7 +132,7 @@ def test_chat_template_with_system_prompt():
         tokenize=False,
         add_generation_prompt=True,
     )
-    expected = build_expected(cfg, tokenizer.eos_token, chat)
+    expected = "<|prompt|>[user prompt]</s><|answer|>[assistant response]</s><|prompt|>[user prompt2]</s><|answer|>"  # noqa
     assert input == expected
 
     # raise error test
@@ -182,10 +175,13 @@ def test_chat_template_no_eos_token():
     test_directory = os.path.abspath(os.path.dirname(__file__))
     cfg_path = os.path.join(test_directory, "../test_data/cfg.yaml")
     cfg = load_config_yaml(cfg_path)
-    cfg.dataset.system_column = "system"
+    cfg.dataset.text_prompt_start = "<|prompt|>"
+    cfg.dataset.text_answer_separator = "<|answer|>"
+    cfg.dataset.text_system_start = "<|system|>"
     cfg.dataset.add_eos_token_to_system = False
     cfg.dataset.add_eos_token_to_prompt = False
     cfg.dataset.add_eos_token_to_answer = False
+    cfg.dataset.system_column = "system"
 
     tokenizer = get_tokenizer(cfg)
     tokenizer.chat_template = get_chat_template(cfg)
@@ -202,7 +198,7 @@ def test_chat_template_no_eos_token():
         tokenize=False,
         add_generation_prompt=True,
     )
-    expected = build_expected(cfg, tokenizer.eos_token, chat)
+    expected = "<|system|>[system prompt]<|prompt|>[user prompt]<|answer|>[assistant response]<|prompt|>[user prompt2]<|answer|>" # noqa
     assert input == expected
 
 
@@ -234,5 +230,5 @@ def test_chat_template_no_special_token():
         tokenize=False,
         add_generation_prompt=True,
     )
-    expected = build_expected(cfg, tokenizer.eos_token, chat)
+    expected = expected = "[system prompt][user prompt][assistant response][user prompt2]"
     assert input == expected

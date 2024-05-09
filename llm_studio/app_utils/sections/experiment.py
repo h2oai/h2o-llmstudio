@@ -50,6 +50,7 @@ from llm_studio.python_configs.cfg_checks import check_config_for_errors
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
+    GENERATION_PROBLEM_TYPES,
     NON_GENERATION_PROBLEM_TYPES,
     load_config_py,
     load_config_yaml,
@@ -1658,7 +1659,7 @@ async def experiment_download_model(q: Q):
         # See PreTrainedTokenizerBase.save_pretrained for documentation
         # Safeguard against None return if tokenizer class is
         # not inherited from PreTrainedTokenizerBase
-        if cfg.problem_type != "text_sequence_to_sequence_modeling":
+        if cfg.problem_type in GENERATION_PROBLEM_TYPES:
             tokenizer.chat_template = get_chat_template(cfg)
         tokenizer_files = list(tokenizer.save_pretrained(checkpoint_path) or [])
 

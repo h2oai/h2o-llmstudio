@@ -8,7 +8,10 @@ import transformers
 
 from llm_studio.app_utils.sections.chat import load_cfg_model_tokenizer
 from llm_studio.app_utils.utils import hf_repo_friendly_name, save_hf_yaml, set_env
-from llm_studio.src.utils.config_utils import NON_GENERATION_PROBLEM_TYPES
+from llm_studio.src.utils.config_utils import (
+    GENERATION_PROBLEM_TYPES,
+    NON_GENERATION_PROBLEM_TYPES,
+)
 from llm_studio.src.utils.modeling_utils import check_disk_space
 
 
@@ -228,7 +231,7 @@ def publish_model_to_hugging_face(
     repo_id = f"{user_id}/{hf_repo_friendly_name(model_name)}"
 
     # push tokenizer to hub
-    if cfg.problem_type != "text_sequence_to_sequence_modeling":
+    if cfg.problem_type in GENERATION_PROBLEM_TYPES:
         tokenizer.chat_template = get_chat_template(cfg)
     tokenizer.push_to_hub(repo_id=repo_id, private=True)
 
