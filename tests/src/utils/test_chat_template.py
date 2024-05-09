@@ -230,7 +230,5 @@ def test_chat_template_no_special_token():
         tokenize=False,
         add_generation_prompt=True,
     )
-    expected = (
-        "[system prompt][user prompt][assistant response][user prompt2]"  # noqa
-    )
+    expected = "[system prompt][user prompt][assistant response][user prompt2]"
     assert input == expected
