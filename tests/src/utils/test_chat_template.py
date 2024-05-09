@@ -19,7 +19,7 @@ def test_chat_template_no_system_prompt():
     cfg.dataset.add_eos_token_to_answer = True
 
     tokenizer = get_tokenizer(cfg)
-    tokenizer.eos_token = '</s>'
+    tokenizer.eos_token = "</s>"
     tokenizer.chat_template = get_chat_template(cfg)
 
     chat = [
@@ -102,7 +102,7 @@ def test_chat_template_with_system_prompt():
     cfg.dataset.system_column = "system"
 
     tokenizer = get_tokenizer(cfg)
-    tokenizer.eos_token = '</s>'
+    tokenizer.eos_token = "</s>"
     tokenizer.chat_template = get_chat_template(cfg)
 
     chat = [
@@ -198,7 +198,7 @@ def test_chat_template_no_eos_token():
         tokenize=False,
         add_generation_prompt=True,
     )
-    expected = "<|system|>[system prompt]<|prompt|>[user prompt]<|answer|>[assistant response]<|prompt|>[user prompt2]<|answer|>" # noqa
+    expected = "<|system|>[system prompt]<|prompt|>[user prompt]<|answer|>[assistant response]<|prompt|>[user prompt2]<|answer|>"  # noqa
     assert input == expected
 
 
@@ -230,5 +230,7 @@ def test_chat_template_no_special_token():
         tokenize=False,
         add_generation_prompt=True,
     )
-    expected = expected = "[system prompt][user prompt][assistant response][user prompt2]"
+    expected = expected = (
+        "[system prompt][user prompt][assistant response][user prompt2]"  # noqa
+    )
     assert input == expected
