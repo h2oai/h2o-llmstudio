@@ -112,8 +112,18 @@ chat_template_for_system
         chat_template = chat_template.replace(
             "chat_template_for_checking_alternating_roles",
             """
-{% if message['role'] == 'user' == (loop.index0 % 2 == 0) or messages[0]['role'] != 'system' %}
-{{ raise_exception('Conversation roles must alternate system/user/assistant/user/assistant/...') }}{% endif %}""",  # noqa
+{% if loop.index0 != 0 and message['role'] == 'system' %}
+{{ raise_exception('Conversation roles must alternate system(optional)/user/assistant/user/assistant/...') }}"""  # noqa
+            + """
+{% elif messages[0]['role'] == 'system' and ((message['role'] == 'user' and (loop.index0 % 2 == 0)) or (message['role'] == 'assistant' and (loop.index0 % 2 == 1))) %}"""  # noqa
+            + """
+{{ raise_exception('Conversation roles must alternate system(optional)/user/assistant/user/assistant/...') }}"""  # noqa
+            + """
+{% elif messages[0]['role'] != 'system' and ((message['role'] == 'user' and (loop.index0 % 2 != 0)) or (message['role'] == 'assistant' and (loop.index0 % 2 != 1))) %}"""  # noqa
+            + """
+{{ raise_exception('Conversation roles must alternate system(optional)/user/assistant/user/assistant/...') }}"""  # noqa
+            + """
+{% endif %}""",
         )
         chat_template = chat_template.replace(
             "chat_template_for_system",
@@ -130,15 +140,18 @@ chat_template_for_system
         chat_template = chat_template.replace(
             "chat_template_for_checking_system_role",
             """
-{% if messages[0]['role'] == 'system' %}
+{% if message['role'] == 'system' %}
 {{ raise_exception('System role not supported') }}
 {% endif %}""",
         )
         chat_template = chat_template.replace(
             "chat_template_for_checking_alternating_roles",
             """
-{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}
-{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}{% endif %}""",  # noqa
+{% if ((message['role'] == 'user') != (loop.index0 % 2 == 0)) or ((message['role'] == 'assistant') != (loop.index0 % 2 == 1)) %}"""  # noqa
+            + """
+{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}"""  # noqa
+            + """
+{% endif %}""",
         )
         chat_template = chat_template.replace("chat_template_for_system", "")
 
@@ -215,7 +228,8 @@ def publish_model_to_hugging_face(
     repo_id = f"{user_id}/{hf_repo_friendly_name(model_name)}"
 
     # push tokenizer to hub
-    tokenizer.chat_template = get_chat_template(cfg)
+    if cfg.problem_type != "text_sequence_to_sequence_modeling":
+        tokenizer.chat_template = get_chat_template(cfg)
     tokenizer.push_to_hub(repo_id=repo_id, private=True)
 
     # push model card to hub

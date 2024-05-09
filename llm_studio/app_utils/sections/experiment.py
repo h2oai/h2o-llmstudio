@@ -20,6 +20,7 @@ from sqlitedict import SqliteDict
 
 from llm_studio.app_utils.config import default_cfg
 from llm_studio.app_utils.hugging_face_utils import (
+    get_chat_template,
     get_model_card,
     publish_model_to_hugging_face,
 )
@@ -1636,6 +1637,8 @@ async def experiment_download_model(q: Q):
         # See PreTrainedTokenizerBase.save_pretrained for documentation
         # Safeguard against None return if tokenizer class is
         # not inherited from PreTrainedTokenizerBase
+        if cfg.problem_type != "text_sequence_to_sequence_modeling":
+            tokenizer.chat_template = get_chat_template(cfg)
         tokenizer_files = list(tokenizer.save_pretrained(checkpoint_path) or [])
 
         card = get_model_card(cfg, model, repo_id="<path_to_local_folder>")
