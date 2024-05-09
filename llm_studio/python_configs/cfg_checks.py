@@ -104,12 +104,12 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
         ]
 
     # Check if learning rate is accidentally a string
-    # (for example, setting the LR to 3e-4, the yaml considers that a string)
+    # (for example, setting the LR to 3e-4, the yaml considers that a string. It must be 3.0e-4 or 3.e-4)
     if isinstance(cfg.training.learning_rate, str) or isinstance(cfg.training.differential_learning_rate, str):
-        errors["title"] += ["Learning rate in config must be float; e notation is not supported"]
+        errors["title"] += ["Learning rate in config must be float; received string"]
         errors["message"] += [
             "Learning rate in config must be float. "
-            "Please convert the learning rate into a purely decimal number."
+            "Please add a decimal point to make it a float (e.g. '3e-4' -> 3.0e-4)"
         ]
 
     return errors
