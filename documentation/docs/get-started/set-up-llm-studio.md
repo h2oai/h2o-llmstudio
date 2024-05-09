@@ -6,6 +6,10 @@ import TabItem from "@theme/TabItem";
 
 # Set up H2O LLM Studio
 
+This page guides you through setting up and installing H2O LLM Studio on your local system. 
+
+First, download the H2O LLM Studio package from the [H2O LLM Studio Github repository](https://github.com/h2oai/h2o-llmstudio). You can use `git clone` or navigate to the [releases page](https://github.com/h2oai/h2o-llmstudio/releases) and download the `.zip` file found within the **Assets** of the relevant release. 
+
 ## Prerequisites
 
 H2O LLM Studio requires the following minimum requirements:
@@ -21,11 +25,10 @@ H2O LLM Studio requires the following minimum requirements:
   - cdn-lfs.huggingface.co
 
 :::info Notes
-
 - Atleast 24GB of GPU memory is recommended for larger models.
 - For more information on performance benchmarks based on the hardware setup, see [H2O LLM Studio performance](llm-studio-performance.md).
 - The required URLs are accessible by default when you start a GCP instance, however, if you have network rules or custom firewalls in place, it is recommended to confirm that the URLs are accessible before running `make setup`.
-  :::
+:::
 
 ## Installation
 
@@ -299,18 +302,18 @@ docker run \
 
 ### Run with command line interface (CLI)
 
-You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`.
+You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration .yaml file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`.
 
 To specify the path to the configuration file that contains the experiment parameters, run:
 
 ```sh
-python train.py -C {path_to_config_file}
+python train.py -Y {path_to_config_yaml_file}
 ```
 
 To run on multiple GPUs in DDP mode, run:
 
 ```sh
-bash distributed_train.sh {NR_OF_GPUS} -C {path_to_config_file}
+bash distributed_train.sh {NR_OF_GPUS} -Y {path_to_config_yaml_file}
 ```
 
 :::info

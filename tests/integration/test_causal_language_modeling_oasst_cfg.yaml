@@ -41,11 +41,12 @@ environment:
     - '0'
     huggingface_branch: main
     mixed_precision: true
+    mixed_precision_dtype: float16
     number_of_workers: 8
     seed: -1
     trust_remote_code: true
 experiment_name: test-causal-language-modeling-oasst
-llm_backbone: h2oai/h2ogpt-4096-llama2-7b
+llm_backbone: facebook/opt-125m
 logging:
     logger: None
     neptune_project: test_org/test_project
@@ -54,7 +55,7 @@ prediction:
     batch_size_inference: 0
     do_sample: false
     max_length_inference: 256
-    max_time: 120.0
+    max_time: 0.0
     metric: Perplexity
     metric_gpt_model: gpt-3.5-turbo-0301
     metric_gpt_template: general
@@ -92,7 +93,7 @@ training:
     lora_target_modules: ''
     loss_function: TokenAveragedCrossEntropy
     optimizer: AdamW
-    save_best_checkpoint: false
+    save_checkpoint: "last"
     schedule: Cosine
     train_validation_data: false
     warmup_epochs: 0.0

@@ -54,6 +54,7 @@ from llm_studio.src.utils.modeling_utils import (
     get_number_of_validation_epochs,
     get_optimizer,
     get_scheduler,
+    get_torch_dtype,
     load_checkpoint,
     run_inference,
     save_checkpoint,
@@ -181,7 +182,9 @@ def run_train(
 
     scaler: GradScaler | None = None
     if cfg.environment.mixed_precision:
-        scaler = GradScaler()
+        scaler = GradScaler(
+            enabled=(cfg.environment.mixed_precision_dtype == "float16")
+        )
 
     optimizer.zero_grad(set_to_none=True)
 
@@ -259,8 +262,14 @@ def run_train(
                 plot = cfg.logging.plots_class.plot_batch(batch=batch, cfg=cfg)
                 log_plot(cfg, plot, "train_data")
 
+            # only need to sync gradients at last step of grad accumulation
+            model.require_backward_grad_sync = itr % cfg.training.grad_accumulation == 0
+
             # Forward pass
-            with autocast(enabled=cfg.environment.mixed_precision):
+            with autocast(
+                enabled=cfg.environment.mixed_precision,
+                dtype=get_torch_dtype(cfg.environment.mixed_precision_dtype),
+            ):
                 output_dict = model.forward(batch)
 
             loss = output_dict["loss"]
@@ -366,7 +375,7 @@ def run_train(
                     progress_bar.close()
 
                 # TODO: Move back after fixing slow generation of deepspeed.
-                if not cfg.training.save_best_checkpoint:
+                if cfg.training.save_checkpoint == "last":
                     checkpoint_path = cfg.output_directory
                     if cfg.environment._local_rank == 0:
                         logger.info(
@@ -378,7 +387,7 @@ def run_train(
                     cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
                 )
 
-                if cfg.training.save_best_checkpoint:
+                if cfg.training.save_checkpoint == "best":
                     if objective_op(val_metric, best_val_metric):
                         checkpoint_path = cfg.output_directory
                         if cfg.environment._local_rank == 0:
@@ -597,10 +606,6 @@ def run(cfg: Any) -> None:
             else:
                 model.backbone = torch.compile(model.backbone)
 
-    # Force settings when saving best checkpoint
-    if cfg.training.save_best_checkpoint:
-        cfg.training.train_validation_data = False
-
     # reset steps
     cfg.environment._curr_step = 0
     cfg.environment._curr_val_step = 0
@@ -648,7 +653,7 @@ def run(cfg: Any) -> None:
 
     experiment_path = f"{cfg.output_directory}"
 
-    if cfg.training.epochs == 0:
+    if cfg.training.epochs == 0 and cfg.training.save_checkpoint != "disable":
         checkpoint_path = cfg.output_directory
         if cfg.environment._local_rank == 0:
             logger.info(f"Saving last model checkpoint to {checkpoint_path}")

@@ -50,15 +50,6 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             "select the GPUs you want to use again. "
         ]
 
-    if cfg.training.save_best_checkpoint and cfg.training.train_validation_data:
-        errors["title"] += ["Save Best Checkpoint incompatible settings."]
-        errors["message"] += [
-            "Save Best Checkpoint is not compatible with "
-            "Train Validation Data. "
-            "Please set Save Best Checkpoint to False or disable "
-            "Train Validation Data. "
-        ]
-
     stats = os.statvfs(".")
     available_size = stats.f_frsize * stats.f_bavail
     if available_size < default_cfg.min_experiment_disk_space:
@@ -85,24 +76,15 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
 
     if (
         not cfg.training.lora
-        and cfg.architecture.backbone_dtype != "float32"
+        and cfg.architecture.backbone_dtype not in ["bfloat16", "float32"]
         and cfg.training.epochs > 0
     ):
-        if cfg.environment.mixed_precision:
-            errors["title"] += ["Mixed precision not supported."]
-            errors["message"] += [
-                "When not using LORA, "
-                "mixed precision training will likely lead to unstable training. "
-                "Please ensure that mixed precision is disabled "
-                "or set Backbone Dtype to float32."
-            ]
-        if cfg.architecture.backbone_dtype != "bfloat16":
-            errors["title"] += ["Pure float16 or int8 training."]
-            errors["message"] += [
-                f"When not using LORA, {cfg.architecture.backbone_dtype} training will "
-                "likely lead to unstable training. "
-                "Please use LORA or set Backbone Dtype to float32."
-            ]
+        errors["title"] += [f"Pure {cfg.architecture.backbone_dtype} training."]
+        errors["message"] += [
+            f"When not using LORA, {cfg.architecture.backbone_dtype} training will "
+            "likely lead to unstable training. "
+            "Please use LORA or set Backbone Dtype to bfloat16 or float32."
+        ]
 
     if cfg.environment.use_deepspeed and cfg.architecture.backbone_dtype in [
         "int8",

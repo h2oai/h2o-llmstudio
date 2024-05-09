@@ -1,9 +1,9 @@
 ---
-description: Setting up and runnning H2O LLM Studio requires the following minimal prerequisites. This page lists out the speed and performance metrics of H2O LLM Studio based on different hardware setups.
+description: Setting up and running H2O LLM Studio requires the following minimal prerequisites. This page lists out the speed and performance metrics of H2O LLM Studio based on different hardware setups.
 ---
 # H2O LLM Studio performance
 
-Setting up and runnning H2O LLM Studio requires the following minimal [prerequisites](set-up-llm-studio.md#prerequisites). This page lists out the speed and performance metrics of H2O LLM Studio based on different hardware setups.
+Setting up and running H2O LLM Studio requires the following minimal [prerequisites](set-up-llm-studio.md#prerequisites). This page lists out the speed and performance metrics of H2O LLM Studio based on different hardware setups.
 
 The following metrics were measured. 
 
@@ -160,7 +160,7 @@ training:
     lora_target_modules: ''
     loss_function: TokenAveragedCrossEntropy
     optimizer: AdamW
-    save_best_checkpoint: false
+    save_checkpoint: "last"
     schedule: Cosine
     train_validation_data: false
     warmup_epochs: 0.0

@@ -1,5 +1,5 @@
 architecture:
-    backbone_dtype: float32
+    backbone_dtype: int4
     force_embedding_gradients: false
     gradient_checkpointing: true
     intermediate_dropout: 0.0
@@ -10,67 +10,74 @@ augmentation:
     skip_parent_probability: 0.0
     token_mask_probability: 0.0
 dataset:
-    add_eos_token_to_answer: false
-    add_eos_token_to_prompt: false
-    add_eos_token_to_system: false
-    answer_column: binary_label
+    add_eos_token_to_answer: true
+    add_eos_token_to_prompt: true
+    add_eos_token_to_system: true
+    answer_column: output
     chatbot_author: H2O.ai
     chatbot_name: h2oGPT
-    data_sample: 0.03
+    data_sample: 0.01
     data_sample_choice:
     - Train
     - Validation
     limit_chained_samples: false
     mask_prompt_labels: true
-    num_classes: 1
     parent_id_column: None
     personalize: false
     prompt_column:
     - instruction
     system_column: None
-    text_answer_separator: ''
-    text_prompt_start: ''
-    text_system_start: ''
-    train_dataframe: /tmp/train_full.pq
+    text_answer_separator: <|answer|>
+    text_prompt_start: <|prompt|>
+    text_system_start: <|system|>
+    train_dataframe: examples/data_oasst2/train_full.csv
     validation_dataframe: None
-    validation_size: 0.2
+    validation_size: 0.01
     validation_strategy: automatic
 environment:
     compile_model: false
-    deepspeed_reduce_bucket_size: 1000000
-    deepspeed_stage3_param_persistence_threshold: 1000000
-    deepspeed_stage3_prefetch_bucket_size: 1000000
     find_unused_parameters: false
     gpus:
-    - ''
+    - '0'
     huggingface_branch: main
-    mixed_precision: false
+    mixed_precision: true
     number_of_workers: 8
     seed: -1
     trust_remote_code: true
-    use_deepspeed: false
-experiment_name: solid-spaniel
-llm_backbone: h2oai/llama2-0b-unit-test
+experiment_name: example_oasst2
+llm_backbone: h2oai/h2o-danube2-1.8b-base
 logging:
     logger: None
-    neptune_project: ''
-output_directory: /tmp/output
+    neptune_project: test_org/test_project
+output_directory: examples/output_oasst2
 prediction:
     batch_size_inference: 0
-    metric: AUC
-problem_type: text_causal_classification_modeling
+    do_sample: false
+    max_length_inference: 256
+    max_time: 0.0
+    metric: Perplexity
+    metric_gpt_model: gpt-3.5-turbo-0301
+    metric_gpt_template: general
+    min_length_inference: 1
+    num_beams: 1
+    num_history: 4
+    repetition_penalty: 1.2
+    stop_tokens: ''
+    temperature: 0.3
+    top_k: 0
+    top_p: 1.0
+problem_type: text_causal_language_modeling
 tokenizer:
     add_prompt_answer_tokens: false
-    max_length: 32
-    max_length_answer: 16
-    max_length_prompt: 16
+    max_length: 512
+    max_length_answer: 256
+    max_length_prompt: 256
     padding_quantile: 1.0
     use_fast: true
 training:
-    batch_size: 6
+    batch_size: 2
     differential_learning_rate: 1.0e-05
-    differential_learning_rate_layers:
-    - classification_head
+    differential_learning_rate_layers: []
     drop_last_batch: true
     epochs: 1
     evaluate_before_training: false
@@ -83,7 +90,7 @@ training:
     lora_dropout: 0.05
     lora_r: 4
     lora_target_modules: ''
-    loss_function: BinaryCrossEntropyLoss
+    loss_function: TokenAveragedCrossEntropy
     optimizer: AdamW
     save_checkpoint: "last"
     schedule: Cosine

@@ -191,6 +191,9 @@ def test_dpo_perplexity_metric(tmp_path, df2):
     cfg.architecture.gradient_checkpointing = False
     cfg.environment._device = device  # type: ignore
 
+    # bfloat16 is not supported on older GPUs
+    cfg.environment.mixed_precision_dtype = "float16"
+
     dataset = CustomDataset(df2, cfg, mode="train")
     model = Model(cfg).eval().to(device)
     vocab_size = model.backbone.config.vocab_size

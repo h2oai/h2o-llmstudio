@@ -45,6 +45,7 @@ environment:
     - '0'
     huggingface_branch: main
     mixed_precision: true
+    mixed_precision_dtype: float16
     number_of_workers: 8
     seed: -1
     trust_remote_code: true
@@ -85,7 +86,7 @@ training:
     lora_target_modules: ''
     loss_function: CrossEntropyLoss
     optimizer: AdamW
-    save_best_checkpoint: false
+    save_checkpoint: "last"
     schedule: Cosine
     train_validation_data: false
     warmup_epochs: 0.0

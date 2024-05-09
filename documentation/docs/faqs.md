@@ -91,8 +91,8 @@ Use WSL 2 on Windows
 
 If you have limited GPU memory but still want to fine-tune a large language model using H2O LLM Studio's CLI, there are alternative methods you can use to get started quickly.
 
-- [Using Kaggle kernels](https://www.kaggle.com/code/philippsinger/h2o-llm-studio-cli/) 
-- [Using Google Colab](https://colab.research.google.com/drive/1-OYccyTvmfa3r7cAquw8sioFFPJcn4R9?usp=sharing)
+- [Using Kaggle kernels](https://www.kaggle.com/code/ilu000/h2o-llm-studio-cli/) 
+- [Using Google Colab](https://colab.research.google.com/drive/1soqfJjwDJwjjH-VzZYO_pUeLx5xY4N1K?usp=sharing)
 
 ---
 
