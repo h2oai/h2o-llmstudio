@@ -101,6 +101,7 @@ test: reports
 
 .PHONY: test-ui
 test-ui: reports setup-ui
+	@bash -c 'set -o pipefail; \
 	$(PW_DEBUG) $(PIPENV) run pytest \
 	-v \
 	--junitxml=reports/junit_ui.xml \
