@@ -109,7 +109,7 @@ test-ui: reports setup-ui
 	-o log_cli=true \
 	-o log_level=$(LOG_LEVEL) \
 	-o log_file=reports/tests_ui.log \
-	tests/ui/test.py 2>&1 | tee reports/tests_ui.log
+	tests/ui/test.py 2>&1 | tee reports/tests_ui.log'
 
 .PHONY: test-ui-headed
 test-ui-headed: setup-ui
