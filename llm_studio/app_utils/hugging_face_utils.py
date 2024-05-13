@@ -5,11 +5,13 @@ import einops
 import huggingface_hub
 import torch
 import transformers
-from jinja2 import Environment, FileSystemLoader
 
 from llm_studio.app_utils.sections.chat import load_cfg_model_tokenizer
 from llm_studio.app_utils.utils import hf_repo_friendly_name, save_hf_yaml, set_env
-from llm_studio.src.utils.config_utils import NON_GENERATION_PROBLEM_TYPES
+from llm_studio.src.utils.config_utils import (
+    GENERATION_PROBLEM_TYPES,
+    NON_GENERATION_PROBLEM_TYPES,
+)
 from llm_studio.src.utils.modeling_utils import check_disk_space
 
 
@@ -53,6 +55,26 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
                 repetition_penalty=cfg.prediction.repetition_penalty,
             )
         )
+        if cfg.dataset.system_column != "None":
+            cfg_kwargs[
+                "sample_messages"
+            ] = """[
+    {
+        "role": "system",
+        "content": "You are a friendly and polite chatbot.",
+    },
+    {"role": "user", "content": "Hi, how are you?"},
+    {"role": "assistant", "content": "I'm doing great, how about you?"},
+    {"role": "user", "content": "Why is drinking water so healthy?"},
+]"""
+        else:
+            cfg_kwargs[
+                "sample_messages"
+            ] = """[
+    {"role": "user", "content": "Hi, how are you?"},
+    {"role": "assistant", "content": "I'm doing great, how about you?"},
+    {"role": "user", "content": "Why is drinking water so healthy?"},
+]"""
 
     card = huggingface_hub.ModelCard.from_template(
         card_data,
@@ -68,6 +90,91 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
         **cfg_kwargs,
     )
     return card
+
+
+def get_chat_template(cfg):
+
+    chat_template = """
+{% for message in messages %}
+chat_template_for_checking_system_role
+chat_template_for_checking_alternating_roles
+{% if message['role'] == 'user' %}
+{{ 'text_prompt_start' + message['content'].strip() + eos_token_prompt }}
+chat_template_for_system
+{% elif message['role'] == 'assistant' %}
+{{ 'text_answer_separator' + message['content'].strip() + eos_token_answer }}
+{% endif %}
+{% endfor %}
+{% if add_generation_prompt %}{{ 'text_answer_separator' }}{% endif %}"""
+
+    if cfg.dataset.system_column != "None":
+        # If system role is supported
+        chat_template = chat_template.replace(
+            "chat_template_for_checking_system_role", ""
+        )
+        chat_template = chat_template.replace(
+            "chat_template_for_checking_alternating_roles",
+            """
+{% if loop.index0 != 0 and message['role'] == 'system' %}
+{{ raise_exception('Conversation roles must alternate system(optional)/user/assistant/user/assistant/...') }}"""  # noqa
+            + """
+{% elif messages[0]['role'] == 'system' and ((message['role'] == 'user' and (loop.index0 % 2 == 0)) or (message['role'] == 'assistant' and (loop.index0 % 2 == 1))) %}"""  # noqa
+            + """
+{{ raise_exception('Conversation roles must alternate system(optional)/user/assistant/user/assistant/...') }}"""  # noqa
+            + """
+{% elif messages[0]['role'] != 'system' and ((message['role'] == 'user' and (loop.index0 % 2 != 0)) or (message['role'] == 'assistant' and (loop.index0 % 2 != 1))) %}"""  # noqa
+            + """
+{{ raise_exception('Conversation roles must alternate system(optional)/user/assistant/user/assistant/...') }}"""  # noqa
+            + """
+{% endif %}""",
+        )
+        chat_template = chat_template.replace(
+            "chat_template_for_system",
+            """
+{% elif message['role'] == 'system' %}
+{{ 'text_system_start' + message['content'].strip() + eos_token_system }}""",
+        )
+        if cfg.dataset.add_eos_token_to_system:
+            chat_template = chat_template.replace("eos_token_system", "eos_token")
+        else:
+            chat_template = chat_template.replace("+ eos_token_system", "")
+    else:
+        # If system role is NOT supported
+        chat_template = chat_template.replace(
+            "chat_template_for_checking_system_role",
+            """
+{% if message['role'] == 'system' %}
+{{ raise_exception('System role not supported') }}
+{% endif %}""",
+        )
+        chat_template = chat_template.replace(
+            "chat_template_for_checking_alternating_roles",
+            """
+{% if ((message['role'] == 'user') != (loop.index0 % 2 == 0)) or ((message['role'] == 'assistant') != (loop.index0 % 2 == 1)) %}"""  # noqa
+            + """
+{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}"""  # noqa
+            + """
+{% endif %}""",
+        )
+        chat_template = chat_template.replace("chat_template_for_system", "")
+
+    if cfg.dataset.add_eos_token_to_prompt:
+        chat_template = chat_template.replace("eos_token_prompt", "eos_token")
+    else:
+        chat_template = chat_template.replace("+ eos_token_prompt", "")
+    if cfg.dataset.add_eos_token_to_answer:
+        chat_template = chat_template.replace("eos_token_answer", "eos_token")
+    else:
+        chat_template = chat_template.replace("+ eos_token_answer", "")
+
+    chat_template = (
+        chat_template.replace("\n", "")
+        .replace("text_system_start", cfg.dataset.text_system_start)
+        .replace("text_prompt_start", cfg.dataset.text_prompt_start)
+        .replace("text_answer_separator", cfg.dataset.text_answer_separator)
+    )
+
+    return chat_template
 
 
 def publish_model_to_hugging_face(
@@ -124,6 +231,8 @@ def publish_model_to_hugging_face(
     repo_id = f"{user_id}/{hf_repo_friendly_name(model_name)}"
 
     # push tokenizer to hub
+    if cfg.problem_type in GENERATION_PROBLEM_TYPES:
+        tokenizer.chat_template = get_chat_template(cfg)
     tokenizer.push_to_hub(repo_id=repo_id, private=True)
 
     # push model card to hub
@@ -154,13 +263,6 @@ def publish_model_to_hugging_face(
     )
 
     # push model to hub
-    model.backbone.config.custom_pipelines = {
-        "text-generation": {
-            "impl": "h2oai_pipeline.H2OTextGenerationPipeline",
-            "pt": "AutoModelForCausalLM",
-        }
-    }
-
     model.backbone.push_to_hub(
         repo_id=repo_id,
         private=True,
@@ -175,34 +277,4 @@ def publish_model_to_hugging_face(
         account_name=user_id,
         model_name=model_name,
         repo_id=repo_id,
-    )
-
-    # push pipeline to hub
-    template_env = Environment(loader=FileSystemLoader(searchpath="llm_studio/src/"))
-
-    pipeline_template = template_env.get_template("h2oai_pipeline_template.py")
-
-    data = {
-        "text_prompt_start": cfg.dataset.text_prompt_start,
-        "text_answer_separator": cfg.dataset.text_answer_separator,
-    }
-
-    if cfg.dataset.add_eos_token_to_prompt:
-        data.update({"end_of_sentence": cfg._tokenizer_eos_token})
-    else:
-        data.update({"end_of_sentence": ""})
-
-    custom_pipeline = pipeline_template.render(data)
-
-    custom_pipeline_path = os.path.join(path_to_experiment, "h2oai_pipeline.py")
-
-    with open(custom_pipeline_path, "w") as f:
-        f.write(custom_pipeline)
-
-    api.upload_file(
-        path_or_fileobj=custom_pipeline_path,
-        path_in_repo="h2oai_pipeline.py",
-        repo_id=repo_id,
-        repo_type="model",
-        commit_message="Upload h2oai_pipeline.py",
     )

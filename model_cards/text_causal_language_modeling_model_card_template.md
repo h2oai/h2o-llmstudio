@@ -26,12 +26,15 @@ pip install transformers=={{transformers_version}}
 ```
 
 Also make sure you are providing your huggingface token to the pipeline if the model is lying in a private repo.
-    - Either leave `token=True` in the `pipeline` and login to hugginface_hub by running
-        ```python
-        import huggingface_hub
-        huggingface_hub.login(<ACCESS_TOKEN>)
-        ```
-    - Or directly pass your <ACCESS_TOKEN> to `token` in the `pipeline`
+
+- Either leave `token=True` in the `pipeline` and login to hugginface_hub by running
+
+```python
+import huggingface_hub
+huggingface_hub.login(<ACCESS_TOKEN>)
+```
+
+- Or directly pass your <ACCESS_TOKEN> to `token` in the `pipeline`
 
 ```python
 from transformers import pipeline
@@ -53,58 +56,24 @@ generate_text = pipeline(
 # generate_text.model.generation_config.temperature = float({{temperature}})
 # generate_text.model.generation_config.repetition_penalty = float({{repetition_penalty}})
 
-res = generate_text(
-    "Why is drinking water so healthy?",
-    renormalize_logits=True
-)
-print(res[0]["generated_text"])
-```
-
-You can print a sample prompt after the preprocessing step to see how it is feed to the tokenizer:
-
-```python
-print(generate_text.preprocess("Why is drinking water so healthy?")["prompt_text"])
-```
-
-```bash
-{{text_prompt_start}}Why is drinking water so healthy?{{end_of_sentence}}{{text_answer_separator}}
-```
-
-Alternatively, you can download [h2oai_pipeline.py](h2oai_pipeline.py), store it alongside your notebook, and construct the pipeline yourself from the loaded model and tokenizer. If the model and the tokenizer are fully supported in the `transformers` package, this will allow you to set `trust_remote_code=False`.
-
-```python
-from h2oai_pipeline import H2OTextGenerationPipeline
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
-tokenizer = AutoTokenizer.from_pretrained(
-    "{{repo_id}}",
-    use_fast={{use_fast}},
-    padding_side="left",
-    trust_remote_code={{trust_remote_code}},
-)
-model = AutoModelForCausalLM.from_pretrained(
-    "{{repo_id}}",
-    torch_dtype="auto",
-    device_map={"": "cuda:0"},
-    trust_remote_code={{trust_remote_code}},
-)
-generate_text = H2OTextGenerationPipeline(model=model, tokenizer=tokenizer)
-
-# generate configuration can be modified to your needs
-# generate_text.model.generation_config.min_new_tokens = {{min_new_tokens}}
-# generate_text.model.generation_config.max_new_tokens = {{max_new_tokens}}
-# generate_text.model.generation_config.do_sample = {{do_sample}}
-# generate_text.model.generation_config.num_beams = {{num_beams}}
-# generate_text.model.generation_config.temperature = float({{temperature}})
-# generate_text.model.generation_config.repetition_penalty = float({{repetition_penalty}})
+messages = {{sample_messages}}
 
 res = generate_text(
-    "Why is drinking water so healthy?",
+    messages,
     renormalize_logits=True
 )
-print(res[0]["generated_text"])
+print(res[0]["generated_text"][-1]['content'])
 ```
 
+You can print a sample prompt after applying chat template to see how it is feed to the tokenizer:
+
+```python
+print(generate_text.tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True,
+))
+```
 
 You may also construct the pipeline from the loaded model and tokenizer yourself and consider the preprocessing steps:
 
@@ -114,7 +83,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 model_name = "{{repo_id}}"  # either local folder or huggingface model name
 # Important: The prompt needs to be in the same format the model was trained with.
 # You can find an example prompt in the experiment logs.
-prompt = "{{text_prompt_start}}How are you?{{end_of_sentence}}{{text_answer_separator}}"
+messages = {{sample_messages}}
 
 tokenizer = AutoTokenizer.from_pretrained(
     model_name,
@@ -128,7 +97,6 @@ model = AutoModelForCausalLM.from_pretrained(
     trust_remote_code={{trust_remote_code}},
 )
 model.cuda().eval()
-inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cuda")
 
 # generate configuration can be modified to your needs
 # model.generation_config.min_new_tokens = {{min_new_tokens}}
@@ -137,6 +105,14 @@ inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cu
 # model.generation_config.num_beams = {{num_beams}}
 # model.generation_config.temperature = float({{temperature}})
 # model.generation_config.repetition_penalty = float({{repetition_penalty}})
+
+inputs = tokenizer.apply_chat_template(
+    messages,
+    tokenize=True,
+    add_generation_prompt=True,
+    return_tensors="pt",
+    return_dict=True,
+).to("cuda")
 
 tokens = model.generate(
     input_ids=inputs["input_ids"],
