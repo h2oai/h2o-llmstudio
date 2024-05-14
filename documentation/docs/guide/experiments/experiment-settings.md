@@ -47,7 +47,7 @@ import TSloraR from '../../tooltips/experiments/_lora-r.mdx';
 import TSloraAlpha from '../../tooltips/experiments/_lora-alpha.mdx';
 import TSloraDropout from '../../tooltips/experiments/_lora-dropout.mdx';
 import TSloraTargetModules from '../../tooltips/experiments/_lora-target-modules.mdx';
-import TSsavebestcheckpoint from '../../tooltips/experiments/_save-best-checkpoint.mdx';
+import TSsavecheckpoint from '../../tooltips/experiments/_save-checkpoint.mdx';
 import TSevaluationepochs from '../../tooltips/experiments/_evaluation-epochs.mdx';
 import TSevaluationbeforetraining from '../../tooltips/experiments/_evaluate-before-training.mdx';
 import TStrainvalidationdata from '../../tooltips/experiments/_train-validation-data.mdx';
@@ -302,9 +302,9 @@ The settings under each category are listed and described below.
 
 <TSloraTargetModules/>
 
-### Save best checkpoint
+### Save checkpoint
 
-<TSsavebestcheckpoint/>
+<TSsavecheckpoint/>
 
 ### Evaluation epochs
 

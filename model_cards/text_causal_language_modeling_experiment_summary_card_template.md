@@ -27,15 +27,19 @@ generate_text = pipeline(
     token=True,
 )
 
+# generate configuration can be modified to your needs
+# generate_text.model.generation_config.min_new_tokens = {{min_new_tokens}}
+# generate_text.model.generation_config.max_new_tokens = {{max_new_tokens}}
+# generate_text.model.generation_config.do_sample = {{do_sample}}
+# generate_text.model.generation_config.num_beams = {{num_beams}}
+# generate_text.model.generation_config.temperature = float({{temperature}})
+# generate_text.model.generation_config.repetition_penalty = float({{repetition_penalty}})
+
+messages = {{sample_messages}}
+
 res = generate_text(
-    "Why is drinking water so healthy?",
-    min_new_tokens={{min_new_tokens}},
-    max_new_tokens={{max_new_tokens}},
-    do_sample={{do_sample}},
-    num_beams={{num_beams}},
-    temperature=float({{temperature}}),
-    repetition_penalty=float({{repetition_penalty}}),
+    messages,
     renormalize_logits=True
 )
-print(res[0]["generated_text"])
+print(res[0]["generated_text"][-1]['content'])
 ```

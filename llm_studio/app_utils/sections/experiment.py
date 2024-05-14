@@ -20,6 +20,7 @@ from sqlitedict import SqliteDict
 
 from llm_studio.app_utils.config import default_cfg
 from llm_studio.app_utils.hugging_face_utils import (
+    get_chat_template,
     get_model_card,
     publish_model_to_hugging_face,
 )
@@ -49,6 +50,7 @@ from llm_studio.python_configs.cfg_checks import check_config_for_errors
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
+    GENERATION_PROBLEM_TYPES,
     NON_GENERATION_PROBLEM_TYPES,
     load_config_py,
     load_config_yaml,
@@ -1657,6 +1659,8 @@ async def experiment_download_model(q: Q):
         # See PreTrainedTokenizerBase.save_pretrained for documentation
         # Safeguard against None return if tokenizer class is
         # not inherited from PreTrainedTokenizerBase
+        if cfg.problem_type in GENERATION_PROBLEM_TYPES:
+            tokenizer.chat_template = get_chat_template(cfg)
         tokenizer_files = list(tokenizer.save_pretrained(checkpoint_path) or [])
 
         card = get_model_card(cfg, model, repo_id="<path_to_local_folder>")
@@ -1905,6 +1909,29 @@ def get_experiment_summary_code_card(cfg) -> str:
         text = text.replace("{{temperature}}", str(cfg.prediction.temperature))
         text = text.replace(
             "{{repetition_penalty}}", str(cfg.prediction.repetition_penalty)
+        )
+
+    if cfg.dataset.system_column != "None":
+        text = text.replace(
+            "{{sample_messages}}",
+            """[
+    {
+        "role": "system",
+        "content": "You are a friendly and polite chatbot.",
+    },
+    {"role": "user", "content": "Hi, how are you?"},
+    {"role": "assistant", "content": "I'm doing great, how about you?"},
+    {"role": "user", "content": "Why is drinking water so healthy?"},
+]""",
+        )
+    else:
+        text = text.replace(
+            "{{sample_messages}}",
+            """[
+    {"role": "user", "content": "Hi, how are you?"},
+    {"role": "assistant", "content": "I'm doing great, how about you?"},
+    {"role": "user", "content": "Why is drinking water so healthy?"},
+]""",
         )
 
     return text
