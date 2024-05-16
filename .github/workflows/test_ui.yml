@@ -2,7 +2,7 @@ name: Test-UI
 
 on:
   push:
-    branches: [ testui ]
+    branches: [ main ]
   pull_request:
 
 jobs:
