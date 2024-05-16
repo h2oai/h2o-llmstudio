@@ -218,6 +218,8 @@ class LLMStudioPage(BasePage):
                 ).inner_text()
             elif status == "finished":
                 break
+            else:
+                raise Exception(f"Unexpected status: {status}")
 
     def find_experiment_index(self, experiment_name):
         index = 0
