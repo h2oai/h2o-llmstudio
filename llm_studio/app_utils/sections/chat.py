@@ -208,6 +208,8 @@ def load_cfg_model_tokenizer(
         and cfg.training.lora
         and cfg.architecture.backbone_dtype in ("int4", "int8")
     ):
+        # Force to float16 for merging LORA weights.
+        # TODO: Could be configurable in the future to allow bfloat16.
         logger.info("Loading backbone in float16 for merging LORA weights.")
         cfg.architecture.backbone_dtype = "float16"
         cfg.architecture.pretrained = True
@@ -236,11 +238,7 @@ def load_cfg_model_tokenizer(
         # merges the LoRa layers into the base model.
         # This is needed if one wants to use the base model as a standalone model.
         logger.info("Merging LORA layers with base model.")
-        if device == "cpu":
-            model = model.to(torch.float32)
         model.backbone = model.backbone.merge_and_unload()
-        if device == "cpu":
-            model = model.to(torch.float16)
 
     model = model.eval()
     model.backbone.use_cache = True
