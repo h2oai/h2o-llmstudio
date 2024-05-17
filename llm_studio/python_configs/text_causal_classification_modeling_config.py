@@ -54,6 +54,7 @@ class ConfigNLPCausalClassificationDataset(ConfigNLPCausalLMDataset):
 
         self._possible_values["num_classes"] = (1, 100, 1)
 
+        self._visibility["parent_id_column"] = -1
         self._visibility["personalize"] = -1
         self._visibility["chatbot_name"] = -1
         self._visibility["chatbot_author"] = -1
