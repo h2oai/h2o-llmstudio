@@ -145,8 +145,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     dataset: ConfigNLPCausalClassificationDataset = field(
         default_factory=ConfigNLPCausalClassificationDataset
     )
-    tokenizer: ConfigNLPCausalLMTokenizer = field(
-        default_factory=ConfigNLPCausalLMTokenizer
+    tokenizer: ConfigNLPCausalClassificationTokenizer = field(
+        default_factory=ConfigNLPCausalClassificationTokenizer
     )
     architecture: ConfigNLPCausalClassificationArchitecture = field(
         default_factory=ConfigNLPCausalClassificationArchitecture
