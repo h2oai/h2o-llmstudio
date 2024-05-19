@@ -1015,6 +1015,7 @@ def prepare_lora(cfg, backbone):
         logger.info(f"Lora module names: {target_modules}")
 
     lora_config = LoraConfig(
+        use_dora=cfg.training.use_dora,
         r=cfg.training.lora_r,
         lora_alpha=cfg.training.lora_alpha,
         target_modules=target_modules,
