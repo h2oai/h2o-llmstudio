@@ -76,6 +76,11 @@ def update_llm_backbone(llm_studio: LLMStudioPage, llm_backbone: str):
     llm_studio.llm_backbone(llm_backbone)
 
 
+@when(parsers.parse("I set Mixed Precision to {value}"))
+def update_mixed_precision(llm_studio: LLMStudioPage, value: bool):
+    llm_studio.mixed_precision(value)
+
+
 @when(parsers.parse("I tweak max length prompt to {value}"))
 def tweak_max_length_prompt(llm_studio: LLMStudioPage, value: str):
     llm_studio.max_length_prompt(value)

@@ -38,6 +38,7 @@ class LLMStudioPage(BasePage):
     MAX_LENGTH_ANSWER = "experiment/start/cfg/max_length_answer"
     MAX_LENGTH = "experiment/start/cfg/max_length"
     MAX_LENGTH_INFERENCE = "experiment/start/cfg/max_length_inference"
+    MIXED_PRECISION = "experiment/start/cfg/mixed_precision"
     EXPERIMENT_REFRESH_SELECTOR = "experiment/list/refresh"
     GPU_WARNING_SELECTOR = "experiment/start/error/proceed"
 
@@ -173,6 +174,16 @@ class LLMStudioPage(BasePage):
     def llm_backbone(self, value: str):
         self.page.get_by_role("combobox", name="LLM Backbone").fill(value)
 
+    def mixed_precision(self, value: bool):
+        old_toggle_value = self.get_by_test_id(self.MIXED_PRECISION).get_attribute(
+            "aria-checked"
+        )
+        assert old_toggle_value in ["true", "false"]
+        assert value in ["true", "false"]
+
+        if old_toggle_value != value:
+            self.get_by_test_id(self.MIXED_PRECISION).click()
+
     def data_sample(self, value):
         self.slider(self.DATA_SAMPLING, value)
 
@@ -207,6 +218,8 @@ class LLMStudioPage(BasePage):
                 ).inner_text()
             elif status == "finished":
                 break
+            else:
+                raise Exception(f"Unexpected status: {status}")
 
     def find_experiment_index(self, experiment_name):
         index = 0
