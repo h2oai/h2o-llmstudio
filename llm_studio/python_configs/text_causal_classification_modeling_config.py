@@ -59,11 +59,8 @@ class ConfigNLPCausalClassificationDataset(ConfigNLPCausalLMDataset):
         self._visibility["system_column"] = -1
         self._visibility["parent_id_column"] = -1
         self._visibility["text_system_start"] = -1
-        self._visibility["text_prompt_start"] = -1
-        self._visibility["text_answer_separator"] = -1
         self._visibility["add_prompt_answer_tokens"] = -1
         self._visibility["add_eos_token_to_system"] = -1
-        self._visibility["add_eos_token_to_prompt"] = -1
         self._visibility["add_eos_token_to_answer"] = -1
         self._visibility["personalize"] = -1
         self._visibility["chatbot_name"] = -1
