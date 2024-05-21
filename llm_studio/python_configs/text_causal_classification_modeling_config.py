@@ -36,6 +36,8 @@ class ConfigNLPCausalClassificationDataset(ConfigNLPCausalLMDataset):
     text_prompt_start: str = ""
     text_answer_separator: str = ""
 
+    add_prompt_answer_tokens: bool = False
+
     add_eos_token_to_system: bool = False
     add_eos_token_to_prompt: bool = False
     add_eos_token_to_answer: bool = False
@@ -54,11 +56,16 @@ class ConfigNLPCausalClassificationDataset(ConfigNLPCausalLMDataset):
 
         self._possible_values["num_classes"] = (1, 100, 1)
 
+        self._visibility["system_column"] = -1
+        self._visibility["parent_id_column"] = -1
+        self._visibility["text_system_start"] = -1
+        self._visibility["add_prompt_answer_tokens"] = -1
+        self._visibility["add_eos_token_to_system"] = -1
+        self._visibility["add_eos_token_to_answer"] = -1
         self._visibility["personalize"] = -1
         self._visibility["chatbot_name"] = -1
         self._visibility["chatbot_author"] = -1
         self._visibility["mask_prompt_labels"] = -1
-        self._visibility["add_eos_token_to_answer"] = -1
 
 
 @dataclass
@@ -100,6 +107,17 @@ class ConfigNLPCausalClassificationArchitecture(ConfigNLPCausalLMArchitecture):
 
     def __post_init__(self):
         super().__post_init__()
+
+
+@dataclass
+class ConfigNLPCausalClassificationAugmentation(ConfigNLPAugmentation):
+    skip_parent_probability: float = 0.0
+    random_parent_probability: float = 0.0
+
+    def __post_init__(self):
+        super().__post_init__()
+        self._visibility["skip_parent_probability"] = -1
+        self._visibility["random_parent_probability"] = -1
 
 
 @dataclass
@@ -145,8 +163,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     dataset: ConfigNLPCausalClassificationDataset = field(
         default_factory=ConfigNLPCausalClassificationDataset
     )
-    tokenizer: ConfigNLPCausalLMTokenizer = field(
-        default_factory=ConfigNLPCausalLMTokenizer
+    tokenizer: ConfigNLPCausalClassificationTokenizer = field(
+        default_factory=ConfigNLPCausalClassificationTokenizer
     )
     architecture: ConfigNLPCausalClassificationArchitecture = field(
         default_factory=ConfigNLPCausalClassificationArchitecture
@@ -154,7 +172,9 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     training: ConfigNLPCausalClassificationTraining = field(
         default_factory=ConfigNLPCausalClassificationTraining
     )
-    augmentation: ConfigNLPAugmentation = field(default_factory=ConfigNLPAugmentation)
+    augmentation: ConfigNLPCausalClassificationAugmentation = field(
+        default_factory=ConfigNLPCausalClassificationAugmentation
+    )
     prediction: ConfigNLPCausalClassificationPrediction = field(
         default_factory=ConfigNLPCausalClassificationPrediction
     )
