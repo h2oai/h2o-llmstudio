@@ -50,8 +50,6 @@ def get_tokenizer(cfg: Any):
     if tokenizer_class.__name__ in ["LlamaTokenizer", "LlamaTokenizerFast"]:
         kwargs["from_slow"] = True
 
-    print(kwargs)
-
     try:
         tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
     except TypeError as e:
