@@ -310,7 +310,10 @@ def test_encode():
             add_eos_token_to_answer=True,
             limit_chained_samples=True,
         ),
-        tokenizer=ConfigNLPCausalLMTokenizer(max_length=64, tokenizer_kwargs='{"use_fast": true, "add_prefix_space": false, "from_slow": true}'),
+        tokenizer=ConfigNLPCausalLMTokenizer(
+            max_length=64,
+            tokenizer_kwargs='{"use_fast": true, "add_prefix_space": false, "from_slow": true}',
+        ),
     )
 
     cfg.llm_backbone = "h2oai/h2o-danube2-1.8b-base"
@@ -321,4 +324,3 @@ def test_encode():
     result = dataset[0]
     out = dataset.tokenizer.decode(result["input_ids"]).replace("<unk>", "")
     assert out == "<|prompt|>a</s><|answer|>b</s><|prompt|>a</s><|answer|>b</s>"
-
