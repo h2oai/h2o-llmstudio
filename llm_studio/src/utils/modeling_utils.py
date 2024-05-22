@@ -704,6 +704,11 @@ def set_generation_config(backbone: torch.nn.Module, cfg_prediction: Any):
         backbone.generation_config.temperature = cfg_prediction.temperature
         backbone.generation_config.top_k = cfg_prediction.top_k
         backbone.generation_config.top_p = cfg_prediction.top_p
+    else:
+        backbone.generation_config.temperature = None
+        backbone.generation_config.top_k = None
+        backbone.generation_config.top_p = None
+
     backbone.generation_config.transformers_version = transformers.__version__
     return backbone
 
