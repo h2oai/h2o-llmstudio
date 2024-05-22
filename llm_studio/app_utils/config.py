@@ -67,8 +67,11 @@ default_cfg = {
     "dataset_keys": [
         "train_dataframe",
         "validation_dataframe",
+        "system_column",
         "prompt_column",
+        "rejected_prompt_column",
         "answer_column",
+        "rejected_answer_column",
         "parent_id_column",
     ],
     "dataset_trigger_keys": [
