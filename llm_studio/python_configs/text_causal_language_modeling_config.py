@@ -229,7 +229,7 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
     max_length: int = 512
     add_prompt_answer_tokens: bool = False
     padding_quantile: float = 1.0
-    use_fast: bool = True
+    tokenizer_kwargs: str = '{"use_fast": true, "add_prefix_space": false}'
 
     def __post_init__(self):
         super().__post_init__()

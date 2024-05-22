@@ -74,7 +74,6 @@ tokenizer:
     max_length_answer: 256
     max_length_prompt: 256
     padding_quantile: 1.0
-    use_fast: true
 training:
     batch_size: 2
     differential_learning_rate: 1.0e-05

@@ -143,15 +143,15 @@ def test_dataset_label_is_correct(df_with_conversation_chain_ids):
         )
 
         assert (
-            prompt == f"<|prompt|>prompt {idx * 5 + 1} "
-            f"<|answer|> response {idx * 5 + 1} "
-            f"<|prompt|>prompt {idx * 5 + 2} "
-            f"<|answer|> response {idx * 5 + 2} "
-            f"<|prompt|>prompt {idx * 5 + 3} "
-            f"<|answer|> response {idx * 5 + 3} "
-            f"<|prompt|>prompt {idx * 5 + 4} "
-            f"<|answer|> response {idx * 5 + 4} "
-            f"<|prompt|>prompt {idx * 5 + 5} "
+            prompt == f"<|prompt|>prompt {idx * 5 + 1}"
+            f"<|answer|>response {idx * 5 + 1}"
+            f"<|prompt|>prompt {idx * 5 + 2}"
+            f"<|answer|>response {idx * 5 + 2}"
+            f"<|prompt|>prompt {idx * 5 + 3}"
+            f"<|answer|>response {idx * 5 + 3}"
+            f"<|prompt|>prompt {idx * 5 + 4}"
+            f"<|answer|>response {idx * 5 + 4}"
+            f"<|prompt|>prompt {idx * 5 + 5}"
             "<|answer|>"
         )
         assert chosen_response == f"chosen_response {idx * 5 + 5}"

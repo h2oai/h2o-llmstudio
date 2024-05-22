@@ -20,7 +20,6 @@ prompt = "{{text_prompt_start}}How are you?{{end_of_sentence}}{{text_answer_sepa
 
 tokenizer = AutoTokenizer.from_pretrained(
     model_name,
-    use_fast={{use_fast}},
     trust_remote_code={{trust_remote_code}},
 )
 model = AutoModelForSeq2SeqLM.from_pretrained(
