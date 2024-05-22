@@ -1,7 +1,7 @@
 import logging
 from typing import Any, KeysView
 
-from torch import nn
+from torch import Tensor, nn
 
 __all__ = ["Losses"]
 
@@ -15,7 +15,7 @@ class CrossEntropyLoss(nn.Module):
         self.cfg = cfg
         self.loss_fn = nn.CrossEntropyLoss()
 
-    def forward(self, logits, labels):
+    def forward(self, logits: Tensor, labels: Tensor) -> Tensor:
         return self.loss_fn(logits, labels.reshape(-1).long())
 
 
@@ -25,7 +25,7 @@ class BinaryCrossEntropyLoss(nn.Module):
         self.cfg = cfg
         self.loss_fn = nn.BCEWithLogitsLoss()
 
-    def forward(self, logits, labels):
+    def forward(self, logits: Tensor, labels: Tensor) -> Tensor:
         return self.loss_fn(logits, labels)
 
 
