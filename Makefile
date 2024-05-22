@@ -105,7 +105,7 @@ test-custom: reports
 	$(PIPENV) run pytest -s -v --junitxml=reports/junit.xml \
 	--import-mode importlib \
     -o log_cli=true -o log_level=INFO -o log_file=reports/tests.log \
-    tests/src/datasets/test_text_causal_language_modeling_ds.py --tb=no'
+    tests/src/datasets/test_text_dpo_modeling_ds.py --tb=no'
 
 .PHONY: test-ui
 test-ui: reports setup-ui
