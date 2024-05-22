@@ -22,7 +22,6 @@ generate_text = pipeline(
     model="{{repo_id}}",
     torch_dtype="auto",
     trust_remote_code=True,
-    use_fast={{use_fast}},
     device_map={"": "cuda:0"},
     token=True,
 )
