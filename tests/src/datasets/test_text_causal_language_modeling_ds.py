@@ -312,7 +312,7 @@ def test_encode():
         ),
         tokenizer=ConfigNLPCausalLMTokenizer(
             max_length=64,
-            tokenizer_kwargs='{"use_fast": true, "add_prefix_space": false, "from_slow": true}',
+            tokenizer_kwargs='{"use_fast": true, "add_prefix_space": false}',
         ),
     )
 

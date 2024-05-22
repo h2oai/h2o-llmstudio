@@ -44,6 +44,14 @@ def get_tokenizer(cfg: Any):
 
     kwargs.update(json.loads(cfg.tokenizer.tokenizer_kwargs.strip()))
 
+    # We will be able to remove this after 
+    # https://github.com/huggingface/transformers/pull/30964
+    tokenizer_class = AutoTokenizer.from_pretrained(cfg.llm_backbone).__class__
+    if tokenizer_class.__name__ in ["LlamaTokenizer", "LlamaTokenizerFast"]:
+        kwargs["from_slow"] = True
+
+    print(kwargs)
+
     try:
         tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
     except TypeError as e:
