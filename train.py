@@ -385,7 +385,7 @@ def run_train(
                     save_checkpoint(model=model, path=cfg.output_directory, cfg=cfg)
                 elif cfg.training.save_checkpoint == "each_evaluation_epoch":
                     checkpoint_path = os.path.join(
-                        cfg.output_directory, f"evaluation_step_{itr}"
+                        cfg.output_directory, f"epoch_{epoch}_step_{itr}"
                     )
                     if cfg.environment._local_rank == 0:
                         logger.info(f"Saving model checkpoint to {checkpoint_path}")
