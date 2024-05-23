@@ -739,7 +739,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
     config = update_backbone_config(config, cfg)
 
     quantization_config = None
-    if cfg.architecture.backbone_dtype == "int8":
+    if cfg.architecture.backbone_dtype == "int8" and len(cfg.environment.gpus):
         kwargs["device_map"] = {"": cfg.environment._device}  # type: ignore
         quantization_config = BitsAndBytesConfig(
             load_in_8bit=True,
@@ -748,7 +748,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         # need to force pretrained
         cfg.architecture.pretrained = True
         kwargs["torch_dtype"] = torch.float16  # type: ignore
-    elif cfg.architecture.backbone_dtype == "int4":
+    elif cfg.architecture.backbone_dtype == "int4" and len(cfg.environment.gpus):
         kwargs["device_map"] = {"": cfg.environment._device}  # type: ignore
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -758,6 +758,15 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
         # need to force pretrained
         cfg.architecture.pretrained = True
         kwargs["torch_dtype"] = torch.float16  # type: ignore
+    elif len(cfg.environment.gpus) == 0 and cfg.architecture.backbone_dtype in [
+        "int4",
+        "int8",
+    ]:
+        logger.warning(
+            "Quantization is not supported on CPU. "
+            "Please run on GPU or disable quantization."
+        )
+        cfg.architecture.backbone_dtype = "float32"
     else:
         kwargs["torch_dtype"] = getattr(torch, cfg.architecture.backbone_dtype)
 
