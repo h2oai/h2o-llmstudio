@@ -342,7 +342,7 @@ class S3Progress:
         await self.update_ui()
 
 
-def s3_download_coroutine(q, filename):
+def s3_download_coroutine(q: Q, filename: str):
     download_folder = f"{get_data_dir(q)}/tmp"
     download_folder = get_valid_temp_data_folder(q, download_folder)
 

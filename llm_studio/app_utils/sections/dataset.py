@@ -1050,7 +1050,7 @@ async def dataset_delete_single(q: Q, dataset_id: int):
 async def dataset_display(q: Q) -> None:
     """Display a selected dataset."""
 
-    dataset_id = q.client["dataset/list/df_datasets"]["id"].iloc[
+    dataset_id: int = q.client["dataset/list/df_datasets"]["id"].iloc[
         q.client["dataset/display/id"]
     ]
     dataset: Dataset = q.client.app_db.get_dataset(dataset_id)
@@ -1146,7 +1146,7 @@ async def show_data_tab(q, cfg, filename: str):
     q.client.delete_cards.add("dataset/display/data")
 
 
-async def show_visualization_tab(q, cfg):
+async def show_visualization_tab(q: Q, cfg):
     try:
         plot = cfg.logging.plots_class.plot_data(cfg)
     except Exception as error:
@@ -1186,7 +1186,7 @@ async def show_visualization_tab(q, cfg):
     q.client.delete_cards.add("dataset/display/visualization")
 
 
-async def show_summary_tab(q, dataset_id):
+async def show_summary_tab(q: Q, dataset_id: int) -> None:
     dataset_df = get_datasets(q)
     dataset_df = dataset_df[dataset_df.id == dataset_id]
     stat_list_items: List[StatListItem] = []
@@ -1203,7 +1203,9 @@ async def show_summary_tab(q, dataset_id):
     q.client.delete_cards.add("dataset/display/summary")
 
 
-async def show_statistics_tab(q, dataset_filename, config_filename):
+async def show_statistics_tab(
+    q: Q, dataset_filename: str, config_filename: str
+) -> None:
     cfg_hash = hashlib.md5(open(config_filename, "rb").read()).hexdigest()
     stats_dict = compute_dataset_statistics(dataset_filename, config_filename, cfg_hash)
 
@@ -1270,7 +1272,7 @@ async def show_statistics_tab(q, dataset_filename, config_filename):
 
 
 @functools.lru_cache()
-def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str):
+def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str) -> dict:
     """
     Compute various statistics for a dataset.
     - text length distribution for prompts and answers
@@ -1312,7 +1314,7 @@ def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str):
     return stats_dict
 
 
-async def dataset_import_uploaded_file(q: Q):
+async def dataset_import_uploaded_file(q: Q) -> None:
     local_path = await q.site.download(
         q.args["dataset/import/local_upload"][0],
         f"{get_data_dir(q)}/"
@@ -1328,7 +1330,7 @@ async def dataset_import_uploaded_file(q: Q):
         await dataset_import(q, step=1, error=error)
 
 
-async def dataset_delete_current_datasets(q: Q):
+async def dataset_delete_current_datasets(q: Q) -> None:
     dataset_ids = list(
         q.client["dataset/list/df_datasets"]["id"].iloc[
             list(map(int, q.client["dataset/list/table"]))

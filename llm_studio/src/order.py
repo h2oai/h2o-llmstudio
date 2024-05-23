@@ -20,12 +20,12 @@ class Order:
         else:
             self._list = list()
 
-    def _unique_guard(self, *keys: str):
+    def _unique_guard(self, *keys: str) -> None:
         for key in keys:
             if key in self._list:
                 raise ValueError(f"`{key}` is already in the list!")
 
-    def append(self, key: str):
+    def append(self, key: str) -> None:
         """
         Append a key at the end of the list:
 

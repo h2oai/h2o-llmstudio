@@ -400,7 +400,7 @@ async def handle(q: Q) -> None:
         )
 
 
-async def experiment_delete_all_artifacts(q: Q, experiment_ids: List[int]):
+async def experiment_delete_all_artifacts(q: Q, experiment_ids: List[int]) -> None:
     await experiment_stop(q, experiment_ids)
     await experiment_delete(q, experiment_ids)
     await list_current_experiments(q)

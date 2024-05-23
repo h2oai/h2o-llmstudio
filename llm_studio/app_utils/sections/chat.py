@@ -191,6 +191,7 @@ def gpu_is_blocked(q, gpu_id):
 def load_cfg_model_tokenizer(
     experiment_path: str, merge: bool = False, device: str = "cuda:0"
 ):
+    """Loads the model, tokenizer and configuration from the experiment path."""
     cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
     cfg.architecture.pretrained = False
     cfg.architecture.gradient_checkpointing = False
