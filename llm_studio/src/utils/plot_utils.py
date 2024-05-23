@@ -66,31 +66,6 @@ def decode_bytes(chunks: List[bytes]):
     return decoded_tokens
 
 
-def format_for_markdown_visualization(text: str) -> str:
-    """
-    Convert newlines to <br /> tags, except for those inside code blocks.
-    This is needed because the markdown_table_cell_type() function does not
-    convert newlines to <br /> tags, so we have to do it ourselves.
-
-    This function is rather simple and may fail on text that uses `
-    in some other context than marking code cells or uses ` within
-    the code itself (as this function).
-    """
-    code_block_regex = r"(```.*?```|``.*?``)"
-    parts = re.split(code_block_regex, text, flags=re.DOTALL)
-    for i in range(len(parts)):
-        # Only substitute for text outside matched code blocks
-        if "`" not in parts[i]:
-            parts[i] = parts[i].replace("\n", "<br />").strip()
-    text = "".join(parts)
-
-    # Restore newlines around code blocks, needed for correct rendering
-    for x in ["```", "``", "`"]:
-        text = text.replace(f"<br />{x}", f"\n{x}")
-        text = text.replace(f"{x}<br />", f"{x}\n")
-    return html.escape(text.replace("<br />", "\n"))
-
-
 def list_to_markdown_representation(
     tokens: List[str], masks: List[bool], pad_token: int, num_chars: int = 65
 ):

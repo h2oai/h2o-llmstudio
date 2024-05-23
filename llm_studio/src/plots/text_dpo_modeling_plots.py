@@ -11,7 +11,7 @@ from llm_studio.src.plots.text_causal_language_modeling_plots import (
     plot_validation_predictions,
 )
 from llm_studio.src.utils.data_utils import read_dataframe_drop_missing_labels
-from llm_studio.src.utils.plot_utils import PlotData, format_for_markdown_visualization
+from llm_studio.src.utils.plot_utils import PlotData
 from llm_studio.src.utils.utils import PatchedAttribute
 
 
@@ -129,9 +129,6 @@ class Plots:
                     ]
                     i += 1
 
-        df_transposed["Content"] = df_transposed["Content"].apply(
-            format_for_markdown_visualization
-        )
         df_transposed.to_parquet(path)
         return PlotData(path, encoding="df")
 
