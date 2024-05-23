@@ -132,6 +132,8 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
             model = unwrap_model(model)
             checkpoint = {"model": model.state_dict()}
             if path is not None:
+                if not os.path.exists(path):
+                    os.makedirs(path)
                 torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
 
     if (

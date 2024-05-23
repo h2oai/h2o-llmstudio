@@ -162,3 +162,22 @@ class PatchedAttribute:
             setattr(self.obj, self.attribute, self.original_value)
         else:
             delattr(self.obj, self.attribute)
+
+
+def create_symlinks_in_parent_folder(directory):
+    """For each file in a folder, create a symbolic link to that in the parent folder"""
+
+    if not os.path.exists(directory):
+        raise FileNotFoundError(f"Directory {directory} does not exist.")
+
+    parent_directory = os.path.dirname(directory)
+    files = [
+        f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))
+    ]
+
+    for file in files:
+        src = os.path.join(directory, file)
+        dst = os.path.join(parent_directory, file)
+        if os.path.exists(dst):
+            os.remove(dst)
+        os.symlink(src, dst)

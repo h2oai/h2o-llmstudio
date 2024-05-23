@@ -61,7 +61,12 @@ from llm_studio.src.utils.modeling_utils import (
     save_predictions,
     wrap_model_distributed,
 )
-from llm_studio.src.utils.utils import kill_ddp_processes, set_environment, set_seed
+from llm_studio.src.utils.utils import (
+    create_symlinks_in_parent_folder,
+    kill_ddp_processes,
+    set_environment,
+    set_seed,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -371,17 +376,21 @@ def run_train(
 
             # Validation loop
             if (itr + 1) % evaluation_step == 0:
-                if cfg.training.evaluation_epochs == 1:
-                    progress_bar.close()
-
                 # TODO: Move back after fixing slow generation of deepspeed.
                 if cfg.training.save_checkpoint == "last":
-                    checkpoint_path = cfg.output_directory
                     if cfg.environment._local_rank == 0:
                         logger.info(
-                            f"Saving last model checkpoint to {checkpoint_path}"
+                            f"Saving last model checkpoint to {cfg.output_directory}"
                         )
+                    save_checkpoint(model=model, path=cfg.output_directory, cfg=cfg)
+                elif cfg.training.save_checkpoint == "each_evaluation_epoch":
+                    checkpoint_path = os.path.join(
+                        cfg.output_directory, f"evaluation_step_{itr}"
+                    )
+                    if cfg.environment._local_rank == 0:
+                        logger.info(f"Saving model checkpoint to {checkpoint_path}")
                     save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
+                    create_symlinks_in_parent_folder(checkpoint_path)
 
                 val_loss, val_metric = run_eval(
                     cfg=cfg, model=model, val_dataloader=val_dataloader, val_df=val_df
@@ -389,14 +398,13 @@ def run_train(
 
                 if cfg.training.save_checkpoint == "best":
                     if objective_op(val_metric, best_val_metric):
-                        checkpoint_path = cfg.output_directory
                         if cfg.environment._local_rank == 0:
                             logger.info(
                                 f"Saving best model checkpoint: "
                                 f"val_{cfg.prediction.metric} {best_val_metric:.5} -> "
-                                f"{val_metric:.5} to {checkpoint_path}"
+                                f"{val_metric:.5} to {cfg.output_directory}"
                             )
-                        save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
+                        save_checkpoint(model=model, path=cfg.output_directory, cfg=cfg)
                         best_val_metric = val_metric
 
                 model.train()
