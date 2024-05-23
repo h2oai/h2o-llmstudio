@@ -88,16 +88,21 @@ def kill_ddp_processes() -> None:
     current_process.kill()
 
 
-def add_file_to_zip(zf: zipfile.ZipFile, path: str) -> None:
+def add_file_to_zip(zf: zipfile.ZipFile, path: str, folder=None) -> None:
     """Adds a file to the existing zip. Does nothing if file does not exist.
 
     Args:
         zf: zipfile object to add to
         path: path to the file to add
+        folder: folder in the zip to add the file to
     """
 
     try:
-        zf.write(path, os.path.basename(path))
+        if folder is None:
+            zip_path = os.path.basename(path)
+        else:
+            zip_path = os.path.join(folder, os.path.basename(path))
+        zf.write(path, zip_path)
     except Exception:
         logger.warning(f"File {path} could not be added to zip.")
 
