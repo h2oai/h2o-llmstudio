@@ -161,5 +161,6 @@ if __name__ == "__main__":
             )
             write_flag(flag_path.format(local_rank), "info", "See logs")
 
-        if ("WORLD_SIZE" in os.environ) and (int(os.environ["WORLD_SIZE"]) > 1):
-            kill_ddp_processes()
+        # Clean up any potential DDP processes
+        # Do not kill parent process, as it is the main/wave process
+        kill_ddp_processes(kill_parent=False)
