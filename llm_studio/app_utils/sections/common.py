@@ -10,7 +10,7 @@ from llm_studio.app_utils.config import default_cfg
 logger = logging.getLogger(__name__)
 
 
-# Src: https://github.com/highlightjs/highlight.js/blob/main/src/styles/atom-one-dark.css.
+# https://github.com/highlightjs/highlight.js/blob/main/src/styles/atom-one-dark.css.
 css = """
 .hljs {
   color: #abb2bf;
