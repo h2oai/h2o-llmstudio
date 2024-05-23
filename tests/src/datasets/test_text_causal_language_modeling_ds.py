@@ -135,6 +135,8 @@ def test_init(mock_auto_tokenizer):
     cfg.dataset.text_prompt_start = ""
     cfg.dataset.text_answer_separator = ""
 
+    cfg.tokenizer.tokenizer_kwargs = '{"use_fast": true, "add_prefix_space": false}'
+
     dataset = CustomDataset(df, cfg)
 
     assert dataset.df.equals(df)
@@ -286,3 +288,39 @@ def test_getitem_no_chaining():
             f"Prompt:prompt {i+1}"
             "Answer:"
         )
+
+
+def test_encode():
+    df = pd.DataFrame(
+        {
+            "prompt": ["a", "a"],
+            "answer": ["b", "b"],
+            "parent_id": [None, 0],
+            "id": [0, 1],
+        }
+    )
+
+    cfg = ConfigProblemBase(
+        dataset=ConfigNLPCausalLMDataset(
+            prompt_column=("prompt",),
+            answer_column="answer",
+            parent_id_column="parent_id",
+            text_prompt_start="<|prompt|>",
+            text_answer_separator="<|answer|>",
+            add_eos_token_to_answer=True,
+            limit_chained_samples=True,
+        ),
+        tokenizer=ConfigNLPCausalLMTokenizer(
+            max_length=64,
+            tokenizer_kwargs='{"use_fast": true, "add_prefix_space": false}',
+        ),
+    )
+
+    cfg.llm_backbone = "h2oai/h2o-danube2-1.8b-base"
+
+    dataset = CustomDataset(df, cfg)
+    assert len(dataset) == 1
+
+    result = dataset[0]
+    out = dataset.tokenizer.decode(result["input_ids"]).replace("<unk>", "")
+    assert out == "<|prompt|>a</s><|answer|>b</s><|prompt|>a</s><|answer|>b</s>"

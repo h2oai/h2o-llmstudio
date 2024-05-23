@@ -36,7 +36,6 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
         tags=["gpt", "llm", "large language model", "h2o-llmstudio"],
     )
     cfg_kwargs = dict(
-        use_fast=cfg.tokenizer.use_fast,
         text_prompt_start=cfg.dataset.text_prompt_start,
         text_answer_separator=cfg.dataset.text_answer_separator,
         trust_remote_code=cfg.environment.trust_remote_code,

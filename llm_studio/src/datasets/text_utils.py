@@ -1,4 +1,5 @@
 import codecs
+import json
 import logging
 import os
 from typing import Any
@@ -34,12 +35,20 @@ def get_texts(df, cfg, separator=None):
 
 
 def get_tokenizer(cfg: Any):
+
     kwargs = dict(
         revision=cfg.environment.huggingface_branch,
-        use_fast=cfg.tokenizer.use_fast,
         trust_remote_code=cfg.environment.trust_remote_code,
         token=os.getenv("HUGGINGFACE_TOKEN"),
     )
+
+    kwargs.update(json.loads(cfg.tokenizer.tokenizer_kwargs.strip()))
+
+    # We will be able to remove this after
+    # https://github.com/huggingface/transformers/pull/30964
+    tokenizer_class = AutoTokenizer.from_pretrained(cfg.llm_backbone).__class__
+    if tokenizer_class.__name__ in ["LlamaTokenizer", "LlamaTokenizerFast"]:
+        kwargs["from_slow"] = True
 
     try:
         tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
