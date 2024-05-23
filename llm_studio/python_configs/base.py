@@ -34,7 +34,7 @@ class DefaultConfig:
     Template for any configuration file
     """
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self._possible_values: Dict[str, Any] = {k: None for k in self.__dict__}
         self._visibility = {k: 0 for k in self.__dict__}
 
@@ -156,7 +156,7 @@ class DefaultConfig:
         return ordered_keys + unordered_keys
 
     @classmethod
-    def get_annotations(cls):
+    def get_annotations(cls) -> Dict[str, Any]:
         """Returns type annotations through all the Parent config classes"""
 
         d: Dict[str, Any] = {}
@@ -189,6 +189,7 @@ class DefaultConfigProblemBase(DefaultConfig):
     experiment_name: str
     output_directory: str
     llm_backbone: str
+    _parent_experiment: str
 
     dataset: Any
     tokenizer: Any
