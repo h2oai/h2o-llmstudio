@@ -1,5 +1,4 @@
 import html
-import re
 from dataclasses import dataclass
 from typing import List
 
