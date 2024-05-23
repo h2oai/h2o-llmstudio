@@ -1289,6 +1289,7 @@ async def summary_tab(experiment_id, q):
         box=ui.box(zone="third"),
         title="",
         content=content,
+        compact=False,
     )
     q.client.delete_cards.add(card_name)
 

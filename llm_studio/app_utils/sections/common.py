@@ -10,6 +10,84 @@ from llm_studio.app_utils.config import default_cfg
 logger = logging.getLogger(__name__)
 
 
+# Src: https://github.com/highlightjs/highlight.js/blob/main/src/styles/atom-one-dark.css.
+css = """
+.hljs {
+  color: #abb2bf;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+
+.hljs-doctag,
+.hljs-keyword,
+.hljs-formula {
+  color: #c678dd;
+}
+
+.hljs-section,
+.hljs-name,
+.hljs-selector-tag,
+.hljs-deletion,
+.hljs-subst {
+  color: #e06c75;
+}
+
+.hljs-literal {
+  color: #56b6c2;
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta .hljs-string {
+  color: #98c379;
+}
+
+.hljs-attr,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-type,
+.hljs-selector-class,
+.hljs-selector-attr,
+.hljs-selector-pseudo,
+.hljs-number {
+  color: #d19a66;
+}
+
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-meta,
+.hljs-selector-id,
+.hljs-title {
+  color: #61aeee;
+}
+
+.hljs-built_in,
+.hljs-title.class_,
+.hljs-class .hljs-title {
+  color: #e6c07b;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+.hljs-link {
+  text-decoration: underline;
+}
+"""
+
+
 async def meta(q: Q) -> None:
     if q.client["keep_meta"]:  # Do not reset meta, keep current dialog opened
         q.client["keep_meta"] = False
@@ -37,44 +115,7 @@ async def meta(q: Q) -> None:
         scripts=[
             ui.script(source, asynchronous=True) for source in q.app["script_sources"]
         ],
-        stylesheet=ui.inline_stylesheet(
-            """
-             .ms-MessageBar {
-              padding-top: 3px;
-              padding-bottom: 3px;
-              min-height: 18px;
-            }
-            div[data-test="nav_bar"] .ms-Nav-groupContent {
-              margin-bottom: 0;
-            }
-
-            div[data-test="experiment/display/deployment/top_right"],
-            div[data-test="experiment/display/deployment/top_right"]
-            div[data-visible="true"]:last-child > div > div {
-                display: flex;
-            }
-
-            div[data-test="experiment/display/deployment/top_right"]
-            div[data-visible="true"]:last-child,
-            div[data-test="experiment/display/deployment/top_right"]
-            div[data-visible="true"]:last-child > div {
-                display: flex;
-                flex-grow: 1;
-            }
-
-            div[data-test="experiment/display/deployment/top_right"]
-            div[data-visible="true"]:last-child > div > div > div {
-                display: flex;
-                flex-grow: 1;
-                flex-direction: column;
-            }
-
-            div[data-test="experiment/display/deployment/top_right"]
-            div[data-visible="true"]:last-child > div > div > div > div {
-                flex-grow: 1;
-            }
-            """
-        ),
+        stylesheet=ui.inline_stylesheet(css),
         script=None,
         notification_bar=notification_bar,
     )
