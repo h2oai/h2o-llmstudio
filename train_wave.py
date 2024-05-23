@@ -160,4 +160,6 @@ if __name__ == "__main__":
                 "Exception occurred during H2O LLM Studio run:", exc_info=True
             )
             write_flag(flag_path.format(local_rank), "info", "See logs")
-        kill_ddp_processes()
+
+        if ("WORLD_SIZE" in os.environ) and (int(os.environ["WORLD_SIZE"]) > 1):
+            kill_ddp_processes()
