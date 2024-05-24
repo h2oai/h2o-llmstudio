@@ -97,6 +97,9 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
         Dictionary with all the keys to save
     """
 
+    if path is not None and not os.path.exists(path):
+        os.makedirs(path)
+
     if cfg.environment.use_deepspeed:
         if path is not None:
             # gather model params from all ranks when using Deepspeed
@@ -132,8 +135,6 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
             model = unwrap_model(model)
             checkpoint = {"model": model.state_dict()}
             if path is not None:
-                if not os.path.exists(path):
-                    os.makedirs(path)
                 torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
 
     if (
