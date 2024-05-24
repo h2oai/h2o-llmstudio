@@ -24,6 +24,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers.deepspeed import HfDeepSpeedConfig
 
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.loggers import MainLogger
 from llm_studio.src.utils.config_utils import (
     load_config_py,
@@ -67,7 +68,7 @@ logger = logging.getLogger(__name__)
 
 
 def run_eval(
-    cfg,
+    cfg: DefaultConfigProblemBase,
     model: torch.nn.Module,
     val_dataloader: DataLoader,
     val_df: pd.DataFrame,
@@ -149,7 +150,7 @@ def run_eval(
 
 
 def run_train(
-    cfg: Any,
+    cfg: DefaultConfigProblemBase,
     model: torch.nn.Module,
     optimizer,
     scheduler,
@@ -161,7 +162,7 @@ def run_train(
     """Runs the training loop.
 
     Args:
-        cfg: config object
+        cfg: DefaultConfigProblemBase config object
         model: model
         train_dataloader: custom training Dataloader
         train_df: train DataFrame
@@ -419,11 +420,11 @@ def run_train(
     return val_loss, val_metric
 
 
-def run(cfg: Any) -> None:
+def run(cfg: DefaultConfigProblemBase) -> None:
     """Runs the routine.
 
     Args:
-        cfg: config object with all the hyperparameters
+        cfg: DefaultConfigProblemBase config object with all the hyperparameters
     """
 
     if cfg.problem_type == "text_rlhf_language_modeling":
@@ -689,9 +690,9 @@ if __name__ == "__main__":
     parser_args, unknown = parser.parse_known_args(sys.argv)
 
     if "config" in parser_args:
-        cfg = load_config_py(parser_args.config)
+        cfg: DefaultConfigProblemBase = load_config_py(parser_args.config)
     elif "yaml" in parser_args:
-        cfg = load_config_yaml(parser_args.yaml)
+        cfg: DefaultConfigProblemBase = load_config_yaml(parser_args.yaml)
     else:
         raise ValueError("Please, provide a configuration file")
 

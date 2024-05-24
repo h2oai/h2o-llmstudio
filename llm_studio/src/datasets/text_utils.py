@@ -2,7 +2,6 @@ import codecs
 import json
 import logging
 import os
-from typing import Any
 
 from pandas import DataFrame
 from transformers import AutoTokenizer
