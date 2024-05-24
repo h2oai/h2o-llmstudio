@@ -38,7 +38,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     data_sample: float = 1.0
     data_sample_choice: Tuple[str, ...] = ("Train", "Validation")
 
-    system_column: str = "None"
+    system_column: str = "system"
     prompt_column: Tuple[str, ...] = ("instruction", "input")
     answer_column: str = "output"
     parent_id_column: str = "None"
@@ -85,13 +85,15 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
             prefer_with=lambda column: column in ("system",), add_none=True
         )
         self._possible_values["prompt_column"] = possible_values.Columns(
-            prefer_with=lambda column: column in ("instruction", "prompt")
+            prefer_with=lambda column: column
+            in ("instruction", "prompt", "question", "input", "user")
         )
         self._possible_values["answer_column"] = possible_values.Columns(
-            prefer_with=lambda column: column in ("answer", "output")
+            prefer_with=lambda column: column
+            in ("answer", "output", "response", "assistant", "chosen")
         )
         self._possible_values["parent_id_column"] = possible_values.Columns(
-            prefer_with=lambda column: column in ("parent",), add_none=True
+            prefer_with=lambda column: column in ("parent", "parent_id"), add_none=True
         )
 
         self._nesting.add(
@@ -196,6 +198,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
             values=(
                 ("last", "Last"),
                 ("best", "Best"),
+                ("each_evaluation_epoch", "Each evaluation epoch"),
                 ("disable", "Disable"),
             ),
             allow_custom=False,
