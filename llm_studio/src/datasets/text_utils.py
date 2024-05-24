@@ -11,7 +11,7 @@ from llm_studio.python_configs.base import DefaultConfigProblemBase
 logger = logging.getLogger(__name__)
 
 
-def get_texts(df: DataFrame, cfg: DefaultConfigProblemBase, separator: str = ""):
+def get_texts(df: DataFrame, cfg: DefaultConfigProblemBase):
     if isinstance(cfg.dataset.prompt_column, str):
         # single column dataset
         texts = df[cfg.dataset.prompt_column].astype(str)
@@ -23,7 +23,8 @@ def get_texts(df: DataFrame, cfg: DefaultConfigProblemBase, separator: str = "")
         for column in columns:
             df[column] = df[column].astype(str)
 
-        join_str = f" {separator} "
+        join_str = codecs.decode(cfg.dataset.prompt_column_separator, "unicode_escape")
+
         texts = df[columns].astype(str)
         texts = texts.apply(lambda x: join_str.join(x), axis=1).values
 

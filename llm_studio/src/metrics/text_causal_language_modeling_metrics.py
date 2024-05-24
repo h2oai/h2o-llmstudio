@@ -101,7 +101,7 @@ def gpt_score(
     raw_results: bool = False,
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
     vdf = val_df.copy()
-    vdf["_PROMPT"] = get_texts(val_df, cfg, separator="")
+    vdf["_PROMPT"] = get_texts(val_df, cfg)
     vdf["_PREDICTED_TEXT"] = results["predicted_text"]
     vdf["_TARGET_TEXT"] = results["target_text"]
 
