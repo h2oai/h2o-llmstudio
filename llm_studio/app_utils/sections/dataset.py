@@ -42,6 +42,7 @@ from llm_studio.app_utils.utils import (
 )
 from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df
 from llm_studio.src.datasets.conversation_chain_handler import get_conversation_chains
+from llm_studio.src.tooltips import tooltips
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,
@@ -456,6 +457,7 @@ async def dataset_import(
                     label="Dataset name",
                     value=q.client["dataset/import/name"],
                     required=True,
+                    tooltip=tooltips["experiments_dataset_name"],
                 ),
             ]
 
@@ -489,6 +491,17 @@ async def dataset_import(
                     category=q.client["dataset/import/cfg_category"]
                 )[0][0]
 
+            items += [
+                ui.dropdown(
+                    name="dataset/import/cfg_file",
+                    label="Problem Type",
+                    required=True,
+                    choices=choices_problem_types,
+                    value=q.client["dataset/import/cfg_file"],
+                    trigger=True,
+                    tooltip=tooltips["experiments_problem_type"],
+                )
+            ]
             model_types = get_model_types(q.client["dataset/import/cfg_file"])
             if len(model_types) > 0:
                 # add model type to cfg file name here
