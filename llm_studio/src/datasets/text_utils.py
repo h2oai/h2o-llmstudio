@@ -4,15 +4,15 @@ import logging
 import os
 from typing import Any
 
+from pandas import DataFrame
 from transformers import AutoTokenizer
+
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 
 logger = logging.getLogger(__name__)
 
 
-TEXT_SEPARATOR = "<TEXT_SEPARATOR>"
-
-
-def get_texts(df, cfg, separator=None):
+def get_texts(df: DataFrame, cfg: DefaultConfigProblemBase, separator: str = ""):
     if isinstance(cfg.dataset.prompt_column, str):
         # single column dataset
         texts = df[cfg.dataset.prompt_column].astype(str)
@@ -24,9 +24,6 @@ def get_texts(df, cfg, separator=None):
         for column in columns:
             df[column] = df[column].astype(str)
 
-        if separator is None:
-            separator = getattr(cfg, "_tokenizer_sep_token", TEXT_SEPARATOR)
-
         join_str = f" {separator} "
         texts = df[columns].astype(str)
         texts = texts.apply(lambda x: join_str.join(x), axis=1).values
@@ -34,7 +31,7 @@ def get_texts(df, cfg, separator=None):
     return texts
 
 
-def get_tokenizer(cfg: Any):
+def get_tokenizer(cfg: DefaultConfigProblemBase):
 
     kwargs = dict(
         revision=cfg.environment.huggingface_branch,
