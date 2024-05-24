@@ -86,53 +86,52 @@ def check_disk_space(model: torch.nn.Module, path: str):
 
 
 # TODO: currently not saving optimizer
-def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any):
+def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> None:
     """Saves a model checkpoint if the path is provided.
 
     Args:
         model: model to save
         path: path to save the checkpoint to
-
-    Returns:
-        Dictionary with all the keys to save
     """
 
+    if not path:
+        raise ValueError(f"Path must be provided. Received {path}.")
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
     if cfg.environment.use_deepspeed:
-        if path is not None:
-            # gather model params from all ranks when using Deepspeed
-            status = model.save_16bit_model(path, "checkpoint.pth")  # type: ignore
-            if status:
-                if cfg.environment._local_rank == 0:
-                    checkpoint = {
-                        "model": torch.load(
-                            os.path.join(path, "checkpoint.pth"), map_location="cpu"
-                        )
-                    }
-            else:
-                logger.warning(
-                    "deepspeed.save_16bit_model didn't save the model, since"
-                    " stage3_gather_16bit_weights_on_model_save=False."
-                    " Saving the full checkpoint instead"
-                )
-                model.save_checkpoint(  # type: ignore
+        # gather model params from all ranks when using Deepspeed
+        status = model.save_16bit_model(path, "checkpoint.pth")
+        if status:
+            if cfg.environment._local_rank == 0:
+                checkpoint = {
+                    "model": torch.load(
+                        os.path.join(path, "checkpoint.pth"), map_location="cpu"
+                    )
+                }
+        else:
+            logger.warning(
+                "deepspeed.save_16bit_model didn't save the model, since"
+                " stage3_gather_16bit_weights_on_model_save=False."
+                " Saving the full checkpoint instead"
+            )
+            model.save_checkpoint(os.path.join(path, "ds_checkpoint"))
+            if cfg.environment._local_rank == 0:
+                # load to cpu
+                state_dict = get_fp32_state_dict_from_zero_checkpoint(
                     os.path.join(path, "ds_checkpoint")
                 )
-                if cfg.environment._local_rank == 0:
-                    # load to cpu
-                    state_dict = get_fp32_state_dict_from_zero_checkpoint(
-                        os.path.join(path, "ds_checkpoint")
-                    )
-                    # save as normal checkpoint that can be loaded by `load_state_dict`
-                    checkpoint = {"model": state_dict}
-                    torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
-                    shutil.rmtree(os.path.join(path, "ds_checkpoint"))
+                # save as normal checkpoint that can be loaded by `load_state_dict`
+                checkpoint = {"model": state_dict}
+                torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
+                shutil.rmtree(os.path.join(path, "ds_checkpoint"))
 
     else:
         if cfg.environment._local_rank == 0:
             model = unwrap_model(model)
             checkpoint = {"model": model.state_dict()}
-            if path is not None:
-                torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
+            torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
 
     if (
         cfg.environment._local_rank == 0

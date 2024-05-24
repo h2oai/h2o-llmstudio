@@ -131,7 +131,7 @@ prediction:
     num_history: 4
     repetition_penalty: 1.2
     stop_tokens: ''
-    temperature: 0.3
+    temperature: 0.0
     top_k: 0
     top_p: 1.0
 problem_type: text_causal_language_modeling
