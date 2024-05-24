@@ -55,7 +55,7 @@ async def home(q: Q) -> None:
                             ("queued + running", num_running_queued),
                             ("failed + stopped", num_failed_stopped),
                         ],
-                        pack=True,  # type: ignore
+                        pack=True,
                     ),
                 )
             ],

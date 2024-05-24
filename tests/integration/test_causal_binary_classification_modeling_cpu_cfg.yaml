@@ -65,6 +65,7 @@ tokenizer:
     max_length_answer: 16
     max_length_prompt: 16
     padding_quantile: 1.0
+    tokenizer_kwargs: '{"use_fast": true, "add_prefix_space": false}'
 training:
     batch_size: 6
     differential_learning_rate: 1.0e-05

@@ -36,14 +36,21 @@ dataset:
     validation_strategy: automatic
 environment:
     compile_model: false
+    deepspeed_allgather_bucket_size: 1000000
+    deepspeed_method: ZeRO2
+    deepspeed_reduce_bucket_size: 1000000
+    deepspeed_stage3_param_persistence_threshold: 1000000
+    deepspeed_stage3_prefetch_bucket_size: 1000000
     find_unused_parameters: false
     gpus:
     - '0'
     huggingface_branch: main
     mixed_precision: true
+    mixed_precision_dtype: bfloat16
     number_of_workers: 8
     seed: -1
     trust_remote_code: true
+    use_deepspeed: false
 experiment_name: example_oasst2
 llm_backbone: h2oai/h2o-danube2-1.8b-base
 logging:
@@ -63,7 +70,7 @@ prediction:
     num_history: 4
     repetition_penalty: 1.2
     stop_tokens: ''
-    temperature: 0.3
+    temperature: 0.0
     top_k: 0
     top_p: 1.0
 problem_type: text_causal_language_modeling
@@ -73,6 +80,7 @@ tokenizer:
     max_length_answer: 256
     max_length_prompt: 256
     padding_quantile: 1.0
+    tokenizer_kwargs: '{"use_fast": true, "add_prefix_space": false}'
 training:
     batch_size: 2
     differential_learning_rate: 1.0e-05

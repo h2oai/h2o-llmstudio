@@ -198,6 +198,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
             values=(
                 ("last", "Last"),
                 ("best", "Best"),
+                ("each_evaluation_epoch", "Each evaluation epoch"),
                 ("disable", "Disable"),
             ),
             allow_custom=False,

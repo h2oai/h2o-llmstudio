@@ -7,4 +7,9 @@ When set to **Best** it saves the model weights for the epoch exhibiting the bes
 - The default goal should be to attempt to tune models so that the last epoch is the best epoch.  
 - Suppose an evident decline for later epochs is observed in logging. In that case, it is usually better to adjust hyperparameters, such as reducing the number of epochs or increasing regularization, instead of turning this setting on.
 
+When set to **Each evaluation epoch** it will save the model weights for each evaluation epoch. 
+- This can be useful for debugging and experimenting, but will consume more disk space.
+- Models uploaded to Hugging Face Hub will only contain the last checkpoint.
+- Local downloads will contain all checkpoints.
+
 When set to **Disable** it will not save the checkpoint at all. This can be useful for debugging and experimenting in order to save disk space, but will disable certain functionalities like chatting or pushing to HF.

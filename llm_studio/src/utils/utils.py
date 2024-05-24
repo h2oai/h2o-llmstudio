@@ -91,16 +91,21 @@ def kill_ddp_processes(kill_parent=True) -> None:
     current_process.kill()
 
 
-def add_file_to_zip(zf: zipfile.ZipFile, path: str) -> None:
+def add_file_to_zip(zf: zipfile.ZipFile, path: str, folder=None) -> None:
     """Adds a file to the existing zip. Does nothing if file does not exist.
 
     Args:
         zf: zipfile object to add to
         path: path to the file to add
+        folder: folder in the zip to add the file to
     """
 
     try:
-        zf.write(path, os.path.basename(path))
+        if folder is None:
+            zip_path = os.path.basename(path)
+        else:
+            zip_path = os.path.join(folder, os.path.basename(path))
+        zf.write(path, zip_path)
     except Exception:
         logger.warning(f"File {path} could not be added to zip.")
 
@@ -165,3 +170,22 @@ class PatchedAttribute:
             setattr(self.obj, self.attribute, self.original_value)
         else:
             delattr(self.obj, self.attribute)
+
+
+def create_symlinks_in_parent_folder(directory):
+    """For each file in a folder, create a symbolic link to that in the parent folder"""
+
+    if not os.path.exists(directory):
+        raise FileNotFoundError(f"Directory {directory} does not exist.")
+
+    parent_directory = os.path.dirname(directory)
+    files = [
+        f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))
+    ]
+
+    for file in files:
+        src = os.path.join(directory, file)
+        dst = os.path.join(parent_directory, file)
+        if os.path.exists(dst):
+            os.remove(dst)
+        os.symlink(src, dst)
