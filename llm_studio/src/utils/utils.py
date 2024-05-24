@@ -62,12 +62,12 @@ def kill_child_processes(parent_pid: int) -> bool:
         return False
 
 
-def kill_ddp_processes() -> None:
+def kill_ddp_processes(kill_parent=True) -> None:
     """
     Killing all DDP processes from a single process.
     Firstly kills all children of a single DDP process (dataloader workers)
     Then kills all other DDP processes
-    Then kills main parent DDP process
+    Then kills main parent DDP process (if kill_parent is True)
     """
 
     pid = os.getpid()
@@ -84,7 +84,10 @@ def kill_ddp_processes() -> None:
         if child.pid == pid:
             continue
         child.kill()
-    parent_process.kill()
+
+    if kill_parent:
+        parent_process.kill()
+
     current_process.kill()
 
 
