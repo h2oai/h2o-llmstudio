@@ -841,7 +841,9 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
                 )
 
     if cfg.architecture.gradient_checkpointing:
-        backbone.gradient_checkpointing_enable()
+        backbone.gradient_checkpointing_enable(
+            gradient_checkpointing_kwargs={"use_reentrant": False}
+        )
 
     # initialize the generation config
     if backbone.generation_config.eos_token_id != config.eos_token_id:
@@ -1085,7 +1087,9 @@ def generate(backbone, batch, cfg, streamer, remove_prompt=True):
     transformers_logging.set_verbosity(verbosity)
     # enable checkpointing again
     if cfg.architecture.gradient_checkpointing:
-        backbone.gradient_checkpointing_enable()
+        backbone.gradient_checkpointing_enable(
+            gradient_checkpointing_kwargs={"use_reentrant": False}
+        )
     if remove_prompt:
         output = output[:, input_ids.shape[1] :]
     return output

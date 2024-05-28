@@ -46,7 +46,9 @@ def get_tokenizer(cfg: Any):
 
     # We will be able to remove this after
     # https://github.com/huggingface/transformers/pull/30964
-    tokenizer_class = AutoTokenizer.from_pretrained(cfg.llm_backbone).__class__
+    tokenizer_class = AutoTokenizer.from_pretrained(
+        cfg.llm_backbone, **kwargs
+    ).__class__
     if tokenizer_class.__name__ in ["LlamaTokenizer", "LlamaTokenizerFast"]:
         kwargs["from_slow"] = True
 
