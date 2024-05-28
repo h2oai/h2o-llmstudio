@@ -156,6 +156,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     lora_alpha: int = 16
     lora_dropout: float = 0.05
     lora_target_modules: str = ""
+    lora_unfreeze_layers: Tuple[str, ...] = ()
 
     save_checkpoint: str = "last"
     evaluation_epochs: float = 1.0
@@ -193,6 +194,13 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["lora_r"] = (1, 256, 1)
         self._possible_values["lora_alpha"] = (1, 256, 1)
         self._possible_values["lora_dropout"] = (0.0, 0.5, 0.01)
+        self._possible_values["lora_unfreeze_layers"] = (
+            possible_values.String(
+                values=("embed", "head"),
+                allow_custom=False,
+                placeholder="Select optional layers to unfreeze...",
+            )
+        )
 
         self._possible_values["save_checkpoint"] = possible_values.String(
             values=(
@@ -220,7 +228,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
             ],
         )
         self._nesting.add(
-            ["use_dora", "lora_r", "lora_alpha", "lora_dropout", "lora_target_modules"],
+            ["use_dora", "lora_r", "lora_alpha", "lora_dropout", "lora_target_modules", "lora_unfreeze_layers"],
             [Dependency(key="lora", value=False, is_set=False)],
         )
 
@@ -250,7 +258,6 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
 
     backbone_dtype: str = "int4"
     gradient_checkpointing: bool = True
-    force_embedding_gradients: bool = False
     intermediate_dropout: float = 0
     pretrained_weights: str = ""
 
@@ -496,7 +503,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
-    llm_backbone: str = "h2oai/h2ogpt-4096-llama2-7b"
+    llm_backbone: str = "h2oai/h2o-danube2-1.8b-base"
 
     dataset: ConfigNLPCausalLMDataset = field(default_factory=ConfigNLPCausalLMDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(

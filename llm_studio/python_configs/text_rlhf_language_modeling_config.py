@@ -138,10 +138,7 @@ class ConfigRLHFLMArchitecture(ConfigNLPCausalLMArchitecture):
 
     def __post_init__(self):
         super().__post_init__()
-        # RLHF is not supported with force_embedding_gradients.
-        self.force_embedding_gradients = False
         self._visibility["reward_model_class"] = -1
-        self._visibility["force_embedding_gradients"] = -1
 
 
 @dataclass

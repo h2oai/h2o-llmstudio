@@ -820,9 +820,12 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             backbone, "is_loaded_in_4bit", False
         )
 
-        for name, param in backbone.named_parameters():
-            # freeze base model's layers
-            param.requires_grad = False
+        # for name, param in backbone.named_parameters():
+        #     # freeze base model's layers
+        #     if not any(unfreeze_layer in name for unfreeze_layer in cfg.training.lora_unfreeze_layers):
+        #         param.requires_grad = False
+        #     else:
+        #         print("WTFFFF", name)
 
         # cast all non INT8 parameters to fp32
         if loaded_in_kbit:
@@ -1029,7 +1032,11 @@ def prepare_lora(cfg, backbone):
     )
     if cfg.architecture.gradient_checkpointing:
         backbone.enable_input_require_grads()
+    for name, param in backbone.named_parameters():
+        print(name, param.requires_grad)
     backbone = get_peft_model(backbone, lora_config)
+    for name, param in backbone.named_parameters():
+        print(name, param.requires_grad)
 
     trainable_params, all_param = backbone.get_nb_trainable_parameters()
     if cfg.environment._local_rank == 0:

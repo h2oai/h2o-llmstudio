@@ -94,7 +94,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
     # 7b model may be unstable (NaN loss)
-    llm_backbone: str = "h2oai/h2ogpt-4096-llama2-13b-chat"
+    llm_backbone: str = "h2oai/h2o-danube2-1.8b-sft"
 
     dataset: ConfigDPODataset = field(default_factory=ConfigDPODataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
