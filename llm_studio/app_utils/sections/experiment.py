@@ -1780,7 +1780,6 @@ async def experiment_download_adapter(q: Q):
             "adapter_model/README.md",
         ]
 
-        # Add tokenizer and config.json files, as well as potential classification head
         paths_added = []
         for file in FILES_TO_PUSH:
             path = os.path.join(experiment_path, file)
