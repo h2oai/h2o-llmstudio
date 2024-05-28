@@ -1046,7 +1046,7 @@ async def experiment_display(q: Q) -> None:
             buttons += [
                 ui.button(
                     name="experiment/display/download_adapter",
-                    label="Download adapter model",
+                    label="Download adapter",
                     primary=False,
                     disabled=False,
                     tooltip=None,
