@@ -151,7 +151,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     grad_accumulation: int = 1
 
     lora: bool = True
-    save_adapter: bool = False
     use_dora: bool = False
     lora_r: int = 4
     lora_alpha: int = 16
@@ -221,14 +220,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
             ],
         )
         self._nesting.add(
-            [
-                "save_adapter",
-                "use_dora",
-                "lora_r",
-                "lora_alpha",
-                "lora_dropout",
-                "lora_target_modules",
-            ],
+            ["use_dora", "lora_r", "lora_alpha", "lora_dropout", "lora_target_modules"],
             [Dependency(key="lora", value=False, is_set=False)],
         )
 
