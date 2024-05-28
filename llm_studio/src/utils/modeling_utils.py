@@ -132,6 +132,8 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> None:
             model = unwrap_model(model)
             checkpoint = {"model": model.state_dict()}
             torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
+            if cfg.training.lora and not cfg.architecture.force_embedding_gradients:
+                model.backbone.save_pretrained(os.path.join(path, "adapter_model"))
 
     if (
         cfg.environment._local_rank == 0
