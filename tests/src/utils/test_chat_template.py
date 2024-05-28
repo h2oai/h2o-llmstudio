@@ -13,6 +13,7 @@ def test_chat_template_no_system_prompt():
     test_directory = os.path.abspath(os.path.dirname(__file__))
     cfg_path = os.path.join(test_directory, "../test_data/cfg.yaml")
     cfg = load_config_yaml(cfg_path)
+    cfg.dataset.system_column = "None"
     cfg.dataset.text_prompt_start = "<|prompt|>"
     cfg.dataset.text_answer_separator = "<|answer|>"
     cfg.dataset.add_eos_token_to_prompt = True
