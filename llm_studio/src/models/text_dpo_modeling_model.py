@@ -81,8 +81,16 @@ class Model(nn.Module):
             cfg, model_class=AutoModelForCausalLM
         )
 
-        assert cfg.training.lora, "Need to enable lora for dpo training"
-        self.backbone = prepare_lora(cfg=cfg, backbone=self.backbone)
+        if cfg.training.lora:
+            self.backbone = prepare_lora(cfg=cfg, backbone=self.backbone)
+        else:
+            self.backbone_orig, self.backbone_orig_config = create_nlp_backbone(
+                cfg, model_class=AutoModelForCausalLM
+            )
+            for _, param in self.backbone_orig.named_parameters():
+                # freeze base model's layers
+                param.requires_grad = False
+            self.backbone_orig = self.backbone_orig.eval()
 
         self.loss_fn = self.cfg.training.loss_class.get(
             self.cfg.training.loss_function
@@ -143,19 +151,24 @@ class Model(nn.Module):
                 average_log_prob=LOSS_REDUCTION[self.cfg.training.loss_function],
             )
 
-            with self.backbone.disable_adapter():
-                with torch.no_grad():
-                    reference_logits = self.backbone(
-                        input_ids=batch[f"{answer}_input_ids"],
-                        attention_mask=batch[f"{answer}_attention_mask"],
-                    ).logits
-                    outputs[f"{answer}_reference_logps"] = get_batch_logps(
-                        reference_logits,
-                        batch[f"{answer}_labels"],
-                        average_log_prob=LOSS_REDUCTION[
-                            self.cfg.training.loss_function
-                        ],
-                    )
+            with torch.no_grad():
+                if self.cfg.training.lora:
+                    with self.backbone.disable_adapter():
+                        reference_logits = self.backbone(
+                            input_ids=batch[f"{answer}_input_ids"],
+                            attention_mask=batch[f"{answer}_attention_mask"],
+                        ).logits
+                else:
+                    with torch.no_grad():
+                        reference_logits = self.backbone_orig(
+                            input_ids=batch[f"{answer}_input_ids"],
+                            attention_mask=batch[f"{answer}_attention_mask"],
+                        ).logits
+                outputs[f"{answer}_reference_logps"] = get_batch_logps(
+                    reference_logits,
+                    batch[f"{answer}_labels"],
+                    average_log_prob=LOSS_REDUCTION[self.cfg.training.loss_function],
+                )
 
         loss, chosen_rewards, rejected_rewards = self.loss_fn(
             policy_chosen_logps=outputs["chosen_logps"],

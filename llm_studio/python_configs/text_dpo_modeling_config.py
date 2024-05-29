@@ -75,7 +75,6 @@ class ConfigDPOTraining(ConfigNLPCausalLMTraining):
         super().__post_init__()
         self._possible_values["beta"] = possible_values.Number(0.05, 1.0, 0.05)
         self._order.insert("beta", after="learning_rate")
-        self._visibility["lora"] = -1
 
 
 @dataclass
