@@ -578,9 +578,6 @@ def run(cfg: Any) -> None:
     optimizer = get_optimizer(model=model, cfg=cfg)
     scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
 
-    for name, param in model.named_parameters():
-        print(name, param.requires_grad)
-
     if cfg.environment._distributed:
         (
             model,

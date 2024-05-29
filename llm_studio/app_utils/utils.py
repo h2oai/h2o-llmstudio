@@ -911,6 +911,12 @@ def get_ui_element(
                     raise ValueError(
                         "Combobox cannot handle (value, name) pairs for options."
                     )
+                if is_tuple:
+                    choices = list(set(list(options) + list(v)))
+                else:  
+                    choices = (
+                        list(options) + v if v not in options else list(options)
+                    )
 
                 t = [
                     ui.combobox(
@@ -918,9 +924,7 @@ def get_ui_element(
                         label=make_label(k),
                         value=None if is_tuple else v[0],
                         values=v if is_tuple else None,
-                        choices=(
-                            list(options) + v if v not in options else list(options)
-                        ),
+                        choices=choices,
                         tooltip=tooltip,
                         placeholder=placeholder,
                         trigger=trigger,
@@ -1288,7 +1292,6 @@ def parse_ui_elements(
                     value = ()
                 else:
                     value = tuple(value)
-                print(k, v, value)
             if isinstance(type_annotations[k], str) and isinstance(value, list):
                 # fix for combobox outputting custom values as list in wave 0.22
                 value = value[0]
