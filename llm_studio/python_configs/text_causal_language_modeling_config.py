@@ -138,6 +138,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     learning_rate: float = 0.0001
     differential_learning_rate_layers: Tuple[str, ...] = ()
     differential_learning_rate: float = 0.00001
+    freeze_layers: Tuple[str, ...] = ()
 
     use_flash_attention_2: bool = False
     batch_size: int = 2
@@ -181,6 +182,11 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["differential_learning_rate"] = self._possible_values[
             "learning_rate"
         ]
+        self._possible_values["freeze_layers"] = possible_values.String(
+            values=("embed", "layer", "head"),
+            allow_custom=True,
+            placeholder="Select optional layers to freeze...",
+        )
 
         self._possible_values["batch_size"] = (1, 256, 1)
         self._possible_values["epochs"] = (0, 10, 1)
@@ -194,12 +200,10 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["lora_r"] = (1, 256, 1)
         self._possible_values["lora_alpha"] = (1, 256, 1)
         self._possible_values["lora_dropout"] = (0.0, 0.5, 0.01)
-        self._possible_values["lora_unfreeze_layers"] = (
-            possible_values.String(
-                values=("embed", "head"),
-                allow_custom=False,
-                placeholder="Select optional layers to unfreeze...",
-            )
+        self._possible_values["lora_unfreeze_layers"] = possible_values.String(
+            values=("embed", "head"),
+            allow_custom=True,
+            placeholder="Select optional layers to unfreeze...",
         )
 
         self._possible_values["save_checkpoint"] = possible_values.String(
@@ -228,7 +232,18 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
             ],
         )
         self._nesting.add(
-            ["use_dora", "lora_r", "lora_alpha", "lora_dropout", "lora_target_modules", "lora_unfreeze_layers"],
+            ["freeze_layers"],
+            [Dependency(key="lora", value=False, is_set=True)],
+        )
+        self._nesting.add(
+            [
+                "use_dora",
+                "lora_r",
+                "lora_alpha",
+                "lora_dropout",
+                "lora_target_modules",
+                "lora_unfreeze_layers",
+            ],
             [Dependency(key="lora", value=False, is_set=False)],
         )
 
@@ -269,11 +284,6 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
             allow_custom=False,
         )
         self._possible_values["intermediate_dropout"] = (0, 0.5, 0.05)
-
-        self._nesting.add(
-            ["force_embedding_gradients"],
-            [Dependency(key="lora", value=False, is_set=False)],
-        )
 
         self._visibility["model_class"] = -1
         self._visibility["pretrained"] = -1

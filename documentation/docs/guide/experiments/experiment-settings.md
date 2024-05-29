@@ -28,7 +28,6 @@ import TSpaddingQuantile from '../../tooltips/experiments/_padding-quantile.mdx'
 import TSuseFast from '../../tooltips/experiments/_use-fast.mdx';
 import ASBackboneDtype from '../../tooltips/experiments/_backbone-dtype.mdx';
 import ASGradientcheckpointing from '../../tooltips/experiments/_gradient-checkpointing.mdx';
-import ASforceEmbeddingGradients from '../../tooltips/experiments/_force-embedding-gradients.mdx';
 import ASintermediateDropout from '../../tooltips/experiments/_intermediate-dropout.mdx';
 import ASpretrainedWeights from '../../tooltips/experiments/_pretrained-weights.mdx';
 import TSoptimizer from '../../tooltips/experiments/_optimizer.mdx';
@@ -224,10 +223,6 @@ The settings under each category are listed and described below.
 ### Gradient Checkpointing
 
 <ASGradientcheckpointing/>
-
-### Force Embedding Gradients
-
-<ASforceEmbeddingGradients/>
 
 ### Intermediate dropout
 

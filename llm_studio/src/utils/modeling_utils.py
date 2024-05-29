@@ -820,12 +820,8 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             backbone, "is_loaded_in_4bit", False
         )
 
-        # for name, param in backbone.named_parameters():
-        #     # freeze base model's layers
-        #     if not any(unfreeze_layer in name for unfreeze_layer in cfg.training.lora_unfreeze_layers):
-        #         param.requires_grad = False
-        #     else:
-        #         print("WTFFFF", name)
+        for _, param in backbone.named_parameters():
+            param.requires_grad = False
 
         # cast all non INT8 parameters to fp32
         if loaded_in_kbit:
@@ -842,6 +838,13 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
                     "Pure float16 or int8 training will "
                     "likely lead to unstable training without adapters."
                 )
+
+    for name, param in backbone.named_parameters():
+        # freeze base model's layers
+        if any(freeze_layer in name for freeze_layer in cfg.training.freeze_layers):
+            if cfg.environment._local_rank == 0:
+                logger.info(f"Freezing layer: {name}")
+            param.requires_grad = False
 
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable(
@@ -1032,13 +1035,21 @@ def prepare_lora(cfg, backbone):
         bias="none",
         task_type="CAUSAL_LM",
     )
-    if cfg.architecture.gradient_checkpointing:
-        backbone.enable_input_require_grads()
-    for name, param in backbone.named_parameters():
-        print(name, param.requires_grad)
+    # not needed anylonger with use_reentrant=False
+    # if cfg.architecture.gradient_checkpointing:
+    #     backbone.enable_input_require_grads()
+
     backbone = get_peft_model(backbone, lora_config)
+
     for name, param in backbone.named_parameters():
-        print(name, param.requires_grad)
+        # unfreeze base model's layers
+        if any(
+            unfreeze_layer in name
+            for unfreeze_layer in cfg.training.lora_unfreeze_layers
+        ):
+            if cfg.environment._local_rank == 0:
+                logger.info(f"Unfreezing layer: {name}")
+            param.requires_grad = True
 
     trainable_params, all_param = backbone.get_nb_trainable_parameters()
     if cfg.environment._local_rank == 0:
