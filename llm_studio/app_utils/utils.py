@@ -913,10 +913,8 @@ def get_ui_element(
                     )
                 if is_tuple:
                     choices = list(set(list(options) + list(v)))
-                else:  
-                    choices = (
-                        list(options) + v if v not in options else list(options)
-                    )
+                else:
+                    choices = list(options) + v if v not in options else list(options)
 
                 t = [
                     ui.combobox(
