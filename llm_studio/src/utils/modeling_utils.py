@@ -839,12 +839,12 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
                     "likely lead to unstable training without adapters."
                 )
 
-    for name, param in backbone.named_parameters():
-        # freeze base model's layers
-        if any(freeze_layer in name for freeze_layer in cfg.training.freeze_layers):
-            if cfg.environment._local_rank == 0:
-                logger.info(f"Freezing layer: {name}")
-            param.requires_grad = False
+        for name, param in backbone.named_parameters():
+            # freeze base model's layers
+            if any(freeze_layer in name for freeze_layer in cfg.training.freeze_layers):
+                if cfg.environment._local_rank == 0:
+                    logger.info(f"Freezing layer: {name}")
+                param.requires_grad = False
 
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable(
