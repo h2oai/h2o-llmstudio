@@ -61,7 +61,6 @@ The runtimes were gathered using the default parameters.
 ```
 architecture:
     backbone_dtype: int4
-    force_embedding_gradients: false
     gradient_checkpointing: true
     intermediate_dropout: 0.0
     pretrained: true

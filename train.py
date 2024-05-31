@@ -578,13 +578,6 @@ def run(cfg: Any) -> None:
     optimizer = get_optimizer(model=model, cfg=cfg)
     scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
 
-    if getattr(cfg.architecture, "force_embedding_gradients"):
-        for module in model.modules():
-            if isinstance(module, torch.nn.Embedding):
-                for param in module.parameters():
-                    param.requires_grad = True
-                    param.data = param.data.float()
-
     if cfg.environment._distributed:
         (
             model,
