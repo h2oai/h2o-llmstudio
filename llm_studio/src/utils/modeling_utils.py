@@ -12,7 +12,6 @@ import numpy as np
 import torch
 import transformers
 from deepspeed.runtime.dataloader import DeepSpeedDataLoader
-from llm_studio.python_configs.base import DefaultConfigProblemBase
 from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
 from peft import LoraConfig, PeftModel, get_peft_model
 from torch.cuda.amp import autocast
@@ -29,6 +28,7 @@ from transformers import (
 from transformers.pytorch_utils import Conv1D as Conv1DTransformer
 from transformers.utils import logging as transformers_logging
 
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
