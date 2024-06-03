@@ -899,12 +899,6 @@ def get_ui_element(
 
             is_tuple = type_annotation == Tuple[str, ...]
 
-            if is_tuple and allow_custom:
-                raise TypeError(
-                    "Multi-select (`Tuple[str, ...]` type annotation) and"
-                    " `allow_custom=True` is not supported at the same time."
-                )
-
             v = q.client[pre + k] if q.client[pre + k] is not None else v
             if isinstance(v, str):
                 v = [v]
@@ -917,16 +911,21 @@ def get_ui_element(
                     raise ValueError(
                         "Combobox cannot handle (value, name) pairs for options."
                     )
+                if is_tuple:
+                    choices = list(set(list(options) + list(v)))
+                else:
+                    choices = list(options) + v if v not in options else list(options)
 
                 t = [
                     ui.combobox(
                         name=pre + k,
                         label=make_label(k),
-                        value=v[0],
-                        choices=(
-                            list(options) + v if v not in options else list(options)
-                        ),
+                        value=None if is_tuple else v[0],
+                        values=v if is_tuple else None,
+                        choices=choices,
                         tooltip=tooltip,
+                        placeholder=placeholder,
+                        trigger=trigger,
                     )
                 ]
             else:
@@ -1287,7 +1286,10 @@ def parse_ui_elements(
             if type_annotations[k] == Tuple[str, ...]:
                 if isinstance(value, str):
                     value = [value]
-                value = tuple(value)
+                elif value is None:
+                    value = ()
+                else:
+                    value = tuple(value)
             if isinstance(type_annotations[k], str) and isinstance(value, list):
                 # fix for combobox outputting custom values as list in wave 0.22
                 value = value[0]

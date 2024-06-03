@@ -13,7 +13,6 @@ def test_load_config_yaml():
     assert cfg.output_directory == "output/user/test/"
 
     assert cfg.architecture.backbone_dtype == "float16"
-    assert cfg.architecture.force_embedding_gradients is False
     assert cfg.architecture.gradient_checkpointing is False
     assert cfg.architecture.intermediate_dropout == 0.0
 

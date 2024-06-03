@@ -1,6 +1,5 @@
 architecture:
   backbone_dtype: float32
-  force_embedding_gradients: false
   gradient_checkpointing: false
   intermediate_dropout: 0.0
   pretrained: true

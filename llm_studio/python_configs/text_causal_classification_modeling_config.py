@@ -158,7 +158,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
     _parent_experiment: str = ""
-    llm_backbone: str = "h2oai/h2ogpt-4096-llama2-7b"
+    llm_backbone: str = "h2oai/h2o-danube2-1.8b-chat"
 
     dataset: ConfigNLPCausalClassificationDataset = field(
         default_factory=ConfigNLPCausalClassificationDataset
