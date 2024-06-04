@@ -29,7 +29,7 @@ import yaml
 from azure.storage.filedatalake import DataLakeServiceClient
 from boto3.session import Session
 from botocore.handlers import disable_signing
-from h2o_wave import Q, ui
+from h2o_wave import Choice, Q, ui
 from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
 
@@ -1248,20 +1248,22 @@ def get_ui_elements(
             allow_custom = cfg._get_grid_search_iscustom(k) or len(add_choice) == 1
 
             if allow_custom:
-                choices = [str(c) for c in cfg._get_grid_search_values(k)] + add_choice
+                cust_choices: list[str] = [
+                    str(c) for c in cfg._get_grid_search_values(k)
+                ] + add_choice
                 t += [
                     ui.combobox(
                         name=grid_name,
                         label=make_label(k) + " (grid search)",
                         values=v,
                         required=False,
-                        choices=choices,
+                        choices=cust_choices,
                         tooltip=tooltip,
                         trigger=trigger,
                     )
                 ]
             else:
-                choices = [
+                choices: list[Choice] = [
                     ui.choice(str(c), str(c)) for c in cfg._get_grid_search_values(k)
                 ]
 
