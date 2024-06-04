@@ -893,11 +893,11 @@ def get_ui_element(
             ]
         else:
             if isinstance(poss_values, possible_values.String):
-                options = poss_values.values
+                options = list(poss_values.values)
                 allow_custom = poss_values.allow_custom
                 placeholder = poss_values.placeholder
             else:
-                options = poss_values
+                options = list(poss_values)
                 allow_custom = False
                 placeholder = None
 
