@@ -46,7 +46,7 @@ The number of epochs are set by the user.
 ### What is the maximum dataset size that an LLM Studio instance can handle?
 
 The total dataset size is basically unlimited / only bound by disk space as all training is done in batches. There is no specific rule of thumb for maximum batch size - this depends strongly on backbone, context size, use of flash attention 2.0, use of gradient checkpointing, etc.
-We suggest using a batch size that just fills the RAM for maximum efficiency. While testing for maximum memory consumption, set padding quantile to 0. Make sure to set it back to 1 when you found a good setting for the batch size to save on runtime.
+We suggest using a batch size that just fills the RAM for maximum efficiency. While testing for maximum memory consumption, set padding quantile to `0`. Make sure to set it back to `1` when you have found a good setting for the batch size to save on runtime.
 
 ----
 
