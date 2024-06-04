@@ -241,6 +241,8 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         )
         self._grid_search_values["weight_decay"] = (0.0, 0.01, 0.1, 0.2)
         self._grid_search_values["warmup_epochs"] = (0.0, 0.25)
+        self._grid_search_values["gradient_clip"] = (0.0, 0.5, 1, 2, 4, 8)
+        self._grid_search_values["grad_accumulation"] = (1, 2, 4, 8, 16, 32)
         self._grid_search_values["batch_size"] = (1, 2, 4, 8, 16, 32, 64)
         self._grid_search_values["epochs"] = (0.1, 0.5, 1, 2, 4)
         self._grid_search_values["lora_r"] = (2, 4, 8, 16, 32, 64, 128)
@@ -251,6 +253,8 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._grid_search_iscustom["differential_learning_rate"] = True
         self._grid_search_iscustom["weight_decay"] = True
         self._grid_search_iscustom["warmup_epochs"] = True
+        self._grid_search_iscustom["gradient_clip"] = True
+        self._grid_search_iscustom["grad_accumulation"] = True
 
         self._visibility["loss_class"] = -1
         self._visibility["drop_last_batch"] = -1
@@ -350,6 +354,17 @@ class ConfigNLPAugmentation(DefaultConfig):
         self._possible_values["skip_parent_probability"] = (0.0, 1.0, 0.05)
         self._possible_values["random_parent_probability"] = (0.0, 1.0, 0.05)
         self._possible_values["neftune_noise_alpha"] = (0.0, 15, 0.05)
+
+        self._grid_search_values["token_mask_probability"] = (0.0, 0.1, 0.2, 0.3)
+        self._grid_search_values["skip_parent_probability"] = (0.0, 0.1, 0.2, 0.3)
+        self._grid_search_values["random_parent_probability"] = (0.0, 0.1, 0.2, 0.3)
+        self._grid_search_values["neftune_noise_alpha"] = (0.0, 5, 10, 15)
+
+        self._grid_search_iscustom["token_mask_probability"] = True
+        self._grid_search_iscustom["skip_parent_probability"] = True
+        self._grid_search_iscustom["random_parent_probability"] = True
+        self._grid_search_iscustom["neftune_noise_alpha"] = True
+
         self._visibility["nlp_augmentations_class"] = -1
 
 
