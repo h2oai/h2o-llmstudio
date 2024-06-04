@@ -1,8 +1,8 @@
-import itertools
-import random
 import glob
+import itertools
 import logging
 import os
+import random
 import shutil
 import time
 import zipfile
