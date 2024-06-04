@@ -244,7 +244,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._grid_search_values["gradient_clip"] = (0.0, 0.5, 1, 2, 4, 8)
         self._grid_search_values["grad_accumulation"] = (1, 2, 4, 8, 16, 32)
         self._grid_search_values["batch_size"] = (1, 2, 4, 8, 16, 32, 64)
-        self._grid_search_values["epochs"] = (0.1, 0.5, 1, 2, 4)
+        self._grid_search_values["epochs"] = (1, 2, 4)
         self._grid_search_values["lora_r"] = (2, 4, 8, 16, 32, 64, 128)
         self._grid_search_values["lora_alpha"] = (4, 8, 16, 32, 64, 128, 256)
 
