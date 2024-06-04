@@ -96,7 +96,7 @@ class Model(nn.Module):
         output = self.backbone(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
-            position_ids=get_position_ids(batch["attention_mask"])
+            position_ids=get_position_ids(batch["attention_mask"]),
         )
 
         if "labels" in batch:

@@ -324,7 +324,7 @@ def test_encode():
     result = dataset[0]
 
     labels = result["labels"]
-    assert (labels!=-100).sum() == 4
+    assert (labels != -100).sum() == 4
 
     out = dataset.tokenizer.decode(result["input_ids"]).replace("<unk>", "")
     assert out == "<|prompt|>a</s><|answer|>b</s><|prompt|>a</s><|answer|>b</s>"

@@ -253,9 +253,7 @@ def generate_causal_lm_model_input_ids(df):
             prompt_column=("prompt",),
             answer_column="answer",
         ),
-        tokenizer=ConfigNLPCausalLMTokenizer(
-            max_length=512
-        ),
+        tokenizer=ConfigNLPCausalLMTokenizer(max_length=512),
     )
     dataset = CausalLMCustomDataset(df, cfg, mode="train")
     return dataset[0]
@@ -277,9 +275,7 @@ def test_dataset_prompt_ids_are_the_same_as_for_causal_language_modeling(
             answer_column="answer",
             rejected_answer_column="rejected_answer",
         ),
-        tokenizer=ConfigNLPCausalLMTokenizer(
-            max_length=512
-        ),
+        tokenizer=ConfigNLPCausalLMTokenizer(max_length=512),
     )
     dataset = CustomDataset(df_single_prompt, cfg, mode="train")
     generated_text = dataset[0]
