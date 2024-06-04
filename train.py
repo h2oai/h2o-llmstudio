@@ -427,7 +427,7 @@ def run_train(
     return val_loss, val_metric
 
 
-def run(cfg: Any) -> None:
+def run(cfg: Any) -> float:
     """Runs the routine.
 
     Args:
@@ -679,6 +679,8 @@ def run(cfg: Any) -> None:
                 "%H:%M:%S", time.gmtime(float(time_took))
             )
         write_flag(flag_path, "info", f"Runtime: {time_took_formatted}")
+
+    return val_metric
 
 
 if __name__ == "__main__":
