@@ -918,7 +918,13 @@ def get_ui_element(
                 if is_tuple:
                     choices = list(set(list(options) + list(v)))
                 else:
-                    choices = list(options) + v if v not in options else list(options)
+                    if isinstance(v, list):
+                        for option in v:
+                            if option not in options:
+                                options.append(option)
+                        choices = list(options)
+                    else:
+                        raise ValueError("Expected a list.")
 
                 t = [
                     ui.combobox(
