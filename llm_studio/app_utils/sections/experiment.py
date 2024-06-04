@@ -481,6 +481,20 @@ async def experiment_start(q: Q) -> None:
 
     q.client.delete_cards.add("experiment/start")
 
+    cfg = q.client["experiment/start/cfg"]
+    cfg = parse_ui_elements(cfg=cfg, q=q, pre="experiment/start/cfg/")
+    cfg.experiment_name = cfg.experiment_name.replace("/", "-")
+
+    grid_search = get_grid_search(cfg=cfg, q=q, pre="experiment/start")
+    if len(grid_search) > 0:
+        all_grid_hyperparams = sorted(grid_search)
+        combinations = itertools.product(
+            *(grid_search[name] for name in all_grid_hyperparams)
+        )
+        combinations = [dict(zip(all_grid_hyperparams, x)) for x in list(combinations)]
+    else:
+        combinations = []
+
     q.page["experiment/start/footer"] = ui.form_card(
         box="footer",
         items=[
@@ -488,7 +502,11 @@ async def experiment_start(q: Q) -> None:
                 items=[
                     ui.button(
                         name="experiment/start/run",
-                        label="Run experiment",
+                        label=(
+                            "Run experiment"
+                            if len(combinations) <= 1
+                            else f"Run grid search [{len(combinations)} combinations]"
+                        ),
                         primary=True,
                     )
                 ],
