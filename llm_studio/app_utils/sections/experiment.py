@@ -499,15 +499,16 @@ async def experiment_start(q: Q) -> None:
     q.client.delete_cards.add("experiment/start/footer")
 
 
-async def experiment_run(q: Q, pre: str = "experiment/start"):
+async def experiment_run(q: Q):
     """Start an experiment.
 
     Args:
         q: Q
-        pre: prefix for client key
     """
     # import here to avoid circular imports
     from llm_studio.app_utils.sections.project import list_current_experiments
+
+    pre = "experiment/start"
 
     logger.info("Starting experiment")
     logger.info(f"{pre}/cfg_file")

@@ -175,7 +175,7 @@ async def handle(q: Q) -> None:
                 q.client["experiment/start/cfg_sub"],
             )
             q.client.delete_cards.add("experiment/start")
-            await experiment_run(q, pre="experiment/start")
+            await experiment_run(q)
             q.client["experiment/list/mode"] = "train"
 
         elif (
