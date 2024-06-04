@@ -36,9 +36,9 @@ class DefaultConfig:
 
     def __post_init__(self) -> None:
         self._possible_values: Dict[str, Any] = {k: None for k in self.__dict__}
-        self._visibility = {k: 0 for k in self.__dict__}
-        self._grid_search_values = {k: None for k in self.__dict__}
-        self._grid_search_iscustom = {k: None for k in self.__dict__}
+        self._visibility: Dict[str, int] = {k: 0 for k in self.__dict__}
+        self._grid_search_values: Dict[str, Any] = {k: None for k in self.__dict__}
+        self._grid_search_iscustom: Dict[str, Any] = {k: None for k in self.__dict__}
 
         # go up the class hierarchy until we are one below the `DefaultConfig`
         bases = _get_bases_below_parent(self.__class__, DefaultConfig)
