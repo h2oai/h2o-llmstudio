@@ -41,7 +41,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     system_column: str = "system"
     prompt_column: Tuple[str, ...] = ("instruction", "input")
     answer_column: str = "output"
-    parent_id_column: str = "None"
+    parent_id_column: str = "parent_id"
 
     text_system_start: str = "<|system|>"
     text_prompt_start: str = "<|prompt|>"
