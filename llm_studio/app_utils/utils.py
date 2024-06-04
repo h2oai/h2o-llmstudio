@@ -1218,12 +1218,7 @@ def get_ui_elements(
             continue
 
         tooltip = cfg._get_tooltips(k)
-
-        trigger = False
-        q.client[f"{pre}/trigger_ks"] = ["train_dataframe"]
-        q.client[f"{pre}/trigger_ks"] += cfg._get_nesting_triggers()
-        if k in q.client[f"{pre}/trigger_ks"]:
-            trigger = True
+        trigger = True
 
         if (
             pre == "experiment/start"
