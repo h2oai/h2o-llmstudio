@@ -67,7 +67,6 @@ class CustomDataset(Dataset):
                 attention_mask=torch.ones_like(input_ids),
                 max_length=self.cfg.tokenizer.max_length,
                 pad_token_id=self.tokenizer.pad_token_id,
-                tokenizer=self.tokenizer,
             )
         )
 
@@ -466,7 +465,6 @@ class CustomDataset(Dataset):
         pad_token_id,
         direction="left",
         prefix="",
-        tokenizer=None,
     ):
         sample = {}
 
@@ -476,10 +474,6 @@ class CustomDataset(Dataset):
             )
             input_ids = input_ids[-max_length:]
             attention_mask = attention_mask[-max_length:]
-            if tokenizer is not None:
-                logger.info(
-                    f"Truncated sample: {tokenizer.decode(input_ids.long().cpu().numpy())}"
-                )
 
         if len(input_ids) > 0:
             if direction == "left":
