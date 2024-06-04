@@ -1221,7 +1221,7 @@ def get_ui_elements(
 
         if (
             pre == "experiment/start"
-            and q.client[f"{pre}/grid_search"] != "no"
+            and q.client[f"{pre}/grid_search"]
             and cfg._get_grid_search_values(k)
         ):
 

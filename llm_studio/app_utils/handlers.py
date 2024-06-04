@@ -60,7 +60,6 @@ async def handle(q: Q) -> None:
 
     # logger.info(f"args: {q.args}")
     # logger.info(f"events: {q.events}")
-    q.client["experiment/start/grid_search"] = True
 
     if not (
         q.args.__wave_submission_name__ == "experiment/display/chat/chatbot"

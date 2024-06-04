@@ -120,6 +120,13 @@ async def experiment_start(q: Q) -> None:
 
     items = [
         ui.separator(name="general_expander", label="General settings"),
+        ui.toggle(
+            name="experiment/start/grid_search",
+            label="Enable hyperparameter grid search",
+            value=q.client["experiment/start/grid_search"],
+            trigger=True,
+            tooltip=tooltips["experiments_grid_search"],
+        ),
         ui.dropdown(
             name="experiment/start/dataset",
             label="Dataset",
@@ -547,7 +554,9 @@ async def experiment_run(q: Q, pre: str = "experiment/start"):
         exp_name = cfg.experiment_name
 
         all_grid_hyperparams = sorted(grid_search)
-        combinations = itertools.product(*(grid_search[name] for name in all_grid_hyperparams))
+        combinations = itertools.product(
+            *(grid_search[name] for name in all_grid_hyperparams)
+        )
         combinations = [dict(zip(all_grid_hyperparams, x)) for x in list(combinations)]
 
         random.shuffle(combinations)
