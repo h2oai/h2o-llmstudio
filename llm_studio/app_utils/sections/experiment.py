@@ -1,3 +1,5 @@
+import itertools
+import random
 import glob
 import logging
 import os
@@ -28,12 +30,14 @@ from llm_studio.app_utils.sections.chat import chat_tab, load_cfg_model_tokenize
 from llm_studio.app_utils.sections.common import clean_dashboard
 from llm_studio.app_utils.utils import (
     add_model_type,
+    filter_grid_search_combination,
     flatten_dict,
     get_cfg_list_items,
     get_data_dir,
     get_download_link,
     get_experiment_status,
     get_experiments,
+    get_grid_search,
     get_model_types,
     get_problem_categories,
     get_problem_types,
@@ -43,6 +47,7 @@ from llm_studio.app_utils.utils import (
     parse_ui_elements,
     remove_model_type,
     set_env,
+    set_grid_to_cfg,
     start_experiment,
 )
 from llm_studio.app_utils.wave_utils import busy_dialog, ui_table_from_df, wave_theme
@@ -508,6 +513,8 @@ async def experiment_run(q: Q, pre: str = "experiment/start"):
     cfg.experiment_name = cfg.experiment_name.replace("/", "-")
 
     errors = check_config_for_errors(cfg)
+    grid_search = get_grid_search(cfg=cfg, q=q, pre=pre)
+
     if errors["title"] and not q.args["experiment/start/error/proceed"]:
         title = (
             errors["title"][0]
@@ -536,6 +543,39 @@ async def experiment_run(q: Q, pre: str = "experiment/start"):
             closable=True,
         )
         q.client["keep_meta"] = True
+    elif len(grid_search) > 0:
+        exp_name = cfg.experiment_name
+
+        all_grid_hyperparams = sorted(grid_search)
+        combinations = itertools.product(*(grid_search[name] for name in all_grid_hyperparams))
+        combinations = [dict(zip(all_grid_hyperparams, x)) for x in list(combinations)]
+
+        random.shuffle(combinations)
+
+        all_grid_names = []
+        for exp_idx, combo in enumerate(combinations):
+            filtered_combo = filter_grid_search_combination(grid=combo.copy(), cfg=cfg)
+
+            grid_name = "_".join(
+                [
+                    f"{hyp}_{filtered_combo[hyp]}"
+                    for hyp in sorted(filtered_combo.keys())
+                    if len(grid_search[hyp]) > 1
+                ]
+            )
+            if grid_name in all_grid_names:
+                continue
+            else:
+                all_grid_names.append(grid_name)
+
+            cfg = set_grid_to_cfg(cfg=cfg, grid=combo)
+
+            if grid_name != "":
+                cfg.experiment_name = exp_name + f"_{grid_name}"
+                cfg.experiment_name = cfg.experiment_name.replace("/", "-")
+
+            start_experiment(cfg=cfg, q=q, pre=pre)
+            await list_current_experiments(q)
     else:
         start_experiment(cfg=cfg, q=q, pre=pre)
         await list_current_experiments(q)
