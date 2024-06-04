@@ -92,13 +92,10 @@ class ConfigNLPCausalClassificationTraining(ConfigNLPCausalLMTraining):
 
 @dataclass
 class ConfigNLPCausalClassificationTokenizer(ConfigNLPCausalLMTokenizer):
-    max_length_prompt: int = 512
     max_length: int = 512
 
     def __post_init__(self):
         super().__post_init__()
-
-        self._visibility["max_length_answer"] = -1
 
 
 @dataclass

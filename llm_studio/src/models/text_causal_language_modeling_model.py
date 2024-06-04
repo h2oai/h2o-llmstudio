@@ -9,6 +9,7 @@ from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import (
     create_nlp_backbone,
     generate,
+    get_position_ids,
     prepare_lora,
 )
 
@@ -95,6 +96,7 @@ class Model(nn.Module):
         output = self.backbone(
             input_ids=batch["input_ids"],
             attention_mask=batch["attention_mask"],
+            position_ids=get_position_ids(batch["attention_mask"])
         )
 
         if "labels" in batch:

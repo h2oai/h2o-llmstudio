@@ -250,8 +250,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
 
 @dataclass
 class ConfigNLPCausalLMTokenizer(DefaultConfig):
-    max_length_prompt: int = 256
-    max_length_answer: int = 256
     max_length: int = 512
     add_prompt_answer_tokens: bool = False
     padding_quantile: float = 1.0
@@ -259,9 +257,8 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self._possible_values["max_length_prompt"] = (32, 1024 * 16, 32)
-        self._possible_values["max_length_answer"] = (32, 1024 * 16, 32)
-        self._possible_values["max_length"] = (32, 1024 * 16, 32)
+        #self._possible_values["max_length"] = (32, 1024 * 16, 1)
+        self._possible_values["max_length"] = (32, 8200, 1)
         self._possible_values["padding_quantile"] = (0, 1, 0.01)
         self._padding_side = "left"
 

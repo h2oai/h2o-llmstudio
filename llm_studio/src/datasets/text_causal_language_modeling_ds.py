@@ -42,6 +42,9 @@ class CustomDataset(Dataset):
         input_text_dict["prompts"] = [
             self.parse_prompt(self.cfg, prompt) for prompt in input_text_dict["prompts"]
         ]
+        input_text_dict["answers"] = [
+            self.parse_answer(self.cfg, answer) for answer in input_text_dict["answers"]
+        ]
 
         sample = dict()
         system_encoding, prompt_encodings, answer_encodings = self.get_encodings(
@@ -64,6 +67,7 @@ class CustomDataset(Dataset):
                 attention_mask=torch.ones_like(input_ids),
                 max_length=self.cfg.tokenizer.max_length,
                 pad_token_id=self.tokenizer.pad_token_id,
+                tokenizer=self.tokenizer,
             )
         )
 
@@ -72,7 +76,7 @@ class CustomDataset(Dataset):
             self.pad_tokens(
                 answer_encodings[-1],
                 attention_mask=torch.ones_like(answer_encodings[-1]),
-                max_length=self.cfg.tokenizer.max_length_answer,
+                max_length=self.cfg.tokenizer.max_length,
                 pad_token_id=self.tokenizer.pad_token_id,
                 direction="right",
                 prefix="answer_",
@@ -99,14 +103,6 @@ class CustomDataset(Dataset):
             )
         )
 
-        # make sure system encoding is always prepended if max_length exceeded
-        if sample["input_ids"][0] != self.tokenizer.pad_token_id:
-            sample["input_ids"][: len(system_encoding)] = system_encoding
-            if self.cfg.dataset.mask_prompt_labels and "labels" in sample.keys():
-                sample["labels"][: len(system_encoding)] = -100
-        if sample["prompt_input_ids"][0] != self.tokenizer.pad_token_id:
-            sample["prompt_input_ids"][: len(system_encoding)] = system_encoding
-
         return sample
 
     @staticmethod
@@ -121,6 +117,12 @@ class CustomDataset(Dataset):
             f"{codecs.decode(cfg.dataset.text_answer_separator, 'unicode_escape')}"
         )
         return prompt
+
+    @staticmethod
+    def parse_answer(cfg: Any, answer: str):
+        if cfg.dataset.add_eos_token_to_answer:
+            answer += cfg._tokenizer_eos_token
+        return answer
 
     @staticmethod
     def parse_system(cfg: Any, system: str):
@@ -375,9 +377,6 @@ class CustomDataset(Dataset):
                 ]
             ).to(torch.bool)
             labels.masked_fill_(prompt_mask, -100)
-        if self.cfg.dataset.add_eos_token_to_answer:
-            # eos_token may be equal to pad_token. Add the label back manually.
-            labels[-1] = self.tokenizer.eos_token_id
         if self.cfg.tokenizer.max_length < len(labels):
             labels = labels[-self.cfg.tokenizer.max_length :]
 
@@ -446,27 +445,16 @@ class CustomDataset(Dataset):
     def _get_sample_encoding(self, system: str, prompt: str, answer: str) -> List:
         if len(system) > 0:
             system_encoding = self.encode(
-                self.tokenizer, system, self.cfg.tokenizer.max_length_prompt, "right"
+                self.tokenizer, system, self.cfg.tokenizer.max_length, "right"
             )["input_ids"]
         else:
             system_encoding = torch.empty(0)
         prompt_encoding = self.encode(
-            self.tokenizer, prompt, self.cfg.tokenizer.max_length_prompt, "left"
+            self.tokenizer, prompt, self.cfg.tokenizer.max_length, "left"
         )["input_ids"]
-        max_length_answer = self.cfg.tokenizer.max_length_answer - int(
-            self.cfg.dataset.add_eos_token_to_answer
-        )
         answer_encoding = self.encode(
-            self.tokenizer, answer, max_length_answer, "right"
+            self.tokenizer, answer, self.cfg.tokenizer.max_length, "right"
         )["input_ids"]
-        if self.cfg.dataset.add_eos_token_to_answer:
-            answer_encoding = torch.cat(
-                [
-                    answer_encoding,
-                    torch.Tensor([self.tokenizer.eos_token_id]),
-                ],
-                dim=0,
-            )
 
         return [system_encoding, prompt_encoding, answer_encoding]
 
@@ -478,12 +466,16 @@ class CustomDataset(Dataset):
         pad_token_id,
         direction="left",
         prefix="",
+        tokenizer=None,
     ):
         sample = {}
 
         if max_length < len(input_ids):
+            logger.info(f"Input length of {len(input_ids)} exceeds max_length of {max_length}, truncating sample.")
             input_ids = input_ids[-max_length:]
             attention_mask = attention_mask[-max_length:]
+            if tokenizer is not None:
+                logger.info(f"Truncated sample: {tokenizer.decode(input_ids.long().cpu().numpy())}")
 
         if len(input_ids) > 0:
             if direction == "left":

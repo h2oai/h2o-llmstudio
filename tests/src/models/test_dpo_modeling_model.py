@@ -74,7 +74,7 @@ def generate_causal_lm_model_text(df):
             answer_column="answer_column",
         ),
         tokenizer=ConfigNLPCausalLMTokenizer(
-            max_length_prompt=256, max_length_answer=256, max_length=512
+            max_length=512
         ),
     )
     cfg.architecture.backbone_dtype = "float32"
@@ -117,7 +117,7 @@ def test_generation_is_the_same_as_for_causal_language_modeling(df):
             rejected_answer_column="rejected_answer",
         ),
         tokenizer=ConfigNLPCausalLMTokenizer(
-            max_length_prompt=256, max_length_answer=256, max_length=512
+            max_length=512
         ),
     )
     cfg.architecture.backbone_dtype = "float32"
@@ -184,7 +184,7 @@ def test_dpo_perplexity_metric(tmp_path, df2):
             rejected_answer_column="answer_column",
         ),
         tokenizer=ConfigNLPCausalLMTokenizer(
-            max_length_prompt=256, max_length_answer=256, max_length=512
+            max_length=512
         ),
         prediction=ConfigNLPCausalLMPrediction(metric="Perplexity"),
     )
