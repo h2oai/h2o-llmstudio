@@ -100,6 +100,7 @@ async def experiment_start(q: Q) -> None:
         q.client["experiment/start/cfg_file_prev"] = None
         q.client["experiment/start/prev_dataset"] = None
         q.client["experiment/start/cfg_sub"] = None
+        q.client["experiment/start/grid_search"] = None
         show_update_warnings = False
         is_create_experiment = True
 
