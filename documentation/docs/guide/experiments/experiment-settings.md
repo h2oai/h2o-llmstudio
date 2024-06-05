@@ -16,7 +16,6 @@ import DSanswerColumn from '../../tooltips/experiments/_answer-column.mdx';
 import DSparentIdColumn from '../../tooltips/experiments/_parent-id-column.mdx';
 import DStextPromptStart from '../../tooltips/experiments/_text-prompt-start.mdx';
 import DStextAnswerSeparator from '../../tooltips/experiments/_text-answer-separator.mdx';
-import DSadaptiveKlControl from '../../tooltips/experiments/_adaptive-kl-control.mdx';
 import DSaddEosTokentoprompt from '../../tooltips/experiments/_add-eos-token-to-prompt.mdx';
 import DSaddEosTokentoanswer from '../../tooltips/experiments/_add-eos-token-to-answer.mdx';
 import DSmaskPromptlabels from '../../tooltips/experiments/_mask-prompt-labels.mdx';
@@ -53,20 +52,6 @@ import TSsavecheckpoint from '../../tooltips/experiments/_save-checkpoint.mdx';
 import TSevaluationepochs from '../../tooltips/experiments/_evaluation-epochs.mdx';
 import TSevaluationbeforetraining from '../../tooltips/experiments/_evaluate-before-training.mdx';
 import TStrainvalidationdata from '../../tooltips/experiments/_train-validation-data.mdx';
-import TSuseRHLF from '../../tooltips/experiments/_use-rlhf.mdx';
-import TSrewardModel from '../../tooltips/experiments/_reward-model.mdx';
-import TSinitialKlCoefficient from '../../tooltips/experiments/_initial-kl-coefficient.mdx';
-import TSklTarget from '../../tooltips/experiments/_kl-target.mdx';
-import TSklHorizon from '../../tooltips/experiments/_kl-horizon.mdx';
-import TSadvantagesGamma from '../../tooltips/experiments/_advantages-gamma.mdx';
-import TSadvantagesLambda from '../../tooltips/experiments/_advantages-lambda.mdx';
-import TSppoClipPolicy from '../../tooltips/experiments/_ppo-clip-policy.mdx';
-import TSppoClipValue from '../../tooltips/experiments/_ppo-clip-value.mdx';
-import TSscalingFactorValueLoss from '../../tooltips/experiments/_scaling-factor-value-loss.mdx';
-import TSppoEpochs from '../../tooltips/experiments/_ppo-epochs.mdx';
-import TSppoBatchSize from '../../tooltips/experiments/_ppo-batch-size.mdx';
-import TSppoGenerateTemp from '../../tooltips/experiments/_ppo-generate-temperature.mdx';
-import TSoffloadRewardModel from '../../tooltips/experiments/_offload-reward-model.mdx';
 import AStokenmaskprobability from '../../tooltips/experiments/_token-mask-probability.mdx';
 import ASskipParentprobability from '../../tooltips/experiments/_skip-parent-probability.mdx';
 import ASrandomparentprobability from '../../tooltips/experiments/_random-parent-probability.mdx';
@@ -173,10 +158,6 @@ The settings under each category are listed and described below.
 ### Text answer separator
 
 <DStextAnswerSeparator/>
-
-## Adaptive Kl control
-
-<DSadaptiveKlControl/>
 
 ### Add EOS token to prompt
 
@@ -327,66 +308,6 @@ The settings under each category are listed and described below.
 ### Train validation data
 
 <TStrainvalidationdata/>
-
-### Use RLHF
-
-<TSuseRHLF/>
-
-### Reward model
-
-<TSrewardModel/>
-
-### Adaptive KL control
-
-<DSadaptiveKlControl/>
-
-### Initial KL coefficient
-
-<TSinitialKlCoefficient/>
-
-### KL target
-
-<TSklTarget/>
-
-### KL Horizon
-
-<TSklHorizon/>
-
-### Advantages gamma
-
-<TSadvantagesGamma/>
-
-### Advantages Lambda
-
-<TSadvantagesLambda/>
-
-### PPO clip policy
-
-<TSppoClipPolicy/>
-
-### PPO clip value
-
-<TSppoClipValue/>
-
-### Scaling factor value loss
-
-<TSscalingFactorValueLoss/>
-
-### PPO epochs
-
-<TSppoEpochs/>
-
-### PPO Batch Size
-
-<TSppoBatchSize/>
-
-### PPO generate temperature
-
-<TSppoGenerateTemp/>
-
-### Offload reward model
-
-<TSoffloadRewardModel/>
 
 ## Augmentation settings
 
