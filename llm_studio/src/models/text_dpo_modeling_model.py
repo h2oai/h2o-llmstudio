@@ -141,7 +141,7 @@ class Model(nn.Module):
             logits = self.backbone(
                 input_ids=batch[f"{answer}_input_ids"],
                 attention_mask=batch[f"{answer}_attention_mask"],
-                position_ids=get_position_ids(batch[f"{answer}_input_ids"]),
+                position_ids=get_position_ids(batch[f"{answer}_attention_mask"]),
             ).logits
 
             logits_dict[answer] = logits
@@ -159,14 +159,14 @@ class Model(nn.Module):
                         reference_logits = self.backbone(
                             input_ids=batch[f"{answer}_input_ids"],
                             attention_mask=batch[f"{answer}_attention_mask"],
-                            position_ids=get_position_ids(batch[f"{answer}_input_ids"]),
+                            position_ids=get_position_ids(batch[f"{answer}_attention_mask"]),
                         ).logits
                 else:
                     with torch.no_grad():
                         reference_logits = self.backbone_orig(
                             input_ids=batch[f"{answer}_input_ids"],
                             attention_mask=batch[f"{answer}_attention_mask"],
-                            position_ids=get_position_ids(batch[f"{answer}_input_ids"]),
+                            position_ids=get_position_ids(batch[f"{answer}_attention_mask"]),
                         ).logits
                 outputs[f"{answer}_reference_logps"] = get_batch_logps(
                     reference_logits,
