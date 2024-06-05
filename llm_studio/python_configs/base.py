@@ -127,6 +127,11 @@ class DefaultConfig:
 
         return self._grid_search_iscustom.get(field, None)
 
+    def _get_nesting_triggers(self) -> Set[str]:
+        """Returns a Set of keys other elements are depending on"""
+
+        return self._nesting.triggers
+
     def _get_nesting_dependencies(self, key: str) -> List[Dependency] | None:
         """Returns a all dependencies for a given key"""
 
