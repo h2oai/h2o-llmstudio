@@ -264,20 +264,6 @@ async def experiment_start(q: Q) -> None:
         show_update_warnings = False
 
     if q.client["experiment/start/cfg_category"] == "experiment":
-        items += [
-            ui.dropdown(
-                name="experiment/start/cfg_experiment",
-                label="Experiment",
-                required=True,
-                choices=[
-                    ui.choice(str(row.id), row["name"])
-                    for _, row in df_experiments.iterrows()
-                ],
-                value=q.client["experiment/start/cfg_experiment"],
-                trigger=True,
-            )
-        ]
-
         if (
             show_update_warnings
             and q.client["experiment/start/cfg_experiment_prev"]
@@ -356,13 +342,9 @@ async def experiment_start(q: Q) -> None:
         )
 
         parent_path = os.path.dirname(q.client["experiment/start/experiment"].path)
-        parent_exp_name = parent_path.split("/")[-1]
-        parent_experiment = f"{parent_exp_name}"
+        parent_config = load_config_yaml(f"{parent_path}/cfg.yaml")
 
-        old_config = load_config_yaml(f"{parent_path}/cfg.yaml")
-        old_config._parent_experiment = parent_experiment
-
-        q.client["experiment/start/cfg"] = old_config
+        q.client["experiment/start/cfg"] = parent_config
 
         # set pretrained weights
         if q.client["experiment/start/cfg_experiment_pretrained"]:
@@ -408,7 +390,6 @@ async def experiment_start(q: Q) -> None:
                 q.client["experiment/start/experiment"].dataset
             )
 
-            items[1].dropdown.value = q.client["experiment/start/dataset"]
         # pick default values from config or dataset
         elif (
             q.client["experiment/start/dataset_prev"]

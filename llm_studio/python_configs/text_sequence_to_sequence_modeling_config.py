@@ -72,7 +72,6 @@ class ConfigNLPSeq2SeqEnvironment(ConfigNLPCausalLMEnvironment):
 class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
-    _parent_experiment: str = ""
     llm_backbone: str = "t5-small"
 
     dataset: ConfigNLPSeq2SeqDataset = field(default_factory=ConfigNLPSeq2SeqDataset)
