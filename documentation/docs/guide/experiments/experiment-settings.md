@@ -25,15 +25,15 @@ import TSmaxLengthAnswer from '../../tooltips/experiments/_max-length-answer.mdx
 import TSmaxLength from '../../tooltips/experiments/_max-length.mdx';
 import TSaddpromptanswertokens from '../../tooltips/experiments/_add-prompt-answer-tokens.mdx';
 import TSpaddingQuantile from '../../tooltips/experiments/_padding-quantile.mdx';
-import TSuseFast from '../../tooltips/experiments/_use-fast.mdx';
 import ASBackboneDtype from '../../tooltips/experiments/_backbone-dtype.mdx';
 import ASGradientcheckpointing from '../../tooltips/experiments/_gradient-checkpointing.mdx';
-import ASforceEmbeddingGradients from '../../tooltips/experiments/_force-embedding-gradients.mdx';
 import ASintermediateDropout from '../../tooltips/experiments/_intermediate-dropout.mdx';
 import ASpretrainedWeights from '../../tooltips/experiments/_pretrained-weights.mdx';
 import TSoptimizer from '../../tooltips/experiments/_optimizer.mdx';
 import TSlossfunction from '../../tooltips/experiments/_loss-function.mdx';
 import TSlearningRate from '../../tooltips/experiments/_learning-rate.mdx';
+import TSdifferentialLearningRateLayers from '../../tooltips/experiments/_differential-learning-rate-layers.mdx';
+import TSfreezeLayers from '../../tooltips/experiments/_freeze-layers.mdx';
 import TSuseflashattention2 from '../../tooltips/experiments/_use-flash-attention-2.mdx';
 import TSbatchSize from '../../tooltips/experiments/_batch-size.mdx';
 import TSepochs from '../../tooltips/experiments/_epochs.mdx';
@@ -48,6 +48,7 @@ import TSloraR from '../../tooltips/experiments/_lora-r.mdx';
 import TSloraAlpha from '../../tooltips/experiments/_lora-alpha.mdx';
 import TSloraDropout from '../../tooltips/experiments/_lora-dropout.mdx';
 import TSloraTargetModules from '../../tooltips/experiments/_lora-target-modules.mdx';
+import TSloraUnfreezeLayers from '../../tooltips/experiments/_lora-unfreeze-layers.mdx';
 import TSsavecheckpoint from '../../tooltips/experiments/_save-checkpoint.mdx';
 import TSevaluationepochs from '../../tooltips/experiments/_evaluation-epochs.mdx';
 import TSevaluationbeforetraining from '../../tooltips/experiments/_evaluate-before-training.mdx';
@@ -211,10 +212,6 @@ The settings under each category are listed and described below.
 
 <TSpaddingQuantile/>
 
-### Use fast
-
-<TSuseFast />
-
 ## Architecture settings
 
 ### Backbone Dtype
@@ -224,10 +221,6 @@ The settings under each category are listed and described below.
 ### Gradient Checkpointing
 
 <ASGradientcheckpointing/>
-
-### Force Embedding Gradients
-
-<ASforceEmbeddingGradients/>
 
 ### Intermediate dropout
 
@@ -250,6 +243,14 @@ The settings under each category are listed and described below.
 ### Learning rate
 
 <TSlearningRate/>
+
+### Differential learning rate layers
+
+<TSdifferentialLearningRateLayers/>
+
+### Freeze layers
+
+<TSfreezeLayers/>
 
 ### Use Flash Attention 2
 
@@ -306,6 +307,12 @@ The settings under each category are listed and described below.
 ### Lora target modules
 
 <TSloraTargetModules/>
+
+### Lora unfreeze layers
+
+<TSloraUnfreezeLayers/>
+
+TSloraUnfreezeLayers
 
 ### Save checkpoint
 

@@ -59,6 +59,7 @@ from llm_studio.src.utils.config_utils import (
 from llm_studio.src.utils.exceptions import LLMResourceException
 from llm_studio.src.utils.export_utils import (
     check_available_space,
+    get_adapter_model_path,
     get_artifact_path_path,
     get_logs_path,
     get_model_path,
@@ -908,6 +909,9 @@ async def experiment_display(q: Q) -> None:
     checkpoints_exists = os.path.exists(
         os.path.join(q.client["experiment/display/experiment_path"], "checkpoint.pth")
     )
+    adapter_exists = os.path.exists(
+        os.path.join(q.client["experiment/display/experiment_path"], "adapter_model")
+    )
     status, _ = get_experiment_status(experiment.path)
 
     charts = load_charts(q.client["experiment/display/experiment_path"])
@@ -1036,6 +1040,21 @@ async def experiment_display(q: Q) -> None:
                     disabled=False,
                     tooltip=None,
                 ),
+            ]
+
+        if adapter_exists:
+            buttons += [
+                ui.button(
+                    name="experiment/display/download_adapter",
+                    label="Download adapter",
+                    primary=False,
+                    disabled=False,
+                    tooltip=None,
+                ),
+            ]
+
+        if checkpoints_exists:
+            buttons += [
                 ui.button(
                     name="experiment/display/push_to_huggingface",
                     label="Push checkpoint to huggingface",
@@ -1732,6 +1751,42 @@ async def experiment_download_model(q: Q):
                 add_file_to_zip(zf=zf, path=file_path, folder=subdirectory)
                 paths_added.append(file_path)
                 logger.info(f"Added {file_path} to zip file.")
+        zf.close()
+
+    download_url = get_download_link(q, zip_path)
+    logger.info(f"Logs URL: {download_url}")
+
+    q.page["meta"].script = ui.inline_script(
+        f'window.open("{download_url}", "_blank");'
+    )
+    await q.page.save()
+
+
+async def experiment_download_adapter(q: Q):
+    experiment = q.client["experiment/display/experiment"]
+    experiment_path = q.client["experiment/display/experiment_path"]
+
+    zip_path = get_adapter_model_path(experiment.name, experiment_path)
+
+    if not os.path.exists(zip_path):
+        logger.info(f"Creating {zip_path} on demand")
+
+        logger.info(f"Creating Zip File at {zip_path}")
+        zf = zipfile.ZipFile(zip_path, "w")
+
+        FILES_TO_PUSH = [
+            "adapter_model/adapter_config.json",
+            "adapter_model/adapter_model.safetensors",
+            "adapter_model/README.md",
+        ]
+
+        paths_added = []
+        for file in FILES_TO_PUSH:
+            path = os.path.join(experiment_path, file)
+            if os.path.isfile(path):
+                paths_added.append(path)
+                add_file_to_zip(zf=zf, path=path)
+
         zf.close()
 
     download_url = get_download_link(q, zip_path)

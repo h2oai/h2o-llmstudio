@@ -23,6 +23,7 @@ from llm_studio.app_utils.sections.dataset import (
 from llm_studio.app_utils.sections.experiment import (
     experiment_delete,
     experiment_display,
+    experiment_download_adapter,
     experiment_download_logs,
     experiment_download_model,
     experiment_download_predictions,
@@ -330,6 +331,8 @@ async def handle(q: Q) -> None:
             await experiment_push_to_huggingface_dialog(q)
         elif q.args.__wave_submission_name__ == "experiment/display/download_model":
             await experiment_download_model(q)
+        elif q.args.__wave_submission_name__ == "experiment/display/download_adapter":
+            await experiment_download_adapter(q)
         elif (
             q.args.__wave_submission_name__
             == "experiment/display/push_to_huggingface_submit"

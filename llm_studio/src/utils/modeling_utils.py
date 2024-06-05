@@ -28,6 +28,7 @@ from transformers import (
 from transformers.pytorch_utils import Conv1D as Conv1DTransformer
 from transformers.utils import logging as transformers_logging
 
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.schedulers import Schedulers
@@ -86,7 +87,9 @@ def check_disk_space(model: torch.nn.Module, path: str):
 
 
 # TODO: currently not saving optimizer
-def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> None:
+def save_checkpoint(
+    model: torch.nn.Module, path: str, cfg: DefaultConfigProblemBase
+) -> None:
     """Saves a model checkpoint if the path is provided.
 
     Args:
@@ -132,6 +135,8 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> None:
             model = unwrap_model(model)
             checkpoint = {"model": model.state_dict()}
             torch.save(checkpoint, os.path.join(path, "checkpoint.pth"))
+            if cfg.training.lora and len(cfg.training.lora_unfreeze_layers) == 0:
+                model.backbone.save_pretrained(os.path.join(path, "adapter_model"))
 
     if (
         cfg.environment._local_rank == 0
@@ -144,7 +149,10 @@ def save_checkpoint(model: torch.nn.Module, path: str, cfg: Any) -> None:
 
 
 def load_model_weights(
-    model: torch.nn.Module, model_weights: Dict, strict: bool, cfg: Any
+    model: torch.nn.Module,
+    model_weights: Dict,
+    strict: bool,
+    cfg: DefaultConfigProblemBase,
 ):
     orig_num_items = len(model_weights)
     model_state_dict = model.state_dict()
@@ -200,7 +208,10 @@ def load_model_weights(
 
 
 def load_checkpoint(
-    cfg: Any, model: torch.nn.Module, strict: bool = True, weights_path: str = None
+    cfg: DefaultConfigProblemBase,
+    model: torch.nn.Module,
+    strict: bool = True,
+    weights_path: str = None,
 ):
     """Load checkpoint
 
@@ -243,7 +254,7 @@ def load_checkpoint(
         logger.info(f"Weights loaded from: {weights_path}")
 
 
-def get_ds_config(cfg: Any):
+def get_ds_config(cfg: DefaultConfigProblemBase):
     ds_config = {
         "fp16": {
             "enabled": True if cfg.architecture.backbone_dtype == "float16" else False,
@@ -314,7 +325,7 @@ def wrap_model_distributed(
     lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
     train_dataloader: torch.utils.data.DataLoader,
     val_dataloader: torch.utils.data.DataLoader,
-    cfg: Any,
+    cfg: DefaultConfigProblemBase,
 ):
     if cfg.environment.use_deepspeed:
         ds_config = get_ds_config(cfg)
@@ -362,7 +373,9 @@ def wrap_model_distributed(
     return model, optimizer, train_dataloader, val_dataloader, lr_scheduler
 
 
-def get_optimizer(model: torch.nn.Module, cfg: Any) -> torch.optim.Optimizer:
+def get_optimizer(
+    model: torch.nn.Module, cfg: DefaultConfigProblemBase
+) -> torch.optim.Optimizer:
     """Prepares Optimizer.
 
     Args:
@@ -429,7 +442,7 @@ def get_optimizer(model: torch.nn.Module, cfg: Any) -> torch.optim.Optimizer:
 
 
 def get_scheduler(
-    cfg: Any, optimizer: torch.optim.Optimizer, epoch_steps: int
+    cfg: DefaultConfigProblemBase, optimizer: torch.optim.Optimizer, epoch_steps: int
 ) -> torch.optim.lr_scheduler._LRScheduler:
     """Prepares Learning Rate Scheduler.
 
@@ -513,7 +526,7 @@ def contains_nan(output: Dict):
 
 
 def run_inference(
-    cfg: Any,
+    cfg: DefaultConfigProblemBase,
     model: torch.nn.Module,
     dataloader,
     mode: str,
@@ -635,8 +648,10 @@ def run_inference(
     return out
 
 
-def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
-    val_data, val_df = val_dataloader.dataset.format_output(  # type: ignore
+def save_predictions(
+    cfg: DefaultConfigProblemBase, val_data, val_dataloader, val_df, mode
+):
+    val_data, val_df = val_dataloader.dataset.format_output(
         cfg=cfg, df=val_df, output=val_data
     )
     raw_preds_name = os.path.join(cfg.output_directory, f"{mode}_raw_predictions.pkl")
@@ -645,7 +660,7 @@ def save_predictions(cfg, val_data, val_dataloader, val_df, mode):
     val_df.to_csv(csv_preds_name, index=False)
 
 
-def update_backbone_config(config: Any, cfg: Any):
+def update_backbone_config(config: Any, cfg: DefaultConfigProblemBase):
     if hasattr(config, "hidden_dropout_prob"):
         config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
     if hasattr(config, "attention_probs_dropout_prob"):
@@ -712,7 +727,7 @@ def set_generation_config(backbone: torch.nn.Module, cfg_prediction: Any):
     return backbone
 
 
-def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
+def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) -> Any:
     """
     Creates a backbone model for NLP tasks.
     This is needed for Gradient Checkpointing in DDP mode.
@@ -820,8 +835,7 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
             backbone, "is_loaded_in_4bit", False
         )
 
-        for name, param in backbone.named_parameters():
-            # freeze base model's layers
+        for _, param in backbone.named_parameters():
             param.requires_grad = False
 
         # cast all non INT8 parameters to fp32
@@ -839,6 +853,13 @@ def create_nlp_backbone(cfg, model_class=AutoModel) -> Any:
                     "Pure float16 or int8 training will "
                     "likely lead to unstable training without adapters."
                 )
+
+        for name, param in backbone.named_parameters():
+            # freeze base model's layers
+            if any(freeze_layer in name for freeze_layer in cfg.training.freeze_layers):
+                if cfg.environment._local_rank == 0:
+                    logger.info(f"Freezing layer: {name}")
+                param.requires_grad = False
 
     if cfg.architecture.gradient_checkpointing:
         backbone.gradient_checkpointing_enable(
@@ -992,7 +1013,7 @@ class EnvVariableStoppingCriteria(StoppingCriteria):
         return should_stop
 
 
-def prepare_lora(cfg, backbone):
+def prepare_lora(cfg: DefaultConfigProblemBase, backbone):
     target_modules = (
         [
             lora_target_module.strip()
@@ -1029,9 +1050,21 @@ def prepare_lora(cfg, backbone):
         bias="none",
         task_type="CAUSAL_LM",
     )
-    if cfg.architecture.gradient_checkpointing:
-        backbone.enable_input_require_grads()
+    # not needed anylonger with use_reentrant=False
+    # if cfg.architecture.gradient_checkpointing:
+    #     backbone.enable_input_require_grads()
+
     backbone = get_peft_model(backbone, lora_config)
+
+    for name, param in backbone.named_parameters():
+        # unfreeze base model's layers
+        if any(
+            unfreeze_layer in name
+            for unfreeze_layer in cfg.training.lora_unfreeze_layers
+        ):
+            if cfg.environment._local_rank == 0:
+                logger.info(f"Unfreezing layer: {name}")
+            param.requires_grad = True
 
     trainable_params, all_param = backbone.get_nb_trainable_parameters()
     if cfg.environment._local_rank == 0:
@@ -1042,7 +1075,9 @@ def prepare_lora(cfg, backbone):
     return backbone
 
 
-def generate(backbone, batch, cfg, streamer, remove_prompt=True):
+def generate(
+    backbone, batch, cfg: DefaultConfigProblemBase, streamer, remove_prompt=True
+):
     mask_key = "prompt_attention_mask"
     pad_keys = [
         "prompt_input_ids",
