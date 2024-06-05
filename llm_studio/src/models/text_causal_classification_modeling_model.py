@@ -74,7 +74,7 @@ class Model(nn.Module):
         output = self.backbone(
             input_ids=batch["prompt_input_ids"],
             attention_mask=batch["prompt_attention_mask"],
-            position_ids=get_position_ids(batch["prompt_input_ids"]),
+            position_ids=get_position_ids(batch["prompt_attention_mask"]),
         )
 
         output.logits = self.classification_head(output[0][:, -1].float())
