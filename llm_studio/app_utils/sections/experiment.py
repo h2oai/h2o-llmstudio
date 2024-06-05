@@ -466,16 +466,6 @@ async def experiment_start(q: Q) -> None:
     cfg = parse_ui_elements(cfg=cfg, q=q, pre="experiment/start/cfg/")
     cfg.experiment_name = cfg.experiment_name.replace("/", "-")
 
-    grid_search = get_grid_search(cfg=cfg, q=q, pre="experiment/start")
-    if len(grid_search) > 0:
-        all_grid_hyperparams = sorted(grid_search)
-        combinations = itertools.product(
-            *(grid_search[name] for name in all_grid_hyperparams)
-        )
-        combinations = [dict(zip(all_grid_hyperparams, x)) for x in list(combinations)]
-    else:
-        combinations = []
-
     q.page["experiment/start/footer"] = ui.form_card(
         box="footer",
         items=[
@@ -484,9 +474,9 @@ async def experiment_start(q: Q) -> None:
                     ui.button(
                         name="experiment/start/run",
                         label=(
-                            "Run experiment"
-                            if len(combinations) <= 1
-                            else f"Run grid search [{len(combinations)} combinations]"
+                            "Run grid search"
+                            if q.client["experiment/start/grid_search"]
+                            else "Run experiment"
                         ),
                         primary=True,
                     )
@@ -562,30 +552,68 @@ async def experiment_run(q: Q):
 
         random.shuffle(combinations)
 
-        all_grid_names = []
-        for exp_idx, combo in enumerate(combinations):
-            filtered_combo = filter_grid_search_combination(grid=combo.copy(), cfg=cfg)
+        q.page["meta"].dialog = ui.dialog(
+            title="Start grid search",
+            name="experiment/start/gridsearch/dialog",
+            items=[
+                ui.text(
+                    "Your selected grid of hyperparameters results in "
+                    f"{len(combinations)} individual experiments. "
+                    "Do you want to proceed?"
+                )
+            ]
+            + [
+                ui.buttons(
+                    [
+                        ui.button(
+                            name="experiment/start/gridsearch/proceed",
+                            label=(
+                                f"Start grid search of {len(combinations)} experiments"
+                            ),
+                            primary=True,
+                        ),
+                        ui.button(
+                            name="experiment/start/gridsearch/cancel",
+                            label="Cancel",
+                            primary=False,
+                        ),
+                    ]
+                )
+            ],
+            closable=True,
+        )
+        q.client["keep_meta"] = True
 
-            grid_name = "_".join(
-                [
-                    f"{hyp}_{filtered_combo[hyp]}"
-                    for hyp in sorted(filtered_combo.keys())
-                    if len(grid_search[hyp]) > 1
-                ]
-            )
-            if grid_name in all_grid_names:
-                continue
-            else:
-                all_grid_names.append(grid_name)
+        if q.args["experiment/start/gridsearch/proceed"]:
+            all_grid_names = []
+            for exp_idx, combo in enumerate(combinations):
+                filtered_combo = filter_grid_search_combination(
+                    grid=combo.copy(), cfg=cfg
+                )
 
-            cfg = set_grid_to_cfg(cfg=cfg, grid=combo)
+                grid_name = "_".join(
+                    [
+                        f"{hyp}_{filtered_combo[hyp]}"
+                        for hyp in sorted(filtered_combo.keys())
+                        if len(grid_search[hyp]) > 1
+                    ]
+                )
+                if grid_name in all_grid_names:
+                    continue
+                else:
+                    all_grid_names.append(grid_name)
 
-            if grid_name != "":
-                cfg.experiment_name = exp_name + f"_{grid_name}"
-                cfg.experiment_name = cfg.experiment_name.replace("/", "-")
+                cfg = set_grid_to_cfg(cfg=cfg, grid=combo)
 
-            start_experiment(cfg=cfg, q=q, pre=pre)
-            await list_current_experiments(q)
+                if grid_name != "":
+                    cfg.experiment_name = exp_name + f"_{grid_name}"
+                    cfg.experiment_name = cfg.experiment_name.replace("/", "-")
+
+                start_experiment(cfg=cfg, q=q, pre=pre)
+                await list_current_experiments(q)
+
+            # Remove the dialog
+            q.client["keep_meta"] = False
     else:
         start_experiment(cfg=cfg, q=q, pre=pre)
         await list_current_experiments(q)

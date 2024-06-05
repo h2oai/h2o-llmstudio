@@ -168,6 +168,7 @@ async def handle(q: Q) -> None:
         elif (
             q.args.__wave_submission_name__ == "experiment/start/run"
             or q.args.__wave_submission_name__ == "experiment/start/error/proceed"
+            or q.args.__wave_submission_name__ == "experiment/start/gridsearch/proceed"
         ):
             # add model type to cfg file name here
             q.client["experiment/start/cfg_file"] = add_model_type(
