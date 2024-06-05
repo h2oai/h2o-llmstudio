@@ -312,8 +312,6 @@ The settings under each category are listed and described below.
 
 <TSloraUnfreezeLayers/>
 
-TSloraUnfreezeLayers
-
 ### Save checkpoint
 
 <TSsavecheckpoint/>
