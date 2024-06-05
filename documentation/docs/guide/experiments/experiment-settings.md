@@ -25,7 +25,6 @@ import TSmaxLengthAnswer from '../../tooltips/experiments/_max-length-answer.mdx
 import TSmaxLength from '../../tooltips/experiments/_max-length.mdx';
 import TSaddpromptanswertokens from '../../tooltips/experiments/_add-prompt-answer-tokens.mdx';
 import TSpaddingQuantile from '../../tooltips/experiments/_padding-quantile.mdx';
-import TSuseFast from '../../tooltips/experiments/_use-fast.mdx';
 import ASBackboneDtype from '../../tooltips/experiments/_backbone-dtype.mdx';
 import ASGradientcheckpointing from '../../tooltips/experiments/_gradient-checkpointing.mdx';
 import ASintermediateDropout from '../../tooltips/experiments/_intermediate-dropout.mdx';
@@ -212,10 +211,6 @@ The settings under each category are listed and described below.
 ### Padding quantile
 
 <TSpaddingQuantile/>
-
-### Use fast
-
-<TSuseFast />
 
 ## Architecture settings
 
