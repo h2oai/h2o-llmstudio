@@ -334,7 +334,7 @@ def test_encode_maxlength():
     df = pd.DataFrame(
         {
             "prompt": ["a", "a"],
-            "answer": ["b", "b"],
+            "answer": ["b", "a b"],
             "parent_id": [None, 0],
             "id": [0, 1],
         }
@@ -363,4 +363,4 @@ def test_encode_maxlength():
 
     result = dataset[0]
     out = dataset.tokenizer.decode(result["input_ids"]).replace("<unk>", "")
-    assert out == "b</s>"
+    assert out == "a b"

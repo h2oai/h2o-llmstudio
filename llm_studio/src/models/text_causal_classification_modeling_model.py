@@ -7,7 +7,7 @@ from transformers import AutoModelForCausalLM
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import (
     create_nlp_backbone,
-    get_position_ids,
+    forward,
     prepare_lora,
 )
 
@@ -71,10 +71,10 @@ class Model(nn.Module):
                 padding_side=self.cfg.tokenizer._padding_side,
             )
 
-        output = self.backbone(
+        output = forward(
+            self.backbone,
             input_ids=batch["prompt_input_ids"],
             attention_mask=batch["prompt_attention_mask"],
-            position_ids=get_position_ids(batch["prompt_attention_mask"]),
         )
 
         output.logits = self.classification_head(output[0][:, -1].float())

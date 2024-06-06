@@ -13,8 +13,8 @@ from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplex
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import (
     create_nlp_backbone,
+    forward,
     generate,
-    get_position_ids,
     prepare_lora,
 )
 
@@ -143,10 +143,10 @@ class Model(nn.Module):
                         f"{answer}_labels",
                     ],
                 )
-            logits = self.backbone(
+            logits = forward(
+                self.backbone,
                 input_ids=batch[f"{answer}_input_ids"],
                 attention_mask=batch[f"{answer}_attention_mask"],
-                position_ids=get_position_ids(batch[f"{answer}_attention_mask"]),
             ).logits
 
             logits_dict[answer] = logits
@@ -161,23 +161,19 @@ class Model(nn.Module):
             with torch.no_grad():
                 if self.backbone_orig:
                     with torch.no_grad():
-                        reference_logits = self.backbone_orig(
+                        reference_logits = forward(
+                            self.backbone_orig,
                             input_ids=batch[f"{answer}_input_ids"],
                             attention_mask=batch[f"{answer}_attention_mask"],
-                            position_ids=get_position_ids(
-                                batch[f"{answer}_attention_mask"]
-                            ),
                         ).logits
                 else:
                     with self.backbone.disable_adapter():
-                        reference_logits = self.backbone(
+                        reference_logits = forward(
+                            self.backbone,
                             input_ids=batch[f"{answer}_input_ids"],
                             attention_mask=batch[f"{answer}_attention_mask"],
-                            position_ids=get_position_ids(
-                                batch[f"{answer}_attention_mask"]
-                            ),
                         ).logits
-                    
+
                 outputs[f"{answer}_reference_logps"] = get_batch_logps(
                     reference_logits,
                     batch[f"{answer}_labels"],

@@ -8,8 +8,8 @@ from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplex
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import (
     create_nlp_backbone,
+    forward,
     generate,
-    get_position_ids,
     prepare_lora,
 )
 
@@ -93,11 +93,7 @@ class Model(nn.Module):
                 padding_side=self.cfg.tokenizer._padding_side,
             )
 
-        output = self.backbone(
-            input_ids=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
-            position_ids=get_position_ids(batch["attention_mask"]),
-        )
+        output = forward(self.backbone, batch["input_ids"], batch["attention_mask"])
 
         if "labels" in batch:
             loss = self.loss_fn(output.logits, batch["labels"])

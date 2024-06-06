@@ -469,10 +469,7 @@ class CustomDataset(Dataset):
         sample = {}
 
         if max_length < len(input_ids):
-            logger.info(
-                f"Input length of {len(input_ids)} exceeds max_length of "
-                f"{max_length}, truncating sample."
-            )
+            logger.info(f"Input exceeds max_length of {max_length}, truncating sample.")
             input_ids = input_ids[-max_length:]
             attention_mask = attention_mask[-max_length:]
 
