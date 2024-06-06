@@ -185,7 +185,7 @@ class SimPOLoss(CPOLoss):
 
     def get_losses(self, logits):
         label_smoothing = 0
-        gamma = 1.0
+        gamma = self.cfg.training.simpo_gamma
         gamma_logratios = gamma / self.cfg.training.beta
         logits = logits - gamma_logratios
 
