@@ -1244,7 +1244,7 @@ def get_ui_elements(
             t = [
                 ui.message_bar(
                     type="info",
-                    text=f"{make_label(k)} is a grid search hyperparameter.",
+                    text=f"**{make_label(k)}** is a grid search hyperparameter.",
                 )
             ]
 
