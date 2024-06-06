@@ -410,7 +410,10 @@ async def handle(q: Q) -> None:
         elif q.args.__wave_submission_name__ == "experiment/start/dataset":
             await experiment_start(q)
 
-        elif q.client["nav/active"] == "experiment/start":
+        elif (
+            q.client["nav/active"] == "experiment/start"
+            or q.client["nav/active"] == "experiment/start/grid_search"
+        ):
             await experiment_start(q)
 
     except Exception as unknown_exception:
