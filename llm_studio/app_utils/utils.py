@@ -29,7 +29,7 @@ import yaml
 from azure.storage.filedatalake import DataLakeServiceClient
 from boto3.session import Session
 from botocore.handlers import disable_signing
-from h2o_wave import Q, ui
+from h2o_wave import Choice, Q, ui
 from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
 
@@ -48,6 +48,10 @@ from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 from .config import default_cfg
 
 logger = logging.getLogger(__name__)
+
+
+class GridCheckError(Exception):
+    pass
 
 
 def get_user_id(q):
@@ -889,11 +893,11 @@ def get_ui_element(
             ]
         else:
             if isinstance(poss_values, possible_values.String):
-                options = poss_values.values
+                options = list(poss_values.values)
                 allow_custom = poss_values.allow_custom
                 placeholder = poss_values.placeholder
             else:
-                options = poss_values
+                options = list(poss_values)
                 allow_custom = False
                 placeholder = None
 
@@ -914,7 +918,13 @@ def get_ui_element(
                 if is_tuple:
                     choices = list(set(list(options) + list(v)))
                 else:
-                    choices = list(options) + v if v not in options else list(options)
+                    if isinstance(v, list):
+                        for option in v:
+                            if option not in options:
+                                options.append(option)
+                        choices = list(options)
+                    else:
+                        raise ValueError("Expected a list.")
 
                 t = [
                     ui.combobox(
@@ -1079,10 +1089,17 @@ def check_dependencies(cfg: Any, pre: str, k: str, q: Q, dataset_import: bool = 
     if len(dependencies) > 0:
         all_deps = 0
         for d in dependencies:
-            if isinstance(q.client[f"{pre}/cfg/{d.key}"], (list, tuple)):
-                dependency_values = q.client[f"{pre}/cfg/{d.key}"]
+            if (
+                not dataset_import
+                and q.client["experiment/start/grid_search"]
+                and cfg._get_grid_search_values(d.key) is not None
+            ):
+                dependency_values = q.client[f"{pre}/cfg/{d.key}_grid_search"]
             else:
-                dependency_values = [q.client[f"{pre}/cfg/{d.key}"]]
+                if isinstance(q.client[f"{pre}/cfg/{d.key}"], (list, tuple)):
+                    dependency_values = q.client[f"{pre}/cfg/{d.key}"]
+                else:
+                    dependency_values = [q.client[f"{pre}/cfg/{d.key}"]]
 
             all_deps += d.check(dependency_values)
         return all_deps == len(dependencies)
@@ -1107,6 +1124,24 @@ def is_visible(k: str, cfg: Any, q: Q) -> bool:
         return False
 
     return True
+
+
+def get_grid_value(v: Any, type_annotation: Any) -> List[str]:
+    """Handles .0 for floats in the grid search
+
+    Args:
+        v: value of the hyperparameter
+        type_annotation: type of the parameter
+    Returns:
+        List with a grid search element
+    """
+
+    v: str = str(v)
+
+    if type_annotation == float and v.endswith(".0"):
+        v = v[:-2]
+
+    return [v]
 
 
 def get_ui_elements(
@@ -1164,6 +1199,9 @@ def get_ui_elements(
                 q.client[f"{pre}/cfg/{k}"] = v
             elif q.client[f"{pre}/cfg_mode/from_cfg"]:
                 q.client[f"{pre}/cfg/{k}"] = v
+                q.client[f"{pre}/cfg/{k}_grid_search"] = get_grid_value(
+                    v, type_annotation
+                )
         # Overwrite current default values with user_settings
         if q.client[f"{pre}/cfg_mode/from_default"] and f"default_{k}" in q.client:
             q.client[f"{pre}/cfg/{k}"] = q.client[f"default_{k}"]
@@ -1187,7 +1225,65 @@ def get_ui_elements(
         if k in q.client[f"{pre}/trigger_ks"]:
             trigger = True
 
-        if type_annotation in KNOWN_TYPE_ANNOTATIONS:
+        if (
+            pre == "experiment/start"
+            and q.client[f"{pre}/grid_search"]
+            and cfg._get_grid_search_values(k)
+        ):
+
+            grid_name = f"{pre}/cfg/{k}_grid_search"
+            add_choice = []
+
+            # Value is not in the grid range, add to choices
+            if v not in cfg._get_grid_search_values(k):
+                add_choice = get_grid_value(v, type_annotation)
+
+            v = get_grid_value(v, type_annotation)
+            v = q.client[grid_name] if q.client[grid_name] is not None else v
+
+            t = [
+                ui.message_bar(
+                    type="info",
+                    text=f"{make_label(k)} is a grid search hyperparameter.",
+                )
+            ]
+
+            # len(add_choice) == 1 added due to a strange bug, that iscustom will get
+            # overwritten to None in special cases
+            allow_custom = cfg._get_grid_search_iscustom(k) or len(add_choice) == 1
+
+            if allow_custom:
+                cust_choices: list[str] = [
+                    str(c) for c in cfg._get_grid_search_values(k)
+                ] + add_choice
+                t += [
+                    ui.combobox(
+                        name=grid_name,
+                        label=make_label(k) + " (grid search)",
+                        values=v,
+                        required=False,
+                        choices=cust_choices,
+                        tooltip=tooltip,
+                        trigger=trigger,
+                    )
+                ]
+            else:
+                choices: list[Choice] = [
+                    ui.choice(str(c), str(c)) for c in cfg._get_grid_search_values(k)
+                ]
+
+                t += [
+                    ui.dropdown(
+                        name=grid_name,
+                        label=make_label(k) + " (grid search)",
+                        values=v,
+                        required=False,
+                        choices=choices,
+                        tooltip=tooltip,
+                        trigger=trigger,
+                    )
+                ]
+        elif type_annotation in KNOWN_TYPE_ANNOTATIONS:
             if limit is not None and k not in limit:
                 continue
 
@@ -1280,6 +1376,13 @@ def parse_ui_elements(
         ):
             continue
 
+        if (
+            pre == "experiment/start/cfg/"
+            and q.client["experiment/start/grid_search"]
+            and cfg._get_grid_search_values(k)
+        ):
+            value = q.client[f"{pre}{k}_grid_search"]
+            setattr(cfg, k, value)
         elif type_annotations[k] in KNOWN_TYPE_ANNOTATIONS:
             value = q.client[f"{pre}{k}"]
 
@@ -1689,6 +1792,103 @@ def get_datasets(
         df = df.loc[~df["name"].isin(experiment_datasets)]
 
     return df
+
+
+def filter_grid_search_combination(grid: Dict[str, Any], cfg: Any) -> Dict[str, Any]:
+    """Filters grid search combination in order not to start multiple same experiments.
+
+    Args:
+        grid: grid combination from the full grid search
+        cfg: configuration settings
+
+    Returns:
+        Filtered grid combination after checking the dependencies
+    """
+
+    grid = grid.copy()
+    cfg_dict = cfg.__dict__
+
+    for k, v in cfg_dict.items():
+        if dataclasses.is_dataclass(v):
+            grid = filter_grid_search_combination(grid=grid, cfg=v)
+
+        if k in grid:
+            dependencies = cfg._get_nesting_dependencies(k)
+            if dependencies is None:
+                continue
+
+            if all(
+                [d.key in grid and not d.check([grid[d.key]]) for d in dependencies]
+            ):
+                grid.pop(k)
+
+    return grid
+
+
+def get_grid_search(cfg: Any, q: Q, pre: str) -> Dict[str, List]:
+    """Creates a dictionary with grid search values.
+
+    Args:
+        cfg: configuration settings
+        q: Q
+        pre: prefix for client keys
+    """
+
+    grid_search = {}
+    cfg_dict = cfg.__dict__
+
+    type_annotations = cfg.get_annotations()
+    for k, v in cfg_dict.items():
+        if k.startswith("_") or cfg._get_visibility(k) < 0:
+            continue
+        elif (
+            pre == "experiment/start"
+            and q.client["experiment/start/grid_search"]
+            and cfg._get_grid_search_values(k)
+        ):
+            if type_annotations[k] == bool:
+                grid_search[k] = [True if x == "True" else False for x in v]
+            else:
+                try:
+                    grid_search[k] = [type_annotations[k](x) for x in v]
+                except ValueError:
+                    raise GridCheckError(f"{make_label(k)}")
+        elif type_annotations[k] in KNOWN_TYPE_ANNOTATIONS:
+            pass
+        elif dataclasses.is_dataclass(v):
+            grid_search.update(get_grid_search(cfg=v, q=q, pre=pre))
+        else:
+            raise _get_type_annotation_error(v, type_annotations[k])
+
+    return grid_search
+
+
+def set_grid_to_cfg(cfg: Any, grid: Dict[str, List]) -> Any:
+    """Sets individual run config for the Grid Search.
+
+    Args:
+        cfg: configuration settings
+        grid: dictionary of a single grid search element
+    Returns:
+        config for the corresponding grid search run
+    """
+
+    cfg_dict = cfg.__dict__
+    type_annotations = cfg.get_annotations()
+
+    for k, v in cfg_dict.items():
+        if k.startswith("_") or cfg._get_visibility(k) < 0:
+            continue
+        elif k in grid and cfg._get_grid_search_values(k):
+            setattr(cfg, k, grid[k])
+        elif type_annotations[k] in KNOWN_TYPE_ANNOTATIONS:
+            pass
+        elif dataclasses.is_dataclass(v):
+            setattr(cfg, k, set_grid_to_cfg(cfg=v, grid=grid))
+        else:
+            raise _get_type_annotation_error(v, type_annotations[k])
+
+    return cfg
 
 
 def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) -> None:

@@ -45,7 +45,7 @@ def logloss_score(
     if cfg.dataset.num_classes > 1:
         target_text = np.eye(cfg.dataset.num_classes)[target_text]
         logits = softmax(logits, axis=1)
-    return log_loss(target_text, logits, eps=1e-7)
+    return log_loss(target_text, logits)
 
 
 class Metrics:
