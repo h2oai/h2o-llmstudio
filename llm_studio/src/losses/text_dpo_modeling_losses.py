@@ -230,5 +230,5 @@ LOSS_REDUCTION = {
     "DPOHingeLoss": True,
     "DPOIPOLoss": True,
     "CPOLoss": False,
-    "SimPOLoss": False,
+    "SimPOLoss": True,
 }
