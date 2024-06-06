@@ -113,7 +113,7 @@ async def answer_chat(q: Q) -> str:
     logger.info(f"Full prompt: {full_prompt}")
 
     inputs = cfg.dataset.dataset_class.encode(
-        tokenizer, full_prompt, cfg.tokenizer.max_length_prompt, "left"
+        tokenizer, full_prompt, cfg.tokenizer.max_length, "left"
     )
     inputs["prompt_input_ids"] = (
         inputs.pop("input_ids").unsqueeze(0).to(cfg.environment._device)

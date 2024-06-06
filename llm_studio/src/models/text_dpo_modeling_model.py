@@ -13,6 +13,7 @@ from llm_studio.src.metrics.text_causal_language_modeling_metrics import Perplex
 from llm_studio.src.utils.data_utils import batch_padding
 from llm_studio.src.utils.modeling_utils import (
     create_nlp_backbone,
+    forward,
     generate,
     prepare_lora,
 )
@@ -83,7 +84,12 @@ class Model(nn.Module):
 
         if cfg.training.lora:
             self.backbone = prepare_lora(cfg=cfg, backbone=self.backbone)
+
+        if cfg.training.lora and not cfg.training.lora_unfreeze_layers:
+            self.backbone_orig = None
         else:
+            if cfg.environment._local_rank == 0:
+                logger.info("Duplicating backbone for reference model.")
             self.backbone_orig, self.backbone_orig_config = create_nlp_backbone(
                 cfg, model_class=AutoModelForCausalLM
             )
@@ -137,7 +143,8 @@ class Model(nn.Module):
                         f"{answer}_labels",
                     ],
                 )
-            logits = self.backbone(
+            logits = forward(
+                self.backbone,
                 input_ids=batch[f"{answer}_input_ids"],
                 attention_mask=batch[f"{answer}_attention_mask"],
             ).logits
@@ -152,18 +159,21 @@ class Model(nn.Module):
             )
 
             with torch.no_grad():
-                if self.cfg.training.lora:
-                    with self.backbone.disable_adapter():
-                        reference_logits = self.backbone(
+                if self.backbone_orig:
+                    with torch.no_grad():
+                        reference_logits = forward(
+                            self.backbone_orig,
                             input_ids=batch[f"{answer}_input_ids"],
                             attention_mask=batch[f"{answer}_attention_mask"],
                         ).logits
                 else:
-                    with torch.no_grad():
-                        reference_logits = self.backbone_orig(
+                    with self.backbone.disable_adapter():
+                        reference_logits = forward(
+                            self.backbone,
                             input_ids=batch[f"{answer}_input_ids"],
                             attention_mask=batch[f"{answer}_attention_mask"],
                         ).logits
+
                 outputs[f"{answer}_reference_logps"] = get_batch_logps(
                     reference_logits,
                     batch[f"{answer}_labels"],

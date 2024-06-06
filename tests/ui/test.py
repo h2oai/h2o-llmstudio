@@ -81,16 +81,6 @@ def update_mixed_precision(llm_studio: LLMStudioPage, value: bool):
     llm_studio.mixed_precision(value)
 
 
-@when(parsers.parse("I tweak max length prompt to {value}"))
-def tweak_max_length_prompt(llm_studio: LLMStudioPage, value: str):
-    llm_studio.max_length_prompt(value)
-
-
-@when(parsers.parse("I tweak max length answer to {value}"))
-def tweak_max_length_answer(llm_studio: LLMStudioPage, value: str):
-    llm_studio.max_length_answer(value)
-
-
 @when(parsers.parse("I tweak max length to {value}"))
 def tweak_max_length(llm_studio: LLMStudioPage, value: str):
     llm_studio.max_length(value)

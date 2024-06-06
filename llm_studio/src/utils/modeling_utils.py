@@ -681,13 +681,13 @@ def update_backbone_config(config: Any, cfg: DefaultConfigProblemBase):
     if config.eos_token_id != tokenizer.eos_token_id:
         logger.warning(
             "EOS token id not matching between config and tokenizer. "
-            "Overwriting with tokenizer id."
+            f"Overwriting with tokenizer id {tokenizer.eos_token_id}."
         )
         config.eos_token_id = tokenizer.eos_token_id
     if config.pad_token_id != tokenizer.pad_token_id:
         logger.warning(
             "PAD token id not matching between config and tokenizer. "
-            "Overwriting with tokenizer id."
+            f"Overwriting with tokenizer id {tokenizer.pad_token_id}."
         )
         config.pad_token_id = tokenizer.pad_token_id
     # no warning needed as not used
@@ -1075,6 +1075,37 @@ def prepare_lora(cfg: DefaultConfigProblemBase, backbone):
     return backbone
 
 
+def get_torch_dtype(dtype):
+    if dtype == "float16":
+        return torch.float16
+    elif dtype == "bfloat16":
+        return torch.bfloat16
+    else:
+        return torch.float32
+
+
+def get_position_ids(attention_mask):
+    position_ids = attention_mask.long().cumsum(-1) - 1
+    position_ids.masked_fill_(attention_mask == 0, 1)
+    return position_ids
+
+
+def forward(backbone, input_ids, attention_mask):
+    kwargs = {
+        "input_ids": input_ids,
+        "attention_mask": attention_mask,
+        "position_ids": get_position_ids(attention_mask),
+    }
+
+    try:
+        output = backbone(**kwargs)
+    except TypeError:
+        # some models do not have position_ids
+        del kwargs["position_ids"]
+        output = backbone(**kwargs)
+    return output
+
+
 def generate(
     backbone, batch, cfg: DefaultConfigProblemBase, streamer, remove_prompt=True
 ):
@@ -1128,12 +1159,3 @@ def generate(
     if remove_prompt:
         output = output[:, input_ids.shape[1] :]
     return output
-
-
-def get_torch_dtype(dtype):
-    if dtype == "float16":
-        return torch.float16
-    elif dtype == "bfloat16":
-        return torch.bfloat16
-    else:
-        return torch.float32

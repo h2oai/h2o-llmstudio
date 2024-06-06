@@ -76,8 +76,6 @@ problem_type: text_causal_language_modeling
 tokenizer:
     add_prompt_answer_tokens: false
     max_length: 512
-    max_length_answer: 256
-    max_length_prompt: 256
     padding_quantile: 1.0
     tokenizer_kwargs: '{"use_fast": true, "add_prefix_space": false}'
 training:
