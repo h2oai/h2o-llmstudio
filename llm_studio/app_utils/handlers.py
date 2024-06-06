@@ -27,6 +27,7 @@ from llm_studio.app_utils.sections.experiment import (
     experiment_download_logs,
     experiment_download_model,
     experiment_download_predictions,
+    experiment_input_type_error,
     experiment_list,
     experiment_push_to_huggingface_dialog,
     experiment_rename_ui_workflow,
@@ -170,14 +171,22 @@ async def handle(q: Q) -> None:
             or q.args.__wave_submission_name__ == "experiment/start/error/proceed"
             or q.args.__wave_submission_name__ == "experiment/start/gridsearch/proceed"
         ):
-            # add model type to cfg file name here
-            q.client["experiment/start/cfg_file"] = add_model_type(
-                q.client["experiment/start/cfg_file"],
-                q.client["experiment/start/cfg_sub"],
-            )
-            q.client.delete_cards.add("experiment/start")
-            await experiment_run(q)
-            q.client["experiment/list/mode"] = "train"
+            # error check for custom entered values in combo boxes (grid search)
+            error = experiment_input_type_error(q, pre="experiment/start")
+            if error:
+                await experiment_start(q)
+                q.client["notification_bar"] = (
+                    f"Input type mismatch found in parameter **{error}**."
+                )
+            else:
+                # add model type to cfg file name here
+                q.client["experiment/start/cfg_file"] = add_model_type(
+                    q.client["experiment/start/cfg_file"],
+                    q.client["experiment/start/cfg_sub"],
+                )
+                q.client.delete_cards.add("experiment/start")
+                await experiment_run(q)
+                q.client["experiment/list/mode"] = "train"
 
         elif (
             q.args.__wave_submission_name__ == "experiment/start_experiment"

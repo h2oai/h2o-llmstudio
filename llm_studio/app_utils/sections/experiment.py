@@ -7,7 +7,7 @@ import shutil
 import time
 import zipfile
 from pathlib import Path
-from typing import Callable, List, Optional, Set
+from typing import Callable, List, Optional, Set, Union
 
 import accelerate
 import einops
@@ -29,6 +29,7 @@ from llm_studio.app_utils.hugging_face_utils import (
 from llm_studio.app_utils.sections.chat import chat_tab, load_cfg_model_tokenizer
 from llm_studio.app_utils.sections.common import clean_dashboard
 from llm_studio.app_utils.utils import (
+    GridCheckError,
     add_model_type,
     filter_grid_search_combination,
     flatten_dict,
@@ -498,6 +499,24 @@ async def experiment_start(q: Q) -> None:
         ],
     )
     q.client.delete_cards.add("experiment/start/footer")
+
+
+def experiment_input_type_error(
+    q: Q, pre: str = "experiment/start"
+) -> Union[bool, GridCheckError]:
+    """Error check for custom entered values in combo boxes (grid search)
+
+    Returns:
+        GridCheckError if errors found and False if no errors found
+    """
+    cfg = q.client[f"{pre}/cfg"]
+    cfg = parse_ui_elements(cfg=cfg, q=q, pre=f"{pre}/cfg/")
+
+    try:
+        get_grid_search(cfg=cfg, q=q, pre=pre)
+    except GridCheckError as e:
+        return e
+    return False
 
 
 async def experiment_run(q: Q):
