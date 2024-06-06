@@ -51,8 +51,6 @@ prediction:
 problem_type: text_causal_language_modeling
 tokenizer:
     max_length: 144
-    max_length_answer: 256
-    max_length_prompt: 256
     padding_quantile: 1.0
     tokenizer_kwargs: '{"use_fast": true, "add_prefix_space": false}'
 training:
