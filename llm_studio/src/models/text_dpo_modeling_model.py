@@ -89,7 +89,7 @@ class Model(nn.Module):
             self.backbone_orig = None
         else:
             if cfg.environment._local_rank == 0:
-                logger.info(f"Duplicating backbone for reference model.")
+                logger.info("Duplicating backbone for reference model.")
             self.backbone_orig, self.backbone_orig_config = create_nlp_backbone(
                 cfg, model_class=AutoModelForCausalLM
             )
