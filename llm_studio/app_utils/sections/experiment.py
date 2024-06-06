@@ -541,38 +541,44 @@ async def experiment_run(q: Q):
     cfg = parse_ui_elements(cfg=cfg, q=q, pre=f"{pre}/cfg/")
     cfg.experiment_name = cfg.experiment_name.replace("/", "-")
 
-    errors = check_config_for_errors(cfg)
     grid_search = get_grid_search(cfg=cfg, q=q, pre=pre)
 
-    if errors["title"] and not q.args["experiment/start/error/proceed"]:
-        title = (
-            errors["title"][0]
-            if len(errors["title"]) == 1
-            else "The following configuration mismatches were found:"
-        )
-        error_text = [ui.text(message) for message in errors["message"]]
-        q.page["meta"].dialog = ui.dialog(
-            title=title,
-            name="experiment/start/error/dialog",
-            items=error_text
-            + [
-                ui.buttons(
-                    [
-                        ui.button(
-                            name="experiment/start/error/ok", label="Ok", primary=True
-                        ),
-                        ui.button(
-                            name="experiment/start/error/proceed",
-                            label="I want to proceed anyhow",
-                            primary=False,
-                        ),
-                    ]
-                )
-            ],
-            closable=True,
-        )
-        q.client["keep_meta"] = True
-    elif len(grid_search) > 0:
+    if len(grid_search) == 0:
+        errors = check_config_for_errors(cfg)
+        if errors["title"] and not q.args["experiment/start/error/proceed"]:
+            title = (
+                errors["title"][0]
+                if len(errors["title"]) == 1
+                else "The following configuration mismatches were found:"
+            )
+            error_text = [ui.text(message) for message in errors["message"]]
+            q.page["meta"].dialog = ui.dialog(
+                title=title,
+                name="experiment/start/error/dialog",
+                items=error_text
+                + [
+                    ui.buttons(
+                        [
+                            ui.button(
+                                name="experiment/start/error/ok",
+                                label="Ok",
+                                primary=True,
+                            ),
+                            ui.button(
+                                name="experiment/start/error/proceed",
+                                label="I want to proceed anyhow",
+                                primary=False,
+                            ),
+                        ]
+                    )
+                ],
+                closable=True,
+            )
+            q.client["keep_meta"] = True
+        else:
+            start_experiment(cfg=cfg, q=q, pre=pre)
+            await list_current_experiments(q)
+    else:
         exp_name = cfg.experiment_name
 
         all_grid_hyperparams = sorted(grid_search)
@@ -645,9 +651,6 @@ async def experiment_run(q: Q):
 
             # Remove the dialog
             q.client["keep_meta"] = False
-    else:
-        start_experiment(cfg=cfg, q=q, pre=pre)
-        await list_current_experiments(q)
 
 
 def get_experiment_table(
