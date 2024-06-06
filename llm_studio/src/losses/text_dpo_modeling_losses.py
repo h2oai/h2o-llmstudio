@@ -182,6 +182,9 @@ class SimPOLoss(CPOLoss):
 
     def get_losses(self, logits):
         label_smoothing = 0
+        gamma = 1.0
+        gamma_logratios = gamma / self.cfg.training.beta
+        logits = logits - gamma_logratios
 
         losses = (
             -F.logsigmoid(self.cfg.training.beta * logits) * (1 - label_smoothing)
@@ -221,6 +224,8 @@ class Losses:
 LOSS_REDUCTION = {
     "DPOLoss": False,
     "KTOPairLoss": False,
-    "HingeLoss": True,
-    "IPOLoss": True,
+    "DPOHingeLoss": True,
+    "DPOIPOLoss": True,
+    "CPOLoss": False,
+    "SimPOLoss": False,
 }

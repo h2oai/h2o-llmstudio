@@ -1,5 +1,4 @@
 import logging
-from tkinter import NONE
 from typing import Any, Dict
 
 import torch
