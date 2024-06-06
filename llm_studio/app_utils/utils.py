@@ -889,11 +889,11 @@ def get_ui_element(
             ]
         else:
             if isinstance(poss_values, possible_values.String):
-                options = poss_values.values
+                options = list(poss_values.values)
                 allow_custom = poss_values.allow_custom
                 placeholder = poss_values.placeholder
             else:
-                options = poss_values
+                options = list(poss_values)
                 allow_custom = False
                 placeholder = None
 
@@ -914,7 +914,13 @@ def get_ui_element(
                 if is_tuple:
                     choices = list(set(list(options) + list(v)))
                 else:
-                    choices = list(options) + v if v not in options else list(options)
+                    if isinstance(v, list):
+                        for option in v:
+                            if option not in options:
+                                options.append(option)
+                        choices = list(options)
+                    else:
+                        raise ValueError("Expected a list.")
 
                 t = [
                     ui.combobox(
