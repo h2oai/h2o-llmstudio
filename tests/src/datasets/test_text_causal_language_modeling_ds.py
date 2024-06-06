@@ -322,5 +322,45 @@ def test_encode():
     assert len(dataset) == 1
 
     result = dataset[0]
+
+    labels = result["labels"]
+    assert (labels != -100).sum() == 4
+
     out = dataset.tokenizer.decode(result["input_ids"]).replace("<unk>", "")
     assert out == "<|prompt|>a</s><|answer|>b</s><|prompt|>a</s><|answer|>b</s>"
+
+
+def test_encode_maxlength():
+    df = pd.DataFrame(
+        {
+            "prompt": ["a", "a"],
+            "answer": ["b", "a b"],
+            "parent_id": [None, 0],
+            "id": [0, 1],
+        }
+    )
+
+    cfg = ConfigProblemBase(
+        dataset=ConfigNLPCausalLMDataset(
+            prompt_column=("prompt",),
+            answer_column="answer",
+            parent_id_column="parent_id",
+            text_prompt_start="<|prompt|>",
+            text_answer_separator="<|answer|>",
+            add_eos_token_to_answer=True,
+            limit_chained_samples=True,
+        ),
+        tokenizer=ConfigNLPCausalLMTokenizer(
+            max_length=2,
+            tokenizer_kwargs='{"use_fast": true, "add_prefix_space": false}',
+        ),
+    )
+
+    cfg.llm_backbone = "h2oai/h2o-danube2-1.8b-base"
+
+    dataset = CustomDataset(df, cfg)
+    assert len(dataset) == 1
+
+    result = dataset[0]
+    out = dataset.tokenizer.decode(result["input_ids"]).replace("<unk>", "")
+    assert out == "a b"

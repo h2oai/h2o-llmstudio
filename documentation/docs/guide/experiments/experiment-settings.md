@@ -19,8 +19,6 @@ import DStextAnswerSeparator from '../../tooltips/experiments/_text-answer-separ
 import DSaddEosTokentoprompt from '../../tooltips/experiments/_add-eos-token-to-prompt.mdx';
 import DSaddEosTokentoanswer from '../../tooltips/experiments/_add-eos-token-to-answer.mdx';
 import DSmaskPromptlabels from '../../tooltips/experiments/_mask-prompt-labels.mdx';
-import TSmaxLengthPrompt from '../../tooltips/experiments/_max-length-prompt.mdx';
-import TSmaxLengthAnswer from '../../tooltips/experiments/_max-length-answer.mdx';
 import TSmaxLength from '../../tooltips/experiments/_max-length.mdx';
 import TSaddpromptanswertokens from '../../tooltips/experiments/_add-prompt-answer-tokens.mdx';
 import TSpaddingQuantile from '../../tooltips/experiments/_padding-quantile.mdx';
@@ -172,14 +170,6 @@ The settings under each category are listed and described below.
 <DSmaskPromptlabels/>
 
 ## Tokenizer settings
-
-### Max length prompt
-
-<TSmaxLengthPrompt/>
-
-### Max length answer
-
-<TSmaxLengthAnswer/>
 
 ### Max length 
 

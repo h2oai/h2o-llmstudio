@@ -174,8 +174,8 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         )
         self._possible_values["differential_learning_rate_layers"] = (
             possible_values.String(
-                values=("backbone", "embed"),
-                allow_custom=False,
+                values=("backbone", "embed", "head"),
+                allow_custom=True,
                 placeholder="Select optional layers...",
             )
         )
@@ -250,8 +250,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
 
 @dataclass
 class ConfigNLPCausalLMTokenizer(DefaultConfig):
-    max_length_prompt: int = 256
-    max_length_answer: int = 256
     max_length: int = 512
     add_prompt_answer_tokens: bool = False
     padding_quantile: float = 1.0
@@ -259,8 +257,6 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self._possible_values["max_length_prompt"] = (32, 1024 * 16, 32)
-        self._possible_values["max_length_answer"] = (32, 1024 * 16, 32)
         self._possible_values["max_length"] = (32, 1024 * 16, 32)
         self._possible_values["padding_quantile"] = (0, 1, 0.01)
         self._padding_side = "left"
@@ -353,7 +349,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
 
         self._possible_values["num_beams"] = (1, 4, 1)
         self._possible_values["temperature"] = (0, 10, 0.05)
-        self._possible_values["repetition_penalty"] = (1, 10, 0.05)
+        self._possible_values["repetition_penalty"] = (1, 10, 0.025)
         self._possible_values["top_k"] = (0, 100, 1)
         self._possible_values["top_p"] = (0.5, 1, 0.05)
         self._possible_values["num_history"] = (1, 50, 1)
