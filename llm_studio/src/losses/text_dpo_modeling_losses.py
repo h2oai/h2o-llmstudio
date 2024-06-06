@@ -154,13 +154,15 @@ class CPOLoss(nn.Module):
         policy_chosen_logps: torch.FloatTensor,
         policy_rejected_logps: torch.FloatTensor,
     ):
-        
-        logits = (policy_chosen_logps - policy_rejected_logps)
+
+        logits = policy_chosen_logps - policy_rejected_logps
 
         losses = self.get_losses(logits)
 
         chosen_rewards = (self.cfg.training.beta * policy_chosen_logps.detach()).float()
-        rejected_rewards = (self.cfg.training.beta * policy_rejected_logps.detach()).float()
+        rejected_rewards = (
+            self.cfg.training.beta * policy_rejected_logps.detach()
+        ).float()
 
         return losses.mean(), chosen_rewards.mean(), rejected_rewards.mean()
 
@@ -172,6 +174,7 @@ class CPOLoss(nn.Module):
             - F.logsigmoid(-self.cfg.training.beta * logits) * label_smoothing
         )
         return losses
+
 
 class SimPOLoss(CPOLoss):
     """
@@ -190,7 +193,7 @@ class SimPOLoss(CPOLoss):
             -F.logsigmoid(self.cfg.training.beta * logits) * (1 - label_smoothing)
             - F.logsigmoid(-self.cfg.training.beta * logits) * label_smoothing
         )
-        return losses     
+        return losses
 
 
 class Losses:
@@ -202,7 +205,7 @@ class Losses:
         "DPOIPOLoss": DPOIPOLoss,
         "KTOPairLoss": KTOPairLoss,
         "CPOLoss": CPOLoss,
-        "SimPOLoss": SimPOLoss
+        "SimPOLoss": SimPOLoss,
     }
 
     @classmethod

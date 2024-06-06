@@ -180,7 +180,9 @@ class Model(nn.Module):
                     outputs[f"{answer}_reference_logps"] = get_batch_logps(
                         reference_logits,
                         batch[f"{answer}_labels"],
-                        average_log_prob=LOSS_REDUCTION[self.cfg.training.loss_function],
+                        average_log_prob=LOSS_REDUCTION[
+                            self.cfg.training.loss_function
+                        ],
                     )
 
         if self.loss_fn.requires_reference_model:
