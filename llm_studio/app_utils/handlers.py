@@ -182,9 +182,14 @@ async def handle(q: Q) -> None:
         elif (
             q.args.__wave_submission_name__ == "experiment/start_experiment"
             or q.args.__wave_submission_name__ == "experiment/list/new"
+            or q.args.__wave_submission_name__ == "experiment/list/new_gridsearch"
         ):
             if q.client["experiment/list/df_experiments"] is not None:
-                selected_idx = int(q.args["experiment/list/new"])
+                if q.args.__wave_submission_name__ == "experiment/list/new_gridsearch":
+                    selected_idx = int(q.args["experiment/list/new_gridsearch"])
+                elif q.args.__wave_submission_name__ == "experiment/list/new":
+                    selected_idx = int(q.args["experiment/list/new"])
+
                 experiment_id = q.client["experiment/list/df_experiments"]["id"].iloc[
                     selected_idx
                 ]
@@ -194,7 +199,10 @@ async def handle(q: Q) -> None:
                 q.client["experiment/start/cfg_experiment"] = str(experiment_id)
 
             await experiment_start(q)
-        elif q.args.__wave_submission_name__ == "experiment/start":
+        elif (
+            q.args.__wave_submission_name__ == "experiment/start"
+            or q.args.__wave_submission_name__ == "experiment/start/grid_search"
+        ):
             q.client["experiment/start/cfg_category"] = None
             q.client["experiment/start/cfg_file"] = None
             datasets_df = q.client.app_db.get_datasets_df()

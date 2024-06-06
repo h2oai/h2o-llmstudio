@@ -84,11 +84,25 @@ async def experiment_start(q: Q) -> None:
     """Display experiment start cards."""
 
     await clean_dashboard(q, mode="experiment_start", exclude=["experiment/start"])
-    q.client["nav/active"] = "experiment/start"
 
     show_update_warnings = True
     is_create_experiment = False
     # reset certain configs if new experiment start session
+    if (
+        q.args.__wave_submission_name__ == "experiment/start"
+        or q.args.__wave_submission_name__ == "experiment/start/grid_search"
+        or q.args.__wave_submission_name__ == "experiment/start_experiment"
+        or q.args.__wave_submission_name__ == "dataset/newexperiment"
+        or q.args.__wave_submission_name__ == "dataset/newexperiment/from_current"
+        or q.args.__wave_submission_name__ == "experiment/list/new"
+        or q.args.__wave_submission_name__ == "experiment/list/new_gridsearch"
+    ):
+        q.client["experiment/start/cfg_experiment_prev"] = None
+        q.client["experiment/start/cfg_file_prev"] = None
+        q.client["experiment/start/prev_dataset"] = None
+        q.client["experiment/start/cfg_sub"] = None
+        show_update_warnings = False
+        is_create_experiment = True
     if (
         q.args.__wave_submission_name__ == "experiment/start"
         or q.args.__wave_submission_name__ == "experiment/start_experiment"
@@ -96,13 +110,18 @@ async def experiment_start(q: Q) -> None:
         or q.args.__wave_submission_name__ == "dataset/newexperiment/from_current"
         or q.args.__wave_submission_name__ == "experiment/list/new"
     ):
-        q.client["experiment/start/cfg_experiment_prev"] = None
-        q.client["experiment/start/cfg_file_prev"] = None
-        q.client["experiment/start/prev_dataset"] = None
-        q.client["experiment/start/cfg_sub"] = None
         q.client["experiment/start/grid_search"] = None
-        show_update_warnings = False
-        is_create_experiment = True
+    elif (
+        q.args.__wave_submission_name__ == "experiment/start/grid_search"
+        or q.args.__wave_submission_name__ == "experiment/list/new_gridsearch"
+    ):
+        q.client["experiment/start/grid_search"] = True
+
+    # set active navigation
+    if q.client["experiment/start/grid_search"]:
+        q.client["nav/active"] = "experiment/start/grid_search"
+    else:
+        q.client["nav/active"] = "experiment/start"
 
     # get all the datasets available
     df_datasets = q.client.app_db.get_datasets_df()
@@ -121,13 +140,6 @@ async def experiment_start(q: Q) -> None:
 
     items = [
         ui.separator(name="general_expander", label="General settings"),
-        ui.toggle(
-            name="experiment/start/grid_search",
-            label="Enable hyperparameter grid search",
-            value=q.client["experiment/start/grid_search"],
-            trigger=True,
-            tooltip=tooltips["experiments_grid_search"],
-        ),
         ui.dropdown(
             name="experiment/start/dataset",
             label="Dataset",
@@ -648,6 +660,7 @@ def get_experiment_table(
     if actions == "experiment" and q.client["experiment/list/mode"] == "train":
         actions_dict = {
             "experiment/list/new": "New experiment",
+            "experiment/list/new_gridsearch": "New grid search",
             "experiment/list/rename": "Rename experiment",
             "experiment/list/stop/table": "Stop experiment",
             "experiment/list/delete/table/dialog": "Delete experiment",
