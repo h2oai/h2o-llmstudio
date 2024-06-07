@@ -403,6 +403,7 @@ async def experiment_start(q: Q) -> None:
                 q.client["experiment/start/experiment"].dataset
             )
 
+            items[1].dropdown.value = q.client["experiment/start/dataset"]
         # pick default values from config or dataset
         elif (
             q.client["experiment/start/dataset_prev"]
