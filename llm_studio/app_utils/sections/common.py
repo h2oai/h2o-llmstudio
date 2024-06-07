@@ -157,19 +157,19 @@ async def interface(q: Q) -> None:
                 ui.nav_group(
                     "Datasets",
                     items=[
-                        ui.nav_item(name="dataset/list", label="View datasets"),
                         ui.nav_item(name="dataset/import", label="Import dataset"),
+                        ui.nav_item(name="dataset/list", label="View datasets"),
                     ],
                 ),
                 ui.nav_group(
                     "Experiments",
                     items=[
-                        ui.nav_item(name="experiment/list", label="View experiments"),
                         ui.nav_item(name="experiment/start", label="Create experiment"),
                         ui.nav_item(
                             name="experiment/start/grid_search",
                             label="Create grid search",
                         ),
+                        ui.nav_item(name="experiment/list", label="View experiments"),
                     ],
                 ),
             ],
