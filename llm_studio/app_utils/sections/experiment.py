@@ -475,10 +475,6 @@ async def experiment_start(q: Q) -> None:
 
     q.client.delete_cards.add("experiment/start")
 
-    cfg = q.client["experiment/start/cfg"]
-    cfg = parse_ui_elements(cfg=cfg, q=q, pre="experiment/start/cfg/")
-    cfg.experiment_name = cfg.experiment_name.replace("/", "-")
-
     q.page["experiment/start/footer"] = ui.form_card(
         box="footer",
         items=[
