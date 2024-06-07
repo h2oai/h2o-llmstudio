@@ -165,6 +165,10 @@ async def interface(q: Q) -> None:
                     "Experiments",
                     items=[
                         ui.nav_item(name="experiment/start", label="Create experiment"),
+                        ui.nav_item(
+                            name="experiment/start/grid_search",
+                            label="Create grid search",
+                        ),
                         ui.nav_item(name="experiment/list", label="View experiments"),
                     ],
                 ),
