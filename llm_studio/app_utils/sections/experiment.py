@@ -7,7 +7,7 @@ import shutil
 import time
 import zipfile
 from pathlib import Path
-from typing import Callable, List, Optional, Set
+from typing import Callable, List, Optional, Set, Union
 
 import accelerate
 import einops
@@ -29,6 +29,7 @@ from llm_studio.app_utils.hugging_face_utils import (
 from llm_studio.app_utils.sections.chat import chat_tab, load_cfg_model_tokenizer
 from llm_studio.app_utils.sections.common import clean_dashboard
 from llm_studio.app_utils.utils import (
+    GridCheckError,
     add_model_type,
     filter_grid_search_combination,
     flatten_dict,
@@ -84,11 +85,25 @@ async def experiment_start(q: Q) -> None:
     """Display experiment start cards."""
 
     await clean_dashboard(q, mode="experiment_start", exclude=["experiment/start"])
-    q.client["nav/active"] = "experiment/start"
 
     show_update_warnings = True
     is_create_experiment = False
     # reset certain configs if new experiment start session
+    if (
+        q.args.__wave_submission_name__ == "experiment/start"
+        or q.args.__wave_submission_name__ == "experiment/start/grid_search"
+        or q.args.__wave_submission_name__ == "experiment/start_experiment"
+        or q.args.__wave_submission_name__ == "dataset/newexperiment"
+        or q.args.__wave_submission_name__ == "dataset/newexperiment/from_current"
+        or q.args.__wave_submission_name__ == "experiment/list/new"
+        or q.args.__wave_submission_name__ == "experiment/list/new_gridsearch"
+    ):
+        q.client["experiment/start/cfg_experiment_prev"] = None
+        q.client["experiment/start/cfg_file_prev"] = None
+        q.client["experiment/start/prev_dataset"] = None
+        q.client["experiment/start/cfg_sub"] = None
+        show_update_warnings = False
+        is_create_experiment = True
     if (
         q.args.__wave_submission_name__ == "experiment/start"
         or q.args.__wave_submission_name__ == "experiment/start_experiment"
@@ -96,13 +111,18 @@ async def experiment_start(q: Q) -> None:
         or q.args.__wave_submission_name__ == "dataset/newexperiment/from_current"
         or q.args.__wave_submission_name__ == "experiment/list/new"
     ):
-        q.client["experiment/start/cfg_experiment_prev"] = None
-        q.client["experiment/start/cfg_file_prev"] = None
-        q.client["experiment/start/prev_dataset"] = None
-        q.client["experiment/start/cfg_sub"] = None
         q.client["experiment/start/grid_search"] = None
-        show_update_warnings = False
-        is_create_experiment = True
+    elif (
+        q.args.__wave_submission_name__ == "experiment/start/grid_search"
+        or q.args.__wave_submission_name__ == "experiment/list/new_gridsearch"
+    ):
+        q.client["experiment/start/grid_search"] = True
+
+    # set active navigation
+    if q.client["experiment/start/grid_search"]:
+        q.client["nav/active"] = "experiment/start/grid_search"
+    else:
+        q.client["nav/active"] = "experiment/start"
 
     # get all the datasets available
     df_datasets = q.client.app_db.get_datasets_df()
@@ -121,13 +141,6 @@ async def experiment_start(q: Q) -> None:
 
     items = [
         ui.separator(name="general_expander", label="General settings"),
-        ui.toggle(
-            name="experiment/start/grid_search",
-            label="Enable hyperparameter grid search",
-            value=q.client["experiment/start/grid_search"],
-            trigger=True,
-            tooltip=tooltips["experiments_grid_search"],
-        ),
         ui.dropdown(
             name="experiment/start/dataset",
             label="Dataset",
@@ -390,6 +403,7 @@ async def experiment_start(q: Q) -> None:
                 q.client["experiment/start/experiment"].dataset
             )
 
+            items[1].dropdown.value = q.client["experiment/start/dataset"]
         # pick default values from config or dataset
         elif (
             q.client["experiment/start/dataset_prev"]
@@ -462,10 +476,6 @@ async def experiment_start(q: Q) -> None:
 
     q.client.delete_cards.add("experiment/start")
 
-    cfg = q.client["experiment/start/cfg"]
-    cfg = parse_ui_elements(cfg=cfg, q=q, pre="experiment/start/cfg/")
-    cfg.experiment_name = cfg.experiment_name.replace("/", "-")
-
     q.page["experiment/start/footer"] = ui.form_card(
         box="footer",
         items=[
@@ -486,6 +496,24 @@ async def experiment_start(q: Q) -> None:
         ],
     )
     q.client.delete_cards.add("experiment/start/footer")
+
+
+def experiment_input_type_error(
+    q: Q, pre: str = "experiment/start"
+) -> Union[bool, GridCheckError]:
+    """Error check for custom entered values in combo boxes (grid search)
+
+    Returns:
+        GridCheckError if errors found and False if no errors found
+    """
+    cfg = q.client[f"{pre}/cfg"]
+    cfg = parse_ui_elements(cfg=cfg, q=q, pre=f"{pre}/cfg/")
+
+    try:
+        get_grid_search(cfg=cfg, q=q, pre=pre)
+    except GridCheckError as e:
+        return e
+    return False
 
 
 async def experiment_run(q: Q):
@@ -510,38 +538,44 @@ async def experiment_run(q: Q):
     cfg = parse_ui_elements(cfg=cfg, q=q, pre=f"{pre}/cfg/")
     cfg.experiment_name = cfg.experiment_name.replace("/", "-")
 
-    errors = check_config_for_errors(cfg)
     grid_search = get_grid_search(cfg=cfg, q=q, pre=pre)
 
-    if errors["title"] and not q.args["experiment/start/error/proceed"]:
-        title = (
-            errors["title"][0]
-            if len(errors["title"]) == 1
-            else "The following configuration mismatches were found:"
-        )
-        error_text = [ui.text(message) for message in errors["message"]]
-        q.page["meta"].dialog = ui.dialog(
-            title=title,
-            name="experiment/start/error/dialog",
-            items=error_text
-            + [
-                ui.buttons(
-                    [
-                        ui.button(
-                            name="experiment/start/error/ok", label="Ok", primary=True
-                        ),
-                        ui.button(
-                            name="experiment/start/error/proceed",
-                            label="I want to proceed anyhow",
-                            primary=False,
-                        ),
-                    ]
-                )
-            ],
-            closable=True,
-        )
-        q.client["keep_meta"] = True
-    elif len(grid_search) > 0:
+    if len(grid_search) == 0:
+        errors = check_config_for_errors(cfg)
+        if errors["title"] and not q.args["experiment/start/error/proceed"]:
+            title = (
+                errors["title"][0]
+                if len(errors["title"]) == 1
+                else "The following configuration mismatches were found:"
+            )
+            error_text = [ui.text(message) for message in errors["message"]]
+            q.page["meta"].dialog = ui.dialog(
+                title=title,
+                name="experiment/start/error/dialog",
+                items=error_text
+                + [
+                    ui.buttons(
+                        [
+                            ui.button(
+                                name="experiment/start/error/ok",
+                                label="Ok",
+                                primary=True,
+                            ),
+                            ui.button(
+                                name="experiment/start/error/proceed",
+                                label="I want to proceed anyhow",
+                                primary=False,
+                            ),
+                        ]
+                    )
+                ],
+                closable=True,
+            )
+            q.client["keep_meta"] = True
+        else:
+            start_experiment(cfg=cfg, q=q, pre=pre)
+            await list_current_experiments(q)
+    else:
         exp_name = cfg.experiment_name
 
         all_grid_hyperparams = sorted(grid_search)
@@ -614,9 +648,6 @@ async def experiment_run(q: Q):
 
             # Remove the dialog
             q.client["keep_meta"] = False
-    else:
-        start_experiment(cfg=cfg, q=q, pre=pre)
-        await list_current_experiments(q)
 
 
 def get_experiment_table(
@@ -648,6 +679,7 @@ def get_experiment_table(
     if actions == "experiment" and q.client["experiment/list/mode"] == "train":
         actions_dict = {
             "experiment/list/new": "New experiment",
+            "experiment/list/new_gridsearch": "New grid search",
             "experiment/list/rename": "Rename experiment",
             "experiment/list/stop/table": "Stop experiment",
             "experiment/list/delete/table/dialog": "Delete experiment",
