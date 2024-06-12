@@ -9,6 +9,34 @@ The sections below provide answers to frequently asked questions. If you have ad
 
 ---
 
+### What are the general recommendations for using H2O LLM Studio?
+
+The recommendation is to always start with the default settings. From there, the parameters that tend to have the largest impact are: 
+- the LLM backbone
+- the number of epochs
+- the learning rate
+- the LoRA settings 
+
+:::info
+For more information on experiment settings, see [Experiment Settings](guide/experiments/experiment-settings). 
+:::
+
+The parameters that have the largest impact on the amount of GPU memory being used are the [backbone dtype](guide/experiments/experiment-settings#backbone-dtype) and the [max length](guide/experiments/experiment-settings#max-length) (the length of the input sequence being used during model training). 
+
+:::info
+For more information, see [this FAQ about GPU out-of-memory issues](#i-encounter-gpu-out-of-memory-issues-what-can-i-change-to-be-able-to-train-large-models). 
+:::
+
+While these parameters will change the behavior of the fine-tuned model, the change that will be most impactful is the actual data used for fine tuning. Having clean data and enough samples (i.e., atleast 1000 records) is imperative.
+
+---
+
+### Is the tool multi-user or single user? 
+
+While it is possible for multiple users to use the same instance, the tool was created for a single user at a time. 
+
+----
+
 ### How much data is generally required to fine-tune a model?
 
 There is no clear answer. As a rule of thumb, 1000 to 50000 samples of conversational data should be enough. Quality and diversity is very important. Make sure to try training on a subsample of data using the "sample" parameter to see how big the impact of the dataset size is. Recent studies suggest that less data is needed for larger foundation models.
