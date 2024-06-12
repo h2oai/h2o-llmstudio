@@ -41,7 +41,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     system_column: str = "system"
     prompt_column: Tuple[str, ...] = ("instruction", "input")
     answer_column: str = "output"
-    parent_id_column: str = "None"
+    parent_id_column: str = "parent_id"
 
     text_system_start: str = "<|system|>"
     text_prompt_start: str = "<|prompt|>"
@@ -200,7 +200,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["batch_size"] = (1, 256, 1)
         self._possible_values["epochs"] = (0, 10, 1)
         self._possible_values["schedule"] = Schedulers.names()
-        self._possible_values["warmup_epochs"] = (0.0, 5, 0.05)
+        self._possible_values["warmup_epochs"] = (0.0, 5.0, 0.05)
 
         self._possible_values["weight_decay"] = possible_values.Number(step=1e-5, min=0)
         self._possible_values["gradient_clip"] = (0.0, 10.0, 0.1)
@@ -226,6 +226,44 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         )
 
         self._possible_values["evaluation_epochs"] = (0.01, 1, 0.01)
+
+        self._grid_search_values["loss_function"] = self._possible_values[
+            "loss_function"
+        ]
+        self._grid_search_values["learning_rate"] = (
+            0.000001,
+            0.000005,
+            0.00001,
+            0.00005,
+            0.0001,
+            0.0003,
+            0.0005,
+        )
+        self._grid_search_values["differential_learning_rate"] = (
+            0.000001,
+            0.000005,
+            0.00001,
+            0.00005,
+            0.0001,
+            0.0003,
+            0.0005,
+        )
+        self._grid_search_values["weight_decay"] = (0.0, 0.01, 0.1, 0.2)
+        self._grid_search_values["warmup_epochs"] = (0.0, 0.25)
+        self._grid_search_values["gradient_clip"] = (0.0, 0.5, 1, 2, 4, 8)
+        self._grid_search_values["grad_accumulation"] = (1, 2, 4, 8, 16, 32)
+        self._grid_search_values["batch_size"] = (1, 2, 4, 8, 16, 32, 64)
+        self._grid_search_values["epochs"] = (1, 2, 4)
+        self._grid_search_values["lora_r"] = (2, 4, 8, 16, 32, 64, 128)
+        self._grid_search_values["lora_alpha"] = (4, 8, 16, 32, 64, 128, 256)
+
+        self._grid_search_iscustom["loss_function"] = False
+        self._grid_search_iscustom["learning_rate"] = True
+        self._grid_search_iscustom["differential_learning_rate"] = True
+        self._grid_search_iscustom["weight_decay"] = True
+        self._grid_search_iscustom["warmup_epochs"] = True
+        self._grid_search_iscustom["gradient_clip"] = True
+        self._grid_search_iscustom["grad_accumulation"] = True
 
         self._visibility["loss_class"] = -1
         self._visibility["drop_last_batch"] = -1
@@ -268,6 +306,15 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
         super().__post_init__()
         self._possible_values["max_length"] = (32, 1024 * 16, 32)
         self._possible_values["padding_quantile"] = (0, 1, 0.01)
+
+        self._grid_search_values["max_length_prompt"] = (256, 512, 1024)
+        self._grid_search_values["max_length_answer"] = (256, 512, 1024)
+        self._grid_search_values["max_length"] = (256, 512, 1024)
+
+        self._grid_search_iscustom["max_length_prompt"] = True
+        self._grid_search_iscustom["max_length_answer"] = True
+        self._grid_search_iscustom["max_length"] = True
+
         self._padding_side = "left"
 
 
@@ -290,6 +337,10 @@ class ConfigNLPCausalLMArchitecture(DefaultConfig):
         )
         self._possible_values["intermediate_dropout"] = (0, 0.5, 0.05)
 
+        self._grid_search_values["intermediate_dropout"] = (0.0, 0.05, 0.1, 0.15)
+
+        self._grid_search_iscustom["intermediate_dropout"] = True
+
         self._visibility["model_class"] = -1
         self._visibility["pretrained"] = -1
 
@@ -308,6 +359,17 @@ class ConfigNLPAugmentation(DefaultConfig):
         self._possible_values["skip_parent_probability"] = (0.0, 1.0, 0.05)
         self._possible_values["random_parent_probability"] = (0.0, 1.0, 0.05)
         self._possible_values["neftune_noise_alpha"] = (0.0, 15, 0.05)
+
+        self._grid_search_values["token_mask_probability"] = (0.0, 0.1, 0.2, 0.3)
+        self._grid_search_values["skip_parent_probability"] = (0.0, 0.1, 0.2, 0.3)
+        self._grid_search_values["random_parent_probability"] = (0.0, 0.1, 0.2, 0.3)
+        self._grid_search_values["neftune_noise_alpha"] = (0.0, 5, 10, 15)
+
+        self._grid_search_iscustom["token_mask_probability"] = True
+        self._grid_search_iscustom["skip_parent_probability"] = True
+        self._grid_search_iscustom["random_parent_probability"] = True
+        self._grid_search_iscustom["neftune_noise_alpha"] = True
+
         self._visibility["nlp_augmentations_class"] = -1
 
 
@@ -517,7 +579,6 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
 class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
-    _parent_experiment: str = ""
     llm_backbone: str = "h2oai/h2o-danube2-1.8b-base"
 
     dataset: ConfigNLPCausalLMDataset = field(default_factory=ConfigNLPCausalLMDataset)
