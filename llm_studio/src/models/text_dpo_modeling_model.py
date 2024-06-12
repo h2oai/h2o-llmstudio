@@ -163,12 +163,11 @@ class Model(nn.Module):
             if self.loss_fn.requires_reference_model:
                 with torch.no_grad():
                     if self.backbone_reference:
-                        with torch.no_grad():
-                            reference_logits = forward(
-                                self.backbone_reference,
-                                input_ids=batch[f"{answer}_input_ids"],
-                                attention_mask=batch[f"{answer}_attention_mask"],
-                            ).logits
+                        reference_logits = forward(
+                            self.backbone_reference,
+                            input_ids=batch[f"{answer}_input_ids"],
+                            attention_mask=batch[f"{answer}_attention_mask"],
+                        ).logits
                     else:
                         with self.backbone.disable_adapter():
                             reference_logits = forward(
