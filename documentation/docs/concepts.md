@@ -56,3 +56,14 @@ Quantization is a technique used to reduce the size and memory requirements of a
 
 8-bit model training with a low memory footprint refers to a fine-tuning technique that reduces the memory requirements for training neural networks by using 8-bit integers instead of 32-bit floating-point numbers. This approach can significantly reduce the amount of memory needed to store the model's parameters and can make it possible to train larger models on hardware with limited memory capacity.
 
+### BLEU 
+
+Bilingual Evaluation Understudy (BLEU) is a model evaluation metric that is used to measure the quality of the predicted text against the input text. 
+
+BLEU: BLEU (Bilingual Evaluation Understudy) measures the quality of machine-generated texts by comparing them to reference texts by calculating a score between 0 and 1, where a higher score indicates a better match with the reference text.  BLEU is based on the concept of n-grams, which are contiguous sequences of words. The different variations of BLEU such as BLEU-1, BLEU-2, BLEU-3, and BLEU-4 differ in the size of the n-grams considered for evaluation.  BLEU-n measures the precision of n-grams (n consecutive words) in the generated text compared to the reference text. It calculates the precision score by counting the number of overlapping n-grams and dividing it by the total number of n-grams in the generated text.
+
+### Perplexity
+
+Perplexity (PPL) is a commonly used evaluation metric. It measures the confidence a model has in its predictions, or in simpler words how 'perplexed' or surprised it is by seeing new data. Lower perplexity means the model is highly confident in the sequence of words it is responding with. The underlying assumption is that the model's confidence is correlated to accuracy. Perplexity actually does not reference the ground truth at all and is usually only used to evaluate how well the model has learned the training data. 
+
+
