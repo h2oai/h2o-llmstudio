@@ -50,7 +50,7 @@ def _load_cls(module_path: str, cls_name: str) -> DefaultConfigProblemBase:
         module_path, cls_name
     )
 
-    cls: DefaultConfigProblemBase = getattr(module, cls_name)
+    cls: DefaultConfigProblemBase = getattr(module, cls_name)()
 
     return cls
 
@@ -68,7 +68,7 @@ def load_config_py(
         Loaded config class
     """
 
-    return _load_cls(config_path, config_name)()
+    return _load_cls(config_path, config_name)
 
 
 def _get_type_annotation_error(v: Any, type_annotation: Type) -> ValueError:
