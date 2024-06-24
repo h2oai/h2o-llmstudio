@@ -428,18 +428,12 @@ def run_train(
     return val_loss, val_metric
 
 
-def run(cfg: DefaultConfigProblemBase) -> None:
+def run(cfg: DefaultConfigProblemBase) -> float:
     """Runs the routine.
 
     Args:
         cfg: DefaultConfigProblemBase config object with all the hyperparameters
     """
-
-    if cfg.problem_type == "text_rlhf_language_modeling":
-        raise DeprecationWarning(
-            "text_rlhf_language_modeling is deprecated. "
-            "Please use DPO Modeling instead."
-        )
 
     os.makedirs(cfg.output_directory, exist_ok=True)
 
@@ -579,13 +573,6 @@ def run(cfg: DefaultConfigProblemBase) -> None:
     optimizer = get_optimizer(model=model, cfg=cfg)
     scheduler = get_scheduler(cfg=cfg, optimizer=optimizer, epoch_steps=epoch_steps)
 
-    if getattr(cfg.architecture, "force_embedding_gradients"):
-        for module in model.modules():
-            if isinstance(module, torch.nn.Embedding):
-                for param in module.parameters():
-                    param.requires_grad = True
-                    param.data = param.data.float()
-
     if cfg.environment._distributed:
         (
             model,
@@ -687,6 +674,8 @@ def run(cfg: DefaultConfigProblemBase) -> None:
                 "%H:%M:%S", time.gmtime(float(time_took))
             )
         write_flag(flag_path, "info", f"Runtime: {time_took_formatted}")
+
+    return val_metric
 
 
 if __name__ == "__main__":

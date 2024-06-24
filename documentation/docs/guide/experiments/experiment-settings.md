@@ -16,24 +16,21 @@ import DSanswerColumn from '../../tooltips/experiments/_answer-column.mdx';
 import DSparentIdColumn from '../../tooltips/experiments/_parent-id-column.mdx';
 import DStextPromptStart from '../../tooltips/experiments/_text-prompt-start.mdx';
 import DStextAnswerSeparator from '../../tooltips/experiments/_text-answer-separator.mdx';
-import DSadaptiveKlControl from '../../tooltips/experiments/_adaptive-kl-control.mdx';
 import DSaddEosTokentoprompt from '../../tooltips/experiments/_add-eos-token-to-prompt.mdx';
 import DSaddEosTokentoanswer from '../../tooltips/experiments/_add-eos-token-to-answer.mdx';
 import DSmaskPromptlabels from '../../tooltips/experiments/_mask-prompt-labels.mdx';
-import TSmaxLengthPrompt from '../../tooltips/experiments/_max-length-prompt.mdx';
-import TSmaxLengthAnswer from '../../tooltips/experiments/_max-length-answer.mdx';
 import TSmaxLength from '../../tooltips/experiments/_max-length.mdx';
 import TSaddpromptanswertokens from '../../tooltips/experiments/_add-prompt-answer-tokens.mdx';
 import TSpaddingQuantile from '../../tooltips/experiments/_padding-quantile.mdx';
-import TSuseFast from '../../tooltips/experiments/_use-fast.mdx';
 import ASBackboneDtype from '../../tooltips/experiments/_backbone-dtype.mdx';
 import ASGradientcheckpointing from '../../tooltips/experiments/_gradient-checkpointing.mdx';
-import ASforceEmbeddingGradients from '../../tooltips/experiments/_force-embedding-gradients.mdx';
 import ASintermediateDropout from '../../tooltips/experiments/_intermediate-dropout.mdx';
 import ASpretrainedWeights from '../../tooltips/experiments/_pretrained-weights.mdx';
 import TSoptimizer from '../../tooltips/experiments/_optimizer.mdx';
 import TSlossfunction from '../../tooltips/experiments/_loss-function.mdx';
 import TSlearningRate from '../../tooltips/experiments/_learning-rate.mdx';
+import TSdifferentialLearningRateLayers from '../../tooltips/experiments/_differential-learning-rate-layers.mdx';
+import TSfreezeLayers from '../../tooltips/experiments/_freeze-layers.mdx';
 import TSuseflashattention2 from '../../tooltips/experiments/_use-flash-attention-2.mdx';
 import TSbatchSize from '../../tooltips/experiments/_batch-size.mdx';
 import TSepochs from '../../tooltips/experiments/_epochs.mdx';
@@ -48,24 +45,11 @@ import TSloraR from '../../tooltips/experiments/_lora-r.mdx';
 import TSloraAlpha from '../../tooltips/experiments/_lora-alpha.mdx';
 import TSloraDropout from '../../tooltips/experiments/_lora-dropout.mdx';
 import TSloraTargetModules from '../../tooltips/experiments/_lora-target-modules.mdx';
+import TSloraUnfreezeLayers from '../../tooltips/experiments/_lora-unfreeze-layers.mdx';
 import TSsavecheckpoint from '../../tooltips/experiments/_save-checkpoint.mdx';
 import TSevaluationepochs from '../../tooltips/experiments/_evaluation-epochs.mdx';
 import TSevaluationbeforetraining from '../../tooltips/experiments/_evaluate-before-training.mdx';
 import TStrainvalidationdata from '../../tooltips/experiments/_train-validation-data.mdx';
-import TSuseRHLF from '../../tooltips/experiments/_use-rlhf.mdx';
-import TSrewardModel from '../../tooltips/experiments/_reward-model.mdx';
-import TSinitialKlCoefficient from '../../tooltips/experiments/_initial-kl-coefficient.mdx';
-import TSklTarget from '../../tooltips/experiments/_kl-target.mdx';
-import TSklHorizon from '../../tooltips/experiments/_kl-horizon.mdx';
-import TSadvantagesGamma from '../../tooltips/experiments/_advantages-gamma.mdx';
-import TSadvantagesLambda from '../../tooltips/experiments/_advantages-lambda.mdx';
-import TSppoClipPolicy from '../../tooltips/experiments/_ppo-clip-policy.mdx';
-import TSppoClipValue from '../../tooltips/experiments/_ppo-clip-value.mdx';
-import TSscalingFactorValueLoss from '../../tooltips/experiments/_scaling-factor-value-loss.mdx';
-import TSppoEpochs from '../../tooltips/experiments/_ppo-epochs.mdx';
-import TSppoBatchSize from '../../tooltips/experiments/_ppo-batch-size.mdx';
-import TSppoGenerateTemp from '../../tooltips/experiments/_ppo-generate-temperature.mdx';
-import TSoffloadRewardModel from '../../tooltips/experiments/_offload-reward-model.mdx';
 import AStokenmaskprobability from '../../tooltips/experiments/_token-mask-probability.mdx';
 import ASskipParentprobability from '../../tooltips/experiments/_skip-parent-probability.mdx';
 import ASrandomparentprobability from '../../tooltips/experiments/_random-parent-probability.mdx';
@@ -173,10 +157,6 @@ The settings under each category are listed and described below.
 
 <DStextAnswerSeparator/>
 
-## Adaptive Kl control
-
-<DSadaptiveKlControl/>
-
 ### Add EOS token to prompt
 
 <DSaddEosTokentoprompt/>
@@ -191,14 +171,6 @@ The settings under each category are listed and described below.
 
 ## Tokenizer settings
 
-### Max length prompt
-
-<TSmaxLengthPrompt/>
-
-### Max length answer
-
-<TSmaxLengthAnswer/>
-
 ### Max length 
 
 <TSmaxLength/>
@@ -211,10 +183,6 @@ The settings under each category are listed and described below.
 
 <TSpaddingQuantile/>
 
-### Use fast
-
-<TSuseFast />
-
 ## Architecture settings
 
 ### Backbone Dtype
@@ -224,10 +192,6 @@ The settings under each category are listed and described below.
 ### Gradient Checkpointing
 
 <ASGradientcheckpointing/>
-
-### Force Embedding Gradients
-
-<ASforceEmbeddingGradients/>
 
 ### Intermediate dropout
 
@@ -250,6 +214,14 @@ The settings under each category are listed and described below.
 ### Learning rate
 
 <TSlearningRate/>
+
+### Differential learning rate layers
+
+<TSdifferentialLearningRateLayers/>
+
+### Freeze layers
+
+<TSfreezeLayers/>
 
 ### Use Flash Attention 2
 
@@ -307,6 +279,10 @@ The settings under each category are listed and described below.
 
 <TSloraTargetModules/>
 
+### Lora unfreeze layers
+
+<TSloraUnfreezeLayers/>
+
 ### Save checkpoint
 
 <TSsavecheckpoint/>
@@ -322,66 +298,6 @@ The settings under each category are listed and described below.
 ### Train validation data
 
 <TStrainvalidationdata/>
-
-### Use RLHF
-
-<TSuseRHLF/>
-
-### Reward model
-
-<TSrewardModel/>
-
-### Adaptive KL control
-
-<DSadaptiveKlControl/>
-
-### Initial KL coefficient
-
-<TSinitialKlCoefficient/>
-
-### KL target
-
-<TSklTarget/>
-
-### KL Horizon
-
-<TSklHorizon/>
-
-### Advantages gamma
-
-<TSadvantagesGamma/>
-
-### Advantages Lambda
-
-<TSadvantagesLambda/>
-
-### PPO clip policy
-
-<TSppoClipPolicy/>
-
-### PPO clip value
-
-<TSppoClipValue/>
-
-### Scaling factor value loss
-
-<TSscalingFactorValueLoss/>
-
-### PPO epochs
-
-<TSppoEpochs/>
-
-### PPO Batch Size
-
-<TSppoBatchSize/>
-
-### PPO generate temperature
-
-<TSppoGenerateTemp/>
-
-### Offload reward model
-
-<TSoffloadRewardModel/>
 
 ## Augmentation settings
 

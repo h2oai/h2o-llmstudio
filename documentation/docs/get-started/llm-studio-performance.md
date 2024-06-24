@@ -61,7 +61,6 @@ The runtimes were gathered using the default parameters.
 ```
 architecture:
     backbone_dtype: int4
-    force_embedding_gradients: false
     gradient_checkpointing: true
     intermediate_dropout: 0.0
     pretrained: true
@@ -138,8 +137,6 @@ problem_type: text_causal_language_modeling
 tokenizer:
     add_prompt_answer_tokens: false
     max_length: 512
-    max_length_answer: 256
-    max_length_prompt: 256
     padding_quantile: 1.0
 training:
     batch_size: 2

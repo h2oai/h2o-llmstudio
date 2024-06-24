@@ -1,6 +1,5 @@
 architecture:
     backbone_dtype: float16
-    force_embedding_gradients: false
     gradient_checkpointing: false
     intermediate_dropout: 0.0
     config_item_that_is_not_used: 0
@@ -52,8 +51,6 @@ prediction:
 problem_type: text_causal_language_modeling
 tokenizer:
     max_length: 144
-    max_length_answer: 256
-    max_length_prompt: 256
     padding_quantile: 1.0
     tokenizer_kwargs: '{"use_fast": true, "add_prefix_space": false}'
 training:

@@ -122,7 +122,7 @@ if __name__ == "__main__":
             print(prompt)
 
             inputs = cfg.dataset.dataset_class.encode(
-                tokenizer, prompt, cfg.tokenizer.max_length_prompt, "left"
+                tokenizer, prompt, cfg.tokenizer.max_length, "left"
             )
             inputs["prompt_input_ids"] = inputs.pop("input_ids").unsqueeze(0).to(DEVICE)
             inputs["prompt_attention_mask"] = (

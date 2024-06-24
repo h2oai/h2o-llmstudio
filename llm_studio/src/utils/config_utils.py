@@ -139,15 +139,6 @@ def convert_nested_dictionary_to_cfg_base(
     return module.ConfigProblemBase.from_dict(cfg_dict)
 
 
-def get_parent_element(cfg):
-    if hasattr(cfg, "_parent_experiment") and cfg._parent_experiment != "":
-        key = "Parent Experiment"
-        value = cfg._parent_experiment
-        return {key: value}
-
-    return None
-
-
 def parse_cfg_dataclass(cfg) -> List[Dict]:
     """Returns all single config settings for a given configuration
 
@@ -156,10 +147,6 @@ def parse_cfg_dataclass(cfg) -> List[Dict]:
     """
 
     items = []
-
-    parent_element = get_parent_element(cfg)
-    if parent_element:
-        items.append(parent_element)
 
     cfg_dict = cfg.__dict__
     type_annotations = cfg.get_annotations()

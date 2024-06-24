@@ -85,8 +85,8 @@ class Value:
 
 @dataclass
 class Number:
-    min: Optional[float] = None
-    max: Optional[float] = None
+    min: float | None = None
+    max: float | None = None
     step: Union[str, float] = 1.0
 
 

@@ -23,8 +23,8 @@ endif
 
 PHONY: pipenv
 pipenv:
-	$(PIP) install pip==24.0
-	$(PIP) install pipenv==2023.12.1
+	$(PIP) install pip==24.1
+	$(PIP) install pipenv==2024.0.1
 
 .PHONY: setup
 setup: pipenv
@@ -98,6 +98,19 @@ test: reports
 	--cov-report html:./reports/coverage.html \
     -o log_cli=true -o log_level=INFO -o log_file=reports/tests.log \
     tests/* 2>&1 | tee reports/tests.log'
+
+
+.PHONY: test-debug
+test-debug: reports
+	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); \
+	$(PIPENV) run pytest -v --junitxml=reports/junit.xml \
+	--import-mode importlib \
+	--html=./reports/pytest.html \
+	-k test_encode \
+	-s \
+    -o log_cli=false -o log_level=WARNING -o log_file=/dev/null \
+    tests/*'
+	
 
 .PHONY: test-ui
 test-ui: reports setup-ui

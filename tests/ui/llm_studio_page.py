@@ -34,8 +34,6 @@ class LLMStudioPage(BasePage):
     KAGGLE_USERNAME = "dataset/import/kaggle_username"
     KAGGLE_SECRET_KEY = "dataset/import/kaggle_secret_key"
     DATA_SAMPLING = "experiment/start/cfg/data_sample"
-    MAX_LENGTH_PROMPT = "experiment/start/cfg/max_length_prompt"
-    MAX_LENGTH_ANSWER = "experiment/start/cfg/max_length_answer"
     MAX_LENGTH = "experiment/start/cfg/max_length"
     MAX_LENGTH_INFERENCE = "experiment/start/cfg/max_length_inference"
     MIXED_PRECISION = "experiment/start/cfg/mixed_precision"
@@ -186,12 +184,6 @@ class LLMStudioPage(BasePage):
 
     def data_sample(self, value):
         self.slider(self.DATA_SAMPLING, value)
-
-    def max_length_prompt(self, value):
-        self.slider(self.MAX_LENGTH_PROMPT, value)
-
-    def max_length_answer(self, value):
-        self.slider(self.MAX_LENGTH_ANSWER, value)
 
     def max_length(self, value):
         self.slider(self.MAX_LENGTH, value)

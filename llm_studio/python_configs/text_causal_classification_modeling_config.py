@@ -92,13 +92,10 @@ class ConfigNLPCausalClassificationTraining(ConfigNLPCausalLMTraining):
 
 @dataclass
 class ConfigNLPCausalClassificationTokenizer(ConfigNLPCausalLMTokenizer):
-    max_length_prompt: int = 512
     max_length: int = 512
 
     def __post_init__(self):
         super().__post_init__()
-
-        self._visibility["max_length_answer"] = -1
 
 
 @dataclass
@@ -157,8 +154,7 @@ class ConfigNLPCausalClassificationLogging(ConfigNLPCausalLMLogging):
 class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
-    _parent_experiment: str = ""
-    llm_backbone: str = "h2oai/h2ogpt-4096-llama2-7b"
+    llm_backbone: str = "h2oai/h2o-danube2-1.8b-chat"
 
     dataset: ConfigNLPCausalClassificationDataset = field(
         default_factory=ConfigNLPCausalClassificationDataset
