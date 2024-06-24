@@ -84,23 +84,19 @@ def get_tokenizer(cfg: DefaultConfigProblemBase):
         tokenizer.bos_token = tokenizer.eos_token
     if tokenizer.cls_token is None:
         tokenizer.cls_token = tokenizer.eos_token
-    if tokenizer.sep_token is None:
-        tokenizer.sep_token = tokenizer.eos_token
-
-    cfg._tokenizer_sep_token = tokenizer.sep_token
 
     if tokenizer.unk_token_id is not None:
-        cfg._tokenizer_mask_token_id = tokenizer.unk_token_id
+        cfg.tokenizer._tokenizer_mask_token_id = tokenizer.unk_token_id
     elif tokenizer.mask_token_id is not None:
-        cfg._tokenizer_mask_token_id = tokenizer.mask_token_id
+        cfg.tokenizer._tokenizer_mask_token_id = tokenizer.mask_token_id
     elif tokenizer.pad_token_id is not None:
-        cfg._tokenizer_mask_token_id = tokenizer.pad_token_id
+        cfg.tokenizer._tokenizer_mask_token_id = tokenizer.pad_token_id
     else:
         # setting the mask token id to the last token in the vocabulary
         # this usually is a safe choice and mostly refers to eos token
-        cfg._tokenizer_mask_token_id = len(tokenizer) - 1
+        cfg.tokenizer._tokenizer_mask_token_id = len(tokenizer) - 1
 
-    cfg._tokenizer_eos_token = tokenizer.eos_token
+    cfg.tokenizer._tokenizer_eos_token = tokenizer.eos_token
 
     if hasattr(cfg.prediction, "stop_tokens"):
         set_stop_token_ids(cfg, tokenizer)
