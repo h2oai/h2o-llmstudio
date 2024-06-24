@@ -689,7 +689,7 @@ if __name__ == "__main__":
     if "config" in parser_args:
         cfg: DefaultConfigProblemBase = load_config_py(parser_args.config)
     elif "yaml" in parser_args:
-        cfg: DefaultConfigProblemBase = load_config_yaml(parser_args.yaml)
+        cfg = load_config_yaml(parser_args.yaml)
     else:
         raise ValueError("Please, provide a configuration file")
 
