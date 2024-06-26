@@ -64,6 +64,6 @@ BLEU: BLEU (Bilingual Evaluation Understudy) measures the quality of machine-gen
 
 ### Perplexity
 
-Perplexity (PPL) is a commonly used evaluation metric. It measures the confidence a model has in its predictions, or in simpler words how 'perplexed' or surprised it is by seeing new data. Lower perplexity means the model is highly confident in the sequence of words it is responding with. The underlying assumption is that the model's confidence is correlated to accuracy. Perplexity actually does not reference the ground truth at all and is usually only used to evaluate how well the model has learned the training data. 
+Perplexity (PPL) is a commonly used evaluation metric. It measures the confidence a model has in its predictions, or in simpler words how 'perplexed' or surprised it is by seeing new data. Perplexity is defined as the exponentiated cross-entropy of a sequence of tokens. Lower perplexity means the model is highly confident and accurate in the sequence of tokens it is responding with.
 
 
