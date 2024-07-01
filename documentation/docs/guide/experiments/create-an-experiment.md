@@ -16,7 +16,7 @@ Follow the relevant steps below to create an experiment in H2O LLM Studio.
 4. Provide a meaningful **Experiment name**.
 
 5. Define the parameters. The most important parameters are:
-    - **LLM Backbone**: This parameter determines the LLM architecture to use. It is the foundation model that you continue training. H2O LLM Studio has a predefined list of recommended foundation models available in the dropdown list. You can also type in the name of a [HuggingFace model](https://huggingface.co/models) that is not in the list, for example: `h2oai/h2o-danube2-1.8b-sft` or the path of a local folder that has the model you would like to fine-tune.
+    - **LLM Backbone**: This parameter determines the LLM architecture to use. It is the foundation model that you continue training. H2O LLM Studio has a predefined list of recommended foundation models available in the dropdown list. You can also type in the name of a [Hugging Face model](https://huggingface.co/models) that is not in the list, for example: `h2oai/h2o-danube2-1.8b-sft` or the path of a local folder that has the model you would like to fine-tune.
     - **Mask Prompt Labels**: This option controls whether to mask the prompt labels during training and only train on the loss of the answer.
     - Hyperparameters such as **Learning rate**, **Batch size**, and number of epochs determine the training process. You can refer to the tooltips that are shown next to each hyperparameter in the GUI to learn more about them.
     - **Evaluate Before Training**: This option lets you evaluate the model before training, which can help you judge the quality of the LLM backbone before fine-tuning. 

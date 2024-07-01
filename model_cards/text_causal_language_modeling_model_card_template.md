@@ -79,7 +79,7 @@ You may also construct the pipeline from the loaded model and tokenizer yourself
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-model_name = "{{repo_id}}"  # either local folder or huggingface model name
+model_name = "{{repo_id}}"  # either local folder or Hugging Face model name
 # Important: The prompt needs to be in the same format the model was trained with.
 # You can find an example prompt in the experiment logs.
 messages = {{sample_messages}}
