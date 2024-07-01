@@ -27,7 +27,6 @@ class ConfigDPODataset(ConfigNLPCausalLMDataset):
     # Always have full chat history.
     # Chosen/Rejected prompt are only at the end of a conversation.
     limit_chained_samples: bool = True
-    mask_prompt_labels: bool = True
 
     rejected_prompt_column: str = "None"
     answer_column: str = "chosen_response"
@@ -64,6 +63,7 @@ class ConfigDPODataset(ConfigNLPCausalLMDataset):
 class ConfigDPOTraining(ConfigNLPCausalLMTraining):
     learning_rate: float = 1e-4  # relatively high as we use LORA
     beta: float = 0.2
+    simpo_gamma: float = 1.0
     gradient_clip: float = 10.0
     loss_class: Any = text_dpo_modeling_losses.Losses
     loss_function: str = "DPOLoss"
@@ -74,7 +74,13 @@ class ConfigDPOTraining(ConfigNLPCausalLMTraining):
     def __post_init__(self):
         super().__post_init__()
         self._possible_values["beta"] = possible_values.Number(0.05, 1.0, 0.05)
+        self._possible_values["simpo_gamma"] = possible_values.Number(0.05, 2.0, 0.05)
+
+        self._grid_search_values["beta"] = (0.1,0.15,0.2,0.25,0.3)
+        self._grid_search_values["simpo_gamma"] = (0.5, 0.75, 1.0, 1.25, 1.5)
+
         self._order.insert("beta", after="learning_rate")
+        self._order.insert("simpo_gamma", after="beta")
 
 
 @dataclass

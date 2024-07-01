@@ -1,6 +1,7 @@
 """
 Loss Implementation based upon
 https://github.com/eric-mitchell/direct-preference-optimization
+https://github.com/huggingface/trl
 """
 
 import logging
@@ -26,6 +27,7 @@ class DPOLoss(nn.Module):
     def __init__(self, cfg: Any):
         super().__init__()
         self.cfg = cfg
+        self.requires_reference_model = True
 
     def forward(
         self,
@@ -67,6 +69,27 @@ class DPOLoss(nn.Module):
         return losses
 
 
+class DPOHingeLoss(DPOLoss):
+    def get_losses(self, logits):
+        losses = torch.relu(1 - self.cfg.training.beta * logits)
+        return losses
+
+
+class DPOIPOLoss(DPOLoss):
+    """
+    Implements "A General Theoretical Paradigm
+    to Understand Learning from Human Preferences"
+    from https://arxiv.org/pdf/2310.12036.pdf
+    """
+
+    def get_losses(self, logits):
+        # eqn (17) of the https://arxiv.org/pdf/2310.12036.pdf
+        # where beta is the real, positive KL parameter for the IPO loss,
+        # denoted by tau in the paper (see also eqn (6)).
+        losses = (logits - 1 / (2 * self.cfg.training.beta)) ** 2
+        return losses
+
+
 class KTOPairLoss(nn.Module):
     """
     Implements original paired KTO implementation
@@ -77,6 +100,7 @@ class KTOPairLoss(nn.Module):
     def __init__(self, cfg: Any):
         super().__init__()
         self.cfg = cfg
+        self.requires_reference_model = True
 
     def forward(
         self,
@@ -114,24 +138,61 @@ class KTOPairLoss(nn.Module):
         return losses.mean(), chosen_rewards.mean(), rejected_rewards.mean()
 
 
-class HingeLoss(DPOLoss):
+class CPOLoss(nn.Module):
+    """
+    Implements CPO Loss https://arxiv.org/abs/2401.08417
+    Adopted from https://github.com/huggingface/trl
+    """
+
+    def __init__(self, cfg: Any):
+        super().__init__()
+        self.cfg = cfg
+        self.requires_reference_model = False
+
+    def forward(
+        self,
+        policy_chosen_logps: torch.FloatTensor,
+        policy_rejected_logps: torch.FloatTensor,
+    ):
+
+        logits = policy_chosen_logps - policy_rejected_logps
+
+        losses = self.get_losses(logits)
+
+        chosen_rewards = (self.cfg.training.beta * policy_chosen_logps.detach()).float()
+        rejected_rewards = (
+            self.cfg.training.beta * policy_rejected_logps.detach()
+        ).float()
+
+        return losses.mean(), chosen_rewards.mean(), rejected_rewards.mean()
+
     def get_losses(self, logits):
-        losses = torch.relu(1 - self.cfg.training.beta * logits)
+        label_smoothing = 0
+
+        losses = (
+            -F.logsigmoid(self.cfg.training.beta * logits) * (1 - label_smoothing)
+            - F.logsigmoid(-self.cfg.training.beta * logits) * label_smoothing
+        )
         return losses
 
 
-class IPOLoss(DPOLoss):
+class SimPOLoss(CPOLoss):
     """
-    Implements "A General Theoretical Paradigm
-    to Understand Learning from Human Preferences"
-    from https://arxiv.org/pdf/2310.12036.pdf
+    Implements SimPO Loss https://arxiv.org/abs/2405.14734
+    Adopted from https://github.com/princeton-nlp/SimPO
+    and https://github.com/huggingface/trl
     """
 
     def get_losses(self, logits):
-        # eqn (17) of the https://arxiv.org/pdf/2310.12036.pdf
-        # where beta is the real, positive KL parameter for the IPO loss,
-        # denoted by tau in the paper (see also eqn (6)).
-        losses = (logits - 1 / (2 * self.cfg.training.beta)) ** 2
+        label_smoothing = 0
+        gamma = self.cfg.training.simpo_gamma
+        gamma_logratios = gamma / self.cfg.training.beta
+        logits = logits - gamma_logratios
+
+        losses = (
+            -F.logsigmoid(self.cfg.training.beta * logits) * (1 - label_smoothing)
+            - F.logsigmoid(-self.cfg.training.beta * logits) * label_smoothing
+        )
         return losses
 
 
@@ -140,9 +201,11 @@ class Losses:
 
     _losses = {
         "DPOLoss": DPOLoss,
-        "HingeLoss": HingeLoss,
-        "IPOLoss": IPOLoss,
+        "DPOHingeLoss": DPOHingeLoss,
+        "DPOIPOLoss": DPOIPOLoss,
         "KTOPairLoss": KTOPairLoss,
+        "CPOLoss": CPOLoss,
+        "SimPOLoss": SimPOLoss,
     }
 
     @classmethod
@@ -164,6 +227,8 @@ class Losses:
 LOSS_REDUCTION = {
     "DPOLoss": False,
     "KTOPairLoss": False,
-    "HingeLoss": True,
-    "IPOLoss": True,
+    "DPOHingeLoss": True,
+    "DPOIPOLoss": True,
+    "CPOLoss": False,
+    "SimPOLoss": True,
 }
