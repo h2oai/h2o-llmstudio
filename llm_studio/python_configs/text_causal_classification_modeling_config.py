@@ -66,6 +66,7 @@ class ConfigNLPCausalClassificationDataset(ConfigNLPCausalLMDataset):
         self._visibility["chatbot_name"] = -1
         self._visibility["chatbot_author"] = -1
         self._visibility["mask_prompt_labels"] = -1
+        self._visibility["only_last_answer"] = -1
 
 
 @dataclass
