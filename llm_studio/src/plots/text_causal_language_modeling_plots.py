@@ -7,11 +7,7 @@ import pandas as pd
 from llm_studio.src.datasets.conversation_chain_handler import get_conversation_chains
 from llm_studio.src.datasets.text_utils import get_tokenizer
 from llm_studio.src.utils.data_utils import read_dataframe_drop_missing_labels
-from llm_studio.src.utils.plot_utils import (
-    PlotData,
-    format_for_markdown_visualization,
-    list_to_markdown_representation,
-)
+from llm_studio.src.utils.plot_utils import PlotData, list_to_markdown_representation
 
 
 class Plots:
@@ -90,10 +86,6 @@ class Plots:
                 ]
                 i += 1
 
-        df_transposed["Content"] = df_transposed["Content"].apply(
-            format_for_markdown_visualization
-        )
-
         df_transposed.to_parquet(path)
 
         return PlotData(path, encoding="df")
@@ -153,11 +145,6 @@ def plot_validation_predictions(
             "Predicted Text": predicted_texts,
         }
     )
-    df[input_text_column_name] = df[input_text_column_name].apply(
-        format_for_markdown_visualization
-    )
-    df["Target Text"] = df["Target Text"].apply(format_for_markdown_visualization)
-    df["Predicted Text"] = df["Predicted Text"].apply(format_for_markdown_visualization)
 
     if val_outputs.get("metrics") is not None:
         metric_column_name = f"Metric ({cfg.prediction.metric})"
@@ -195,7 +182,7 @@ def create_batch_prediction_df(
             ]
         }
     )
-    df["Prompt Text"] = df["Prompt Text"].apply(format_for_markdown_visualization)
+
     if labels_column in batch.keys():
         df["Answer Text"] = [
             tokenizer.decode(

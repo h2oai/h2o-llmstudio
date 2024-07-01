@@ -267,7 +267,7 @@ async def show_stream_is_aborted_dialog(q):
     await q.page.save()
 
 
-async def is_app_blocked_while_streaming(q: Q):
+async def is_app_blocked_while_streaming(q: Q) -> bool:
     """
     Check whether the app is blocked with current answer generation.
     """

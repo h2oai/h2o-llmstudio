@@ -204,6 +204,7 @@ class DefaultConfigProblemBase(DefaultConfig):
     experiment_name: str
     output_directory: str
     llm_backbone: str
+    _parent_experiment: str
 
     dataset: Any
     tokenizer: Any

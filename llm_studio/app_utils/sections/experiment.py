@@ -1418,6 +1418,7 @@ async def summary_tab(experiment_id, q):
         box=ui.box(zone="third"),
         title="",
         content=content,
+        compact=False,
     )
     q.client.delete_cards.add(card_name)
 
@@ -1492,7 +1493,7 @@ def unite_validation_metric_charts(charts_list):
     return charts_list
 
 
-async def charts_tab(q, charts_list, legend_labels):
+async def charts_tab(q, charts_list, legend_labels) -> None:
     charts_list = unite_validation_metric_charts(charts_list)
 
     box = ["first", "first", "second", "second"]

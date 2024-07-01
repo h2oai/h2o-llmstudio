@@ -13,20 +13,14 @@ from .config import default_cfg
 
 
 class ThemeColors(TypedDict):
-    light: dict
-    dark: dict
+    primary: str
+    background_color: str
 
 
 class WaveTheme:
     _theme_colors: ThemeColors = {
-        "light": {
-            "primary": "#000000",
-            "background_color": "#ffffff",
-        },
-        "dark": {
-            "primary": "#FEC925",
-            "background_color": "#121212",
-        },
+        "primary": "#FEC925",
+        "background_color": "#121212",
     }
 
     states = {
@@ -43,20 +37,12 @@ class WaveTheme:
     def __repr__(self) -> str:
         return "WaveTheme"
 
-    def get_value_by_key(self, q: Q, key: str):
-        value = (
-            self._theme_colors["dark"][key]
-            if q.client.theme_dark
-            else self._theme_colors["light"][key]
-        )
-        return value
-
     def get_primary_color(self, q: Q):
-        primary_color = self.get_value_by_key(q, "primary")
+        primary_color = self._theme_colors["primary"]
         return primary_color
 
     def get_background_color(self, q: Q):
-        background_color = self.get_value_by_key(q, "background_color")
+        background_color = self._theme_colors["background_color"]
         return background_color
 
 
