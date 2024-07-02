@@ -23,7 +23,7 @@ To publish a trained model to Hugging Face Hub:
 
 6. Click **Export**.
 
-    ![export model to hugging face](export-model-to-huggingface.png)
+    ![export model to Hugging Face](export-model-to-huggingface.png)
 
 ## Download a model
 
@@ -34,7 +34,7 @@ Use the following code snippet to utilize the converted model in Jupyter Noteboo
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-model_name = "path_to_downloaded_model"  # either local folder or huggingface model name
+model_name = "path_to_downloaded_model"  # either local folder or Hugging Face model name
 
 # Important: The prompt needs to be in the same format the model was trained with.
 # You can find an example prompt in the experiment logs.
