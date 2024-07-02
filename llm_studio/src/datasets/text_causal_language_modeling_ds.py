@@ -110,7 +110,7 @@ class CustomDataset(Dataset):
             f"{codecs.decode(cfg.dataset.text_prompt_start, 'unicode_escape')}{prompt}"
         )
         if cfg.dataset.add_eos_token_to_prompt:
-            prompt += cfg._tokenizer_eos_token
+            prompt += cfg.tokenizer._tokenizer_eos_token
         prompt = (
             f"{prompt}"
             f"{codecs.decode(cfg.dataset.text_answer_separator, 'unicode_escape')}"
@@ -120,7 +120,7 @@ class CustomDataset(Dataset):
     @staticmethod
     def parse_answer(cfg: Any, answer: str):
         if cfg.dataset.add_eos_token_to_answer:
-            answer += cfg._tokenizer_eos_token
+            answer += cfg.tokenizer._tokenizer_eos_token
         return answer
 
     @staticmethod
@@ -132,7 +132,7 @@ class CustomDataset(Dataset):
             f"{codecs.decode(cfg.dataset.text_system_start, 'unicode_escape')}{system}"
         )
         if cfg.dataset.add_eos_token_to_system:
-            system += cfg._tokenizer_eos_token
+            system += cfg.tokenizer._tokenizer_eos_token
         return system
 
     @staticmethod

@@ -2070,7 +2070,11 @@ def get_experiment_summary_code_card(cfg) -> str:
     )
     text = text.replace(
         "{{end_of_sentence}}",
-        str(cfg._tokenizer_eos_token) if cfg.dataset.add_eos_token_to_prompt else "",
+        (
+            str(cfg.tokenizer._tokenizer_eos_token)
+            if cfg.dataset.add_eos_token_to_prompt
+            else ""
+        ),
     )
 
     text = text.replace("{{trust_remote_code}}", str(cfg.environment.trust_remote_code))

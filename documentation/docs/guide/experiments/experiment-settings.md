@@ -11,6 +11,7 @@ import DSvalidationStrategy from '../../tooltips/experiments/_validation-strateg
 import DSvalidationSize from '../../tooltips/experiments/_validation-size.mdx';
 import DSdataSample from '../../tooltips/experiments/_data-sample.mdx';
 import DSpromptColumn from '../../tooltips/experiments/_prompt-column.mdx';
+import DSPromptColumnSeparator from '../../tooltips/experiments/_prompt-column-separator.mdx';
 import DSsystemColumn from '../../tooltips/experiments/_system-column.mdx';
 import DSanswerColumn from '../../tooltips/experiments/_answer-column.mdx';
 import DSparentIdColumn from '../../tooltips/experiments/_parent-id-column.mdx';
@@ -140,6 +141,10 @@ The settings under each category are listed and described below.
 ### Prompt column
 
 <DSpromptColumn/>
+
+### Prompt column separator
+
+<DSpromptColumnSeparator/>
 
 ### Answer column
 

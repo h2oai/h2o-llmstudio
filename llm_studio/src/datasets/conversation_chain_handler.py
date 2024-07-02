@@ -57,7 +57,7 @@ class ConversationChainHandler:
         # Do not set self.cfg = cfg, as ConversationChainHandler
         # will be used with PatchedAttribute context manager.
         self.conversation_chain_ids = self.get_conversation_chain_ids(cfg, df)
-        self.prompts = get_texts(df, cfg, separator="")
+        self.prompts = get_texts(df, cfg)
         self.answers = self.get_answers(df, cfg)
         self.systems = self.get_systems(cfg, df)
 
