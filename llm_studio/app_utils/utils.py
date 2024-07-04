@@ -770,6 +770,23 @@ def get_dataset(
     return dataset, v
 
 
+def escape_python_string(s: str) -> str:
+    """Escapes a python string
+
+    Args:
+        s: string to escape
+
+    Returns:
+        Escaped string
+    """
+
+    s = s.replace("\\", "\\\\")
+    s = s.replace("\n", "\\n")
+    s = s.replace("\t", "\\t")
+    s = s.replace("\r", "\\r")
+    return s
+
+
 def get_ui_element(
     k: str,
     v: Any,
@@ -884,7 +901,7 @@ def get_ui_element(
                 ui.textbox(
                     name=pre + k,
                     label=title_label,
-                    value=val,
+                    value=escape_python_string(val),
                     required=False,
                     password=password,
                     tooltip=tooltip,
