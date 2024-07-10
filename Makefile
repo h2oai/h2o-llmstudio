@@ -23,8 +23,8 @@ endif
 
 PHONY: pipenv
 pipenv:
-	$(PIP) install pip==24.0
-	$(PIP) install pipenv==2023.12.1
+	$(PIP) install pip==24.1
+	$(PIP) install pipenv==2024.0.1
 
 .PHONY: setup
 setup: pipenv
