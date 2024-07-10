@@ -2,10 +2,9 @@
 input/
 notebooks/
 demo_data/
-output/
-output_old/
+output*/
 tmp/
-data/
+data*/
 examples/data_oasst2
 examples/output_oasst2
 data_old/
