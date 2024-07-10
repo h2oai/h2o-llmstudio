@@ -363,10 +363,13 @@ class CustomDataset(Dataset):
 
         if self.cfg.dataset.mask_prompt_labels:
             masks = []
-            for idx, (prompt_encoding, answer_encoding) in enumerate(zip(
-                prompt_encodings, answer_encodings
-            )):
-                if not self.cfg.dataset.only_last_answer or idx == len(answer_encodings) - 1:
+            for idx, (prompt_encoding, answer_encoding) in enumerate(
+                zip(prompt_encodings, answer_encodings)
+            ):
+                if (
+                    not self.cfg.dataset.only_last_answer
+                    or idx == len(answer_encodings) - 1
+                ):
                     mask = [
                         torch.ones_like(prompt_encoding),
                         torch.zeros_like(answer_encoding),
