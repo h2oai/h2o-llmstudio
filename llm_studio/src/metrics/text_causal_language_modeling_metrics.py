@@ -14,6 +14,7 @@ from sacrebleu.metrics.base import Metric
 from torch import nn
 from tqdm import tqdm
 
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.datasets.text_utils import get_texts
 from llm_studio.src.utils.logging_utils import TqdmToLogger
 
@@ -25,7 +26,7 @@ LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", 60))
 
 
 def sacrebleu_score(
-    cfg: Any, results: Dict, val_df: pd.DataFrame, metric: Metric
+    cfg: DefaultConfigProblemBase, results: Dict, val_df: pd.DataFrame, metric: Metric
 ) -> NDArray:
     scores = []
     for predicted_text, target_text in zip(
@@ -39,7 +40,7 @@ def sacrebleu_score(
     return np.array(scores)
 
 
-def call_openai_api(template, model, deployment_id=None):
+def call_openai_api(template: str, model: str):
     if os.getenv("OPENAI_API_TYPE", "open_ai") == "azure":
         endpoint = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
         client: AzureOpenAI | OpenAI = AzureOpenAI(
@@ -85,7 +86,7 @@ def call_openai_api(template, model, deployment_id=None):
     return score, ret
 
 
-def rate_reply(filled_eval_template, model):
+def rate_reply(filled_eval_template: str, model: str):
     try:
         return call_openai_api(filled_eval_template, model)
     except Exception as e:
@@ -94,13 +95,13 @@ def rate_reply(filled_eval_template, model):
 
 
 def gpt_score(
-    cfg: Any,
+    cfg: DefaultConfigProblemBase,
     results: Dict,
     val_df: pd.DataFrame,
     raw_results: bool = False,
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
     vdf = val_df.copy()
-    vdf["_PROMPT"] = get_texts(val_df, cfg, separator="")
+    vdf["_PROMPT"] = get_texts(val_df, cfg)
     vdf["_PREDICTED_TEXT"] = results["predicted_text"]
     vdf["_TARGET_TEXT"] = results["target_text"]
 
@@ -150,7 +151,7 @@ def gpt_score(
 
 
 class Perplexity(nn.Module):
-    def __init__(self, cfg: Any, reduce: bool = True):
+    def __init__(self, cfg: DefaultConfigProblemBase, reduce: bool = True):
         super().__init__()
         self.cfg = cfg
         self.loss_fn = nn.CrossEntropyLoss()
@@ -170,7 +171,7 @@ class Perplexity(nn.Module):
         return perplexity
 
 
-def perplexity(cfg: Any, results: Dict, val_df: pd.DataFrame):
+def perplexity(cfg: DefaultConfigProblemBase, results: Dict, val_df: pd.DataFrame):
     return results["perplexity"].detach().float().cpu().numpy()
 
 

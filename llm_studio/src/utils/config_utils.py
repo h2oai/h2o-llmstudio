@@ -25,7 +25,7 @@ def rreload(module):
                     importlib.reload(attribute2)
 
 
-def _load_cls(module_path: str, cls_name: str) -> Any:
+def _load_cls(module_path: str, cls_name: str) -> DefaultConfigProblemBase:
     """Loads the python class.
 
     Args:
@@ -50,12 +50,14 @@ def _load_cls(module_path: str, cls_name: str) -> Any:
         module_path, cls_name
     )
 
-    cls = getattr(module, cls_name)
+    cls: DefaultConfigProblemBase = getattr(module, cls_name)()
 
     return cls
 
 
-def load_config_py(config_path: str, config_name: str = "Config"):
+def load_config_py(
+    config_path: str, config_name: str = "Config"
+) -> DefaultConfigProblemBase:
     """Loads the config class.
 
     Args:
@@ -66,7 +68,7 @@ def load_config_py(config_path: str, config_name: str = "Config"):
         Loaded config class
     """
 
-    return _load_cls(config_path, config_name)()
+    return _load_cls(config_path, config_name)
 
 
 def _get_type_annotation_error(v: Any, type_annotation: Type) -> ValueError:

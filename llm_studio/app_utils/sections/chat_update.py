@@ -107,7 +107,7 @@ async def answer_chat(q: Q) -> str:
             else:
                 prev_message = prev_message[0]
                 if cfg.dataset.add_eos_token_to_answer:
-                    prev_message += cfg._tokenizer_eos_token
+                    prev_message += cfg.tokenizer._tokenizer_eos_token
 
             full_prompt += prev_message
     logger.info(f"Full prompt: {full_prompt}")

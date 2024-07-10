@@ -34,6 +34,7 @@ from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
 
 from llm_studio.app_utils.db import Experiment
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src import possible_values
 from llm_studio.src.utils.config_utils import (
     _get_type_annotation_error,
@@ -98,12 +99,12 @@ def find_free_port():
 
 
 def start_process(
-    cfg: Any, gpu_list: List, process_queue: List, env_vars: Dict
+    cfg: DefaultConfigProblemBase, gpu_list: List, process_queue: List, env_vars: Dict
 ) -> subprocess.Popen:
     """Starts train.py for a given configuration setting
 
     Args:
-        cfg: config
+        cfg: DefaultConfigProblemBase config
         gpu_list: list of GPUs to use for the training
         process_queue: list of processes to wait for before starting the training
         env_vars: dictionary of ENV variables to pass to the training process
@@ -346,7 +347,7 @@ class S3Progress:
         await self.update_ui()
 
 
-def s3_download_coroutine(q, filename):
+def s3_download_coroutine(q: Q, filename: str):
     download_folder = f"{get_data_dir(q)}/tmp"
     download_folder = get_valid_temp_data_folder(q, download_folder)
 
@@ -370,7 +371,7 @@ def extract_if_zip(file, actual_path):
 
 
 async def s3_download(
-    q, bucket, filename, aws_access_key, aws_secret_key
+    q: Q, bucket, filename, aws_access_key, aws_secret_key
 ) -> Tuple[str, str]:
     """Downloads a file from s3
 
@@ -447,7 +448,7 @@ def azure_file_options(conn_string: str, container: str) -> List[str]:
         return []
 
 
-async def download_progress(q, title, seen_so_far, total_len):
+async def download_progress(q: Q, title, seen_so_far, total_len):
     if seen_so_far is not None and total_len is not None:
         percentage = seen_so_far / total_len
         value = percentage
@@ -469,7 +470,7 @@ async def download_progress(q, title, seen_so_far, total_len):
 
 
 async def azure_download(
-    q: Any, conn_string: str, container: str, filename: str
+    q: Q, conn_string: str, container: str, filename: str
 ) -> Tuple[str, str]:
     """Downloads a file from azure
 
@@ -531,7 +532,7 @@ async def azure_download(
     return azure_path, "".join(filename.split(".")[:-1])
 
 
-async def local_download(q: Any, filename: str) -> Tuple[str, str]:
+async def local_download(q: Q, filename: str) -> Tuple[str, str]:
     """Downloads a file from local path
 
     Args:
@@ -558,7 +559,7 @@ async def local_download(q: Any, filename: str) -> Tuple[str, str]:
 
 
 async def kaggle_download(
-    q: Any, command: str, kaggle_access_key: str, kaggle_secret_key: str
+    q: Q, command: str, kaggle_access_key: str, kaggle_secret_key: str
 ) -> Tuple[str, str]:
     """ "Downloads a file from kaggle
 
@@ -769,6 +770,23 @@ def get_dataset(
     return dataset, v
 
 
+def escape_python_string(s: str) -> str:
+    """Escapes a python string
+
+    Args:
+        s: string to escape
+
+    Returns:
+        Escaped string
+    """
+
+    s = s.replace("\\", "\\\\")
+    s = s.replace("\n", "\\n")
+    s = s.replace("\t", "\\t")
+    s = s.replace("\r", "\\r")
+    return s
+
+
 def get_ui_element(
     k: str,
     v: Any,
@@ -883,7 +901,7 @@ def get_ui_element(
                 ui.textbox(
                     name=pre + k,
                     label=title_label,
-                    value=val,
+                    value=escape_python_string(val),
                     required=False,
                     password=password,
                     tooltip=tooltip,
@@ -965,11 +983,11 @@ def get_ui_element(
     return t
 
 
-def get_dataset_elements(cfg: Any, q: Q) -> List:
+def get_dataset_elements(cfg: DefaultConfigProblemBase, q: Q) -> List:
     """For a given configuration setting return the according dataset ui components.
 
     Args:
-        cfg: configuration settings
+        cfg: DefaultConfigProblemBase configuration settings
         q: Q
 
     Returns:
@@ -1061,11 +1079,13 @@ def get_dataset_elements(cfg: Any, q: Q) -> List:
     return items
 
 
-def check_dependencies(cfg: Any, pre: str, k: str, q: Q, dataset_import: bool = False):
+def check_dependencies(
+    cfg: DefaultConfigProblemBase, pre: str, k: str, q: Q, dataset_import: bool = False
+):
     """Checks all dependencies for a given key
 
     Args:
-        cfg: configuration settings
+        cfg: DefaultConfigProblemBase configuration settings
         pre: prefix for client keys
         k: key to be checked
         q: Q
@@ -1107,7 +1127,7 @@ def check_dependencies(cfg: Any, pre: str, k: str, q: Q, dataset_import: bool = 
     return True
 
 
-def is_visible(k: str, cfg: Any, q: Q) -> bool:
+def is_visible(k: str, cfg: DefaultConfigProblemBase, q: Q) -> bool:
     """Returns a flag whether a given key should be visible on UI.
 
     Args:
@@ -1145,7 +1165,7 @@ def get_grid_value(v: Any, type_annotation: Any) -> List[str]:
 
 
 def get_ui_elements(
-    cfg: Any,
+    cfg: DefaultConfigProblemBase,
     q: Q,
     limit: Optional[List[str]] = None,
     pre: str = "experiment/start",
@@ -1349,7 +1369,7 @@ def get_ui_elements(
 
 
 def parse_ui_elements(
-    cfg: Any, q: Q, limit: Union[List, str] = "", pre: str = ""
+    cfg: DefaultConfigProblemBase, q: Q, limit: Union[List, str] = "", pre: str = ""
 ) -> Any:
     """Sets configuration settings with arguments from app
 
@@ -1891,11 +1911,13 @@ def set_grid_to_cfg(cfg: Any, grid: Dict[str, List]) -> Any:
     return cfg
 
 
-def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) -> None:
+def start_experiment(
+    cfg: DefaultConfigProblemBase, q: Q, pre: str, gpu_list: Optional[List] = None
+) -> None:
     """Starts an experiment
 
     Args:
-        cfg: configuration settings
+        cfg: DefaultConfigProblemBase configuration settings
         q: Q
         pre: prefix for client keys
         gpu_list: list of GPUs available
@@ -2022,7 +2044,7 @@ def dir_file_table(current_path: str) -> pd.DataFrame:
     return pd.DataFrame({current_path: results})
 
 
-def get_download_link(q, artifact_path):
+def get_download_link(q: Q, artifact_path):
     new_path = os.path.relpath(artifact_path, get_output_dir(q))
     new_path = os.path.join(get_download_dir(q), new_path)
     url_path = os.path.relpath(new_path, get_output_dir(q))
@@ -2148,17 +2170,17 @@ def remove_temp_files(q: Q):
                 os.remove(file)
 
 
-def get_gpu_usage():
-    usage = 0.0
-    all_gpus = GPUtil.getGPUs()
+def get_gpu_usage() -> float:
+    usage: float = 0.0
+    all_gpus: List[GPUtil.GPU] = GPUtil.getGPUs()
     for gpu in all_gpus:
-        usage += gpu.load
+        usage += float(gpu.load)
 
     usage /= len(all_gpus)
-    return usage * 100
+    return usage * 100.0
 
 
-def get_single_gpu_usage(sig_figs=1, highlight=None):
+def get_single_gpu_usage(sig_figs: int = 1, highlight: Optional[str] = None):
     all_gpus = GPUtil.getGPUs()
     items = []
     for i, gpu in enumerate(all_gpus):
@@ -2184,11 +2206,11 @@ def get_single_gpu_usage(sig_figs=1, highlight=None):
     return items
 
 
-def copy_config(cfg: Any, q: Q) -> Any:
+def copy_config(cfg: DefaultConfigProblemBase, q: Q) -> Any:
     """Makes a copy of the config
 
     Args:
-        cfg: config object
+        cfg: DefaultConfigProblemBase config object
     Returns:
         copy of the config
     """
@@ -2217,7 +2239,7 @@ def make_label(title: str, appendix: str = "") -> str:
     return label
 
 
-def get_cfg_list_items(cfg) -> List:
+def get_cfg_list_items(cfg: DefaultConfigProblemBase) -> List:
     items = parse_cfg_dataclass(cfg)
     x = []
     for item in items:
