@@ -45,7 +45,7 @@ class BaseNLPAug(nn.Module):
                 .bool()
                 # & special_mask
             ).bool()
-            input_ids[mask] = self.cfg._tokenizer_mask_token_id
+            input_ids[mask] = self.cfg.tokenizer._tokenizer_mask_token_id
             batch["input_ids"] = input_ids.clone()
             batch["attention_mask"][mask] = 0
             if batch["labels"].shape[1] == batch["input_ids"].shape[1]:
