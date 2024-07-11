@@ -1048,6 +1048,7 @@ def prepare_lora(cfg: DefaultConfigProblemBase, backbone):
         target_modules=target_modules,
         lora_dropout=cfg.training.lora_dropout,
         bias="none",
+        use_rslora=cfg.training.use_rslora,
         task_type="CAUSAL_LM",
     )
     # not needed anylonger with use_reentrant=False
