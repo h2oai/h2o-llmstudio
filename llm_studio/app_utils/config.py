@@ -51,7 +51,6 @@ default_cfg = {
     "output_folder": "output/",
     "cfg_file": "text_causal_language_modeling_config",
     "start_page": "home",
-    "kaggle_command": ("kaggle competitions download -c " "dataset"),
     "problem_types": [
         "text_causal_language_modeling_config",
         "text_dpo_modeling_config",

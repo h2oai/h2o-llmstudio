@@ -321,7 +321,7 @@ async def dataset_import(
                 ui.textbox(
                     name="dataset/import/kaggle_command",
                     label="Kaggle API command",
-                    value=default_cfg.kaggle_command,
+                    placeholder="kaggle competitions download -c dataset",
                     required=True,
                     tooltip="Kaggle API command to be executed",
                 ),
