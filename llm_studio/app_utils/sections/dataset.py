@@ -306,14 +306,14 @@ async def dataset_import(
 
         elif q.client["dataset/import/source"] == "H2O-Drive":
 
-            files = await h2o_drive_file_options()
+            files: List[str] | Exception = await h2o_drive_file_options()
 
             # Handle errors in h2o_drive connection and display them nicely below
             if isinstance(files, Exception):
                 warning = str(files)
-                files = None
+                files = []
 
-            if files is None:
+            if len(files) == 0:
                 ui_filename = ui.textbox(
                     name="dataset/import/h2o_drive_filename",
                     label="File name",

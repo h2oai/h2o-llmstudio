@@ -16,4 +16,3 @@ ignore_missing_imports = true
 allow_redefinition = true
 strict_optional = false
 exclude = "(build|output|data)"
-
