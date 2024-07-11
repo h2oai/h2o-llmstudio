@@ -37,7 +37,7 @@ You will also need to download the classification head, either manually, or by r
 ```python
 from huggingface_hub import hf_hub_download
 
-model_name = "{{repo_id}}"  # either local folder or huggingface model name
+model_name = "{{repo_id}}"  # either local folder or Hugging Face model name
 hf_hub_download(repo_id=model_name, filename="classification_head.pth", local_dir="./")
 ```
 
@@ -46,7 +46,7 @@ You can make classification predictions by following the example below:
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-model_name = "{{repo_id}}"  # either local folder or huggingface model name
+model_name = "{{repo_id}}"  # either local folder or Hugging Face model name
 # Important: The prompt needs to be in the same format the model was trained with.
 # You can find an example prompt in the experiment logs.
 prompt = "{{text_prompt_start}}How are you?{{end_of_sentence}}{{text_answer_separator}}"

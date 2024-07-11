@@ -40,6 +40,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
 
     system_column: str = "system"
     prompt_column: Tuple[str, ...] = ("instruction", "input")
+    prompt_column_separator: str = "\n\n"
     answer_column: str = "output"
     parent_id_column: str = "parent_id"
 
