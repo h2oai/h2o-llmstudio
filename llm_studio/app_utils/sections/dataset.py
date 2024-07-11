@@ -130,10 +130,7 @@ async def dataset_import(
             ),
         ]
 
-        if (
-            q.client["dataset/import/source"] is None
-            or q.client["dataset/import/source"] == "S3"
-        ):
+        if q.client["dataset/import/source"] == "S3":
             if q.client["dataset/import/s3_bucket"] is None:
                 q.client["dataset/import/s3_bucket"] = q.client[
                     "default_aws_bucket_name"
@@ -202,10 +199,7 @@ async def dataset_import(
                 ui_filename,
             ]
 
-        elif (
-            q.client["dataset/import/source"] is None
-            or q.client["dataset/import/source"] == "Azure"
-        ):
+        elif q.client["dataset/import/source"] == "Azure":
             if q.client["dataset/import/azure_conn_string"] is None:
                 q.client["dataset/import/azure_conn_string"] = q.client[
                     "default_azure_conn_string"
