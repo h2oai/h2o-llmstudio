@@ -2,8 +2,6 @@ import os
 from dataclasses import dataclass, field
 from typing import Any
 
-import numpy as np
-
 import llm_studio.src.datasets.text_dpo_modeling_ds
 from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.python_configs.text_causal_language_modeling_config import (
