@@ -19,6 +19,7 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
 from llm_studio.src import possible_values
 from llm_studio.src.losses import text_dpo_modeling_losses
 from llm_studio.src.models import text_dpo_modeling_model
+from llm_studio.src.nesting import Dependency
 from llm_studio.src.plots import text_dpo_modeling_plots
 from llm_studio.src.utils.modeling_utils import generate_experiment_name
 
@@ -83,6 +84,11 @@ class ConfigDPOTraining(ConfigNLPCausalLMTraining):
 
         self._grid_search_iscustom["beta"] = True
         self._grid_search_iscustom["simpo_gamma"] = True
+
+        self._nesting.add(
+            ["simpo_gamma"],
+            [Dependency(key="loss_function", value="SimPOLoss", is_set=True)],
+        )
 
         self._order.insert("beta", after="learning_rate")
         self._order.insert("simpo_gamma", after="beta")
