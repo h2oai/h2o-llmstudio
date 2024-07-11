@@ -32,6 +32,8 @@ from llm_studio.app_utils.utils import (
     get_model_types,
     get_problem_types,
     get_unique_dataset_name,
+    h2o_drive_download,
+    h2o_drive_file_options,
     kaggle_download,
     local_download,
     make_label,
@@ -108,6 +110,7 @@ async def dataset_import(
             ui.choice("Local", "Local"),
             ui.choice("S3", "AWS S3"),
             ui.choice("Azure", "Azure Datalake"),
+            ui.choice("H2O-Drive", "H2O-Drive"),
             ui.choice("Kaggle", "Kaggle"),
         ]
 
@@ -307,6 +310,37 @@ async def dataset_import(
                 ),
             ]
 
+        elif q.client["dataset/import/source"] == "H2O-Drive":
+
+            files = await h2o_drive_file_options()
+
+            # Handle errors in h2o_drive connection and display them nicely below
+            if isinstance(files, Exception):
+                warning = str(files)
+                files = None
+
+            if files is None:
+                ui_filename = ui.textbox(
+                    name="dataset/import/h2o_drive_filename",
+                    label="File name",
+                    value="No files found",
+                    required=True,
+                    disabled=True,
+                    tooltip="File name to be imported",
+                )
+            else:
+                default_file = files[0]
+                ui_filename = ui.dropdown(
+                    name="dataset/import/h2o_drive_filename",
+                    label="File name",
+                    value=default_file,
+                    choices=[ui.choice(x, x.split("/")[-1]) for x in files],
+                    required=True,
+                    tooltip="File name to be imported",
+                )
+
+            items += [ui_filename]
+
         elif q.client["dataset/import/source"] == "Kaggle":
             if q.client["dataset/import/kaggle_access_key"] is None:
                 q.client["dataset/import/kaggle_access_key"] = q.client[
@@ -397,6 +431,13 @@ async def dataset_import(
                         q.client["dataset/import/path"],
                         q.client["dataset/import/name"],
                     ) = await local_download(q, q.client["dataset/import/local_path"])
+                elif q.client["dataset/import/source"] == "H2O-Drive":
+                    (
+                        q.client["dataset/import/path"],
+                        q.client["dataset/import/name"],
+                    ) = await h2o_drive_download(
+                        q, q.client["dataset/import/h2o_drive_filename"]
+                    )
                 elif q.client["dataset/import/source"] == "Kaggle":
                     (
                         q.client["dataset/import/path"],

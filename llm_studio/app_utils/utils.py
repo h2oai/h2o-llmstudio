@@ -20,7 +20,7 @@ from collections import defaultdict
 from contextlib import closing
 from functools import partial
 from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
-
+import h2o_drive
 import GPUtil
 import numpy as np
 import pandas as pd
@@ -606,6 +606,60 @@ async def kaggle_download(
             clean_macos_artifacts(kaggle_path)
 
     return kaggle_path, "".join(command.split(" ")[-1].split("/")[-1])
+
+
+async def h2o_drive_download(q: Q, filename) -> Tuple[str, str]:
+    """Downloads a file from H2O Drive
+
+    Args:
+        q: Q
+        filename: filename to download
+
+    Returns:
+        Download location path
+    """
+    drive = await h2o_drive.Drive()
+    my_home_space = drive.my_bucket().home()
+
+    local_path = f"{get_data_dir(q)}/tmp"
+    local_path = get_valid_temp_data_folder(q, local_path)
+
+    if os.path.exists(local_path):
+        shutil.rmtree(local_path)
+    os.makedirs(local_path, exist_ok=True)
+
+    await my_home_space.download_file(filename, local_path)
+
+    zip_file = f"{local_path}/{filename.split('/')[-1]}"
+    extract_if_zip(zip_file, local_path)
+
+    return local_path, "".join(filename.split("/")[-1].split(".")[:-1])
+
+
+async def h2o_drive_file_options() -> List[str] | Exception:
+    """ "Returns all zip files in the H2O Drive
+
+    Args:
+
+    Returns:
+        List of zip files in bucket or Exception in case of access error
+
+    """
+    try:
+        drive = await h2o_drive.Drive()
+        my_home_space = drive.my_bucket().home()
+
+        files = []
+        for h2o_drive_file in my_home_space.list_objects():
+            print(h2o_drive_file)
+            files.append(h2o_drive_file.key)
+
+        files = filter_valid_files(files)
+        return files
+
+    except Exception as e:
+        logger.warning(f"Can't connect to H2O Drive: {e}")
+        return e
 
 
 def clean_error(error: str):
