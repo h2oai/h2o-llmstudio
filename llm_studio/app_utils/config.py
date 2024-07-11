@@ -49,11 +49,6 @@ default_cfg = {
     "heap_mode": os.getenv("H2O_LLM_STUDIO_ENABLE_HEAP", "False") == "True",
     "data_folder": "data/",
     "output_folder": "output/",
-    "s3_bucket": f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
-    "s3_filename": os.path.join(
-        f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
-        "default.zip",
-    ),
     "cfg_file": "text_causal_language_modeling_config",
     "start_page": "home",
     "kaggle_command": ("kaggle competitions download -c " "dataset"),

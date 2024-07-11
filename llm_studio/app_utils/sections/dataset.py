@@ -159,10 +159,7 @@ async def dataset_import(
                     tooltip="File name to be imported",
                 )
             else:
-                if default_cfg.s3_filename in files:
-                    default_file = default_cfg.s3_filename
-                else:
-                    default_file = files[0]
+                default_file = files[0]
                 ui_filename = ui.dropdown(
                     name="dataset/import/s3_filename",
                     label="File name",
