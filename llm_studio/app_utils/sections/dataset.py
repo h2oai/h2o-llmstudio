@@ -144,13 +144,18 @@ async def dataset_import(
                     "default_aws_secret_key"
                 ]
 
-            files = s3_file_options(
+            files: List[str] | Exception = s3_file_options(
                 q.client["dataset/import/s3_bucket"],
                 q.client["dataset/import/s3_access_key"],
                 q.client["dataset/import/s3_secret_key"],
             )
 
-            if not files:
+            # Handle errors in S3 connection and display them nicely below
+            if isinstance(files, Exception):
+                warning = str(files)
+                files = []
+
+            if len(files) == 0:
                 ui_filename = ui.textbox(
                     name="dataset/import/s3_filename",
                     label="File name",
@@ -306,7 +311,7 @@ async def dataset_import(
 
         elif q.client["dataset/import/source"] == "H2O-Drive":
 
-            files: List[str] | Exception = await h2o_drive_file_options()
+            files = await h2o_drive_file_options()
 
             # Handle errors in h2o_drive connection and display them nicely below
             if isinstance(files, Exception):

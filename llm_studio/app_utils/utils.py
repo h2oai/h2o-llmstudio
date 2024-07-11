@@ -229,7 +229,7 @@ def filter_valid_files(files) -> List[str]:
 
 def s3_file_options(
     bucket: str, aws_access_key: str, aws_secret_key: str
-) -> Optional[List[str]]:
+) -> List[str] | Exception:
     """ "Returns all zip files in the target s3 bucket
 
     Args:
@@ -238,7 +238,7 @@ def s3_file_options(
         aws_secret_key: s3 secret key
 
     Returns:
-        List of zip files in bucket or None in case of access error
+        List of zip files in bucket or Exception in case of access error
 
     """
 
@@ -266,7 +266,7 @@ def s3_file_options(
 
     except Exception as e:
         logger.warning(f"Can't load S3 datasets list: {e}")
-        return None
+        return e
 
 
 def convert_file_size(size: float):
