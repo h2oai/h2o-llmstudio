@@ -20,8 +20,9 @@ from collections import defaultdict
 from contextlib import closing
 from functools import partial
 from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
-import h2o_drive
+
 import GPUtil
+import h2o_drive
 import numpy as np
 import pandas as pd
 import psutil
