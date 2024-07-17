@@ -193,6 +193,12 @@ endif
 		-v `pwd`/output:/workspace/output \
 		$(DOCKER_IMAGE)
 
+# Perform a local Trivy scan for CVEs
+# Get Trivy from https://aquasecurity.github.io/trivy/v0.53/getting-started/installation/
+.PHONY: trivy-local
+trivy-local: docker-build-nightly
+	trivy image --scanners vuln --severity  CRITICAL,HIGH --timeout 60m $(DOCKER_IMAGE)
+
 .PHONY: docker-clean-all
 docker-clean-all:
 	@CONTAINERS=$$(docker ps -a -q --filter ancestor=$(DOCKER_IMAGE)); \
