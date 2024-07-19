@@ -152,7 +152,6 @@ test-ui-github-actions: reports setup-ui
 .PHONY: wave
 wave:
 	HF_HUB_ENABLE_HF_TRANSFER=True \
-	H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
@@ -160,7 +159,6 @@ wave:
 
 .PHONY: llmstudio
 llmstudio:
-	H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
