@@ -1553,10 +1553,14 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
             # that are no longer part of the dataclass fields.
             # This can happen if the codebase has changed since the experiment was run.
             # Ignore those warnings here
-            logging_level = logging.getLogger().level
+
+            original_level = logging.getLogger().level
             logging.getLogger().setLevel(logging.ERROR)
-            cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
-            logging.getLogger().setLevel(logging_level)
+            try:
+                cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
+            finally:
+                logging.getLogger().setLevel(original_level)
+
         except Exception:
             cfg = None
 
@@ -1572,13 +1576,7 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
                 loss_function = ""
 
         charts_db_path = f"{row.path}/charts.db"
-        if not os.path.exists(charts_db_path):
-            logs = {}
-            eta = "N/A"
-            total_steps = 1
-            curr_total_step = 0
-            score_val = ""
-        else:
+        if os.path.exists(charts_db_path):
             with SqliteDict(charts_db_path) as logs:
                 if "internal" in logs.keys():
                     if "current_step" in logs["internal"].keys():
@@ -1648,6 +1646,14 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
                     score_val = np.round(logs["validation"][metric]["values"][-1], 4)
                 else:
                     score_val = ""
+
+        else:
+            logs = {}
+            eta = "N/A"
+            total_steps = 1
+            curr_total_step = 0
+            score_val = ""
+            logger.info(f"Experiment path {charts_db_path} not found.")
 
         try:
             dataset = q.client.app_db.get_dataset(row.dataset).name
