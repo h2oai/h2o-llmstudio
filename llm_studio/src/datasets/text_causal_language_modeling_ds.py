@@ -110,7 +110,7 @@ class CustomDataset(Dataset):
             f"{codecs.decode(cfg.dataset.text_prompt_start, 'unicode_escape')}{prompt}"
         )
         if cfg.dataset.add_eos_token_to_prompt:
-            prompt += cfg._tokenizer_eos_token
+            prompt += cfg.tokenizer._tokenizer_eos_token
         prompt = (
             f"{prompt}"
             f"{codecs.decode(cfg.dataset.text_answer_separator, 'unicode_escape')}"
@@ -120,7 +120,7 @@ class CustomDataset(Dataset):
     @staticmethod
     def parse_answer(cfg: Any, answer: str):
         if cfg.dataset.add_eos_token_to_answer:
-            answer += cfg._tokenizer_eos_token
+            answer += cfg.tokenizer._tokenizer_eos_token
         return answer
 
     @staticmethod
@@ -132,7 +132,7 @@ class CustomDataset(Dataset):
             f"{codecs.decode(cfg.dataset.text_system_start, 'unicode_escape')}{system}"
         )
         if cfg.dataset.add_eos_token_to_system:
-            system += cfg._tokenizer_eos_token
+            system += cfg.tokenizer._tokenizer_eos_token
         return system
 
     @staticmethod
@@ -362,20 +362,26 @@ class CustomDataset(Dataset):
         ).clone()
 
         if self.cfg.dataset.mask_prompt_labels:
-            prompt_mask = torch.cat(
-                [
-                    torch.cat(
-                        [
-                            torch.ones_like(prompt_encoding),
-                            torch.zeros_like(answer_encoding),
-                        ]
-                    )
-                    for prompt_encoding, answer_encoding in zip(
-                        prompt_encodings, answer_encodings
-                    )
-                ]
-            ).to(torch.bool)
-            labels.masked_fill_(prompt_mask, -100)
+            masks = []
+            for idx, (prompt_encoding, answer_encoding) in enumerate(
+                zip(prompt_encodings, answer_encodings)
+            ):
+                if (
+                    not self.cfg.dataset.only_last_answer
+                    or idx == len(answer_encodings) - 1
+                ):
+                    mask = [
+                        torch.ones_like(prompt_encoding),
+                        torch.zeros_like(answer_encoding),
+                    ]
+                else:
+                    mask = [
+                        torch.ones_like(prompt_encoding),
+                        torch.ones_like(answer_encoding),
+                    ]
+                masks.append(torch.cat(mask))
+            masks = torch.cat(masks).to(torch.bool)
+            labels.masked_fill_(masks, -100)
         if self.cfg.tokenizer.max_length < len(labels):
             labels = labels[-self.cfg.tokenizer.max_length :]
 

@@ -21,6 +21,7 @@ dataset:
     - Validation
     limit_chained_samples: false
     mask_prompt_labels: true
+    only_last_answer: false
     parent_id_column: None
     personalize: false
     prompt_column:
