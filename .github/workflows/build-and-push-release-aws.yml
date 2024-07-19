@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.LLM_STUDIO_AWS_ROLE }}
           role-session-name: ${{ secrets.LLM_STUDIO_AWS_ROLE_SESSION_NAME }}
