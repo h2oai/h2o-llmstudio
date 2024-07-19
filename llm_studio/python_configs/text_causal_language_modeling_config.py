@@ -48,11 +48,12 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     text_prompt_start: str = "<|prompt|>"
     text_answer_separator: str = "<|answer|>"
 
-    limit_chained_samples: bool = False
     add_eos_token_to_system: bool = True
     add_eos_token_to_prompt: bool = True
     add_eos_token_to_answer: bool = True
+    limit_chained_samples: bool = False
     mask_prompt_labels: bool = True
+    only_last_answer: bool = False
 
     _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq", "parquet")
 
@@ -125,6 +126,14 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
         self._nesting.add(
             ["text_system_start", "add_eos_token_to_system"],
             [Dependency(key="system_column", value="None", is_set=False)],
+        )
+
+        self._nesting.add(
+            ["only_last_answer"],
+            [
+                Dependency(key="parent_id_column", value="None", is_set=False),
+                Dependency(key="mask_prompt_labels", value=True, is_set=True),
+            ],
         )
 
         self._visibility["dataset_class"] = -1
