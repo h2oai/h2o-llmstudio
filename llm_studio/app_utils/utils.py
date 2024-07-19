@@ -1571,75 +1571,83 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
                 metric = ""
                 loss_function = ""
 
-        with SqliteDict(f"{row.path}/charts.db") as logs:
-            if "internal" in logs.keys():
-                if "current_step" in logs["internal"].keys():
-                    curr_step = int(logs["internal"]["current_step"]["values"][-1])
-                else:
-                    curr_step = 0
-
-                if "total_training_steps" in logs["internal"].keys():
-                    total_training_steps = int(
-                        logs["internal"]["total_training_steps"]["values"][-1]
-                    )
-                else:
-                    total_training_steps = 0
-
-                if "current_val_step" in logs["internal"].keys():
-                    curr_val_step = int(
-                        logs["internal"]["current_val_step"]["values"][-1]
-                    )
-                else:
-                    curr_val_step = 0
-
-                if "total_validation_steps" in logs["internal"].keys():
-                    total_validation_steps = int(
-                        logs["internal"]["total_validation_steps"]["values"][-1]
-                    )
-                else:
-                    total_validation_steps = 0
-
-                curr_total_step = curr_step + curr_val_step
-
-                total_steps = max(total_training_steps + total_validation_steps, 1)
-
-                if (
-                    "global_start_time" in logs["internal"].keys()
-                    and curr_total_step > 0
-                ):
-                    elapsed = (
-                        time.time()
-                        - logs["internal"]["global_start_time"]["values"][-1]
-                    )
-                    remaining_steps = total_steps - curr_total_step
-                    eta = elapsed * (remaining_steps / curr_total_step)
-                    if eta == 0:
-                        eta = ""
+        charts_db_path = f"{row.path}/charts.db"
+        if not os.path.exists(charts_db_path):
+            logs = {}
+            eta = "N/A"
+            total_steps = 1
+            curr_total_step = 0
+            score_val = ""
+        else:
+            with SqliteDict(charts_db_path) as logs:
+                if "internal" in logs.keys():
+                    if "current_step" in logs["internal"].keys():
+                        curr_step = int(logs["internal"]["current_step"]["values"][-1])
                     else:
-                        # if more than one day, show days
-                        # need to subtract 1 day from time_took since strftime shows
-                        # day of year which starts counting at 1
-                        if eta > 86400:
-                            eta = time.strftime(
-                                "%-jd %H:%M:%S", time.gmtime(float(eta - 86400))
-                            )
+                        curr_step = 0
+
+                    if "total_training_steps" in logs["internal"].keys():
+                        total_training_steps = int(
+                            logs["internal"]["total_training_steps"]["values"][-1]
+                        )
+                    else:
+                        total_training_steps = 0
+
+                    if "current_val_step" in logs["internal"].keys():
+                        curr_val_step = int(
+                            logs["internal"]["current_val_step"]["values"][-1]
+                        )
+                    else:
+                        curr_val_step = 0
+
+                    if "total_validation_steps" in logs["internal"].keys():
+                        total_validation_steps = int(
+                            logs["internal"]["total_validation_steps"]["values"][-1]
+                        )
+                    else:
+                        total_validation_steps = 0
+
+                    curr_total_step = curr_step + curr_val_step
+
+                    total_steps = max(total_training_steps + total_validation_steps, 1)
+
+                    if (
+                        "global_start_time" in logs["internal"].keys()
+                        and curr_total_step > 0
+                    ):
+                        elapsed = (
+                            time.time()
+                            - logs["internal"]["global_start_time"]["values"][-1]
+                        )
+                        remaining_steps = total_steps - curr_total_step
+                        eta = elapsed * (remaining_steps / curr_total_step)
+                        if eta == 0:
+                            eta = ""
                         else:
-                            eta = time.strftime("%H:%M:%S", time.gmtime(float(eta)))
+                            # if more than one day, show days
+                            # need to subtract 1 day from time_took since strftime shows
+                            # day of year which starts counting at 1
+                            if eta > 86400:
+                                eta = time.strftime(
+                                    "%-jd %H:%M:%S", time.gmtime(float(eta - 86400))
+                                )
+                            else:
+                                eta = time.strftime("%H:%M:%S", time.gmtime(float(eta)))
+                    else:
+                        eta = "N/A"
                 else:
                     eta = "N/A"
-            else:
-                eta = "N/A"
-                total_steps = 1
-                curr_total_step = 0
+                    total_steps = 1
+                    curr_total_step = 0
 
-            if (
-                "validation" in logs
-                and metric in logs["validation"]
-                and logs["validation"][metric]["values"][-1] is not None
-            ):
-                score_val = np.round(logs["validation"][metric]["values"][-1], 4)
-            else:
-                score_val = ""
+                if (
+                    "validation" in logs
+                    and metric in logs["validation"]
+                    and logs["validation"][metric]["values"][-1] is not None
+                ):
+                    score_val = np.round(logs["validation"][metric]["values"][-1], 4)
+                else:
+                    score_val = ""
 
         try:
             dataset = q.client.app_db.get_dataset(row.dataset).name
