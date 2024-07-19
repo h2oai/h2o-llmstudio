@@ -823,7 +823,7 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
 
     if cfg.environment._local_rank == 0:
         logger.info(
-            f"Using {backbone.config._attn_implementation_internal} attention implementation."
+            f"Attention implementation: {backbone.config._attn_implementation_internal}"
         )
 
     if cfg.training.lora:
