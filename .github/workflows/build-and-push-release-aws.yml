@@ -37,7 +37,7 @@ jobs:
           df -h
       - name: Docker Build Image
         run: |-
-          docker build -t ${{ secrets.LLM_STUDIO_AWS_ECR }}:${{ github.ref_name }} .
+          docker build -t ${{ secrets.LLM_STUDIO_AWS_ECR }}:test .
       - name: Push to AWS
         run: |-
-          docker push ${{ secrets.LLM_STUDIO_AWS_ECR }}:${{ github.ref_name }}
+          docker push ${{ secrets.LLM_STUDIO_AWS_ECR }}:test
