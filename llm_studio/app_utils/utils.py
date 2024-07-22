@@ -619,7 +619,7 @@ async def h2o_drive_download(q: Q, filename) -> Tuple[str, str]:
     Returns:
         Download location path
     """
-    drive = await h2o_drive.Drive()
+    drive = await h2o_drive.Drive(q.auth.access_token)
     my_home_space = drive.my_bucket().home()
 
     local_path = f"{get_data_dir(q)}/tmp"
@@ -629,15 +629,16 @@ async def h2o_drive_download(q: Q, filename) -> Tuple[str, str]:
         shutil.rmtree(local_path)
     os.makedirs(local_path, exist_ok=True)
 
-    await my_home_space.download_file(filename, local_path)
-
     zip_file = f"{local_path}/{filename.split('/')[-1]}"
+
+    await my_home_space.download_file(filename, zip_file)
+
     extract_if_zip(zip_file, local_path)
 
     return local_path, "".join(filename.split("/")[-1].split(".")[:-1])
 
 
-async def h2o_drive_file_options() -> List[str] | Exception:
+async def h2o_drive_file_options(q: Q) -> List[str] | Exception:
     """ "Returns all zip files in the H2O Drive
 
     Args:
@@ -647,12 +648,11 @@ async def h2o_drive_file_options() -> List[str] | Exception:
 
     """
     try:
-        drive = await h2o_drive.Drive()
+        drive = await h2o_drive.Drive(q.auth.access_token)
         my_home_space = drive.my_bucket().home()
 
         files = []
-        for h2o_drive_file in my_home_space.list_objects():
-            print(h2o_drive_file)
+        for h2o_drive_file in await my_home_space.list_objects():
             files.append(h2o_drive_file.key)
 
         files = filter_valid_files(files)

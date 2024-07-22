@@ -311,7 +311,7 @@ async def dataset_import(
 
         elif q.client["dataset/import/source"] == "H2O-Drive":
 
-            files = await h2o_drive_file_options()
+            files = await h2o_drive_file_options(q)
 
             # Handle errors in h2o_drive connection and display them nicely below
             if isinstance(files, Exception):
