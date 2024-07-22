@@ -195,12 +195,19 @@ class CustomDataset(Dataset):
             text = text.replace("Open Asistant", cfg.dataset.chatbot_name)
             text = text.replace("Open Assiant", cfg.dataset.chatbot_name)
             text = text.replace("Assistant", cfg.dataset.chatbot_name)
+            text = text.replace("ChatGPT", cfg.dataset.chatbot_name)
             text = text.replace("LAION AI", cfg.dataset.chatbot_author)
             text = text.replace("LAION-AI", cfg.dataset.chatbot_author)
             text = text.replace("LAION,", cfg.dataset.chatbot_author + ",")
             text = text.replace("LAION.ai", cfg.dataset.chatbot_author)
             text = text.replace("LAION.", cfg.dataset.chatbot_author + ".")
             text = text.replace("LAION", cfg.dataset.chatbot_author)
+            text = text.replace("Laion AI", cfg.dataset.chatbot_author)
+            text = text.replace("OpenAI", cfg.dataset.chatbot_author)
+            text = text.replace("Open AI", cfg.dataset.chatbot_author)
+            text = text.replace("openai", cfg.dataset.chatbot_author)
+            text = text.replace("open ai", cfg.dataset.chatbot_author)
+
             return text
 
         if cfg.dataset.personalize:
@@ -362,20 +369,26 @@ class CustomDataset(Dataset):
         ).clone()
 
         if self.cfg.dataset.mask_prompt_labels:
-            prompt_mask = torch.cat(
-                [
-                    torch.cat(
-                        [
-                            torch.ones_like(prompt_encoding),
-                            torch.zeros_like(answer_encoding),
-                        ]
-                    )
-                    for prompt_encoding, answer_encoding in zip(
-                        prompt_encodings, answer_encodings
-                    )
-                ]
-            ).to(torch.bool)
-            labels.masked_fill_(prompt_mask, -100)
+            masks = []
+            for idx, (prompt_encoding, answer_encoding) in enumerate(
+                zip(prompt_encodings, answer_encodings)
+            ):
+                if (
+                    not self.cfg.dataset.only_last_answer
+                    or idx == len(answer_encodings) - 1
+                ):
+                    mask = [
+                        torch.ones_like(prompt_encoding),
+                        torch.zeros_like(answer_encoding),
+                    ]
+                else:
+                    mask = [
+                        torch.ones_like(prompt_encoding),
+                        torch.ones_like(answer_encoding),
+                    ]
+                masks.append(torch.cat(mask))
+            masks = torch.cat(masks).to(torch.bool)
+            labels.masked_fill_(masks, -100)
         if self.cfg.tokenizer.max_length < len(labels):
             labels = labels[-self.cfg.tokenizer.max_length :]
 
