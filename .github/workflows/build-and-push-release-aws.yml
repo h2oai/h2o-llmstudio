@@ -1,9 +1,6 @@
 name: Build and Push to AWS - Release
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
     tags:
       - '**'
@@ -37,7 +34,7 @@ jobs:
           df -h
       - name: Docker Build Image
         run: |-
-          docker build -t ${{ secrets.LLM_STUDIO_AWS_ECR }}:test .
+          docker build -t ${{ secrets.LLM_STUDIO_AWS_ECR }}:${{ github.ref_name }} .
       - name: Push to AWS
         run: |-
-          docker push ${{ secrets.LLM_STUDIO_AWS_ECR }}:test
+          docker push ${{ secrets.LLM_STUDIO_AWS_ECR }}:${{ github.ref_name }}
