@@ -77,6 +77,7 @@ class ConfigDPOTraining(ConfigNLPCausalLMTraining):
         self._possible_values["beta"] = possible_values.Number(0.05, 1.0, 0.05)
         self._possible_values["simpo_gamma"] = possible_values.Number(0.05, 2.0, 0.05)
 
+        self._grid_search_values["loss_function"] = None
         self._grid_search_values["beta"] = (0.1, 0.15, 0.20, 0.25, 0.4, 0.5)
         self._grid_search_values["simpo_gamma"] = (0.5, 0.75, 1, 1.25, 1.5, 1.75, 2)
 
