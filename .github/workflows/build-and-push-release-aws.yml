@@ -21,6 +21,8 @@ jobs:
           role-to-assume: ${{ secrets.LLM_STUDIO_AWS_ROLE }}
           role-session-name: ${{ secrets.LLM_STUDIO_AWS_ROLE_SESSION_NAME }}
           aws-region: ${{ secrets.LLM_STUDIO_AWS_REGION }}
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
       - name: Clean Docker images
         run: |-
           echo "Available storage before cleaning:"
