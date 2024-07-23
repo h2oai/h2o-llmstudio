@@ -1,4 +1,4 @@
-name: Build and Push to Vorvan - Release
+name: Build and Push to GCR - Release
 
 on:
   push:
