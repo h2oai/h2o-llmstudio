@@ -162,7 +162,8 @@ H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
 wave run app
 ```
 
-If you are using a conda environment, you can run ```make llmstudio-conda```.
+If you are using the [nightly conda environment](#nightly-conda-virtual-environment), you can run ```make llmstudio-conda```.
+
 
 ## Run H2O LLM Studio GUI using Docker from a nightly build
 
