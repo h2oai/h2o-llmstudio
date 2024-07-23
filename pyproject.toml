@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 88
-target_version = ["py310"]
+target-version = ["py310"]
 exclude = "(.eggs|.git|.hg|.mypy_cache|.nox|.tox|.venv|.svn|_build|buck-out|build/|dist/|output/|data/)"
 
 [tool.isort]
@@ -16,4 +16,3 @@ ignore_missing_imports = true
 allow_redefinition = true
 strict_optional = false
 exclude = "(build|output|data)"
-
