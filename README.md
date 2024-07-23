@@ -127,7 +127,8 @@ make setup-no-flash
 
 instead. This will install the dependencies without the flash_attn package. Note that this will disable the use of Flash Attention 2 and model training will be slower and consume more memory.
 
-#### Conda virtual environment
+#### Nightly Conda virtual environment
+
 
 You can also setup a conda virtual environment that can also deviate from the recommended setup. The ```Makefile``` contains a command ```setup-conda-nightly``` that installs a fresh conda environment with CUDA 12.4 and current nightly PyTorch.
 
