@@ -732,13 +732,20 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
     Creates a backbone model for NLP tasks.
     This is needed for Gradient Checkpointing in DDP mode.
     """
+
     kwargs = dict()
+    if (
+        hasattr(cfg.training, "attention_implementation")
+        and cfg.training.attention_implementation != "auto"
+    ):
+        kwargs["attn_implementation"] = cfg.training.attention_implementation
     try:
         config = AutoConfig.from_pretrained(
             cfg.llm_backbone,
             trust_remote_code=cfg.environment.trust_remote_code,
             token=os.getenv("HUGGINGFACE_TOKEN"),
             revision=cfg.environment.huggingface_branch,
+            **kwargs,
         )
         kwargs["token"] = os.getenv("HUGGINGFACE_TOKEN")
     except TypeError:
@@ -748,9 +755,11 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
             cfg.llm_backbone,
             trust_remote_code=cfg.environment.trust_remote_code,
             revision=cfg.environment.huggingface_branch,
+            **kwargs,
         )
 
     config = update_backbone_config(config, cfg)
+    kwargs = dict()
 
     quantization_config = None
     if cfg.architecture.backbone_dtype == "int8" and len(cfg.environment.gpus):
@@ -788,23 +797,6 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
 
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
 
-    if cfg.training.use_flash_attention_2:
-        try:
-            import flash_attn  # noqa: F401
-
-            # see https://github.com/fxmarty/transformers/
-            # blob/3f06a3a0aec8cc1ec3ad6bf66ebe277392c5ab37/
-            # src/transformers/configuration_utils.py#L380
-            config._attn_implementation_internal = "flash_attention_2"
-            if cfg.environment._local_rank == 0:
-                logger.info("Using Flash Attention 2.")
-        except ImportError:
-            if cfg.environment._local_rank == 0:
-                logger.warning(
-                    "Flash Attention 2.0 is not available. "
-                    "Please consider to run 'make setup' to install it."
-                )
-
     if cfg.architecture.pretrained:
         if cfg.environment._local_rank == 0:
             logger.info(f"Loading {cfg.llm_backbone}. This may take a while.")
@@ -828,6 +820,11 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
         backbone.resize_token_embeddings(cfg.tokenizer._vocab_length)
 
     backbone.model_parallel = False
+
+    if cfg.environment._local_rank == 0:
+        logger.info(
+            f"Attention implementation: {backbone.config._attn_implementation_internal}"
+        )
 
     if cfg.training.lora:
         # if used, gradient checkpointing will be enabled below

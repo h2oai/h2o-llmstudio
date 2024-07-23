@@ -150,7 +150,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     differential_learning_rate: float = 0.00001
     freeze_layers: Tuple[str, ...] = ()
 
-    use_flash_attention_2: bool = False
+    attention_implementation: str = "auto"
     batch_size: int = 2
     drop_last_batch: bool = True
     epochs: int = 1
@@ -196,6 +196,15 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
             values=("embed", "layer", "head"),
             allow_custom=True,
             placeholder="Select optional layers to freeze...",
+        )
+        self._possible_values["attention_implementation"] = possible_values.String(
+            values=(
+                ("auto", "Auto"),
+                ("eager", "Eager"),
+                ("flash_attention_2", "Flash Attention 2"),
+                ("sdpa", "SDPA"),
+            ),
+            allow_custom=False,
         )
 
         self._possible_values["batch_size"] = (1, 256, 1)
