@@ -51,7 +51,7 @@ setup-conda:
 		conda activate llmstudio; \
 		conda install -c nvidia/label/cuda-12.4.0 cuda-toolkit -y; \
 		conda install pytorch pytorch-cuda=12.4 -c pytorch-nightly -c nvidia -y; \
-		grep -v "nvidia" ~/philipp/h2o-llmstudio/requirements.txt | grep -v "torch" | python -m pip install -r /dev/stdin; \
+		grep -v "nvidia" requirements.txt | grep -v "torch" | python -m pip install -r /dev/stdin; \
 		python -m pip install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir; \
 	'
 
