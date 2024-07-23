@@ -111,7 +111,6 @@ environment:
     number_of_workers: 8
     seed: -1
     trust_remote_code: true
-    use_fsdp: false
 experiment_name: default-8-a10g
 llm_backbone: h2oai/h2ogpt-4096-llama2-7b
 logging:

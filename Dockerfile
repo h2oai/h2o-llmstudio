@@ -1,16 +1,15 @@
-FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get upgrade -y
-
-RUN apt-get update && apt-get install -y \
+RUN apt-get update \
+    && apt-get upgrade -y  \
+    && apt install -y  \
     git \
-    curl \
-    software-properties-common \
-    && add-apt-repository ppa:deadsnakes/ppa \
-    && apt install -y python3.10 \
-    && apt install -y python3.10-distutils \
+    python3.10 \
+    python3.10-distutils \
+    python3.10-venv \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 # Pick an unusual UID for the llmstudio user.
@@ -27,9 +26,7 @@ USER llmstudio
 # if it wants to.  This is really not advisable, though, since it's lost when
 # the container exits.
 WORKDIR /workspace
-RUN \
-    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 && \
-    chmod -R a+w /home/llmstudio
+RUN chmod -R a+w /home/llmstudio
 COPY Makefile .
 COPY Pipfile .
 COPY Pipfile.lock .
@@ -39,6 +36,12 @@ RUN \
     chmod -R a+w /home/llmstudio
 COPY . .
 
+# Remove unnecessary packages
+USER root
+RUN apt-get purge -y linux-libc-dev
+RUN apt-get autoremove -y
+
+USER llmstudio
 ENV HOME=/home/llmstudio
 ENV H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756
 ENV H2O_WAVE_MAX_REQUEST_SIZE=25MB

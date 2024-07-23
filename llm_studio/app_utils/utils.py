@@ -22,6 +22,7 @@ from functools import partial
 from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
 
 import GPUtil
+import h2o_drive
 import numpy as np
 import pandas as pd
 import psutil
@@ -228,7 +229,7 @@ def filter_valid_files(files) -> List[str]:
 
 def s3_file_options(
     bucket: str, aws_access_key: str, aws_secret_key: str
-) -> Optional[List[str]]:
+) -> List[str] | Exception:
     """ "Returns all zip files in the target s3 bucket
 
     Args:
@@ -237,7 +238,7 @@ def s3_file_options(
         aws_secret_key: s3 secret key
 
     Returns:
-        List of zip files in bucket or None in case of access error
+        List of zip files in bucket or Exception in case of access error
 
     """
 
@@ -265,7 +266,7 @@ def s3_file_options(
 
     except Exception as e:
         logger.warning(f"Can't load S3 datasets list: {e}")
-        return None
+        return e
 
 
 def convert_file_size(size: float):
@@ -606,6 +607,60 @@ async def kaggle_download(
             clean_macos_artifacts(kaggle_path)
 
     return kaggle_path, "".join(command.split(" ")[-1].split("/")[-1])
+
+
+async def h2o_drive_download(q: Q, filename) -> Tuple[str, str]:
+    """Downloads a file from H2O Drive
+
+    Args:
+        q: Q
+        filename: filename to download
+
+    Returns:
+        Download location path
+    """
+    drive = await h2o_drive.Drive(q.auth.access_token)
+    my_home_space = drive.my_bucket().home()
+
+    local_path = f"{get_data_dir(q)}/tmp"
+    local_path = get_valid_temp_data_folder(q, local_path)
+
+    if os.path.exists(local_path):
+        shutil.rmtree(local_path)
+    os.makedirs(local_path, exist_ok=True)
+
+    zip_file = f"{local_path}/{filename.split('/')[-1]}"
+
+    await my_home_space.download_file(filename, zip_file)
+
+    extract_if_zip(zip_file, local_path)
+
+    return local_path, "".join(filename.split("/")[-1].split(".")[:-1])
+
+
+async def h2o_drive_file_options(q: Q) -> List[str] | Exception:
+    """ "Returns all zip files in the H2O Drive
+
+    Args:
+
+    Returns:
+        List of zip files in bucket or Exception in case of access error
+
+    """
+    try:
+        drive = await h2o_drive.Drive(q.auth.access_token)
+        my_home_space = drive.my_bucket().home()
+
+        files = []
+        for h2o_drive_file in await my_home_space.list_objects():
+            files.append(h2o_drive_file.key)
+
+        files = filter_valid_files(files)
+        return files
+
+    except Exception as e:
+        logger.warning(f"Can't connect to H2O Drive: {e}")
+        return e
 
 
 def clean_error(error: str):
