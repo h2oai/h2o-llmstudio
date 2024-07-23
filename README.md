@@ -129,7 +129,8 @@ instead. This will install the dependencies without the flash_attn package. Note
 
 #### Conda virtual environment
 
-You can also setup a conda virtual environment that can also deviate from the recommended setup. The ```Makefile``` contains a command ```setup-conda``` that installs a fresh conda environment with CUDA 12.4 and current nightly PyTorch.
+You can also setup a conda virtual environment that can also deviate from the recommended setup. The ```Makefile``` contains a command ```setup-conda-nightly``` that installs a fresh conda environment with CUDA 12.4 and current nightly PyTorch.
+
 
 #### Using requirements.txt
 
