@@ -1,0 +1,6 @@
+Allows to change the utilized attention implementation. 
+
+- **Auto** selection will automatically choose the implementation based on system availability.
+- **Eager** relies on vanilla attention implementation in Python.
+- **SDPA** uses scaled dot product attention in PyTorch.
+- **Flash Attention 2** explicitly uses FA2 which requires the flash_attn package.
