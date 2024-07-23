@@ -107,7 +107,11 @@ conda activate llmstudio
 conda install -c "nvidia/label/cuda-12.1.0" cuda-toolkit
 ```
 
-#### Create virtual environment (pipenv)
+### Virtual environments
+
+We offer various ways of setting up the necessary python environment.
+
+#### Pipenv virtual environment
 
 The following command will create a virtual environment using pipenv and will install the dependencies using pipenv:
 
@@ -123,9 +127,13 @@ make setup-no-flash
 
 instead. This will install the dependencies without the flash_attn package. Note that this will disable the use of Flash Attention 2 and model training will be slower and consume more memory.
 
-### Using requirements.txt
+#### Conda virtual environment
 
-If you wish to use conda or another virtual environment, you can also install the dependencies using the requirements.txt file:
+You can also setup a conda virtual environment that can also deviate from the recommended setup. The ```Makefile``` contains a command ```setup-conda``` that installs a fresh conda environment with CUDA 12.4 and current nightly PyTorch.
+
+#### Using requirements.txt
+
+If you wish to use another virtual environment, you can also install the dependencies using the requirements.txt file:
 
 ```bash
 pip install -r requirements.txt
@@ -152,6 +160,8 @@ H2O_WAVE_NO_LOG=true \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
 wave run app
 ```
+
+If you are using a conda environment, you can run ```make llmstudio-conda```.
 
 ## Run H2O LLM Studio GUI using Docker from a nightly build
 
