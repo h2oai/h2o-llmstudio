@@ -34,12 +34,26 @@ setup: pipenv
 .PHONY: setup-dev
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
-	- $(PIPENV_PIP) install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir
+	-$(PIPENV_PIP) install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir
 	$(PIPENV) run playwright install
 
 .PHONY: setup-no-flash
 setup-no-flash: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
+
+.PHONY: setup-conda
+setup-conda:
+	@bash -c '\
+		set -e; \
+		source $$(conda info --base)/etc/profile.d/conda.sh; \
+		conda deactivate; \
+		conda create -n llmstudio python=3.10 -y; \
+		conda activate llmstudio; \
+		conda install -c nvidia/label/cuda-12.4.0 cuda-toolkit -y; \
+		conda install pytorch pytorch-cuda=12.4 -c pytorch-nightly -c nvidia -y; \
+		grep -v "nvidia" ~/philipp/h2o-llmstudio/requirements.txt | grep -v "torch" | python -m pip install -r /dev/stdin; \
+		python -m pip install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir; \
+	'
 
 setup-ui: pipenv
 	$(PIPENV) install --verbose --categories=dev-packages --python $(PYTHON_VERSION)
@@ -163,6 +177,15 @@ llmstudio:
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
 	$(PIPENV) run wave run --no-reload app
+
+.PHONY: llmstudio-conda
+llmstudio-conda:
+	CONDA_ACTIVATE="source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate llmstudio" && \
+	bash -c "$$CONDA_ACTIVATE && \
+		H2O_WAVE_MAX_REQUEST_SIZE=25MB \
+		H2O_WAVE_NO_LOG=true \
+		H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
+		wave run --no-reload app"
 
 .PHONY: stop-llmstudio
 stop-llmstudio:

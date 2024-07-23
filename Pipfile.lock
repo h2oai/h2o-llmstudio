@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5a74c16e8940e2da9944ec850291050c07dd7851cc65000549f9204cc7c3fc1d"
+            "sha256": "96bea19335b7c9f42631a5a16e187f7b18b7219dbbf12fb08152bfb4aeb728b2"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -653,10 +653,10 @@
         },
         "deepspeed": {
             "hashes": [
-                "sha256:78a8a7ae66b0d3f661224c9d48ed153be0f1a2d5b9be8d0cbfeee1fa6a791995"
+                "sha256:bb2f404b4a1d06aedd40c64d661f71307c22945d04a42d397ad39bbfeef9c8b8"
             ],
             "index": "pypi",
-            "version": "==0.13.2"
+            "version": "==0.14.4"
         },
         "dill": {
             "hashes": [
@@ -1634,6 +1634,13 @@
             "markers": "platform_system == 'Linux' and platform_machine == 'x86_64'",
             "version": "==12.1.0.106"
         },
+        "nvidia-ml-py": {
+            "hashes": [
+                "sha256:b89ba66e8ba8032fdbbaa907323f248be0ed001e106f814a1e1137e58eba2a80",
+                "sha256:e9e7f12ef1ec234bb0dc22d2bdc762ffafab394bdc472a07a4377c95bbf93afe"
+            ],
+            "version": "==12.555.43"
+        },
         "nvidia-nccl-cu12": {
             "hashes": [
                 "sha256:057f6bf9685f75215d0c53bf3ac4a10b3e6578351de307abad9e18a99182af56",
@@ -1669,12 +1676,12 @@
         },
         "openai": {
             "hashes": [
-                "sha256:41be9e0302e95dba8a9374b885c5cb1cec2202816a70b98736fee25a2cadd1f2",
-                "sha256:d399b9d476dbbc167aceaac6bc6ed0b2e2bb6c9e189c7f7047f822743ae62e64"
+                "sha256:a903245c0ecf622f2830024acdaa78683c70abb8e9d37a497b851670864c9f73",
+                "sha256:dc8197fc40ab9d431777b6620d962cc49f4544ffc3011f03ce0a805e6eb54adb"
             ],
             "index": "pypi",
             "markers": "python_full_version >= '3.7.1'",
-            "version": "==1.36.1"
+            "version": "==1.37.0"
         },
         "packaging": {
             "hashes": [
@@ -2051,14 +2058,6 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==2.8.0"
-        },
-        "pynvml": {
-            "hashes": [
-                "sha256:183d223ae487e5f00402d8da06c68c978ef8a9295793ee75559839c6ade7b229",
-                "sha256:a5fba3ab14febda50d19dbda012ef62ae0aed45b7ccc07af0bc5be79223e450c"
-            ],
-            "markers": "python_version >= '3.6'",
-            "version": "==11.5.3"
         },
         "python-dateutil": {
             "hashes": [
