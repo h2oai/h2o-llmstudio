@@ -16,7 +16,7 @@
 - [What's New](#whats-new)
 - [Setup](#setup)
   - [Recommended Install](#recommended-install)
-  - [Using requirements.txt](#using-requirementstxt)
+  - [Virtual Environments](#virtual-environments)
 - [Run H2O LLM Studio GUI](#run-h2o-llm-studio-gui)
 - [Run H2O LLM Studio GUI using Docker from a nightly build](#run-h2o-llm-studio-gui-using-docker-from-a-nightly-build)
 - [Run H2O LLM Studio GUI by building your own Docker image](#run-h2o-llm-studio-gui-by-building-your-own-docker-image)
@@ -129,9 +129,7 @@ instead. This will install the dependencies without the flash_attn package. Note
 
 #### Nightly Conda virtual environment
 
-
 You can also setup a conda virtual environment that can also deviate from the recommended setup. The ```Makefile``` contains a command ```setup-conda-nightly``` that installs a fresh conda environment with CUDA 12.4 and current nightly PyTorch.
-
 
 #### Using requirements.txt
 
