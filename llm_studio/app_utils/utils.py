@@ -22,6 +22,7 @@ from functools import partial
 from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
 
 import GPUtil
+import h2o_drive
 import numpy as np
 import pandas as pd
 import psutil
@@ -228,7 +229,7 @@ def filter_valid_files(files) -> List[str]:
 
 def s3_file_options(
     bucket: str, aws_access_key: str, aws_secret_key: str
-) -> Optional[List[str]]:
+) -> List[str] | Exception:
     """ "Returns all zip files in the target s3 bucket
 
     Args:
@@ -237,7 +238,7 @@ def s3_file_options(
         aws_secret_key: s3 secret key
 
     Returns:
-        List of zip files in bucket or None in case of access error
+        List of zip files in bucket or Exception in case of access error
 
     """
 
@@ -265,7 +266,7 @@ def s3_file_options(
 
     except Exception as e:
         logger.warning(f"Can't load S3 datasets list: {e}")
-        return None
+        return e
 
 
 def convert_file_size(size: float):
@@ -608,6 +609,60 @@ async def kaggle_download(
     return kaggle_path, "".join(command.split(" ")[-1].split("/")[-1])
 
 
+async def h2o_drive_download(q: Q, filename) -> Tuple[str, str]:
+    """Downloads a file from H2O Drive
+
+    Args:
+        q: Q
+        filename: filename to download
+
+    Returns:
+        Download location path
+    """
+    drive = await h2o_drive.Drive(q.auth.access_token)
+    my_home_space = drive.my_bucket().home()
+
+    local_path = f"{get_data_dir(q)}/tmp"
+    local_path = get_valid_temp_data_folder(q, local_path)
+
+    if os.path.exists(local_path):
+        shutil.rmtree(local_path)
+    os.makedirs(local_path, exist_ok=True)
+
+    zip_file = f"{local_path}/{filename.split('/')[-1]}"
+
+    await my_home_space.download_file(filename, zip_file)
+
+    extract_if_zip(zip_file, local_path)
+
+    return local_path, "".join(filename.split("/")[-1].split(".")[:-1])
+
+
+async def h2o_drive_file_options(q: Q) -> List[str] | Exception:
+    """ "Returns all zip files in the H2O Drive
+
+    Args:
+
+    Returns:
+        List of zip files in bucket or Exception in case of access error
+
+    """
+    try:
+        drive = await h2o_drive.Drive(q.auth.access_token)
+        my_home_space = drive.my_bucket().home()
+
+        files = []
+        for h2o_drive_file in await my_home_space.list_objects():
+            files.append(h2o_drive_file.key)
+
+        files = filter_valid_files(files)
+        return files
+
+    except Exception as e:
+        logger.warning(f"Can't connect to H2O Drive: {e}")
+        return e
+
+
 def clean_error(error: str):
     """Cleans some error messages
 
@@ -770,23 +825,6 @@ def get_dataset(
     return dataset, v
 
 
-def escape_python_string(s: str) -> str:
-    """Escapes a python string
-
-    Args:
-        s: string to escape
-
-    Returns:
-        Escaped string
-    """
-
-    s = s.replace("\\", "\\\\")
-    s = s.replace("\n", "\\n")
-    s = s.replace("\t", "\\t")
-    s = s.replace("\r", "\\r")
-    return s
-
-
 def get_ui_element(
     k: str,
     v: Any,
@@ -901,7 +939,7 @@ def get_ui_element(
                 ui.textbox(
                     name=pre + k,
                     label=title_label,
-                    value=escape_python_string(val),
+                    value=val,
                     required=False,
                     password=password,
                     tooltip=tooltip,
@@ -1553,10 +1591,14 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
             # that are no longer part of the dataclass fields.
             # This can happen if the codebase has changed since the experiment was run.
             # Ignore those warnings here
-            logging_level = logging.getLogger().level
+
+            original_level = logging.getLogger().level
             logging.getLogger().setLevel(logging.ERROR)
-            cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
-            logging.getLogger().setLevel(logging_level)
+            try:
+                cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
+            finally:
+                logging.getLogger().setLevel(original_level)
+
         except Exception:
             cfg = None
 
@@ -1571,75 +1613,85 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
                 metric = ""
                 loss_function = ""
 
-        with SqliteDict(f"{row.path}/charts.db") as logs:
-            if "internal" in logs.keys():
-                if "current_step" in logs["internal"].keys():
-                    curr_step = int(logs["internal"]["current_step"]["values"][-1])
-                else:
-                    curr_step = 0
-
-                if "total_training_steps" in logs["internal"].keys():
-                    total_training_steps = int(
-                        logs["internal"]["total_training_steps"]["values"][-1]
-                    )
-                else:
-                    total_training_steps = 0
-
-                if "current_val_step" in logs["internal"].keys():
-                    curr_val_step = int(
-                        logs["internal"]["current_val_step"]["values"][-1]
-                    )
-                else:
-                    curr_val_step = 0
-
-                if "total_validation_steps" in logs["internal"].keys():
-                    total_validation_steps = int(
-                        logs["internal"]["total_validation_steps"]["values"][-1]
-                    )
-                else:
-                    total_validation_steps = 0
-
-                curr_total_step = curr_step + curr_val_step
-
-                total_steps = max(total_training_steps + total_validation_steps, 1)
-
-                if (
-                    "global_start_time" in logs["internal"].keys()
-                    and curr_total_step > 0
-                ):
-                    elapsed = (
-                        time.time()
-                        - logs["internal"]["global_start_time"]["values"][-1]
-                    )
-                    remaining_steps = total_steps - curr_total_step
-                    eta = elapsed * (remaining_steps / curr_total_step)
-                    if eta == 0:
-                        eta = ""
+        charts_db_path = f"{row.path}/charts.db"
+        if os.path.exists(charts_db_path):
+            with SqliteDict(charts_db_path) as logs:
+                if "internal" in logs.keys():
+                    if "current_step" in logs["internal"].keys():
+                        curr_step = int(logs["internal"]["current_step"]["values"][-1])
                     else:
-                        # if more than one day, show days
-                        # need to subtract 1 day from time_took since strftime shows
-                        # day of year which starts counting at 1
-                        if eta > 86400:
-                            eta = time.strftime(
-                                "%-jd %H:%M:%S", time.gmtime(float(eta - 86400))
-                            )
+                        curr_step = 0
+
+                    if "total_training_steps" in logs["internal"].keys():
+                        total_training_steps = int(
+                            logs["internal"]["total_training_steps"]["values"][-1]
+                        )
+                    else:
+                        total_training_steps = 0
+
+                    if "current_val_step" in logs["internal"].keys():
+                        curr_val_step = int(
+                            logs["internal"]["current_val_step"]["values"][-1]
+                        )
+                    else:
+                        curr_val_step = 0
+
+                    if "total_validation_steps" in logs["internal"].keys():
+                        total_validation_steps = int(
+                            logs["internal"]["total_validation_steps"]["values"][-1]
+                        )
+                    else:
+                        total_validation_steps = 0
+
+                    curr_total_step = curr_step + curr_val_step
+
+                    total_steps = max(total_training_steps + total_validation_steps, 1)
+
+                    if (
+                        "global_start_time" in logs["internal"].keys()
+                        and curr_total_step > 0
+                    ):
+                        elapsed = (
+                            time.time()
+                            - logs["internal"]["global_start_time"]["values"][-1]
+                        )
+                        remaining_steps = total_steps - curr_total_step
+                        eta = elapsed * (remaining_steps / curr_total_step)
+                        if eta == 0:
+                            eta = ""
                         else:
-                            eta = time.strftime("%H:%M:%S", time.gmtime(float(eta)))
+                            # if more than one day, show days
+                            # need to subtract 1 day from time_took since strftime shows
+                            # day of year which starts counting at 1
+                            if eta > 86400:
+                                eta = time.strftime(
+                                    "%-jd %H:%M:%S", time.gmtime(float(eta - 86400))
+                                )
+                            else:
+                                eta = time.strftime("%H:%M:%S", time.gmtime(float(eta)))
+                    else:
+                        eta = "N/A"
                 else:
                     eta = "N/A"
-            else:
-                eta = "N/A"
-                total_steps = 1
-                curr_total_step = 0
+                    total_steps = 1
+                    curr_total_step = 0
 
-            if (
-                "validation" in logs
-                and metric in logs["validation"]
-                and logs["validation"][metric]["values"][-1] is not None
-            ):
-                score_val = np.round(logs["validation"][metric]["values"][-1], 4)
-            else:
-                score_val = ""
+                if (
+                    "validation" in logs
+                    and metric in logs["validation"]
+                    and logs["validation"][metric]["values"][-1] is not None
+                ):
+                    score_val = np.round(logs["validation"][metric]["values"][-1], 4)
+                else:
+                    score_val = ""
+
+        else:
+            logs = {}
+            eta = "N/A"
+            total_steps = 1
+            curr_total_step = 0
+            score_val = ""
+            logger.info(f"Experiment path {charts_db_path} not found.")
 
         try:
             dataset = q.client.app_db.get_dataset(row.dataset).name

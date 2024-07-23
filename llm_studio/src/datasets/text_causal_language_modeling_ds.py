@@ -195,12 +195,19 @@ class CustomDataset(Dataset):
             text = text.replace("Open Asistant", cfg.dataset.chatbot_name)
             text = text.replace("Open Assiant", cfg.dataset.chatbot_name)
             text = text.replace("Assistant", cfg.dataset.chatbot_name)
+            text = text.replace("ChatGPT", cfg.dataset.chatbot_name)
             text = text.replace("LAION AI", cfg.dataset.chatbot_author)
             text = text.replace("LAION-AI", cfg.dataset.chatbot_author)
             text = text.replace("LAION,", cfg.dataset.chatbot_author + ",")
             text = text.replace("LAION.ai", cfg.dataset.chatbot_author)
             text = text.replace("LAION.", cfg.dataset.chatbot_author + ".")
             text = text.replace("LAION", cfg.dataset.chatbot_author)
+            text = text.replace("Laion AI", cfg.dataset.chatbot_author)
+            text = text.replace("OpenAI", cfg.dataset.chatbot_author)
+            text = text.replace("Open AI", cfg.dataset.chatbot_author)
+            text = text.replace("openai", cfg.dataset.chatbot_author)
+            text = text.replace("open ai", cfg.dataset.chatbot_author)
+
             return text
 
         if cfg.dataset.personalize:

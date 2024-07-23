@@ -969,7 +969,10 @@ async def experiment_delete(q: Q, experiment_ids: List[int]) -> None:
     for experiment_id in experiment_ids:
         experiment = q.client.app_db.get_experiment(experiment_id)
         q.client.app_db.delete_experiment(experiment.id)
-        shutil.rmtree(f"{experiment.path}")
+        try:
+            shutil.rmtree(f"{experiment.path}")
+        except FileNotFoundError:
+            logger.warning(f"Experiment path {experiment.path} not found for deletion.")
 
 
 async def experiment_stop(q: Q, experiment_ids: List[int]) -> None:
