@@ -41,7 +41,7 @@ setup-dev: pipenv
 setup-no-flash: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
 
-.PHONY: setup-conda
+.PHONY: setup-conda-nightly
 setup-conda:
 	@bash -c '\
 		set -e; \
