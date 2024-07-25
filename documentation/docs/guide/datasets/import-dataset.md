@@ -125,25 +125,25 @@ Once you have successfully uploaded or imported your dataset, you can configure 
 You can upload a `.zip` file with both training and validation sets to avoid having to separately upload files.
 :::
 
-- **Dataset name:** <DatasetNameTooltip />
+- **Dataset name:** <DatasetNameTooltip/>
 
-- **Problem Type:** <ProblemTypeTooltip />
+- **Problem Type:** <ProblemTypeTooltip/>
 
-- **Train Dataframe:** <TrainDataframeTooltip />
+- **Train Dataframe:** <TrainDataframeTooltip/>
 
-- **Validation Dataframe:** <ValidationDataframeTooltip />
+- **Validation Dataframe:** <ValidationDataframeTooltip/>
 
-- **System Column:** <SystemColumnTooltip />
+- **System Column:** <SystemColumnTooltip/>
 
-- **Prompt Column:** <PromptColumnTooltip />
+- **Prompt Column:** <PromptColumnTooltip/>
 
-- **Rejected Prompt Column:** <RejectedPromptColumnTooltip />
+- **Rejected Prompt Column:** <RejectedPromptColumnTooltip/>
 
-- **Answer Column:** <AnswerColumnTooltip />
+- **Answer Column:** <AnswerColumnTooltip/>
 
-- **Rejected Answer Column:** <RejectedAnswerColumnTooltip />
+- **Rejected Answer Column:** <RejectedAnswerColumnTooltip/>
 
-- **Parent Id Column:** <ParentIdColumnTooltip />
+- **Parent Id Column:** <ParentIdColumnTooltip/>
 
 ![configure-dataset](configure-dataset.png)
 
