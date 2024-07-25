@@ -144,7 +144,7 @@ The settings under each category are listed and described below.
 
 ### Prompt column separator
 
-<DSpromptColumnSeparator/>
+<DSPromptColumnSeparator/>
 
 ### Answer column
 
@@ -214,7 +214,7 @@ The settings under each category are listed and described below.
 
 ### Optimizer
 
-<TSoptimizer />
+<TSoptimizer/>
 
 ### Learning rate
 
@@ -370,11 +370,11 @@ The settings under each category are listed and described below.
 
 ### Top K
 
-<PStopk />
+<PStopk/>
 
 ### Top P
 
-<PStopp />
+<PStopp/>
 
 ## Environment settings
 
