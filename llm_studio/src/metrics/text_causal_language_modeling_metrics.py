@@ -26,8 +26,35 @@ LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", 60))
 
 
 def sacrebleu_score(
-    cfg: DefaultConfigProblemBase, results: Dict, val_df: pd.DataFrame, metric: Metric
+    cfg: DefaultConfigProblemBase, results: Dict, val_df: pd.DataFrame
 ) -> NDArray:
+    """
+    Calculate BLEU scores for predicted texts against target texts.
+
+    This function computes the BLEU score for each pair of predicted and target texts.
+    It handles empty target texts by assigning a score of 0.0.
+    BLEU scores are given in the range [0.0, 100.0].
+
+    Args:
+        cfg: DefaultConfigProblemBase, ignored
+        results: Dict, containing 'predicted_text' and 'target_text' lists
+        val_df: pd.DataFrame, ignored
+
+    Returns:
+        NDArray: An array of BLEU scores for each text pair
+
+    Note:
+        - Empty target texts are assigned a score of 0.0
+    """
+    # Input validation
+    if len(results["target_text"]) != len(results["predicted_text"]):
+        raise ValueError(
+            f"Length of target_text ({len(results['target_text'])}) and predicted_text "
+            f"({len(results['predicted_text'])}) should be the same."
+        )
+    if len(results["target_text"]) == 0:
+        raise ValueError("No data to calculate BLEU score")
+
     scores = []
     for predicted_text, target_text in zip(
         results["predicted_text"], results["target_text"]
@@ -35,7 +62,11 @@ def sacrebleu_score(
         if target_text == "":
             score = 0.0
         else:
-            score = metric.sentence_score(predicted_text, [target_text]).score
+            score = (
+                BLEU(effective_order=True)
+                .sentence_score(predicted_text, [target_text])
+                .score
+            )
         scores.append(score)
     return np.array(scores)
 
@@ -188,11 +219,7 @@ class Metrics:
 
     _metrics = {
         "Perplexity": (perplexity, "min", "mean"),
-        "BLEU": (
-            partial(sacrebleu_score, metric=BLEU(effective_order=True)),
-            "max",
-            "mean",
-        ),
+        "BLEU": (sacrebleu_score, "max", "mean"),
         "GPT": (gpt_score, "max", "mean"),
     }
 
