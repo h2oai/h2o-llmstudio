@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
@@ -8,8 +7,6 @@ from scipy.special import softmax
 from sklearn.metrics import log_loss, roc_auc_score
 
 from llm_studio.python_configs.base import DefaultConfigProblemBase
-
-logger = logging.getLogger(__name__)
 
 
 def accuracy_score(
