@@ -107,7 +107,7 @@ class ConfigDPOPLogging(ConfigNLPCausalLMLogging):
 class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
-    # 7b model may be unstable (NaN loss)
+
     llm_backbone: str = "h2oai/h2o-danube2-1.8b-sft"
 
     dataset: ConfigDPODataset = field(default_factory=ConfigDPODataset)

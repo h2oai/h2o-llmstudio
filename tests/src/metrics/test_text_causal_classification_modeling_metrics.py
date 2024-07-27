@@ -90,7 +90,7 @@ def test_accuracy_score_multiclass_mixed_results(mock_val_df):
     assert np.array_equal(score, np.array([1.0, 1.0, 1.0, 0.0, 0.0]))
 
 
-def test_accuracy_score_empty_input(mock_val_df):
+def test_accuracy_score_invalid_input_empty(mock_val_df):
     results = {"predicted_text": [], "target_text": []}
     cfg = MagicMock()
 
@@ -98,7 +98,15 @@ def test_accuracy_score_empty_input(mock_val_df):
         accuracy_score(cfg, results, mock_val_df)
 
 
-def test_accuracy_score_invalid_input(mock_val_df):
+def test_accuracy_score_invalid_input_unequal_length(mock_val_df):
+    results = {"predicted_text": ["1", "0"], "target_text": ["1", "0", "2"]}
+    cfg = MagicMock()
+
+    with pytest.raises(ValueError):
+        accuracy_score(cfg, results, mock_val_df)
+
+
+def test_accuracy_score_invalid_input_string(mock_val_df):
     results = {
         "predicted_text": ["1", "0", "a", "3"],
         "target_text": ["1", "0", "2", "b"],
@@ -161,7 +169,7 @@ def test_auc_score_multiclass_classification(mock_val_df):
     assert np.allclose(score, expected_score)
 
 
-def test_auc_score_empty_input(mock_val_df):
+def test_auc_score_invalid_input_empty(mock_val_df):
     cfg = MagicMock()
     cfg.dataset.num_classes = 2
     results = {"logits": [], "target_text": []}
@@ -170,7 +178,16 @@ def test_auc_score_empty_input(mock_val_df):
         auc_score(cfg, results, mock_val_df)
 
 
-def test_auc_score_invalid_input(mock_val_df):
+def test_auc_score_invalid_input_unequal_length(mock_val_df):
+    cfg = MagicMock()
+    cfg.dataset.num_classes = 2
+    results = {"logits": [[0.1, 0.9], [0.8, 0.2]], "target_text": ["1", "2", "0", "2"]}
+
+    with pytest.raises(ValueError):
+        auc_score(cfg, results, mock_val_df)
+
+
+def test_auc_score_invalid_input_string(mock_val_df):
     cfg = MagicMock()
     cfg.dataset.num_classes = 2
     results = {"logits": [[0.1, 0.9], [0.8, 0.2]], "target_text": ["1", "invalid"]}
@@ -256,7 +273,7 @@ def test_logloss_score_multiclass_classification(mock_val_df):
     assert np.isclose(score, expected_score)
 
 
-def test_logloss_score_empty_input(mock_val_df):
+def test_logloss_score_invalid_input_empty(mock_val_df):
     cfg = MagicMock()
     cfg.dataset.num_classes = 2
     results = {"logits": [], "target_text": []}
@@ -265,7 +282,16 @@ def test_logloss_score_empty_input(mock_val_df):
         logloss_score(cfg, results, mock_val_df)
 
 
-def test_logloss_score_invalid_input(mock_val_df):
+def test_logloss_score_invalid_input_unequal_length(mock_val_df):
+    cfg = MagicMock()
+    cfg.dataset.num_classes = 2
+    results = {"logits": [[0.1, 0.9], [0.8, 0.2]], "target_text": ["1", "2", "0"]}
+
+    with pytest.raises(ValueError):
+        logloss_score(cfg, results, mock_val_df)
+
+
+def test_logloss_score_invalid_input_string(mock_val_df):
     cfg = MagicMock()
     cfg.dataset.num_classes = 2
     results = {"logits": [[0.1, 0.9], [0.8, 0.2]], "target_text": ["1", "invalid"]}
