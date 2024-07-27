@@ -1,6 +1,5 @@
 import logging
 import os
-from functools import partial
 from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
@@ -10,7 +9,6 @@ from joblib import Parallel, delayed
 from numpy.typing import NDArray
 from openai import AzureOpenAI, OpenAI
 from sacrebleu import BLEU
-from sacrebleu.metrics.base import Metric
 from torch import nn
 from tqdm import tqdm
 
