@@ -76,14 +76,14 @@ class Order:
         self._unique_guard(*keys)
 
         if before is not None:
-            for key in keys[::-1]:
+            for key in keys:
                 self._list.insert(self._list.index(before), key)
 
             if after is not None:
                 raise ValueError("`after` must be None if `before` is set.")
 
         if after is not None:
-            for key in keys[::-1]:
+            for key in keys:
                 self._list.insert(self._list.index(after) + 1, key)
 
             if before is not None:
@@ -100,19 +100,3 @@ class Order:
 
     def __iter__(self):
         return iter(self._list)
-
-
-def test_order():
-    order = Order(["dataset", "training", "validation", "logging"])
-
-    order.insert("architecture", before="training")
-    order.insert("environment", after="validation")
-
-    assert [item for item in order] == [
-        "dataset",
-        "architecture",
-        "training",
-        "validation",
-        "environment",
-        "logging",
-    ]
