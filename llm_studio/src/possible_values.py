@@ -221,39 +221,3 @@ class Columns(DatasetValue):
             String(tuple(columns)),
             value if type_annotation == Tuple[str, ...] else value[0],
         )
-
-
-@dataclass
-class ColumnValue(DatasetValue):
-    column: str
-    default: List[str]
-    prefer_with: Optional[Callable[[str], bool]] = None
-    dependency: Optional[Dependency] = None
-
-    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[String, Any]:
-        if dataset is None:
-            return String(tuple()), value
-
-        try:
-            df = dataset["dataframe"]
-        except KeyError:
-            df = None
-
-        if df is not None:
-            if self.dependency is not None and not self.dependency.check(
-                [dataset[self.dependency.key]]
-            ):
-                values = self.default
-            elif self.column in df:
-                values = [str(v) for v in sorted(list(df[self.column].unique()))]
-            else:
-                values = self.default
-        else:
-            values = self.default
-
-        value = DatasetValue._compute_current_values(value, values, self.prefer_with)
-
-        return (
-            String(tuple(values)),
-            value if type_annotation == Tuple[str, ...] else value[0],
-        )
