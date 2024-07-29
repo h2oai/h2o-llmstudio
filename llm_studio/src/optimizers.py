@@ -4,8 +4,6 @@ from typing import Any, List
 import bitsandbytes as bnb
 from torch import optim
 
-__all__ = ["Optimizers"]
-
 
 class Optimizers:
     """Optimizers factory."""
