@@ -1,31 +1,32 @@
 import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Tuple
-from llm_studio.python_configs.text_causal_language_modeling_config import ConfigNLPCausalLMEnvironment, ConfigNLPCausalLMLogging
 
 import llm_studio.src.datasets.text_causal_regression_ds
 import llm_studio.src.plots.text_causal_classification_modeling_plots
 from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
 from llm_studio.python_configs.text_causal_classification_modeling_config import (
     ConfigNLPCausalClassificationAugmentation,
-    ConfigNLPCausalClassificationArchitecture,
     ConfigNLPCausalClassificationDataset,
-    ConfigNLPCausalClassificationEnvironment,
     ConfigNLPCausalClassificationLogging,
     ConfigNLPCausalClassificationTokenizer,
     ConfigNLPCausalClassificationTraining,
 )
+from llm_studio.python_configs.text_causal_language_modeling_config import (
+    ConfigNLPCausalLMArchitecture,
+    ConfigNLPCausalLMEnvironment,
+    ConfigNLPCausalLMLogging,
+)
 from llm_studio.src import possible_values
 from llm_studio.src.losses import text_causal_regression_modeling_losses
 from llm_studio.src.metrics import text_causal_regression_modeling_metrics
+from llm_studio.src.models import text_causal_regression_modeling_model
 from llm_studio.src.utils.modeling_utils import generate_experiment_name
 
 
 @dataclass
 class ConfigNLPCausalRegressionDataset(ConfigNLPCausalClassificationDataset):
-    dataset_class: Any = (
-        llm_studio.src.datasets.text_causal_regression_ds.CustomDataset
-    )
+    dataset_class: Any = llm_studio.src.datasets.text_causal_regression_ds.CustomDataset
     num_classes: int = 1
 
     def __post_init__(self):
@@ -64,6 +65,14 @@ class ConfigNLPCausalRegressionTraining(ConfigNLPCausalClassificationTraining):
 
 
 @dataclass
+class ConfigNLPCausalRegressionArchitecture(ConfigNLPCausalLMArchitecture):
+    model_class: Any = text_causal_regression_modeling_model.Model
+
+    def __post_init__(self):
+        super().__post_init__()
+
+
+@dataclass
 class ConfigNLPCausalRegressionPrediction(DefaultConfig):
     metric_class: Any = text_causal_regression_modeling_metrics.Metrics
     metric: str = "MSE"
@@ -80,9 +89,9 @@ class ConfigNLPCausalRegressionPrediction(DefaultConfig):
 
 @dataclass
 class ConfigNLPCausalRegressionEnvironment(ConfigNLPCausalLMEnvironment):
-    _model_card_template: str = "text_causal_classification_model_card_template.md"
+    _model_card_template: str = "text_causal_regression_model_card_template.md"
     _summary_card_template: str = (
-        "text_causal_classification_experiment_summary_card_template.md"
+        "text_causal_regression_experiment_summary_card_template.md"
     )
 
     def __post_init__(self):
@@ -108,8 +117,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     tokenizer: ConfigNLPCausalClassificationTokenizer = field(
         default_factory=ConfigNLPCausalClassificationTokenizer
     )
-    architecture: ConfigNLPCausalClassificationArchitecture = field(
-        default_factory=ConfigNLPCausalClassificationArchitecture
+    architecture: ConfigNLPCausalRegressionArchitecture = field(
+        default_factory=ConfigNLPCausalRegressionArchitecture
     )
     training: ConfigNLPCausalRegressionTraining = field(
         default_factory=ConfigNLPCausalRegressionTraining
@@ -120,8 +129,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     prediction: ConfigNLPCausalRegressionPrediction = field(
         default_factory=ConfigNLPCausalRegressionPrediction
     )
-    environment: ConfigNLPCausalClassificationEnvironment = field(
-        default_factory=ConfigNLPCausalClassificationEnvironment
+    environment: ConfigNLPCausalRegressionEnvironment = field(
+        default_factory=ConfigNLPCausalRegressionEnvironment
     )
     logging: ConfigNLPCausalClassificationLogging = field(
         default_factory=ConfigNLPCausalClassificationLogging

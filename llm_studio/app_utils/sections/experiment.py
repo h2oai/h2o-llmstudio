@@ -1814,6 +1814,7 @@ async def experiment_download_model(q: Q):
             "added_tokens.json",
             "model_card.md",
             "classification_head.pth",
+            "regression_head.pth",
         ]
         FILES_TO_PUSH = set(
             FILES_TO_PUSH

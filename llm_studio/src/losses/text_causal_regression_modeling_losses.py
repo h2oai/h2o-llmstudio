@@ -23,7 +23,7 @@ class MAELoss(nn.Module):
     def __init__(self, cfg: Any):
         super().__init__()
         self.cfg = cfg
-        self.loss_fn = nn.MAELoss()
+        self.loss_fn = nn.L1Loss()
 
     def forward(self, logits: Tensor, labels: Tensor) -> Tensor:
         return self.loss_fn(logits, labels.reshape(-1))

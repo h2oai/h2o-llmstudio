@@ -4,8 +4,6 @@ from typing import Any, Dict, List, Tuple, Union
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
-from scipy.special import softmax
-from sklearn.metrics import log_loss, roc_auc_score
 
 logger = logging.getLogger(__name__)
 
