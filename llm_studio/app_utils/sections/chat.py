@@ -2,13 +2,13 @@ import gc
 import logging
 import os
 
+import pandas as pd
 import torch
 from accelerate import dispatch_model, infer_auto_device_map
 from accelerate.utils import get_balanced_memory
 from h2o_wave import Q
 from h2o_wave import data as chat_data
 from h2o_wave import ui
-import pandas as pd
 
 from llm_studio.app_utils.utils import get_experiments, get_ui_elements, set_env
 from llm_studio.python_configs.base import DefaultConfigProblemBase
@@ -17,8 +17,8 @@ from llm_studio.src.utils.config_utils import (
     NON_GENERATION_PROBLEM_TYPES,
     load_config_yaml,
 )
-from llm_studio.src.utils.modeling_utils import load_checkpoint
 from llm_studio.src.utils.export_utils import get_prediction_dataframe
+from llm_studio.src.utils.modeling_utils import load_checkpoint
 
 logger = logging.getLogger(__name__)
 
@@ -104,16 +104,10 @@ async def chat_tab(q: Q, load_model=True):
                 icon="Lightbulb",
             ),
             ui.chat_suggestion(
-                "Explain me CSS preprocessors",
-                label="Explain me",
-                caption="CSS preprocessors",
-                icon="Code",
+                get_random_prediction_sample(validation_dataframe, cfg),
+                label="Random sample from validation set",
+                icon="Edit",
             ),
-            ui.chat_suggestion(
-                get_random_prediction_sample(validation_dataframe),
-                label = "Random sample from validation set",
-                icon = "Edit",
-            )
         ],
     )
     q.page["experiment/display/chat"].data += [initial_message, False]
@@ -197,8 +191,12 @@ def gpu_is_blocked(q, gpu_id):
     )
     return gpu_blocked
 
-def get_random_prediction_sample(validation_dataframe: pd.DataFrame):
-    return validation_dataframe.iloc[:, 0].sample().item()
+
+def get_random_prediction_sample(
+    validation_dataframe: pd.DataFrame, cfg: DefaultConfigProblemBase
+):
+    return validation_dataframe[cfg.dataset.prompt_column[0]].sample().item()
+
 
 def load_cfg_model_tokenizer(
     experiment_path: str, merge: bool = False, device: str = "cuda:0"

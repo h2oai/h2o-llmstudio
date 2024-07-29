@@ -3,6 +3,7 @@ import logging
 import os
 import zipfile
 from typing import Optional
+
 import pandas as pd
 
 from llm_studio.src.utils.exceptions import LLMResourceException
@@ -29,6 +30,7 @@ def get_artifact_path_path(
 def get_prediction_dataframe(experiment_path: str):
     """Return the validation dataframe"""
     return pd.read_csv(f"{experiment_path}/validation_predictions.csv")
+
 
 def get_predictions_path(experiment_name: str, experiment_path: str):
     """Get path to experiment predictions"""
