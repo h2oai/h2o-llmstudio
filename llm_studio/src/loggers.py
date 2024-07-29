@@ -134,7 +134,7 @@ class MainLogger:
     def __init__(self, cfg: Any):
         self.loggers = {
             "local": LocalLogger(cfg),
-            "external": Loggers.get(cfg.logging.logger),
+            "external": ExternalLoggers.get(cfg.logging.logger),
         }
 
         try:
@@ -160,8 +160,8 @@ class MainLogger:
             logger.log(subset=subset, name=name, value=value, step=step)
 
 
-class Loggers:
-    """Loggers factory."""
+class ExternalLoggers:
+    """ExternalLoggers factory."""
 
     _loggers = {"None": DummyLogger, "Neptune": NeptuneLogger}
 
@@ -171,12 +171,12 @@ class Loggers:
 
     @classmethod
     def get(cls, name: str) -> Any:
-        """Access to Loggers.
+        """Access to ExternalLoggers.
 
         Args:
-            name: loggers name
+            name: external loggers name
         Returns:
-            A class to build the Loggers
+            A class to build the ExternalLoggers
         """
 
         return cls._loggers.get(name, DummyLogger)
