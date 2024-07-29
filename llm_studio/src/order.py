@@ -75,22 +75,16 @@ class Order:
 
         self._unique_guard(*keys)
 
+        if before is None and after is None:
+            raise ValueError("Either `before` or `after` must be set.")
+
         if before is not None:
             for key in keys:
                 self._list.insert(self._list.index(before), key)
 
-            if after is not None:
-                raise ValueError("`after` must be None if `before` is set.")
-
         if after is not None:
             for key in keys:
                 self._list.insert(self._list.index(after) + 1, key)
-
-            if before is not None:
-                raise ValueError("`before` must be None if `after` is set.")
-
-        if before is None and after is None:
-            raise ValueError("Either `before` or `after` must be set.")
 
     def __getitem__(self, idx):
         return self._list[idx]
