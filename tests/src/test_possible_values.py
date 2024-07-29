@@ -1,4 +1,5 @@
 import os
+
 import pandas as pd
 import pytest
 
@@ -225,6 +226,7 @@ class TestDatasetValue:
             (["a", "a", "b"], ["a", "b", "c"]),
             (["a", "b", "a"], ["a", "b", "c"]),
             (["a", "b", "a"], ["a", "b", "c", "a"]),
+            (["a", "b"], ["a", "a", "b"]),
         ],
     )
     def test_compute_current_values_duplicates(self, current_values, possible_values):
