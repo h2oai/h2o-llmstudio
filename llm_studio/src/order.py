@@ -78,6 +78,9 @@ class Order:
         if before is None and after is None:
             raise ValueError("Either `before` or `after` must be set.")
 
+        if before and after:
+            raise ValueError("Can't set `before` and `after` at the same time.")
+
         if before is not None:
             for key in keys:
                 self._list.insert(self._list.index(before), key)
