@@ -47,7 +47,9 @@ def _scan_files(
     return sorted(path_list)
 
 
-def strip_prefix(paths: Sequence[str], ignore_set: Set[str] = set()) -> Tuple[str, ...]:
+def strip_common_prefix(
+    paths: Sequence[str], ignore_set: Set[str] = set()
+) -> Tuple[str, ...]:
     """
     Strips the common prefix of all the given paths.
 
@@ -179,7 +181,7 @@ class Directories(DatasetValue):
                 tuple(
                     zip(
                         available_dirs,
-                        strip_prefix(available_dirs, ignore_set={"None"}),
+                        strip_common_prefix(available_dirs, ignore_set={"None"}),
                     )
                 )
             ),
@@ -221,7 +223,7 @@ class Files(DatasetValue):
                 tuple(
                     zip(
                         available_files,
-                        strip_prefix(available_files, ignore_set={"None"}),
+                        strip_common_prefix(available_files, ignore_set={"None"}),
                     )
                 )
             ),
