@@ -150,46 +150,6 @@ class DatasetValue:
 
 
 @dataclass
-class Directories(DatasetValue):
-    add_none: Union[bool, Callable[[str], bool]] = False
-    prefer_with: Optional[Callable[[str], bool]] = None
-    prefer_none: bool = True
-
-    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[String, Any]:
-        if dataset is None:
-            return String(tuple()), value
-
-        available_dirs = _scan_dirs(dataset["path"])
-
-        if (isinstance(self.add_none, bool) and self.add_none) or (
-            callable(self.add_none) and self.add_none(mode)
-        ):
-            if self.prefer_none:
-                available_dirs.insert(0, "None")
-            else:
-                available_dirs.insert(len(available_dirs), "None")
-
-        if isinstance(value, str):
-            value = [value]
-
-        value = DatasetValue._compute_current_values(
-            value, available_dirs, self.prefer_with
-        )
-
-        return (
-            String(
-                tuple(
-                    zip(
-                        available_dirs,
-                        strip_common_prefix(available_dirs, ignore_set={"None"}),
-                    )
-                )
-            ),
-            value if type_annotation == Tuple[str, ...] else value[0],
-        )
-
-
-@dataclass
 class Files(DatasetValue):
     add_none: Union[bool, Callable[[str], bool]] = False
     prefer_with: Optional[Callable[[str], bool]] = None
