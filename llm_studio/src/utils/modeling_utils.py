@@ -146,6 +146,14 @@ def save_checkpoint(
             checkpoint["model"]["classification_head.weight"],
             os.path.join(path, "classification_head.pth"),
         )
+    if (
+        cfg.environment._local_rank == 0
+        and "regression_head.weight" in checkpoint["model"]
+    ):
+        torch.save(
+            checkpoint["model"]["regression_head.weight"],
+            os.path.join(path, "regression_head.pth"),
+        )
 
 
 def load_model_weights(

@@ -15,16 +15,16 @@ Also make sure you are providing your huggingface token if the model is lying in
         huggingface_hub.login(<ACCESS_TOKEN>)
         ```
 
-You will also need to download the classification head, either manually, or by running the following code:
+You will also need to download the regression head, either manually, or by running the following code:
 
 ```python
 from huggingface_hub import hf_hub_download
 
 model_name = "{{repo_id}}"  # either local folder or Hugging Face model name
-hf_hub_download(repo_id=model_name, filename="classification_head.pth", local_dir="./")
+hf_hub_download(repo_id=model_name, filename="regression_head.pth", local_dir="./")
 ```
 
-You can make classification predictions by following the example below:
+You can make regression predictions by following the example below:
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -46,7 +46,7 @@ model = AutoModelForCausalLM.from_pretrained(
     trust_remote_code={{trust_remote_code}},
 ).cuda().eval()
 
-head_weights = torch.load("classification_head.pth", map_location="cuda")
+head_weights = torch.load("regression_head.pth", map_location="cuda")
 # settings can be arbitrary here as we overwrite with saved weights
 head = torch.nn.Linear(1, 1, bias=False).to("cuda")
 head.weight.data = head_weights
