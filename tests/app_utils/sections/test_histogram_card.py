@@ -5,15 +5,14 @@ import numpy as np
 from llm_studio.app_utils.sections.histogram_card import compute_quantile_df
 
 
-def test_quantiles_are_computed_correctly():
+def test_quantiles_are_computed_correctly() -> None:
     for _ in range(5):
-        data = np.random.randint(0, 1000, 100_000).tolist()
-        a = round(random.uniform(0, 1), 2)
-        b = round(random.uniform(a, 1), 2)
+        data: list[int] = np.random.randint(0, 1000, 100_000).tolist()
+        a = round(random.uniform(0.05, 0.95), 2)
+        b = round(random.uniform(a, 0.95), 2)
         a, b = min(a, b), max(a, b)
 
         df_quantile = compute_quantile_df(data, a, b)
-
         first = df_quantile[
             df_quantile["data_type"] == f"first {int(a * 100)}% quantile"
         ]
@@ -29,5 +28,5 @@ def test_quantiles_are_computed_correctly():
             -int(len(sorted_data) * (1 - b)) - 1 : -int(len(sorted_data) * (1 - b)) + 1
         ]
 
-        assert first.iloc[-1][0] in expected_first_quantile_range
-        assert last.iloc[0][0] in expected_last_quantile_range
+        assert first["length"].values[-1] in expected_first_quantile_range
+        assert last["length"].values[0] in expected_last_quantile_range

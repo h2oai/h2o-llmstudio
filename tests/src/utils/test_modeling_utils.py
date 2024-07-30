@@ -89,6 +89,7 @@ def test_load_checkpoint():
     cfg = MagicMock()
     cfg.architecture.pretrained_weights = "dummy_weights.pth"
     cfg.environment.use_deepspeed = False
+    cfg.environment._local_rank = 0
 
     # Mock torch.load
     dummy_state_dict = {"model": model.state_dict()}
@@ -102,6 +103,7 @@ def test_load_checkpoint_mismatch():
     cfg = MagicMock()
     cfg.architecture.pretrained_weights = "dummy_weights.pth"
     cfg.environment.use_deepspeed = False
+    cfg.environment._local_rank = 0
 
     # Mock torch.load
     dummy_state_dict = {"model": model_no_classification_head.state_dict()}
