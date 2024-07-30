@@ -17,6 +17,7 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
 from llm_studio.src import possible_values
 from llm_studio.src.losses import text_dpo_modeling_losses
 from llm_studio.src.models import text_dpo_modeling_model
+from llm_studio.src.nesting import Dependency
 from llm_studio.src.plots import text_dpo_modeling_plots
 from llm_studio.src.utils.modeling_utils import generate_experiment_name
 
@@ -27,7 +28,6 @@ class ConfigDPODataset(ConfigNLPCausalLMDataset):
     # Always have full chat history.
     # Chosen/Rejected prompt are only at the end of a conversation.
     limit_chained_samples: bool = True
-    mask_prompt_labels: bool = True
 
     rejected_prompt_column: str = "None"
     answer_column: str = "chosen_response"
@@ -64,6 +64,7 @@ class ConfigDPODataset(ConfigNLPCausalLMDataset):
 class ConfigDPOTraining(ConfigNLPCausalLMTraining):
     learning_rate: float = 1e-4  # relatively high as we use LORA
     beta: float = 0.2
+    simpo_gamma: float = 1.0
     gradient_clip: float = 10.0
     loss_class: Any = text_dpo_modeling_losses.Losses
     loss_function: str = "DPOLoss"
@@ -74,8 +75,22 @@ class ConfigDPOTraining(ConfigNLPCausalLMTraining):
     def __post_init__(self):
         super().__post_init__()
         self._possible_values["beta"] = possible_values.Number(0.05, 1.0, 0.05)
+        self._possible_values["simpo_gamma"] = possible_values.Number(0.05, 2.0, 0.05)
+
+        self._grid_search_values["loss_function"] = None
+        self._grid_search_values["beta"] = (0.1, 0.15, 0.20, 0.25, 0.4, 0.5)
+        self._grid_search_values["simpo_gamma"] = (0.5, 0.75, 1, 1.25, 1.5, 1.75, 2)
+
+        self._grid_search_iscustom["beta"] = True
+        self._grid_search_iscustom["simpo_gamma"] = True
+
+        self._nesting.add(
+            ["simpo_gamma"],
+            [Dependency(key="loss_function", value="SimPOLoss", is_set=True)],
+        )
+
         self._order.insert("beta", after="learning_rate")
-        self._visibility["lora"] = -1
+        self._order.insert("simpo_gamma", after="beta")
 
 
 @dataclass
@@ -92,9 +107,8 @@ class ConfigDPOPLogging(ConfigNLPCausalLMLogging):
 class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
-    _parent_experiment: str = ""
     # 7b model may be unstable (NaN loss)
-    llm_backbone: str = "h2oai/h2ogpt-4096-llama2-13b-chat"
+    llm_backbone: str = "h2oai/h2o-danube2-1.8b-sft"
 
     dataset: ConfigDPODataset = field(default_factory=ConfigDPODataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(

@@ -16,7 +16,7 @@
 - [What's New](#whats-new)
 - [Setup](#setup)
   - [Recommended Install](#recommended-install)
-  - [Using requirements.txt](#using-requirementstxt)
+  - [Virtual Environments](#virtual-environments)
 - [Run H2O LLM Studio GUI](#run-h2o-llm-studio-gui)
 - [Run H2O LLM Studio GUI using Docker from a nightly build](#run-h2o-llm-studio-gui-using-docker-from-a-nightly-build)
 - [Run H2O LLM Studio GUI by building your own Docker image](#run-h2o-llm-studio-gui-by-building-your-own-docker-image)
@@ -53,10 +53,13 @@ Using CLI for fine-tuning LLMs:
 
 ## What's New
 
+- [PR 788](https://github.com/h2oai/h2o-llmstudio/pull/788) New problem type for Causal Regression Modeling allows to train single target regression data using LLMs.
+- [PR 747](https://github.com/h2oai/h2o-llmstudio/pull/747) Fully removed RLHF in favor of DPO/IPO/KTO optimization.
+- [PR 741](https://github.com/h2oai/h2o-llmstudio/pull/741) Removing separate max length settings for prompt and answer in favor of a single `max_length` settings better resembling `chat_template` functionality from `transformers`.
 - [PR 592](https://github.com/h2oai/h2o-llmstudio/pull/599) Added `KTOPairLoss` for DPO modeling allowing to train models with simple preference data. Data currently needs to be manually prepared by randomly matching positive and negative examples as pairs.
 - [PR 592](https://github.com/h2oai/h2o-llmstudio/pull/592) Starting to deprecate RLHF in favor of DPO/IPO optimization. Training is disabled, but old experiments are still viewable. RLHF will be fully removed in a future release.
 - [PR 530](https://github.com/h2oai/h2o-llmstudio/pull/530) Introduced a new problem type for DPO/IPO optimization. This optimization technique can be used as an alternative to RLHF.
-- [PR 288](https://github.com/h2oai/h2o-llmstudio/pull/288) Introduced Deepspeed for sharded training allowing to train larger models on machines with multiple GPUs. Requires NVLink. This feature replaces FSDP and offers more flexibility. Deepspeed requires a system installation of cudatoolkit and we recommend using version 11.8. See [Recommended Install](#recommended-install).
+- [PR 288](https://github.com/h2oai/h2o-llmstudio/pull/288) Introduced Deepspeed for sharded training allowing to train larger models on machines with multiple GPUs. Requires NVLink. This feature replaces FSDP and offers more flexibility. Deepspeed requires a system installation of cudatoolkit and we recommend using version 12.1. See [Recommended Install](#recommended-install).
 - [PR 449](https://github.com/h2oai/h2o-llmstudio/pull/449) New problem type for Causal Classification Modeling allows to train binary and multiclass models using LLMs.
 - [PR 364](https://github.com/h2oai/h2o-llmstudio/pull/364) User secrets are now handled more securely and flexible. Support for handling secrets using the 'keyring' library was added. User settings are tried to be migrated automatically.
 
@@ -90,9 +93,9 @@ If deploying on a 'bare metal' machine running Ubuntu, one may need to install t
 ```bash
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
 sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
-wget https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda-repo-ubuntu2004-11-8-local_11.8.0-520.61.05-1_amd64.deb
-sudo dpkg -i cuda-repo-ubuntu2004-11-8-local_11.8.0-520.61.05-1_amd64.deb
-sudo cp /var/cuda-repo-ubuntu2004-11-8-local/cuda-*-keyring.gpg /usr/share/keyrings/
+wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda-repo-ubuntu2004-12-1-local_12.1.0-530.30.02-1_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu2004-12-1-local_12.1.0-530.30.02-1_amd64.deb
+sudo cp /var/cuda-repo-ubuntu2004-12-1-local/cuda-*-keyring.gpg /usr/share/keyrings/
 sudo apt-get update
 sudo apt-get -y install cuda
 ```
@@ -102,10 +105,14 @@ alternatively, one can install cudatoolkits in a cuda environment:
 ```bash
 conda create -n llmstudio python=3.10
 conda activate llmstudio
-conda install -c "nvidia/label/cuda-11.8.0" cuda-toolkit
+conda install -c "nvidia/label/cuda-12.1.0" cuda-toolkit
 ```
 
-#### Create virtual environment (pipenv)
+### Virtual environments
+
+We offer various ways of setting up the necessary python environment.
+
+#### Pipenv virtual environment
 
 The following command will create a virtual environment using pipenv and will install the dependencies using pipenv:
 
@@ -121,13 +128,17 @@ make setup-no-flash
 
 instead. This will install the dependencies without the flash_attn package. Note that this will disable the use of Flash Attention 2 and model training will be slower and consume more memory.
 
-### Using requirements.txt
+#### Nightly Conda virtual environment
 
-If you wish to use conda or another virtual environment, you can also install the dependencies using the requirements.txt file:
+You can also setup a conda virtual environment that can also deviate from the recommended setup. The ```Makefile``` contains a command ```setup-conda-nightly``` that installs a fresh conda environment with CUDA 12.4 and current nightly PyTorch.
+
+#### Using requirements.txt
+
+If you wish to use another virtual environment, you can also install the dependencies using the requirements.txt file:
 
 ```bash
 pip install -r requirements.txt
-pip install flash-attn==2.5.5 --no-build-isolation  # optional for Flash Attention 2
+pip install flash-attn==2.6.1 --no-build-isolation  # optional for Flash Attention 2
 ```
 
 ## Run H2O LLM Studio GUI
@@ -150,6 +161,9 @@ H2O_WAVE_NO_LOG=true \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
 wave run app
 ```
+
+If you are using the [nightly conda environment](#nightly-conda-virtual-environment), you can run ```make llmstudio-conda```.
+
 
 ## Run H2O LLM Studio GUI using Docker from a nightly build
 

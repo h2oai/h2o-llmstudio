@@ -36,7 +36,9 @@ class DefaultConfig:
 
     def __post_init__(self) -> None:
         self._possible_values: Dict[str, Any] = {k: None for k in self.__dict__}
-        self._visibility = {k: 0 for k in self.__dict__}
+        self._visibility: Dict[str, int] = {k: 0 for k in self.__dict__}
+        self._grid_search_values: Dict[str, Any] = {k: None for k in self.__dict__}
+        self._grid_search_iscustom: Dict[str, Any] = {k: None for k in self.__dict__}
 
         # go up the class hierarchy until we are one below the `DefaultConfig`
         bases = _get_bases_below_parent(self.__class__, DefaultConfig)
@@ -111,6 +113,19 @@ class DefaultConfig:
         """
 
         return self._visibility.get(field, None)
+
+    def _get_grid_search_values(self, field: str) -> Optional[Tuple]:
+        """Returns a Tuple of possible values for Grid Search."""
+
+        return self._grid_search_values.get(field, None)
+
+    def _get_grid_search_iscustom(self, field: str) -> Optional[Tuple]:
+        """Returns "True" if this param is customizable in grid search mode.
+
+        Returns False if not customizable.
+        """
+
+        return self._grid_search_iscustom.get(field, None)
 
     def _get_nesting_triggers(self) -> Set[str]:
         """Returns a Set of keys other elements are depending on"""

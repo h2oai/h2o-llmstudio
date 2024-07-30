@@ -25,7 +25,7 @@ def rreload(module):
                     importlib.reload(attribute2)
 
 
-def _load_cls(module_path: str, cls_name: str) -> Any:
+def _load_cls(module_path: str, cls_name: str) -> DefaultConfigProblemBase:
     """Loads the python class.
 
     Args:
@@ -50,12 +50,14 @@ def _load_cls(module_path: str, cls_name: str) -> Any:
         module_path, cls_name
     )
 
-    cls = getattr(module, cls_name)
+    cls: DefaultConfigProblemBase = getattr(module, cls_name)()
 
     return cls
 
 
-def load_config_py(config_path: str, config_name: str = "Config"):
+def load_config_py(
+    config_path: str, config_name: str = "Config"
+) -> DefaultConfigProblemBase:
     """Loads the config class.
 
     Args:
@@ -66,7 +68,7 @@ def load_config_py(config_path: str, config_name: str = "Config"):
         Loaded config class
     """
 
-    return _load_cls(config_path, config_name)()
+    return _load_cls(config_path, config_name)
 
 
 def _get_type_annotation_error(v: Any, type_annotation: Type) -> ValueError:
@@ -137,15 +139,6 @@ def convert_nested_dictionary_to_cfg_base(
     return module.ConfigProblemBase.from_dict(cfg_dict)
 
 
-def get_parent_element(cfg):
-    if hasattr(cfg, "_parent_experiment") and cfg._parent_experiment != "":
-        key = "Parent Experiment"
-        value = cfg._parent_experiment
-        return {key: value}
-
-    return None
-
-
 def parse_cfg_dataclass(cfg) -> List[Dict]:
     """Returns all single config settings for a given configuration
 
@@ -154,10 +147,6 @@ def parse_cfg_dataclass(cfg) -> List[Dict]:
     """
 
     items = []
-
-    parent_element = get_parent_element(cfg)
-    if parent_element:
-        items.append(parent_element)
 
     cfg_dict = cfg.__dict__
     type_annotations = cfg.get_annotations()
@@ -220,4 +209,7 @@ def load_config_yaml(path: str):
 # Note that importing ConfigProblemBase from the python_configs
 # and using cfg.problem_type below will not work because of circular imports
 GENERATION_PROBLEM_TYPES = ["text_causal_language_modeling", "text_dpo_modeling"]
-NON_GENERATION_PROBLEM_TYPES = ["text_causal_classification_modeling"]
+NON_GENERATION_PROBLEM_TYPES = [
+    "text_causal_classification_modeling",
+    "text_causal_regression_modeling",
+]

@@ -23,23 +23,37 @@ endif
 
 PHONY: pipenv
 pipenv:
-	$(PIP) install pip==24.0
-	$(PIP) install pipenv==2023.12.1
+	$(PIP) install pip==24.1
+	$(PIP) install pipenv==2024.0.1
 
 .PHONY: setup
 setup: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
-	-$(PIPENV_PIP) install flash-attn==2.5.8 --no-build-isolation --upgrade --no-cache-dir
+	-$(PIPENV_PIP) install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir
 
 .PHONY: setup-dev
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
-	- $(PIPENV_PIP) install flash-attn==2.5.8 --no-build-isolation --upgrade --no-cache-dir
+	-$(PIPENV_PIP) install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir
 	$(PIPENV) run playwright install
 
 .PHONY: setup-no-flash
 setup-no-flash: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
+
+.PHONY: setup-conda-nightly
+setup-conda:
+	@bash -c '\
+		set -e; \
+		source $$(conda info --base)/etc/profile.d/conda.sh; \
+		conda deactivate; \
+		conda create -n llmstudio python=3.10 -y; \
+		conda activate llmstudio; \
+		conda install -c nvidia/label/cuda-12.4.0 cuda-toolkit -y; \
+		conda install pytorch pytorch-cuda=12.4 -c pytorch-nightly -c nvidia -y; \
+		grep -v "nvidia" requirements.txt | grep -v "torch" | python -m pip install -r /dev/stdin; \
+		python -m pip install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir; \
+	'
 
 setup-ui: pipenv
 	$(PIPENV) install --verbose --categories=dev-packages --python $(PYTHON_VERSION)
@@ -99,6 +113,19 @@ test: reports
     -o log_cli=true -o log_level=INFO -o log_file=reports/tests.log \
     tests/* 2>&1 | tee reports/tests.log'
 
+
+.PHONY: test-debug
+test-debug: reports
+	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); \
+	$(PIPENV) run pytest -v --junitxml=reports/junit.xml \
+	--import-mode importlib \
+	--html=./reports/pytest.html \
+	-k test_encode \
+	-s \
+    -o log_cli=false -o log_level=WARNING -o log_file=/dev/null \
+    tests/*'
+	
+
 .PHONY: test-ui
 test-ui: reports setup-ui
 	@bash -c 'set -o pipefail; \
@@ -139,7 +166,6 @@ test-ui-github-actions: reports setup-ui
 .PHONY: wave
 wave:
 	HF_HUB_ENABLE_HF_TRANSFER=True \
-	H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
@@ -147,11 +173,20 @@ wave:
 
 .PHONY: llmstudio
 llmstudio:
-	H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
 	$(PIPENV) run wave run --no-reload app
+
+.PHONY: llmstudio-conda
+llmstudio-conda:
+	CONDA_ACTIVATE="source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate llmstudio" && \
+	bash -c "$$CONDA_ACTIVATE && \
+		HF_HUB_ENABLE_HF_TRANSFER=True \
+		H2O_WAVE_MAX_REQUEST_SIZE=25MB \
+		H2O_WAVE_NO_LOG=true \
+		H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
+		wave run --no-reload app"
 
 .PHONY: stop-llmstudio
 stop-llmstudio:
@@ -179,6 +214,12 @@ endif
 		-v `pwd`/data:/workspace/data \
 		-v `pwd`/output:/workspace/output \
 		$(DOCKER_IMAGE)
+
+# Perform a local Trivy scan for CVEs
+# Get Trivy from https://aquasecurity.github.io/trivy/v0.53/getting-started/installation/
+.PHONY: trivy-local
+trivy-local: docker-build-nightly
+	trivy image --scanners vuln --severity  CRITICAL,HIGH --timeout 60m $(DOCKER_IMAGE)
 
 .PHONY: docker-clean-all
 docker-clean-all:

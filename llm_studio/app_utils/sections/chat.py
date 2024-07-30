@@ -145,7 +145,7 @@ async def should_start_chat(q: Q):
             box="first",
             items=[
                 ui.text(
-                    "Chatbot is not available for text classification problems. "
+                    "Chatbot is not available for this problem type. "
                     "Please select a text generation problem."
                 )
             ],

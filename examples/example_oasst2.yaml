@@ -1,6 +1,5 @@
 architecture:
     backbone_dtype: int4
-    force_embedding_gradients: false
     gradient_checkpointing: true
     intermediate_dropout: 0.0
     pretrained: true
@@ -22,6 +21,7 @@ dataset:
     - Validation
     limit_chained_samples: false
     mask_prompt_labels: true
+    only_last_answer: false
     parent_id_column: None
     personalize: false
     prompt_column:
@@ -77,8 +77,6 @@ problem_type: text_causal_language_modeling
 tokenizer:
     add_prompt_answer_tokens: false
     max_length: 512
-    max_length_answer: 256
-    max_length_prompt: 256
     padding_quantile: 1.0
     tokenizer_kwargs: '{"use_fast": true, "add_prefix_space": false}'
 training:

@@ -5,7 +5,11 @@ from torch import nn
 from transformers import AutoModelForCausalLM
 
 from llm_studio.src.utils.data_utils import batch_padding
-from llm_studio.src.utils.modeling_utils import create_nlp_backbone, prepare_lora
+from llm_studio.src.utils.modeling_utils import (
+    create_nlp_backbone,
+    forward,
+    prepare_lora,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +71,8 @@ class Model(nn.Module):
                 padding_side=self.cfg.tokenizer._padding_side,
             )
 
-        output = self.backbone(
+        output = forward(
+            self.backbone,
             input_ids=batch["prompt_input_ids"],
             attention_mask=batch["prompt_attention_mask"],
         )

@@ -40,7 +40,9 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
         text_answer_separator=cfg.dataset.text_answer_separator,
         trust_remote_code=cfg.environment.trust_remote_code,
         end_of_sentence=(
-            cfg._tokenizer_eos_token if cfg.dataset.add_eos_token_to_prompt else ""
+            cfg.tokenizer._tokenizer_eos_token
+            if cfg.dataset.add_eos_token_to_prompt
+            else ""
         ),
     )
     if cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES:
@@ -250,6 +252,15 @@ def publish_model_to_hugging_face(
             repo_id=repo_id,
             repo_type="model",
             commit_message="Upload classification_head.pth",
+        )
+    # push regression head to hub
+    if os.path.isfile(f"{path_to_experiment}/regression_head.pth"):
+        api.upload_file(
+            path_or_fileobj=f"{path_to_experiment}/regression_head.pth",
+            path_in_repo="regression_head.pth",
+            repo_id=repo_id,
+            repo_type="model",
+            commit_message="Upload regression_head.pth",
         )
 
     # push config to hub

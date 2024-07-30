@@ -98,6 +98,7 @@ def test_oasst_data_automatic_split(tmp_path: pathlib.Path):
             cfg_mock.dataset.prompt_column = ("instruction",)
             cfg_mock.dataset.answer_column = "output"
             cfg_mock.dataset.parent_id_column = "parent_id"
+            cfg_mock.dataset.prompt_column_separator = "\n\n"
 
             cfg_mock.dataset.validation_strategy = "automatic"
 

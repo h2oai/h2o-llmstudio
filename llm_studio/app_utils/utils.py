@@ -22,6 +22,7 @@ from functools import partial
 from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
 
 import GPUtil
+import h2o_drive
 import numpy as np
 import pandas as pd
 import psutil
@@ -29,11 +30,12 @@ import yaml
 from azure.storage.filedatalake import DataLakeServiceClient
 from boto3.session import Session
 from botocore.handlers import disable_signing
-from h2o_wave import Q, ui
+from h2o_wave import Choice, Q, ui
 from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
 
 from llm_studio.app_utils.db import Experiment
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src import possible_values
 from llm_studio.src.utils.config_utils import (
     _get_type_annotation_error,
@@ -48,6 +50,10 @@ from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 from .config import default_cfg
 
 logger = logging.getLogger(__name__)
+
+
+class GridCheckError(Exception):
+    pass
 
 
 def get_user_id(q):
@@ -94,12 +100,12 @@ def find_free_port():
 
 
 def start_process(
-    cfg: Any, gpu_list: List, process_queue: List, env_vars: Dict
+    cfg: DefaultConfigProblemBase, gpu_list: List, process_queue: List, env_vars: Dict
 ) -> subprocess.Popen:
     """Starts train.py for a given configuration setting
 
     Args:
-        cfg: config
+        cfg: DefaultConfigProblemBase config
         gpu_list: list of GPUs to use for the training
         process_queue: list of processes to wait for before starting the training
         env_vars: dictionary of ENV variables to pass to the training process
@@ -223,7 +229,7 @@ def filter_valid_files(files) -> List[str]:
 
 def s3_file_options(
     bucket: str, aws_access_key: str, aws_secret_key: str
-) -> Optional[List[str]]:
+) -> List[str] | Exception:
     """ "Returns all zip files in the target s3 bucket
 
     Args:
@@ -232,7 +238,7 @@ def s3_file_options(
         aws_secret_key: s3 secret key
 
     Returns:
-        List of zip files in bucket or None in case of access error
+        List of zip files in bucket or Exception in case of access error
 
     """
 
@@ -260,7 +266,7 @@ def s3_file_options(
 
     except Exception as e:
         logger.warning(f"Can't load S3 datasets list: {e}")
-        return None
+        return e
 
 
 def convert_file_size(size: float):
@@ -366,7 +372,7 @@ def extract_if_zip(file, actual_path):
 
 
 async def s3_download(
-    q, bucket, filename, aws_access_key, aws_secret_key
+    q: Q, bucket, filename, aws_access_key, aws_secret_key
 ) -> Tuple[str, str]:
     """Downloads a file from s3
 
@@ -443,7 +449,7 @@ def azure_file_options(conn_string: str, container: str) -> List[str]:
         return []
 
 
-async def download_progress(q, title, seen_so_far, total_len):
+async def download_progress(q: Q, title, seen_so_far, total_len):
     if seen_so_far is not None and total_len is not None:
         percentage = seen_so_far / total_len
         value = percentage
@@ -465,7 +471,7 @@ async def download_progress(q, title, seen_so_far, total_len):
 
 
 async def azure_download(
-    q: Any, conn_string: str, container: str, filename: str
+    q: Q, conn_string: str, container: str, filename: str
 ) -> Tuple[str, str]:
     """Downloads a file from azure
 
@@ -527,7 +533,7 @@ async def azure_download(
     return azure_path, "".join(filename.split(".")[:-1])
 
 
-async def local_download(q: Any, filename: str) -> Tuple[str, str]:
+async def local_download(q: Q, filename: str) -> Tuple[str, str]:
     """Downloads a file from local path
 
     Args:
@@ -554,7 +560,7 @@ async def local_download(q: Any, filename: str) -> Tuple[str, str]:
 
 
 async def kaggle_download(
-    q: Any, command: str, kaggle_access_key: str, kaggle_secret_key: str
+    q: Q, command: str, kaggle_access_key: str, kaggle_secret_key: str
 ) -> Tuple[str, str]:
     """ "Downloads a file from kaggle
 
@@ -601,6 +607,60 @@ async def kaggle_download(
             clean_macos_artifacts(kaggle_path)
 
     return kaggle_path, "".join(command.split(" ")[-1].split("/")[-1])
+
+
+async def h2o_drive_download(q: Q, filename) -> Tuple[str, str]:
+    """Downloads a file from H2O Drive
+
+    Args:
+        q: Q
+        filename: filename to download
+
+    Returns:
+        Download location path
+    """
+    drive = await h2o_drive.Drive(q.auth.access_token)
+    my_home_space = drive.my_bucket().home()
+
+    local_path = f"{get_data_dir(q)}/tmp"
+    local_path = get_valid_temp_data_folder(q, local_path)
+
+    if os.path.exists(local_path):
+        shutil.rmtree(local_path)
+    os.makedirs(local_path, exist_ok=True)
+
+    zip_file = f"{local_path}/{filename.split('/')[-1]}"
+
+    await my_home_space.download_file(filename, zip_file)
+
+    extract_if_zip(zip_file, local_path)
+
+    return local_path, "".join(filename.split("/")[-1].split(".")[:-1])
+
+
+async def h2o_drive_file_options(q: Q) -> List[str] | Exception:
+    """ "Returns all zip files in the H2O Drive
+
+    Args:
+
+    Returns:
+        List of zip files in bucket or Exception in case of access error
+
+    """
+    try:
+        drive = await h2o_drive.Drive(q.auth.access_token)
+        my_home_space = drive.my_bucket().home()
+
+        files = []
+        for h2o_drive_file in await my_home_space.list_objects():
+            files.append(h2o_drive_file.key)
+
+        files = filter_valid_files(files)
+        return files
+
+    except Exception as e:
+        logger.warning(f"Can't connect to H2O Drive: {e}")
+        return e
 
 
 def clean_error(error: str):
@@ -889,21 +949,15 @@ def get_ui_element(
             ]
         else:
             if isinstance(poss_values, possible_values.String):
-                options = poss_values.values
+                options = list(poss_values.values)
                 allow_custom = poss_values.allow_custom
                 placeholder = poss_values.placeholder
             else:
-                options = poss_values
+                options = list(poss_values)
                 allow_custom = False
                 placeholder = None
 
             is_tuple = type_annotation == Tuple[str, ...]
-
-            if is_tuple and allow_custom:
-                raise TypeError(
-                    "Multi-select (`Tuple[str, ...]` type annotation) and"
-                    " `allow_custom=True` is not supported at the same time."
-                )
 
             v = q.client[pre + k] if q.client[pre + k] is not None else v
             if isinstance(v, str):
@@ -917,16 +971,27 @@ def get_ui_element(
                     raise ValueError(
                         "Combobox cannot handle (value, name) pairs for options."
                     )
+                if is_tuple:
+                    choices = list(set(list(options) + list(v)))
+                else:
+                    if isinstance(v, list):
+                        for option in v:
+                            if option not in options:
+                                options.append(option)
+                        choices = list(options)
+                    else:
+                        raise ValueError("Expected a list.")
 
                 t = [
                     ui.combobox(
                         name=pre + k,
                         label=make_label(k),
-                        value=v[0],
-                        choices=(
-                            list(options) + v if v not in options else list(options)
-                        ),
+                        value=None if is_tuple else v[0],
+                        values=v if is_tuple else None,
+                        choices=choices,
                         tooltip=tooltip,
+                        placeholder=placeholder,
+                        trigger=trigger,
                     )
                 ]
             else:
@@ -956,11 +1021,11 @@ def get_ui_element(
     return t
 
 
-def get_dataset_elements(cfg: Any, q: Q) -> List:
+def get_dataset_elements(cfg: DefaultConfigProblemBase, q: Q) -> List:
     """For a given configuration setting return the according dataset ui components.
 
     Args:
-        cfg: configuration settings
+        cfg: DefaultConfigProblemBase configuration settings
         q: Q
 
     Returns:
@@ -1052,11 +1117,13 @@ def get_dataset_elements(cfg: Any, q: Q) -> List:
     return items
 
 
-def check_dependencies(cfg: Any, pre: str, k: str, q: Q, dataset_import: bool = False):
+def check_dependencies(
+    cfg: DefaultConfigProblemBase, pre: str, k: str, q: Q, dataset_import: bool = False
+):
     """Checks all dependencies for a given key
 
     Args:
-        cfg: configuration settings
+        cfg: DefaultConfigProblemBase configuration settings
         pre: prefix for client keys
         k: key to be checked
         q: Q
@@ -1080,10 +1147,17 @@ def check_dependencies(cfg: Any, pre: str, k: str, q: Q, dataset_import: bool = 
     if len(dependencies) > 0:
         all_deps = 0
         for d in dependencies:
-            if isinstance(q.client[f"{pre}/cfg/{d.key}"], (list, tuple)):
-                dependency_values = q.client[f"{pre}/cfg/{d.key}"]
+            if (
+                not dataset_import
+                and q.client["experiment/start/grid_search"]
+                and cfg._get_grid_search_values(d.key) is not None
+            ):
+                dependency_values = q.client[f"{pre}/cfg/{d.key}_grid_search"]
             else:
-                dependency_values = [q.client[f"{pre}/cfg/{d.key}"]]
+                if isinstance(q.client[f"{pre}/cfg/{d.key}"], (list, tuple)):
+                    dependency_values = q.client[f"{pre}/cfg/{d.key}"]
+                else:
+                    dependency_values = [q.client[f"{pre}/cfg/{d.key}"]]
 
             all_deps += d.check(dependency_values)
         return all_deps == len(dependencies)
@@ -1091,7 +1165,7 @@ def check_dependencies(cfg: Any, pre: str, k: str, q: Q, dataset_import: bool = 
     return True
 
 
-def is_visible(k: str, cfg: Any, q: Q) -> bool:
+def is_visible(k: str, cfg: DefaultConfigProblemBase, q: Q) -> bool:
     """Returns a flag whether a given key should be visible on UI.
 
     Args:
@@ -1110,8 +1184,26 @@ def is_visible(k: str, cfg: Any, q: Q) -> bool:
     return True
 
 
+def get_grid_value(v: Any, type_annotation: Any) -> List[str]:
+    """Handles .0 for floats in the grid search
+
+    Args:
+        v: value of the hyperparameter
+        type_annotation: type of the parameter
+    Returns:
+        List with a grid search element
+    """
+
+    v: str = str(v)
+
+    if type_annotation == float and v.endswith(".0"):
+        v = v[:-2]
+
+    return [v]
+
+
 def get_ui_elements(
-    cfg: Any,
+    cfg: DefaultConfigProblemBase,
     q: Q,
     limit: Optional[List[str]] = None,
     pre: str = "experiment/start",
@@ -1165,6 +1257,9 @@ def get_ui_elements(
                 q.client[f"{pre}/cfg/{k}"] = v
             elif q.client[f"{pre}/cfg_mode/from_cfg"]:
                 q.client[f"{pre}/cfg/{k}"] = v
+                q.client[f"{pre}/cfg/{k}_grid_search"] = get_grid_value(
+                    v, type_annotation
+                )
         # Overwrite current default values with user_settings
         if q.client[f"{pre}/cfg_mode/from_default"] and f"default_{k}" in q.client:
             q.client[f"{pre}/cfg/{k}"] = q.client[f"default_{k}"]
@@ -1188,7 +1283,65 @@ def get_ui_elements(
         if k in q.client[f"{pre}/trigger_ks"]:
             trigger = True
 
-        if type_annotation in KNOWN_TYPE_ANNOTATIONS:
+        if (
+            pre == "experiment/start"
+            and q.client[f"{pre}/grid_search"]
+            and cfg._get_grid_search_values(k)
+        ):
+
+            grid_name = f"{pre}/cfg/{k}_grid_search"
+            add_choice = []
+
+            # Value is not in the grid range, add to choices
+            if v not in cfg._get_grid_search_values(k):
+                add_choice = get_grid_value(v, type_annotation)
+
+            v = get_grid_value(v, type_annotation)
+            v = q.client[grid_name] if q.client[grid_name] is not None else v
+
+            t = [
+                ui.message_bar(
+                    type="info",
+                    text=f"**{make_label(k)}** is a grid search hyperparameter.",
+                )
+            ]
+
+            # len(add_choice) == 1 added due to a strange bug, that iscustom will get
+            # overwritten to None in special cases
+            allow_custom = cfg._get_grid_search_iscustom(k) or len(add_choice) == 1
+
+            if allow_custom:
+                cust_choices: list[str] = [
+                    str(c) for c in cfg._get_grid_search_values(k)
+                ] + add_choice
+                t += [
+                    ui.combobox(
+                        name=grid_name,
+                        label=make_label(k) + " (grid search)",
+                        values=v,
+                        required=False,
+                        choices=cust_choices,
+                        tooltip=tooltip,
+                        trigger=trigger,
+                    )
+                ]
+            else:
+                choices: list[Choice] = [
+                    ui.choice(str(c), str(c)) for c in cfg._get_grid_search_values(k)
+                ]
+
+                t += [
+                    ui.dropdown(
+                        name=grid_name,
+                        label=make_label(k) + " (grid search)",
+                        values=v,
+                        required=False,
+                        choices=choices,
+                        tooltip=tooltip,
+                        trigger=trigger,
+                    )
+                ]
+        elif type_annotation in KNOWN_TYPE_ANNOTATIONS:
             if limit is not None and k not in limit:
                 continue
 
@@ -1254,7 +1407,7 @@ def get_ui_elements(
 
 
 def parse_ui_elements(
-    cfg: Any, q: Q, limit: Union[List, str] = "", pre: str = ""
+    cfg: DefaultConfigProblemBase, q: Q, limit: Union[List, str] = "", pre: str = ""
 ) -> Any:
     """Sets configuration settings with arguments from app
 
@@ -1281,13 +1434,23 @@ def parse_ui_elements(
         ):
             continue
 
+        if (
+            pre == "experiment/start/cfg/"
+            and q.client["experiment/start/grid_search"]
+            and cfg._get_grid_search_values(k)
+        ):
+            value = q.client[f"{pre}{k}_grid_search"]
+            setattr(cfg, k, value)
         elif type_annotations[k] in KNOWN_TYPE_ANNOTATIONS:
             value = q.client[f"{pre}{k}"]
 
             if type_annotations[k] == Tuple[str, ...]:
                 if isinstance(value, str):
                     value = [value]
-                value = tuple(value)
+                elif value is None:
+                    value = ()
+                else:
+                    value = tuple(value)
             if isinstance(type_annotations[k], str) and isinstance(value, list):
                 # fix for combobox outputting custom values as list in wave 0.22
                 value = value[0]
@@ -1428,10 +1591,14 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
             # that are no longer part of the dataclass fields.
             # This can happen if the codebase has changed since the experiment was run.
             # Ignore those warnings here
-            logging_level = logging.getLogger().level
+
+            original_level = logging.getLogger().level
             logging.getLogger().setLevel(logging.ERROR)
-            cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
-            logging.getLogger().setLevel(logging_level)
+            try:
+                cfg = load_config_yaml(f"{row.path}/cfg.yaml").__dict__
+            finally:
+                logging.getLogger().setLevel(original_level)
+
         except Exception:
             cfg = None
 
@@ -1446,75 +1613,85 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
                 metric = ""
                 loss_function = ""
 
-        with SqliteDict(f"{row.path}/charts.db") as logs:
-            if "internal" in logs.keys():
-                if "current_step" in logs["internal"].keys():
-                    curr_step = int(logs["internal"]["current_step"]["values"][-1])
-                else:
-                    curr_step = 0
-
-                if "total_training_steps" in logs["internal"].keys():
-                    total_training_steps = int(
-                        logs["internal"]["total_training_steps"]["values"][-1]
-                    )
-                else:
-                    total_training_steps = 0
-
-                if "current_val_step" in logs["internal"].keys():
-                    curr_val_step = int(
-                        logs["internal"]["current_val_step"]["values"][-1]
-                    )
-                else:
-                    curr_val_step = 0
-
-                if "total_validation_steps" in logs["internal"].keys():
-                    total_validation_steps = int(
-                        logs["internal"]["total_validation_steps"]["values"][-1]
-                    )
-                else:
-                    total_validation_steps = 0
-
-                curr_total_step = curr_step + curr_val_step
-
-                total_steps = max(total_training_steps + total_validation_steps, 1)
-
-                if (
-                    "global_start_time" in logs["internal"].keys()
-                    and curr_total_step > 0
-                ):
-                    elapsed = (
-                        time.time()
-                        - logs["internal"]["global_start_time"]["values"][-1]
-                    )
-                    remaining_steps = total_steps - curr_total_step
-                    eta = elapsed * (remaining_steps / curr_total_step)
-                    if eta == 0:
-                        eta = ""
+        charts_db_path = f"{row.path}/charts.db"
+        if os.path.exists(charts_db_path):
+            with SqliteDict(charts_db_path) as logs:
+                if "internal" in logs.keys():
+                    if "current_step" in logs["internal"].keys():
+                        curr_step = int(logs["internal"]["current_step"]["values"][-1])
                     else:
-                        # if more than one day, show days
-                        # need to subtract 1 day from time_took since strftime shows
-                        # day of year which starts counting at 1
-                        if eta > 86400:
-                            eta = time.strftime(
-                                "%-jd %H:%M:%S", time.gmtime(float(eta - 86400))
-                            )
+                        curr_step = 0
+
+                    if "total_training_steps" in logs["internal"].keys():
+                        total_training_steps = int(
+                            logs["internal"]["total_training_steps"]["values"][-1]
+                        )
+                    else:
+                        total_training_steps = 0
+
+                    if "current_val_step" in logs["internal"].keys():
+                        curr_val_step = int(
+                            logs["internal"]["current_val_step"]["values"][-1]
+                        )
+                    else:
+                        curr_val_step = 0
+
+                    if "total_validation_steps" in logs["internal"].keys():
+                        total_validation_steps = int(
+                            logs["internal"]["total_validation_steps"]["values"][-1]
+                        )
+                    else:
+                        total_validation_steps = 0
+
+                    curr_total_step = curr_step + curr_val_step
+
+                    total_steps = max(total_training_steps + total_validation_steps, 1)
+
+                    if (
+                        "global_start_time" in logs["internal"].keys()
+                        and curr_total_step > 0
+                    ):
+                        elapsed = (
+                            time.time()
+                            - logs["internal"]["global_start_time"]["values"][-1]
+                        )
+                        remaining_steps = total_steps - curr_total_step
+                        eta = elapsed * (remaining_steps / curr_total_step)
+                        if eta == 0:
+                            eta = ""
                         else:
-                            eta = time.strftime("%H:%M:%S", time.gmtime(float(eta)))
+                            # if more than one day, show days
+                            # need to subtract 1 day from time_took since strftime shows
+                            # day of year which starts counting at 1
+                            if eta > 86400:
+                                eta = time.strftime(
+                                    "%-jd %H:%M:%S", time.gmtime(float(eta - 86400))
+                                )
+                            else:
+                                eta = time.strftime("%H:%M:%S", time.gmtime(float(eta)))
+                    else:
+                        eta = "N/A"
                 else:
                     eta = "N/A"
-            else:
-                eta = "N/A"
-                total_steps = 1
-                curr_total_step = 0
+                    total_steps = 1
+                    curr_total_step = 0
 
-            if (
-                "validation" in logs
-                and metric in logs["validation"]
-                and logs["validation"][metric]["values"][-1] is not None
-            ):
-                score_val = np.round(logs["validation"][metric]["values"][-1], 4)
-            else:
-                score_val = ""
+                if (
+                    "validation" in logs
+                    and metric in logs["validation"]
+                    and logs["validation"][metric]["values"][-1] is not None
+                ):
+                    score_val = np.round(logs["validation"][metric]["values"][-1], 4)
+                else:
+                    score_val = ""
+
+        else:
+            logs = {}
+            eta = "N/A"
+            total_steps = 1
+            curr_total_step = 0
+            score_val = ""
+            logger.info(f"Experiment path {charts_db_path} not found.")
 
         try:
             dataset = q.client.app_db.get_dataset(row.dataset).name
@@ -1689,11 +1866,110 @@ def get_datasets(
     return df
 
 
-def start_experiment(cfg: Any, q: Q, pre: str, gpu_list: Optional[List] = None) -> None:
-    """Starts an experiment
+def filter_grid_search_combination(grid: Dict[str, Any], cfg: Any) -> Dict[str, Any]:
+    """Filters grid search combination in order not to start multiple same experiments.
+
+    Args:
+        grid: grid combination from the full grid search
+        cfg: configuration settings
+
+    Returns:
+        Filtered grid combination after checking the dependencies
+    """
+
+    grid = grid.copy()
+    cfg_dict = cfg.__dict__
+
+    for k, v in cfg_dict.items():
+        if dataclasses.is_dataclass(v):
+            grid = filter_grid_search_combination(grid=grid, cfg=v)
+
+        if k in grid:
+            dependencies = cfg._get_nesting_dependencies(k)
+            if dependencies is None:
+                continue
+
+            if all(
+                [d.key in grid and not d.check([grid[d.key]]) for d in dependencies]
+            ):
+                grid.pop(k)
+
+    return grid
+
+
+def get_grid_search(cfg: Any, q: Q, pre: str) -> Dict[str, List]:
+    """Creates a dictionary with grid search values.
 
     Args:
         cfg: configuration settings
+        q: Q
+        pre: prefix for client keys
+    """
+
+    grid_search = {}
+    cfg_dict = cfg.__dict__
+
+    type_annotations = cfg.get_annotations()
+    for k, v in cfg_dict.items():
+        if k.startswith("_") or cfg._get_visibility(k) < 0:
+            continue
+        elif (
+            pre == "experiment/start"
+            and q.client["experiment/start/grid_search"]
+            and cfg._get_grid_search_values(k)
+        ):
+            if type_annotations[k] == bool:
+                grid_search[k] = [True if x == "True" else False for x in v]
+            else:
+                try:
+                    grid_search[k] = [type_annotations[k](x) for x in v]
+                except ValueError:
+                    raise GridCheckError(f"{make_label(k)}")
+        elif type_annotations[k] in KNOWN_TYPE_ANNOTATIONS:
+            pass
+        elif dataclasses.is_dataclass(v):
+            grid_search.update(get_grid_search(cfg=v, q=q, pre=pre))
+        else:
+            raise _get_type_annotation_error(v, type_annotations[k])
+
+    return grid_search
+
+
+def set_grid_to_cfg(cfg: Any, grid: Dict[str, List]) -> Any:
+    """Sets individual run config for the Grid Search.
+
+    Args:
+        cfg: configuration settings
+        grid: dictionary of a single grid search element
+    Returns:
+        config for the corresponding grid search run
+    """
+
+    cfg_dict = cfg.__dict__
+    type_annotations = cfg.get_annotations()
+
+    for k, v in cfg_dict.items():
+        if k.startswith("_") or cfg._get_visibility(k) < 0:
+            continue
+        elif k in grid and cfg._get_grid_search_values(k):
+            setattr(cfg, k, grid[k])
+        elif type_annotations[k] in KNOWN_TYPE_ANNOTATIONS:
+            pass
+        elif dataclasses.is_dataclass(v):
+            setattr(cfg, k, set_grid_to_cfg(cfg=v, grid=grid))
+        else:
+            raise _get_type_annotation_error(v, type_annotations[k])
+
+    return cfg
+
+
+def start_experiment(
+    cfg: DefaultConfigProblemBase, q: Q, pre: str, gpu_list: Optional[List] = None
+) -> None:
+    """Starts an experiment
+
+    Args:
+        cfg: DefaultConfigProblemBase configuration settings
         q: Q
         pre: prefix for client keys
         gpu_list: list of GPUs available
@@ -1820,7 +2096,7 @@ def dir_file_table(current_path: str) -> pd.DataFrame:
     return pd.DataFrame({current_path: results})
 
 
-def get_download_link(q, artifact_path):
+def get_download_link(q: Q, artifact_path):
     new_path = os.path.relpath(artifact_path, get_output_dir(q))
     new_path = os.path.join(get_download_dir(q), new_path)
     url_path = os.path.relpath(new_path, get_output_dir(q))
@@ -1946,17 +2222,17 @@ def remove_temp_files(q: Q):
                 os.remove(file)
 
 
-def get_gpu_usage():
-    usage = 0.0
-    all_gpus = GPUtil.getGPUs()
+def get_gpu_usage() -> float:
+    usage: float = 0.0
+    all_gpus: List[GPUtil.GPU] = GPUtil.getGPUs()
     for gpu in all_gpus:
-        usage += gpu.load
+        usage += float(gpu.load)
 
     usage /= len(all_gpus)
-    return usage * 100
+    return usage * 100.0
 
 
-def get_single_gpu_usage(sig_figs=1, highlight=None):
+def get_single_gpu_usage(sig_figs: int = 1, highlight: Optional[str] = None):
     all_gpus = GPUtil.getGPUs()
     items = []
     for i, gpu in enumerate(all_gpus):
@@ -1982,11 +2258,11 @@ def get_single_gpu_usage(sig_figs=1, highlight=None):
     return items
 
 
-def copy_config(cfg: Any, q: Q) -> Any:
+def copy_config(cfg: DefaultConfigProblemBase, q: Q) -> Any:
     """Makes a copy of the config
 
     Args:
-        cfg: config object
+        cfg: DefaultConfigProblemBase config object
     Returns:
         copy of the config
     """
@@ -2015,7 +2291,7 @@ def make_label(title: str, appendix: str = "") -> str:
     return label
 
 
-def get_cfg_list_items(cfg) -> List:
+def get_cfg_list_items(cfg: DefaultConfigProblemBase) -> List:
     items = parse_cfg_dataclass(cfg)
     x = []
     for item in items:

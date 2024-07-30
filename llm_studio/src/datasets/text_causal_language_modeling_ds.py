@@ -42,6 +42,9 @@ class CustomDataset(Dataset):
         input_text_dict["prompts"] = [
             self.parse_prompt(self.cfg, prompt) for prompt in input_text_dict["prompts"]
         ]
+        input_text_dict["answers"] = [
+            self.parse_answer(self.cfg, answer) for answer in input_text_dict["answers"]
+        ]
 
         sample = dict()
         system_encoding, prompt_encodings, answer_encodings = self.get_encodings(
@@ -72,7 +75,7 @@ class CustomDataset(Dataset):
             self.pad_tokens(
                 answer_encodings[-1],
                 attention_mask=torch.ones_like(answer_encodings[-1]),
-                max_length=self.cfg.tokenizer.max_length_answer,
+                max_length=self.cfg.tokenizer.max_length,
                 pad_token_id=self.tokenizer.pad_token_id,
                 direction="right",
                 prefix="answer_",
@@ -99,14 +102,6 @@ class CustomDataset(Dataset):
             )
         )
 
-        # make sure system encoding is always prepended if max_length exceeded
-        if sample["input_ids"][0] != self.tokenizer.pad_token_id:
-            sample["input_ids"][: len(system_encoding)] = system_encoding
-            if self.cfg.dataset.mask_prompt_labels and "labels" in sample.keys():
-                sample["labels"][: len(system_encoding)] = -100
-        if sample["prompt_input_ids"][0] != self.tokenizer.pad_token_id:
-            sample["prompt_input_ids"][: len(system_encoding)] = system_encoding
-
         return sample
 
     @staticmethod
@@ -115,12 +110,18 @@ class CustomDataset(Dataset):
             f"{codecs.decode(cfg.dataset.text_prompt_start, 'unicode_escape')}{prompt}"
         )
         if cfg.dataset.add_eos_token_to_prompt:
-            prompt += cfg._tokenizer_eos_token
+            prompt += cfg.tokenizer._tokenizer_eos_token
         prompt = (
             f"{prompt}"
             f"{codecs.decode(cfg.dataset.text_answer_separator, 'unicode_escape')}"
         )
         return prompt
+
+    @staticmethod
+    def parse_answer(cfg: Any, answer: str):
+        if cfg.dataset.add_eos_token_to_answer:
+            answer += cfg.tokenizer._tokenizer_eos_token
+        return answer
 
     @staticmethod
     def parse_system(cfg: Any, system: str):
@@ -131,7 +132,7 @@ class CustomDataset(Dataset):
             f"{codecs.decode(cfg.dataset.text_system_start, 'unicode_escape')}{system}"
         )
         if cfg.dataset.add_eos_token_to_system:
-            system += cfg._tokenizer_eos_token
+            system += cfg.tokenizer._tokenizer_eos_token
         return system
 
     @staticmethod
@@ -194,12 +195,19 @@ class CustomDataset(Dataset):
             text = text.replace("Open Asistant", cfg.dataset.chatbot_name)
             text = text.replace("Open Assiant", cfg.dataset.chatbot_name)
             text = text.replace("Assistant", cfg.dataset.chatbot_name)
+            text = text.replace("ChatGPT", cfg.dataset.chatbot_name)
             text = text.replace("LAION AI", cfg.dataset.chatbot_author)
             text = text.replace("LAION-AI", cfg.dataset.chatbot_author)
             text = text.replace("LAION,", cfg.dataset.chatbot_author + ",")
             text = text.replace("LAION.ai", cfg.dataset.chatbot_author)
             text = text.replace("LAION.", cfg.dataset.chatbot_author + ".")
             text = text.replace("LAION", cfg.dataset.chatbot_author)
+            text = text.replace("Laion AI", cfg.dataset.chatbot_author)
+            text = text.replace("OpenAI", cfg.dataset.chatbot_author)
+            text = text.replace("Open AI", cfg.dataset.chatbot_author)
+            text = text.replace("openai", cfg.dataset.chatbot_author)
+            text = text.replace("open ai", cfg.dataset.chatbot_author)
+
             return text
 
         if cfg.dataset.personalize:
@@ -361,23 +369,26 @@ class CustomDataset(Dataset):
         ).clone()
 
         if self.cfg.dataset.mask_prompt_labels:
-            prompt_mask = torch.cat(
-                [
-                    torch.cat(
-                        [
-                            torch.ones_like(prompt_encoding),
-                            torch.zeros_like(answer_encoding),
-                        ]
-                    )
-                    for prompt_encoding, answer_encoding in zip(
-                        prompt_encodings, answer_encodings
-                    )
-                ]
-            ).to(torch.bool)
-            labels.masked_fill_(prompt_mask, -100)
-        if self.cfg.dataset.add_eos_token_to_answer:
-            # eos_token may be equal to pad_token. Add the label back manually.
-            labels[-1] = self.tokenizer.eos_token_id
+            masks = []
+            for idx, (prompt_encoding, answer_encoding) in enumerate(
+                zip(prompt_encodings, answer_encodings)
+            ):
+                if (
+                    not self.cfg.dataset.only_last_answer
+                    or idx == len(answer_encodings) - 1
+                ):
+                    mask = [
+                        torch.ones_like(prompt_encoding),
+                        torch.zeros_like(answer_encoding),
+                    ]
+                else:
+                    mask = [
+                        torch.ones_like(prompt_encoding),
+                        torch.ones_like(answer_encoding),
+                    ]
+                masks.append(torch.cat(mask))
+            masks = torch.cat(masks).to(torch.bool)
+            labels.masked_fill_(masks, -100)
         if self.cfg.tokenizer.max_length < len(labels):
             labels = labels[-self.cfg.tokenizer.max_length :]
 
@@ -446,27 +457,16 @@ class CustomDataset(Dataset):
     def _get_sample_encoding(self, system: str, prompt: str, answer: str) -> List:
         if len(system) > 0:
             system_encoding = self.encode(
-                self.tokenizer, system, self.cfg.tokenizer.max_length_prompt, "right"
+                self.tokenizer, system, self.cfg.tokenizer.max_length, "right"
             )["input_ids"]
         else:
             system_encoding = torch.empty(0)
         prompt_encoding = self.encode(
-            self.tokenizer, prompt, self.cfg.tokenizer.max_length_prompt, "left"
+            self.tokenizer, prompt, self.cfg.tokenizer.max_length, "left"
         )["input_ids"]
-        max_length_answer = self.cfg.tokenizer.max_length_answer - int(
-            self.cfg.dataset.add_eos_token_to_answer
-        )
         answer_encoding = self.encode(
-            self.tokenizer, answer, max_length_answer, "right"
+            self.tokenizer, answer, self.cfg.tokenizer.max_length, "right"
         )["input_ids"]
-        if self.cfg.dataset.add_eos_token_to_answer:
-            answer_encoding = torch.cat(
-                [
-                    answer_encoding,
-                    torch.Tensor([self.tokenizer.eos_token_id]),
-                ],
-                dim=0,
-            )
 
         return [system_encoding, prompt_encoding, answer_encoding]
 
@@ -482,6 +482,7 @@ class CustomDataset(Dataset):
         sample = {}
 
         if max_length < len(input_ids):
+            logger.info(f"Input exceeds max_length of {max_length}, truncating sample.")
             input_ids = input_ids[-max_length:]
             attention_mask = attention_mask[-max_length:]
 

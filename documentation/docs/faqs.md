@@ -9,6 +9,52 @@ The sections below provide answers to frequently asked questions. If you have ad
 
 ---
 
+### What are the general recommendations for using H2O LLM Studio?
+
+The recommendation is to always start with the default settings. From there, the parameters that tend to have the largest impact are: 
+- the LLM backbone
+- the number of epochs
+- the learning rate
+- the LoRA settings 
+
+:::info
+For more information on experiment settings, see [Experiment Settings](guide/experiments/experiment-settings). 
+:::
+
+The parameters that have the largest impact on the amount of GPU memory being used are the [backbone dtype](guide/experiments/experiment-settings#backbone-dtype) and the [max length](guide/experiments/experiment-settings#max-length) (the length of the input sequence being used during model training). 
+
+:::info
+For more information, see [this FAQ about GPU out-of-memory issues](#i-encounter-gpu-out-of-memory-issues-what-can-i-change-to-be-able-to-train-large-models). 
+:::
+
+While these parameters will change the behavior of the fine-tuned model, the change that will be most impactful is the actual data used for fine tuning. Having clean data and enough samples (i.e., atleast 1000 records) is imperative.
+
+---
+
+### Is the tool multi-user or single user? 
+
+While it is possible for multiple users to use the same instance, the tool was created for a single user at a time. 
+
+----
+
+### How can human feedback be applied in LLM Studio?
+
+In order to apply human feedback to H2O LLM Studio, there is a problem type called DPO (Direct Preference Optimization), which is specifically used for learning human feedback. For these types of use cases, there would be a selected answer and a rejected answer column to train a reward model. This is a more stable form of the traditional RLHF. For more information, see [this paper about DPO](https://arxiv.org/abs/2305.18290) by Stanford University.
+
+----
+
+### How does H2O LLM Studio evaluate the fine-tuned model? 
+
+The valuation options are [BLEU](concepts#bleu), [Perplexity](concepts#perplexity), and an AI Judge. For more information about the traditional NLP similarity metrics, see [BLEU](concepts#bleu) and [Perplexity](concepts#perplexity) explained on the concepts page. You can also opt to use an AI judge by having an LLM model (ChatGPT or a local LLM) judge the performance of the response. This [sample prompt](https://github.com/h2oai/h2o-llmstudio/blob/main/prompts/general.txt) is an example of a prompt that is used to have the LLM evaluate the response.
+
+----
+
+### Can I use a different AI Judge than ChatGPT? 
+
+Yes. For instructions on how to use a local LLM to evaluate the fine-tuned model, see [Evaluate model using an AI judge](guide/experiments/evaluate-model-using-llm). 
+
+---
+
 ### How much data is generally required to fine-tune a model?
 
 There is no clear answer. As a rule of thumb, 1000 to 50000 samples of conversational data should be enough. Quality and diversity is very important. Make sure to try training on a subsample of data using the "sample" parameter to see how big the impact of the dataset size is. Recent studies suggest that less data is needed for larger foundation models.
@@ -27,7 +73,14 @@ To train a chatbot style model, you need to convert your data into a question an
 
 If you really want to continue pretraining on your own data without teaching a question-answering style, prepare a dataset with all your data in a single column Dataframe. Make sure that the length of the text in each row is not too long. In the experiment setup, remove all additional tokens (e.g. `<|prompt|>`, `<|answer|>`, for Text Prompt Start and Text Answer Start respectively) and disable **Add Eos Token To Prompt** and **Add Eos Token To Answer**. Deselect everything in the Prompt Column.
 
-There are also other enterprise solutions from H2O.ai that may help you convert your data into a Q&A format. For more information, see [H2O.ai's Generative AI page](https://h2o.ai/) and this blogpost about [H2O LLM DataStudio: Streamlining Data Curation and Data Preparation for LLMs related tasks](https://blog.h2o.ai/blog/streamlining-data-preparation-for-fine-tuning-of-large-language-models/).
+There are also other enterprise solutions from H2O.ai that may help you convert your data into a Q&A format. For more information, see [H2O.ai's Generative AI page](https://h2o.ai/) and this blogpost about [H2O LLM DataStudio: Streamlining Data Curation and Data Preparation for LLMs related tasks](https://h2o.ai/blog/2023/streamlining-data-preparation-for-fine-tuning-of-large-language-models/).
+
+---
+
+
+### Can the adapter be downloaded after fine-tuning so that the adapter can be combined with the backbone LLM for deployment?
+
+H2O LLM Studio provides the option to download only the LoRA adapter when a model was trained with LoRA. Once the experiment has finished running, click the **Download adapter** button to download the lora adapter_weights separately from a fine-tuned model. 
 
 ---
 
@@ -43,11 +96,12 @@ The number of epochs are set by the user.
 
 ---
 
-### How many records are recommended for fine-tuning?
+### What is the maximum dataset size that an LLM Studio instance can handle?
 
-An order of 100K records is recommended for fine-tuning.
+The total dataset size is basically unlimited / only bound by disk space as all training is done in batches. There is no specific rule of thumb for maximum batch size - this depends strongly on backbone, context size, use of flash attention 2.0, use of gradient checkpointing, etc.
+We suggest using a batch size that just fills the RAM for maximum efficiency. While testing for maximum memory consumption, set padding quantile to `0`. Make sure to set it back to `1` when you have found a good setting for the batch size to save on runtime.
 
----
+----
 
 ### Where does H2O LLM Studio store its data?
 

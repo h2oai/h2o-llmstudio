@@ -237,6 +237,12 @@ def load_mt_bench_data(cfg: Any) -> pd.DataFrame:
         df[answer_column].fillna("").apply(lambda x: x[0] if x != "" else x)
     )
 
+    if (
+        hasattr(cfg.dataset, "rejected_prompt_column")
+        and cfg.dataset.rejected_prompt_column != "None"
+    ):
+        df[cfg.dataset.rejected_prompt_column] = df[prompt_column]
+
     return df
 
 

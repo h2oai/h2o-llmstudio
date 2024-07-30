@@ -23,9 +23,11 @@ from llm_studio.app_utils.sections.dataset import (
 from llm_studio.app_utils.sections.experiment import (
     experiment_delete,
     experiment_display,
+    experiment_download_adapter,
     experiment_download_logs,
     experiment_download_model,
     experiment_download_predictions,
+    experiment_input_type_error,
     experiment_list,
     experiment_push_to_huggingface_dialog,
     experiment_rename_ui_workflow,
@@ -167,22 +169,36 @@ async def handle(q: Q) -> None:
         elif (
             q.args.__wave_submission_name__ == "experiment/start/run"
             or q.args.__wave_submission_name__ == "experiment/start/error/proceed"
+            or q.args.__wave_submission_name__ == "experiment/start/gridsearch/proceed"
         ):
-            # add model type to cfg file name here
-            q.client["experiment/start/cfg_file"] = add_model_type(
-                q.client["experiment/start/cfg_file"],
-                q.client["experiment/start/cfg_sub"],
-            )
-            q.client.delete_cards.add("experiment/start")
-            await experiment_run(q, pre="experiment/start")
-            q.client["experiment/list/mode"] = "train"
+            # error check for custom entered values in combo boxes (grid search)
+            error = experiment_input_type_error(q, pre="experiment/start")
+            if error:
+                await experiment_start(q)
+                q.client["notification_bar"] = (
+                    f"Input type mismatch found in parameter **{error}**."
+                )
+            else:
+                # add model type to cfg file name here
+                q.client["experiment/start/cfg_file"] = add_model_type(
+                    q.client["experiment/start/cfg_file"],
+                    q.client["experiment/start/cfg_sub"],
+                )
+                q.client.delete_cards.add("experiment/start")
+                await experiment_run(q)
+                q.client["experiment/list/mode"] = "train"
 
         elif (
             q.args.__wave_submission_name__ == "experiment/start_experiment"
             or q.args.__wave_submission_name__ == "experiment/list/new"
+            or q.args.__wave_submission_name__ == "experiment/list/new_gridsearch"
         ):
             if q.client["experiment/list/df_experiments"] is not None:
-                selected_idx = int(q.args["experiment/list/new"])
+                if q.args.__wave_submission_name__ == "experiment/list/new_gridsearch":
+                    selected_idx = int(q.args["experiment/list/new_gridsearch"])
+                elif q.args.__wave_submission_name__ == "experiment/list/new":
+                    selected_idx = int(q.args["experiment/list/new"])
+
                 experiment_id = q.client["experiment/list/df_experiments"]["id"].iloc[
                     selected_idx
                 ]
@@ -192,7 +208,10 @@ async def handle(q: Q) -> None:
                 q.client["experiment/start/cfg_experiment"] = str(experiment_id)
 
             await experiment_start(q)
-        elif q.args.__wave_submission_name__ == "experiment/start":
+        elif (
+            q.args.__wave_submission_name__ == "experiment/start"
+            or q.args.__wave_submission_name__ == "experiment/start/grid_search"
+        ):
             q.client["experiment/start/cfg_category"] = None
             q.client["experiment/start/cfg_file"] = None
             datasets_df = q.client.app_db.get_datasets_df()
@@ -330,6 +349,8 @@ async def handle(q: Q) -> None:
             await experiment_push_to_huggingface_dialog(q)
         elif q.args.__wave_submission_name__ == "experiment/display/download_model":
             await experiment_download_model(q)
+        elif q.args.__wave_submission_name__ == "experiment/display/download_adapter":
+            await experiment_download_adapter(q)
         elif (
             q.args.__wave_submission_name__
             == "experiment/display/push_to_huggingface_submit"
@@ -389,7 +410,10 @@ async def handle(q: Q) -> None:
         elif q.args.__wave_submission_name__ == "experiment/start/dataset":
             await experiment_start(q)
 
-        elif q.client["nav/active"] == "experiment/start":
+        elif (
+            q.client["nav/active"] == "experiment/start"
+            or q.client["nav/active"] == "experiment/start/grid_search"
+        ):
             await experiment_start(q)
 
     except Exception as unknown_exception:

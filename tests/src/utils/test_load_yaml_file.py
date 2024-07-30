@@ -13,7 +13,6 @@ def test_load_config_yaml():
     assert cfg.output_directory == "output/user/test/"
 
     assert cfg.architecture.backbone_dtype == "float16"
-    assert cfg.architecture.force_embedding_gradients is False
     assert cfg.architecture.gradient_checkpointing is False
     assert cfg.architecture.intermediate_dropout == 0.0
 
@@ -53,8 +52,6 @@ def test_load_config_yaml():
     assert cfg.prediction.temperature == 0.0
 
     assert cfg.tokenizer.max_length == 144
-    assert cfg.tokenizer.max_length_answer == 256
-    assert cfg.tokenizer.max_length_prompt == 256
     assert cfg.tokenizer.padding_quantile == 1.0
 
     assert cfg.training.batch_size == 3
