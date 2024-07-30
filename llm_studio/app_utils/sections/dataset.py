@@ -34,6 +34,7 @@ from llm_studio.app_utils.utils import (
     get_unique_dataset_name,
     h2o_drive_download,
     h2o_drive_file_options,
+    huggingface_download,
     kaggle_download,
     local_download,
     make_label,
@@ -112,6 +113,7 @@ async def dataset_import(
             ui.choice("Azure", "Azure Datalake"),
             ui.choice("H2O-Drive", "H2O-Drive"),
             ui.choice("Kaggle", "Kaggle"),
+            ui.choice("Huggingface", "Huggingface"),
         ]
 
         items = [
@@ -375,6 +377,27 @@ async def dataset_import(
                     tooltip="Kaggle secret key for API authentication",
                 ),
             ]
+        elif q.client["dataset/import/source"] == "Huggingface":
+
+            if q.client["dataset/import/huggingface_split"] is None:
+                q.client["dataset/import/huggingface_split"] = "train"
+
+            items += [
+                ui.textbox(
+                    name="dataset/import/huggingface_dataset",
+                    label="Hugging Face dataset",
+                    required=True,
+                    tooltip="Name of the Hugging Face dataset",
+                ),
+                ui.textbox(
+                    name="dataset/import/huggingface_split",
+                    label="Split",
+                    value=q.client["dataset/import/huggingface_split"],
+                    required=True,
+                    password=False,
+                    tooltip="Split of the dataset",
+                ),
+            ]
 
         allowed_types = ", ".join(default_cfg.allowed_file_extensions)
         allowed_types = " or".join(allowed_types.rsplit(",", 1))
@@ -446,6 +469,15 @@ async def dataset_import(
                         q.client["dataset/import/kaggle_command"],
                         q.client["dataset/import/kaggle_access_key"],
                         q.client["dataset/import/kaggle_secret_key"],
+                    )
+                elif q.client["dataset/import/source"] == "Huggingface":
+                    (
+                        q.client["dataset/import/path"],
+                        q.client["dataset/import/name"],
+                    ) = await huggingface_download(
+                        q,
+                        q.client["dataset/import/huggingface_dataset"],
+                        q.client["dataset/import/huggingface_split"],
                     )
 
             # store if in edit mode
