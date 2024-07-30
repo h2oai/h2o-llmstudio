@@ -209,4 +209,7 @@ def load_config_yaml(path: str):
 # Note that importing ConfigProblemBase from the python_configs
 # and using cfg.problem_type below will not work because of circular imports
 GENERATION_PROBLEM_TYPES = ["text_causal_language_modeling", "text_dpo_modeling"]
-NON_GENERATION_PROBLEM_TYPES = ["text_causal_classification_modeling"]
+NON_GENERATION_PROBLEM_TYPES = [
+    "text_causal_classification_modeling",
+    "text_causal_regression_modeling",
+]
