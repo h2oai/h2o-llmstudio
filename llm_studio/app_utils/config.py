@@ -53,9 +53,10 @@ default_cfg = {
     "start_page": "home",
     "problem_types": [
         "text_causal_language_modeling_config",
-        "text_dpo_modeling_config",
-        "text_sequence_to_sequence_modeling_config",
         "text_causal_classification_modeling_config",
+        "text_causal_regression_modeling_config",
+        "text_sequence_to_sequence_modeling_config",
+        "text_dpo_modeling_config",
     ],
     "problem_categories": ["text"],
     "dataset_keys": [

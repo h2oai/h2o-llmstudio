@@ -71,6 +71,36 @@ def test_oasst_classification_training_gpu(tmp_path, settings):
 @pytest.mark.parametrize(
     "settings",
     [
+        ["MSE", "test_causal_regression_modeling_cfg"],
+    ],
+)
+def test_oasst_regression_training_gpu(tmp_path, settings):
+    metric, config_name = settings
+    run_oasst(
+        tmp_path,
+        config_name=config_name,
+        metric=metric,
+    )
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [
+        ["MSE", "test_causal_regression_modeling_cpu_cfg"],
+    ],
+)
+def test_oasst_regression_training_cpu(tmp_path, settings):
+    metric, config_name = settings
+    run_oasst(
+        tmp_path,
+        config_name=config_name,
+        metric=metric,
+    )
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [
         ["AUC", "test_causal_binary_classification_modeling_cpu_cfg"],
         ["LogLoss", "test_causal_multiclass_classification_modeling_cpu_cfg"],
     ],
@@ -115,6 +145,7 @@ def run_oasst(tmp_path, config_name, metric):
     df = pd.read_parquet(train_path)
     df["multiclass_label"] = np.random.choice(["0", "1", "2"], size=len(df))
     df["binary_label"] = np.random.choice(["0", "1"], size=len(df))
+    df["regression_label"] = np.random.uniform(0, 1, size=len(df))
     df.to_parquet(train_path)
 
     with open(
