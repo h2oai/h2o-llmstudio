@@ -20,7 +20,7 @@ def get_size(x):
         return 2**31
 
 
-version = "1.9.0-dev"
+version = "1.10.0-dev"
 
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -49,19 +49,14 @@ default_cfg = {
     "heap_mode": os.getenv("H2O_LLM_STUDIO_ENABLE_HEAP", "False") == "True",
     "data_folder": "data/",
     "output_folder": "output/",
-    "s3_bucket": f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
-    "s3_filename": os.path.join(
-        f"{os.getenv('AWS_BUCKET', 'bucket_name')}",
-        "default.zip",
-    ),
     "cfg_file": "text_causal_language_modeling_config",
     "start_page": "home",
-    "kaggle_command": ("kaggle competitions download -c " "dataset"),
     "problem_types": [
         "text_causal_language_modeling_config",
-        "text_dpo_modeling_config",
-        "text_sequence_to_sequence_modeling_config",
         "text_causal_classification_modeling_config",
+        "text_causal_regression_modeling_config",
+        "text_sequence_to_sequence_modeling_config",
+        "text_dpo_modeling_config",
     ],
     "problem_categories": ["text"],
     "dataset_keys": [

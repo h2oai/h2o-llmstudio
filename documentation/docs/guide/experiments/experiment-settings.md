@@ -32,7 +32,7 @@ import TSlossfunction from '../../tooltips/experiments/_loss-function.mdx';
 import TSlearningRate from '../../tooltips/experiments/_learning-rate.mdx';
 import TSdifferentialLearningRateLayers from '../../tooltips/experiments/_differential-learning-rate-layers.mdx';
 import TSfreezeLayers from '../../tooltips/experiments/_freeze-layers.mdx';
-import TSuseflashattention2 from '../../tooltips/experiments/_use-flash-attention-2.mdx';
+import TSattentionImplementation from '../../tooltips/experiments/_attention-implementation.mdx';
 import TSbatchSize from '../../tooltips/experiments/_batch-size.mdx';
 import TSepochs from '../../tooltips/experiments/_epochs.mdx';
 import TSschedule from '../../tooltips/experiments/_schedule.mdx';
@@ -144,7 +144,7 @@ The settings under each category are listed and described below.
 
 ### Prompt column separator
 
-<DSpromptColumnSeparator/>
+<DSPromptColumnSeparator/>
 
 ### Answer column
 
@@ -214,7 +214,7 @@ The settings under each category are listed and described below.
 
 ### Optimizer
 
-<TSoptimizer />
+<TSoptimizer/>
 
 ### Learning rate
 
@@ -228,9 +228,9 @@ The settings under each category are listed and described below.
 
 <TSfreezeLayers/>
 
-### Use Flash Attention 2
+### Attention Implementation
 
-<TSuseflashattention2/>
+<TSattentionImplementation/>
 
 ### Batch size
 
@@ -370,11 +370,11 @@ The settings under each category are listed and described below.
 
 ### Top K
 
-<PStopk />
+<PStopk/>
 
 ### Top P
 
-<PStopp />
+<PStopp/>
 
 ## Environment settings
 

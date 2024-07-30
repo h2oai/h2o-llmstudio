@@ -23,7 +23,7 @@ H2O LLM Studio supports the following data connectors to access or upload extern
     - **Parent Id Column:** An optional column specifying the parent id to be used for chained conversations. The value of this column needs to match an additional column with the name `id`. If provided, the prompt will be concatenated after preceding parent rows.
 
 :::info
-To train a chatbot style model, you need to convert your data into a question and answer format. There are other enterprise solutions by H2O.ai that may help you prep your data. For more information, see [H2O.ai's Generative AI page](https://h2o.ai/) and this blogpost about [H2O LLM DataStudio: Streamlining Data Curation and Data Preparation for LLMs related tasks](https://blog.h2o.ai/blog/streamlining-data-preparation-for-fine-tuning-of-large-language-models/).
+To train a chatbot style model, you need to convert your data into a question and answer format. There are other enterprise solutions by H2O.ai that may help you prep your data. For more information, see [H2O.ai's Generative AI page](https://h2o.ai/) and this blogpost about [H2O LLM DataStudio: Streamlining Data Curation and Data Preparation for LLMs related tasks](https://h2o.ai/blog/2023/streamlining-data-preparation-for-fine-tuning-of-large-language-models/).
 
 ## Example data
 

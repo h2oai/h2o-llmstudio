@@ -29,17 +29,31 @@ pipenv:
 .PHONY: setup
 setup: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
-	-$(PIPENV_PIP) install flash-attn==2.5.8 --no-build-isolation --upgrade --no-cache-dir
+	-$(PIPENV_PIP) install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir
 
 .PHONY: setup-dev
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
-	- $(PIPENV_PIP) install flash-attn==2.5.8 --no-build-isolation --upgrade --no-cache-dir
+	-$(PIPENV_PIP) install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir
 	$(PIPENV) run playwright install
 
 .PHONY: setup-no-flash
 setup-no-flash: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
+
+.PHONY: setup-conda-nightly
+setup-conda:
+	@bash -c '\
+		set -e; \
+		source $$(conda info --base)/etc/profile.d/conda.sh; \
+		conda deactivate; \
+		conda create -n llmstudio python=3.10 -y; \
+		conda activate llmstudio; \
+		conda install -c nvidia/label/cuda-12.4.0 cuda-toolkit -y; \
+		conda install pytorch pytorch-cuda=12.4 -c pytorch-nightly -c nvidia -y; \
+		grep -v "nvidia" requirements.txt | grep -v "torch" | python -m pip install -r /dev/stdin; \
+		python -m pip install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir; \
+	'
 
 setup-ui: pipenv
 	$(PIPENV) install --verbose --categories=dev-packages --python $(PYTHON_VERSION)
@@ -164,6 +178,16 @@ llmstudio:
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
 	$(PIPENV) run wave run --no-reload app
 
+.PHONY: llmstudio-conda
+llmstudio-conda:
+	CONDA_ACTIVATE="source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate llmstudio" && \
+	bash -c "$$CONDA_ACTIVATE && \
+		HF_HUB_ENABLE_HF_TRANSFER=True \
+		H2O_WAVE_MAX_REQUEST_SIZE=25MB \
+		H2O_WAVE_NO_LOG=true \
+		H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
+		wave run --no-reload app"
+
 .PHONY: stop-llmstudio
 stop-llmstudio:
 	@kill $$(lsof -ti :10101)
@@ -190,6 +214,12 @@ endif
 		-v `pwd`/data:/workspace/data \
 		-v `pwd`/output:/workspace/output \
 		$(DOCKER_IMAGE)
+
+# Perform a local Trivy scan for CVEs
+# Get Trivy from https://aquasecurity.github.io/trivy/v0.53/getting-started/installation/
+.PHONY: trivy-local
+trivy-local: docker-build-nightly
+	trivy image --scanners vuln --severity  CRITICAL,HIGH --timeout 60m $(DOCKER_IMAGE)
 
 .PHONY: docker-clean-all
 docker-clean-all:

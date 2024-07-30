@@ -4,6 +4,9 @@ from llm_studio.python_configs.text_causal_classification_modeling_config import
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigProblemBase as CausalConfigProblemBase,
 )
+from llm_studio.python_configs.text_causal_regression_modeling_config import (
+    ConfigProblemBase as CausalRegressionConfigProblemBase,
+)
 from llm_studio.python_configs.text_sequence_to_sequence_modeling_config import (
     ConfigProblemBase as Seq2SeqConfigProblemBase,
 )
@@ -18,6 +21,7 @@ def test_from_dict():
         CausalConfigProblemBase,
         Seq2SeqConfigProblemBase,
         CausalClassificationConfigProblemBase,
+        CausalRegressionConfigProblemBase,
     ]:
         cfg = cfg_class()
         cfg_dict = convert_cfg_base_to_nested_dictionary(cfg)
@@ -32,4 +36,9 @@ def test_from_dict():
 
 def test_classification_config_is_in_non_generating_problem_types():
     cfg = CausalClassificationConfigProblemBase()
+    assert cfg.problem_type in NON_GENERATION_PROBLEM_TYPES
+
+
+def test_regression_config_is_in_non_generating_problem_types():
+    cfg = CausalRegressionConfigProblemBase()
     assert cfg.problem_type in NON_GENERATION_PROBLEM_TYPES

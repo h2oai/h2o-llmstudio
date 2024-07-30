@@ -85,22 +85,24 @@ class Model(nn.Module):
         if cfg.training.lora:
             self.backbone = prepare_lora(cfg=cfg, backbone=self.backbone)
 
-        if cfg.training.lora and not cfg.training.lora_unfreeze_layers:
-            self.backbone_orig = None
-        else:
-            if cfg.environment._local_rank == 0:
-                logger.info("Duplicating backbone for reference model.")
-            self.backbone_orig, self.backbone_orig_config = create_nlp_backbone(
-                cfg, model_class=AutoModelForCausalLM
-            )
-            for _, param in self.backbone_orig.named_parameters():
-                # freeze base model's layers
-                param.requires_grad = False
-            self.backbone_orig = self.backbone_orig.eval()
-
         self.loss_fn = self.cfg.training.loss_class.get(
             self.cfg.training.loss_function
         )(self.cfg)
+
+        if self.loss_fn.requires_reference_model:
+            if cfg.training.lora and not cfg.training.lora_unfreeze_layers:
+                self.backbone_reference = None
+            else:
+                if cfg.environment._local_rank == 0:
+                    logger.info("Duplicating backbone for reference model.")
+                self.backbone_reference, _ = create_nlp_backbone(
+                    cfg, model_class=AutoModelForCausalLM
+                )
+                for _, param in self.backbone_reference.named_parameters():
+                    # freeze base model's layers
+                    param.requires_grad = False
+                self.backbone_reference = self.backbone_reference.eval()
+
         if self.cfg.prediction.metric == "Perplexity":
             self.perplexity = Perplexity(self.cfg, reduce=False)
 
@@ -158,34 +160,42 @@ class Model(nn.Module):
                 average_log_prob=LOSS_REDUCTION[self.cfg.training.loss_function],
             )
 
-            with torch.no_grad():
-                if self.backbone_orig:
-                    with torch.no_grad():
+            if self.loss_fn.requires_reference_model:
+                with torch.no_grad():
+                    if self.backbone_reference:
                         reference_logits = forward(
-                            self.backbone_orig,
+                            self.backbone_reference,
                             input_ids=batch[f"{answer}_input_ids"],
                             attention_mask=batch[f"{answer}_attention_mask"],
                         ).logits
-                else:
-                    with self.backbone.disable_adapter():
-                        reference_logits = forward(
-                            self.backbone,
-                            input_ids=batch[f"{answer}_input_ids"],
-                            attention_mask=batch[f"{answer}_attention_mask"],
-                        ).logits
+                    else:
+                        with self.backbone.disable_adapter():
+                            reference_logits = forward(
+                                self.backbone,
+                                input_ids=batch[f"{answer}_input_ids"],
+                                attention_mask=batch[f"{answer}_attention_mask"],
+                            ).logits
 
-                outputs[f"{answer}_reference_logps"] = get_batch_logps(
-                    reference_logits,
-                    batch[f"{answer}_labels"],
-                    average_log_prob=LOSS_REDUCTION[self.cfg.training.loss_function],
-                )
+                    outputs[f"{answer}_reference_logps"] = get_batch_logps(
+                        reference_logits,
+                        batch[f"{answer}_labels"],
+                        average_log_prob=LOSS_REDUCTION[
+                            self.cfg.training.loss_function
+                        ],
+                    )
 
-        loss, chosen_rewards, rejected_rewards = self.loss_fn(
-            policy_chosen_logps=outputs["chosen_logps"],
-            policy_rejected_logps=outputs["rejected_logps"],
-            reference_chosen_logps=outputs["chosen_reference_logps"],
-            reference_rejected_logps=outputs["rejected_reference_logps"],
-        )
+        if self.loss_fn.requires_reference_model:
+            loss, chosen_rewards, rejected_rewards = self.loss_fn(
+                policy_chosen_logps=outputs["chosen_logps"],
+                policy_rejected_logps=outputs["rejected_logps"],
+                reference_chosen_logps=outputs["chosen_reference_logps"],
+                reference_rejected_logps=outputs["rejected_reference_logps"],
+            )
+        else:
+            loss, chosen_rewards, rejected_rewards = self.loss_fn(
+                policy_chosen_logps=outputs["chosen_logps"],
+                policy_rejected_logps=outputs["rejected_logps"],
+            )
         outputs["loss"] = loss
 
         # These values will be logged to Neptune if enabled, see train.py
