@@ -2,7 +2,7 @@ import gc
 import logging
 import os
 
-import pandas as pd
+import numpy as np
 import torch
 from accelerate import dispatch_model, infer_auto_device_map
 from accelerate.utils import get_balanced_memory
@@ -12,7 +12,7 @@ from h2o_wave import ui
 
 from llm_studio.app_utils.utils import get_experiments, get_ui_elements, set_env
 from llm_studio.python_configs.base import DefaultConfigProblemBase
-from llm_studio.src.datasets.text_utils import get_tokenizer
+from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
 from llm_studio.src.utils.config_utils import (
     NON_GENERATION_PROBLEM_TYPES,
     load_config_yaml,
@@ -69,8 +69,13 @@ async def chat_tab(q: Q, load_model=True):
         assert q.client["experiment/display/chat/tokenizer"] is not None
         initial_message = "Chat History cleaned. How can I help you?"
 
-    # Load validation dataframe
+    # Load validation dataframe and texts
     validation_dataframe = get_prediction_dataframe(cfg.output_directory)
+    if cfg.dataset.parent_id_column != "None":
+        validation_dataframe = validation_dataframe.loc[
+            validation_dataframe[cfg.dataset.parent_id_column] != None
+        ]
+    validation_texts = get_texts(validation_dataframe, cfg)
 
     # Hide fields that are should not be visible in the UI
     cfg.prediction._visibility["metric"] = -1
@@ -104,9 +109,9 @@ async def chat_tab(q: Q, load_model=True):
                 icon="Lightbulb",
             ),
             ui.chat_suggestion(
-                get_random_prediction_sample(validation_dataframe, cfg),
+                np.random.choice(validation_texts),
                 label="Random sample from validation set",
-                icon="Edit",
+                icon="Chat",
             ),
         ],
     )
@@ -190,12 +195,6 @@ def gpu_is_blocked(q, gpu_id):
         ]
     )
     return gpu_blocked
-
-
-def get_random_prediction_sample(
-    validation_dataframe: pd.DataFrame, cfg: DefaultConfigProblemBase
-):
-    return validation_dataframe[cfg.dataset.prompt_column[0]].sample().item()
 
 
 def load_cfg_model_tokenizer(
