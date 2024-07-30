@@ -2028,6 +2028,7 @@ def start_experiment(
         "NEPTUNE_API_TOKEN": q.client["default_neptune_api_token"],
         "OPENAI_API_KEY": q.client["default_openai_api_token"],
         "GPT_EVAL_MAX": str(q.client["default_gpt_eval_max"]),
+        "HF_HUB_ENABLE_HF_TRANSFER": str(q.client["default_hf_hub_enable_hf_transfer"]),
     }
     if q.client["default_openai_azure"]:
         env_vars.update(
