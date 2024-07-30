@@ -420,7 +420,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
             allow_custom=True,
         )
         self._possible_values["metric_gpt_template"] = possible_values.String(
-            values=(f.split(".")[0] for f in os.listdir("prompts"))
+            values=tuple(f.split(".")[0] for f in os.listdir("prompts"))
         )
 
         self._possible_values["batch_size_inference"] = (0, 512, 1)
