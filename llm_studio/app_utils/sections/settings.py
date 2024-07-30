@@ -290,7 +290,8 @@ async def settings(q: Q) -> None:
                             "Toggle to enable \
                             <a href='https://github.com/huggingface/hf_transfer' \
                             target='_blank'>HF Transfer</a> for faster \
-                            downloads. EXPERIMENTAL."
+                            downloads. Toggle, if you are experiencing issues on down-\
+                            or upload. EXPERIMENTAL."
                         ),
                         trigger=False,
                     ),
