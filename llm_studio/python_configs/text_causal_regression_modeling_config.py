@@ -6,16 +6,23 @@ import llm_studio.src.datasets.text_causal_regression_ds
 import llm_studio.src.plots.text_causal_classification_modeling_plots
 from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
 from llm_studio.python_configs.text_causal_classification_modeling_config import (
-    ConfigNLPCausalClassificationAugmentation,
+    ConfigNLPCausalClassificationAugmentation as ConfigNLPCausalRegressionAugmentation,
+)
+from llm_studio.python_configs.text_causal_classification_modeling_config import (
     ConfigNLPCausalClassificationDataset,
-    ConfigNLPCausalClassificationLogging,
-    ConfigNLPCausalClassificationTokenizer,
+)
+from llm_studio.python_configs.text_causal_classification_modeling_config import (
+    ConfigNLPCausalClassificationLogging as ConfigNLPCausalRegressionLogging,
+)
+from llm_studio.python_configs.text_causal_classification_modeling_config import (
+    ConfigNLPCausalClassificationTokenizer as ConfigNLPCausalRegressionTokenizer,
+)
+from llm_studio.python_configs.text_causal_classification_modeling_config import (
     ConfigNLPCausalClassificationTraining,
 )
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMArchitecture,
     ConfigNLPCausalLMEnvironment,
-    ConfigNLPCausalLMLogging,
 )
 from llm_studio.src import possible_values
 from llm_studio.src.losses import text_causal_regression_modeling_losses
@@ -48,7 +55,7 @@ class ConfigNLPCausalRegressionTraining(ConfigNLPCausalClassificationTraining):
     loss_function: str = "MSELoss"
 
     learning_rate: float = 0.0001
-    differential_learning_rate_layers: Tuple[str, ...] = ("classification_head",)
+    differential_learning_rate_layers: Tuple[str, ...] = ("regression_head",)
     differential_learning_rate: float = 0.00001
 
     def __post_init__(self):
@@ -57,7 +64,7 @@ class ConfigNLPCausalRegressionTraining(ConfigNLPCausalClassificationTraining):
 
         self._possible_values["differential_learning_rate_layers"] = (
             possible_values.String(
-                values=("backbone", "embed", "classification_head"),
+                values=("backbone", "embed", "regression_head"),
                 allow_custom=False,
                 placeholder="Select optional layers...",
             )
@@ -99,13 +106,6 @@ class ConfigNLPCausalRegressionEnvironment(ConfigNLPCausalLMEnvironment):
 
 
 @dataclass
-class ConfigNLPCausalRegressionLogging(ConfigNLPCausalLMLogging):
-    plots_class: Any = (
-        llm_studio.src.plots.text_causal_classification_modeling_plots.Plots
-    )
-
-
-@dataclass
 class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
@@ -114,8 +114,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     dataset: ConfigNLPCausalRegressionDataset = field(
         default_factory=ConfigNLPCausalRegressionDataset
     )
-    tokenizer: ConfigNLPCausalClassificationTokenizer = field(
-        default_factory=ConfigNLPCausalClassificationTokenizer
+    tokenizer: ConfigNLPCausalRegressionTokenizer = field(
+        default_factory=ConfigNLPCausalRegressionTokenizer
     )
     architecture: ConfigNLPCausalRegressionArchitecture = field(
         default_factory=ConfigNLPCausalRegressionArchitecture
@@ -123,8 +123,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     training: ConfigNLPCausalRegressionTraining = field(
         default_factory=ConfigNLPCausalRegressionTraining
     )
-    augmentation: ConfigNLPCausalClassificationAugmentation = field(
-        default_factory=ConfigNLPCausalClassificationAugmentation
+    augmentation: ConfigNLPCausalRegressionAugmentation = field(
+        default_factory=ConfigNLPCausalRegressionAugmentation
     )
     prediction: ConfigNLPCausalRegressionPrediction = field(
         default_factory=ConfigNLPCausalRegressionPrediction
@@ -132,8 +132,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     environment: ConfigNLPCausalRegressionEnvironment = field(
         default_factory=ConfigNLPCausalRegressionEnvironment
     )
-    logging: ConfigNLPCausalClassificationLogging = field(
-        default_factory=ConfigNLPCausalClassificationLogging
+    logging: ConfigNLPCausalRegressionLogging = field(
+        default_factory=ConfigNLPCausalRegressionLogging
     )
 
     def __post_init__(self):
@@ -166,24 +166,10 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     def check(self) -> Dict[str, List]:
         errors: Dict[str, List] = {"title": [], "message": []}
 
-        if self.training.loss_function == "CrossEntropyLoss":
-            if self.dataset.num_classes == 1:
-                errors["title"] += ["CrossEntropyLoss requires num_classes > 1"]
-                errors["message"] += [
-                    "CrossEntropyLoss requires num_classes > 1, "
-                    "but num_classes is set to 1."
-                ]
-        elif self.training.loss_function == "BinaryCrossEntropyLoss":
-            if self.dataset.num_classes != 1:
-                errors["title"] += ["BinaryCrossEntropyLoss requires num_classes == 1"]
-                errors["message"] += [
-                    "BinaryCrossEntropyLoss requires num_classes == 1, "
-                    "but num_classes is set to {}.".format(self.dataset.num_classes)
-                ]
         if self.dataset.parent_id_column not in ["None", None]:
-            errors["title"] += ["Parent ID column is not supported for classification"]
+            errors["title"] += ["Parent ID column is not supported for regression"]
             errors["message"] += [
-                "Parent ID column is not supported for classification datasets."
+                "Parent ID column is not supported for regression datasets."
             ]
 
         return errors

@@ -27,7 +27,7 @@ def mae_score(
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
     predicted_text = np.array([float(text) for text in results["predicted_text"]])
     target_text = np.array([float(text) for text in results["target_text"]])
-    return (target_text - predicted_text).astype("float")
+    return np.abs(target_text - predicted_text).astype("float")
 
 
 class Metrics:
