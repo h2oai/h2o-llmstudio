@@ -73,7 +73,7 @@ async def chat_tab(q: Q, load_model=True):
     validation_dataframe = get_prediction_dataframe(cfg.output_directory)
     if cfg.dataset.parent_id_column != "None":
         validation_dataframe = validation_dataframe.loc[
-            validation_dataframe[cfg.dataset.parent_id_column] != None
+            validation_dataframe[cfg.dataset.parent_id_column] is not None
         ]
     validation_texts = get_texts(validation_dataframe, cfg)
 
