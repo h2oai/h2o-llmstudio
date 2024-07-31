@@ -23,7 +23,7 @@ endif
 
 PHONY: pipenv
 pipenv:
-	$(PIP) install pip==24.1
+	$(PIP) install pip==24.1.2
 	$(PIP) install pipenv==2024.0.1
 
 .PHONY: setup
@@ -113,18 +113,31 @@ test: reports
     -o log_cli=true -o log_level=INFO -o log_file=reports/tests.log \
     tests/* 2>&1 | tee reports/tests.log'
 
-
+# Use to quickly run a single test (e.g. make test-debug test=test_encode)
 .PHONY: test-debug
 test-debug: reports
 	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); \
 	$(PIPENV) run pytest -v --junitxml=reports/junit.xml \
 	--import-mode importlib \
 	--html=./reports/pytest.html \
-	-k test_encode \
+	-k $(test) \
 	-s \
     -o log_cli=false -o log_level=WARNING -o log_file=/dev/null \
     tests/*'
-	
+
+# Only run the unit-tests (src)
+.PHONY: test-unit
+test-unit: reports
+	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); \
+	$(PIPENV) run pytest -v --junitxml=reports/junit.xml \
+	--import-mode importlib \
+	--html=./reports/pytest.html \
+	-k src \
+	--cov=llm_studio/src \
+	--cov-report term \
+	--cov-report html:./reports/coverage.html \
+    -o log_cli=true -o log_level=INFO -o log_file=reports/tests.log \
+    tests/* 2>&1 | tee reports/tests.log'
 
 .PHONY: test-ui
 test-ui: reports setup-ui

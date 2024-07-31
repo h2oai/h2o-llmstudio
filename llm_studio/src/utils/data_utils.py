@@ -10,8 +10,9 @@ import pyarrow.parquet as pq
 import torch
 from sklearn.model_selection import GroupShuffleSplit, train_test_split
 from torch import distributed as dist
-from torch.utils.data import DataLoader, Sampler, SequentialSampler
+from torch.utils.data import DataLoader, Dataset, Sampler, SequentialSampler
 
+from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
 from llm_studio.src.utils.exceptions import LLMDataException
 from llm_studio.src.utils.gpu_utils import sync_across_processes
@@ -44,7 +45,7 @@ def read_dataframe(
         fill_value: value to fill empty columns with (used for empty text)
         mode: dataset type, used only for better exception/log information
     Returns:
-        dataframe
+        DataFrame
 
     """
 
@@ -121,7 +122,7 @@ def read_dataframe(
     return df
 
 
-def get_fill_columns(cfg: Any) -> List[str]:
+def get_fill_columns(cfg: DefaultConfigProblemBase) -> List[str]:
     if hasattr(cfg.dataset, "prompt_column"):
         if isinstance(cfg.dataset.prompt_column, (list, tuple)):
             return list(cfg.dataset.prompt_column)
@@ -130,7 +131,9 @@ def get_fill_columns(cfg: Any) -> List[str]:
     return []
 
 
-def read_dataframe_drop_missing_labels(path: str, cfg: Any) -> pd.DataFrame:
+def read_dataframe_drop_missing_labels(
+    path: str, cfg: DefaultConfigProblemBase
+) -> pd.DataFrame:
     if isinstance(cfg.dataset.prompt_column, tuple):
         input_cols = list(cfg.dataset.prompt_column)
     else:
@@ -181,7 +184,7 @@ def is_valid_data_frame(path: str, csv_rows: int = 100) -> bool:
     return True
 
 
-def sample_data(cfg: Any, df: pd.DataFrame) -> pd.DataFrame:
+def sample_data(cfg: DefaultConfigProblemBase, df: pd.DataFrame) -> pd.DataFrame:
     """Sample data from the dataframe"""
 
     if cfg.dataset.parent_id_column != "None" and "id" in df.columns:
@@ -217,7 +220,7 @@ def sample_data(cfg: Any, df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def load_mt_bench_data(cfg: Any) -> pd.DataFrame:
+def load_mt_bench_data(cfg: DefaultConfigProblemBase) -> pd.DataFrame:
     """Loads MT-BENCH data.
 
     Args:
@@ -246,11 +249,11 @@ def load_mt_bench_data(cfg: Any) -> pd.DataFrame:
     return df
 
 
-def get_data(cfg: Any) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def get_data(cfg: DefaultConfigProblemBase) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Prepares train and validation DataFrames.
 
     Args:
-        cfg: input config
+        cfg: DefaultConfigProblemBase input config
 
     Returns:
         Train and validation DataFrames
@@ -375,32 +378,32 @@ def worker_init_fn(worker_id: int) -> None:
     set_seed(seed)
 
 
-def get_train_dataset(train_df: pd.DataFrame, cfg: Any, verbose=True):
+def get_train_dataset(train_df: pd.DataFrame, cfg: DefaultConfigProblemBase) -> Dataset:
     """Prepares train Dataset.
 
     Args:
         train_df: train DataFrame
-        cfg: input config
-        verbose: whether to print the logs
+        cfg: DefaultConfigProblemBase input config
 
     Returns:
         Train Dataset
     """
 
-    if cfg.environment._local_rank == 0 and verbose:
+    if cfg.environment._local_rank == 0:
         logger.info("Loading train dataset...")
 
-    train_dataset = cfg.dataset.dataset_class(df=train_df, cfg=cfg, mode="train")
+    train_dataset: Dataset = cfg.dataset.dataset_class(
+        df=train_df, cfg=cfg, mode="train"
+    )
     return train_dataset
 
 
-def get_train_dataloader(train_ds: Any, cfg: Any, verbose=True):
+def get_train_dataloader(train_ds: Any, cfg: DefaultConfigProblemBase) -> DataLoader:
     """Prepares train DataLoader.
 
     Args:
         train_ds: train Dataset
         cfg: input config
-        verbose: whether to print the logs
 
     Returns:
         Train Dataloader
@@ -443,38 +446,36 @@ def get_train_dataloader(train_ds: Any, cfg: Any, verbose=True):
         worker_init_fn=worker_init_fn,
     )
 
-    if cfg.environment._local_rank == 0 and verbose:
+    if cfg.environment._local_rank == 0:
         logger.info(f"Number of observations in train dataset: {len(train_ds)}")
 
     return train_dataloader
 
 
-def get_val_dataset(val_df: pd.DataFrame, cfg: Any, verbose: bool = True):
+def get_val_dataset(val_df: pd.DataFrame, cfg: DefaultConfigProblemBase):
     """Prepares validation Dataset.
 
     Args:
         val_df: validation DataFrame
-        cfg: input config
-        verbose: verbose
+        cfg: DefaultConfigProblemBase input config
 
     Returns:
         Validation Dataset
     """
 
-    if verbose and cfg.environment._local_rank == 0:
+    if cfg.environment._local_rank == 0:
         logger.info("Loading validation dataset...")
     val_dataset = cfg.dataset.dataset_class(df=val_df, cfg=cfg, mode="validation")
 
     return val_dataset
 
 
-def get_val_dataloader(val_ds: Any, cfg: Any, verbose: bool = True):
+def get_val_dataloader(val_ds: Any, cfg: DefaultConfigProblemBase):
     """Prepares validation DataLoader.
 
     Args:
         val_ds: validation Dataset
-        cfg: input config
-        verbose: verbose
+        cfg: DefaultConfigProblemBase input config
 
     Returns:
         Validation Dataloader
@@ -502,7 +503,7 @@ def get_val_dataloader(val_ds: Any, cfg: Any, verbose: bool = True):
         worker_init_fn=worker_init_fn,
     )
 
-    if verbose and cfg.environment._local_rank == 0:
+    if cfg.environment._local_rank == 0:
         logger.info(f"Number of observations in validation dataset: {len(val_ds)}")
 
     return val_dataloader
@@ -616,11 +617,11 @@ def sample_indices(length: int, n_indices: int = 10, seed: int = 1337) -> np.nda
     return idx
 
 
-def get_inference_batch_size(cfg: Any) -> int:
+def get_inference_batch_size(cfg: DefaultConfigProblemBase) -> int:
     """Calculates inference batch size
 
     Args:
-        cfg: config with all the hyperparameters
+        cfg: DefaultConfigProblemBase config with all the hyperparameters
     Returns:
         Inference batch size
     """
@@ -645,7 +646,7 @@ def sanity_check(cfg):
 
 
 def batch_padding(
-    cfg: Any,
+    cfg: DefaultConfigProblemBase,
     batch: Dict,
     training: bool = True,
     mask_key: str = "attention_mask",

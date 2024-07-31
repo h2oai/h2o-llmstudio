@@ -10,8 +10,6 @@ from llm_studio.src.utils.export_utils import get_size_str
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["check_config_for_errors"]
-
 
 def check_config_for_errors(cfg: DefaultConfigProblemBase) -> dict:
     """

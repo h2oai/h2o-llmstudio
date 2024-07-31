@@ -1,20 +1,19 @@
 import os
 from abc import abstractmethod
-from dataclasses import dataclass
-from typing import Any, Callable, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Callable, List, Optional, Sequence, Set, Tuple
 
-from llm_studio.src.nesting import Dependency
+from pydantic.dataclasses import dataclass
 
 
-def _scan_dirs(dirname) -> List[str]:
-    """Scans a directory for subfolders
+def _scan_dirs(dirname: str) -> List[str]:
+    """
+    Recursively scans a directory for subfolders.
 
     Args:
-        dirname: directory name
+        dirname (str): The directory to scan.
 
     Returns:
-        List of subfolders
-
+        List[str]: A list of subfolder paths, with '/' appended to each path.
     """
 
     subfolders = [f.path for f in os.scandir(dirname) if f.is_dir()]
@@ -25,17 +24,19 @@ def _scan_dirs(dirname) -> List[str]:
 
 
 def _scan_files(
-    dirname, extensions: Tuple[str, ...] = (".csv", ".pq", ".parquet", ".json")
+    dirname: str, extensions: Tuple[str, ...] = (".csv", ".pq", ".parquet", ".json")
 ) -> List[str]:
-    """Scans a directory for files with given extension
+    """
+    Scans a directory for files with given extension
+
+    Excludes files starting with "__meta_info__".
 
     Args:
-        dirname: directory name
-        extensions: extensions to consider
+        dirname (str): The directory to scan.
+        extensions (Tuple[str, ...]): File extensions to consider.
 
     Returns:
-        List of files
-
+        List[str]: A sorted list of file paths matching the given extensions.
     """
     path_list = [
         os.path.join(dirpath, filename)
@@ -47,16 +48,18 @@ def _scan_files(
     return sorted(path_list)
 
 
-def strip_prefix(paths: Sequence[str], ignore_set: Set[str] = set()) -> Tuple[str, ...]:
+def strip_common_prefix(
+    paths: Sequence[str], ignore_set: Set[str] = set()
+) -> Tuple[str, ...]:
     """
-    Strips the common prefix of all the given paths.
+    Strips the common prefix from all given paths.
 
     Args:
-        paths: the paths to strip
-        ignore_set: set of path names to ignore when computing the prefix.
+        paths (Sequence[str]): The paths to strip.
+        ignore_set (Set[str]): Set of path names to ignore when computing the prefix.
 
     Returns:
-        List with the same length as `paths` without common prefixes.
+        Tuple[str, ...]: A tuple of paths with common prefixes removed.
     """
 
     paths_to_check = [
@@ -80,34 +83,74 @@ def strip_prefix(paths: Sequence[str], ignore_set: Set[str] = set()) -> Tuple[st
 
 
 class Value:
+    """Base class for value types."""
+
     pass
 
 
 @dataclass
 class Number:
-    min: float | None = None
-    max: float | None = None
-    step: Union[str, float] = 1.0
+    """
+    Represents a numeric range for a setting with optional constraints.
+
+    Attributes:
+        min (float | int): Minimum allowed value. Must be less than or equal to `max`.
+        step (float | int]): Step size for value increments
+        max (float | None): Maximum allowed value. Optional.
+            If provided, the UI component will be rendered as a slider. Otherwise as \
+                a spinbox.
+    """
+
+    min: float | int
+    step: float | int
+    max: Optional[float | int] = None
+
+    def __post_init__(self):
+        if self.max is not None and self.min > self.max:
+            raise ValueError(
+                f"Expected `min <= max`, got min={self.min} > max={self.max}"
+            )
 
 
 @dataclass
 class String:
-    # Each element of the tuple can be either:
-    # - a tuple of (value, name)
-    # - a string. In that case the same value will be used for name and value
-    values: Any = None
+    """
+    Represents possible string values for a setting with optional constraints.
+
+    Attributes:
+        values (Tuple[str, ...] | Tuple[Tuple[str, str], ...]):
+            Possible values for the string.
+            - a tuple of tuples (value, name)
+            - a tuple of strings. In that case the value will be used for name and value
+        allow_custom (bool): Whether custom values are allowed. This will render a \
+            combobox. If False (default), a dropdown will be rendered.
+        placeholder (Optional[str]): Placeholder text for input fields.
+    """
+
+    values: Tuple[str, ...] | Tuple[Tuple[str, str], ...]
     allow_custom: bool = False
     placeholder: Optional[str] = None
 
 
 class DatasetValue:
-    pass
+    """Base class for dataset-related values."""
 
     @abstractmethod
     def get_value(
-        self, dataset: Any, value: Any, type_annotation: type, mode: str
+        self, dataset: Any, value: Any, type_annotation: type
     ) -> Tuple[String, Any]:
-        pass
+        """
+        Abstract method to get the value for a dataset.
+
+        Args:
+            dataset (Any): The dataset object.
+            value (Any): The current value.
+            type_annotation (type): The expected type of the value.
+
+        Returns:
+            Tuple[String, Any]: A tuple containing the String object and the value.
+        """
+        raise NotImplementedError
 
     @staticmethod
     def _compute_current_values(
@@ -116,16 +159,31 @@ class DatasetValue:
         prefer_with: Optional[Callable[[str], bool]] = None,
     ) -> List[str]:
         """
-        Compute current values.
+        Compute current values based on possible values and preferences.
+
+        This method does not handle duplicate values and raises an error if either \
+            `current_values` or `possible_values` contain duplicates.
 
         Args:
-            current_values: The preliminary current values.
-            possible_values: All possible values.
-            prefer_with: Function determining which values to prefer as default.
+            current_values (List[str]): The preliminary current values.
+            possible_values (List[str]): All possible values.
+            prefer_with (Optional[Callable[[str], bool]]): Function determining which \
+                values to prefer as default.
 
         Returns:
-            A list
+            List[str]: A list of computed current values.
+
+        Raises:
+            ValueError: If either `current_values` or `possible_values` contain \
+                duplicate
         """
+
+        if len(set(current_values)) != len(current_values):
+            raise ValueError("Duplicate values in `current_values`")
+
+        if len(set(possible_values)) != len(possible_values):
+            raise ValueError("Duplicate values in `possible_values`")
+
         if len(possible_values) == 0:
             return [""]
 
@@ -148,62 +206,45 @@ class DatasetValue:
 
 
 @dataclass
-class Directories(DatasetValue):
-    add_none: Union[bool, Callable[[str], bool]] = False
-    prefer_with: Optional[Callable[[str], bool]] = None
-    prefer_none: bool = True
-
-    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[String, Any]:
-        if dataset is None:
-            return String(tuple()), value
-
-        available_dirs = _scan_dirs(dataset["path"])
-
-        if (isinstance(self.add_none, bool) and self.add_none) or (
-            callable(self.add_none) and self.add_none(mode)
-        ):
-            if self.prefer_none:
-                available_dirs.insert(0, "None")
-            else:
-                available_dirs.insert(len(available_dirs), "None")
-
-        if isinstance(value, str):
-            value = [value]
-
-        value = DatasetValue._compute_current_values(
-            value, available_dirs, self.prefer_with
-        )
-
-        return (
-            String(
-                tuple(
-                    zip(
-                        available_dirs,
-                        strip_prefix(available_dirs, ignore_set={"None"}),
-                    )
-                )
-            ),
-            value if type_annotation == Tuple[str, ...] else value[0],
-        )
-
-
-@dataclass
 class Files(DatasetValue):
-    add_none: Union[bool, Callable[[str], bool]] = False
+    """
+    Represents a selection of files from a dataset.
+
+    Used to select a file from a dataset for e.g. `train_dataframe`.
+
+    Attributes:
+        add_none (bool): Whether to add a "None" option.
+        prefer_with (Optional[Callable[[str], bool]]): Function to determine preferred \
+            values.
+        prefer_none (bool): Whether to prefer "None" as the default option.
+    """
+
+    add_none: bool = False
     prefer_with: Optional[Callable[[str], bool]] = None
     # For the case where no match found, whether to prioritize
     # selecting any file or selecting no file
     prefer_none: bool = True
 
-    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[String, Any]:
+    def get_value(
+        self, dataset: Any, value: Any, type_annotation: type
+    ) -> Tuple[String, Any]:
+        """
+        Get the value for file selection.
+
+        Args:
+            dataset (Any): The dataset object.
+            value (Any): The current value.
+            type_annotation (type): The expected type of the value.
+
+        Returns:
+            Tuple[String, Any]: Tuple containing the String object and the current \
+                value.
+        """
         if dataset is None:
             return String(tuple()), value
 
         available_files = _scan_files(dataset["path"])
-
-        if (isinstance(self.add_none, bool) and self.add_none) or (
-            callable(self.add_none) and self.add_none(mode)
-        ):
+        if self.add_none is True:
             if self.prefer_none:
                 available_files.insert(0, "None")
             else:
@@ -221,7 +262,7 @@ class Files(DatasetValue):
                 tuple(
                     zip(
                         available_files,
-                        strip_prefix(available_files, ignore_set={"None"}),
+                        strip_common_prefix(available_files, ignore_set={"None"}),
                     )
                 )
             ),
@@ -231,10 +272,23 @@ class Files(DatasetValue):
 
 @dataclass
 class Columns(DatasetValue):
-    add_none: Union[bool, Callable[[str], bool]] = False
+    """
+    Represents a selection of columns from a dataset.
+
+    Used to select a column from a dataset for e.g. `prompt_column`.
+
+    Attributes:
+        add_none (bool): Whether to add a "None" option.
+        prefer_with (Optional[Callable[[str], bool]]): Function to determine preferred \
+            values.
+    """
+
+    add_none: bool = False
     prefer_with: Optional[Callable[[str], bool]] = None
 
-    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[String, Any]:
+    def get_value(
+        self, dataset: Any, value: Any, type_annotation: type
+    ) -> Tuple[String, Any]:
         if dataset is None:
             return String(tuple()), value
 
@@ -243,9 +297,7 @@ class Columns(DatasetValue):
         except KeyError:
             columns = []
 
-        if (isinstance(self.add_none, bool) and self.add_none) or (
-            callable(self.add_none) and self.add_none(mode)
-        ):
+        if self.add_none is True:
             columns.insert(0, "None")
 
         if isinstance(value, str):
@@ -257,41 +309,5 @@ class Columns(DatasetValue):
 
         return (
             String(tuple(columns)),
-            value if type_annotation == Tuple[str, ...] else value[0],
-        )
-
-
-@dataclass
-class ColumnValue(DatasetValue):
-    column: str
-    default: List[str]
-    prefer_with: Optional[Callable[[str], bool]] = None
-    dependency: Optional[Dependency] = None
-
-    def get_value(self, dataset, value, type_annotation, mode) -> Tuple[String, Any]:
-        if dataset is None:
-            return String(tuple()), value
-
-        try:
-            df = dataset["dataframe"]
-        except KeyError:
-            df = None
-
-        if df is not None:
-            if self.dependency is not None and not self.dependency.check(
-                [dataset[self.dependency.key]]
-            ):
-                values = self.default
-            elif self.column in df:
-                values = [str(v) for v in sorted(list(df[self.column].unique()))]
-            else:
-                values = self.default
-        else:
-            values = self.default
-
-        value = DatasetValue._compute_current_values(value, values, self.prefer_with)
-
-        return (
-            String(tuple(values)),
             value if type_annotation == Tuple[str, ...] else value[0],
         )
