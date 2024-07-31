@@ -1444,7 +1444,7 @@ def get_ui_elements(
 
 
 def parse_ui_elements(
-    cfg: DefaultConfigProblemBase, q: Q, limit: Union[List, str] = "", pre: str = ""
+    cfg: DefaultConfigProblemBase, q: Q, limit: List | str = "", pre: str = ""
 ) -> Any:
     """Sets configuration settings with arguments from app
 

@@ -1222,7 +1222,7 @@ async def dataset_display(q: Q) -> None:
     q.client.delete_cards.add("dataset/display/footer")
 
 
-async def show_data_tab(q, cfg, filename: str):
+async def show_data_tab(q: Q, cfg, filename: str):
     fill_columns = get_fill_columns(cfg)
     df = read_dataframe(filename, n_rows=200, fill_columns=fill_columns)
     q.page["dataset/display/data"] = ui.form_card(
@@ -1241,7 +1241,7 @@ async def show_data_tab(q, cfg, filename: str):
     q.client.delete_cards.add("dataset/display/data")
 
 
-async def show_visualization_tab(q, cfg):
+async def show_visualization_tab(q: Q, cfg):
     try:
         plot = cfg.logging.plots_class.plot_data(cfg)
     except Exception as error:
@@ -1281,7 +1281,7 @@ async def show_visualization_tab(q, cfg):
     q.client.delete_cards.add("dataset/display/visualization")
 
 
-async def show_summary_tab(q, dataset_id):
+async def show_summary_tab(q: Q, dataset_id):
     dataset_df = get_datasets(q)
     dataset_df = dataset_df[dataset_df.id == dataset_id]
     stat_list_items: List[StatListItem] = []
@@ -1298,7 +1298,7 @@ async def show_summary_tab(q, dataset_id):
     q.client.delete_cards.add("dataset/display/summary")
 
 
-async def show_statistics_tab(q, dataset_filename, config_filename):
+async def show_statistics_tab(q: Q, dataset_filename, config_filename):
     cfg_hash = hashlib.md5(open(config_filename, "rb").read()).hexdigest()
     stats_dict = compute_dataset_statistics(dataset_filename, config_filename, cfg_hash)
 

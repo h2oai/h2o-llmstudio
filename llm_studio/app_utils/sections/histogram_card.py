@@ -59,9 +59,9 @@ def compute_quantile_df(x: List[int], a: float, b: float):
     if not x:
         raise ValueError("Input list x is empty")
 
-    if not 0 <= a <= b <= 1:
+    if not 0.05 <= a <= b <= 0.95:
         raise ValueError(
-            "Values of a and b must be in [0, 1] "
+            "Values of a and b must be in [0.05, 0.95] "
             "and a should be less than or equal to b"
         )
 

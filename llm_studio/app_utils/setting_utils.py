@@ -15,13 +15,6 @@ from keyring.errors import KeyringLocked, PasswordDeleteError
 from llm_studio.app_utils.config import default_cfg
 from llm_studio.app_utils.utils import get_database_dir, get_user_id
 
-__all__ = [
-    "load_user_settings_and_secrets",
-    "load_default_user_settings",
-    "save_user_settings_and_secrets",
-    "Secrets",
-]
-
 logger = logging.getLogger(__name__)
 SECRET_KEYS = [
     key

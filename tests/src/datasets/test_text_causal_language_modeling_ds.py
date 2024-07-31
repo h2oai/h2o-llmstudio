@@ -364,3 +364,73 @@ def test_encode_maxlength():
     result = dataset[0]
     out = dataset.tokenizer.decode(result["input_ids"]).replace("<unk>", "")
     assert out == "a b"
+
+
+def test_preprocess_dataframe_personalize():
+    df = pd.DataFrame(
+        {
+            "prompt": ["Open Assistant", "a"],
+            "answer": ["b", "LAION b"],
+            "parent_id": [None, 0],
+            "id": [0, 1],
+        }
+    )
+
+    cfg = ConfigProblemBase(
+        dataset=ConfigNLPCausalLMDataset(
+            prompt_column=("prompt",),
+            answer_column="answer",
+            parent_id_column="parent_id",
+            chatbot_author="H2O.ai",
+            chatbot_name="Danube",
+            personalize=True,
+        ),
+    )
+
+    cfg.llm_backbone = "h2oai/h2o-danube2-1.8b-base"
+
+    assert df["prompt"].str.contains("Open Assistant").any()
+    assert df["answer"].str.contains("LAION").any()
+
+    dataset = CustomDataset(df, cfg)
+    df = dataset.preprocess_dataframe(df, cfg, mode="train")
+
+    assert df["prompt"].str.contains("Danube").any()
+    assert df["answer"].str.contains("H2O.ai").any()
+
+
+def test_preprocess_dataframe_no_personalize():
+    df = pd.DataFrame(
+        {
+            "prompt": ["Open Assistant", "a"],
+            "answer": ["b", "LAION b"],
+            "parent_id": [None, 0],
+            "id": [0, 1],
+        }
+    )
+
+    cfg = ConfigProblemBase(
+        dataset=ConfigNLPCausalLMDataset(
+            prompt_column=("prompt",),
+            answer_column="answer",
+            parent_id_column="parent_id",
+            chatbot_author="H2O.ai",
+            chatbot_name="Danube",
+            personalize=False,
+        ),
+    )
+
+    cfg.llm_backbone = "h2oai/h2o-danube2-1.8b-base"
+
+    assert df["prompt"].str.contains("Open Assistant").any()
+    assert df["answer"].str.contains("LAION").any()
+
+    dataset = CustomDataset(df, cfg)
+    df_processed = dataset.preprocess_dataframe(df.copy(), cfg, mode="train")
+
+    assert df_processed["prompt"].str.contains("Open Assistant").any()
+    assert df_processed["answer"].str.contains("LAION").any()
+    assert not df_processed["prompt"].str.contains("Danube").any()
+    assert not df_processed["answer"].str.contains("H2O.ai").any()
+
+    assert df_processed.equals(df)

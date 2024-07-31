@@ -83,7 +83,7 @@ class DefaultConfig:
 
             dataset, value = dataset_fn(field, value)
             poss_values, value = poss_values.get_value(
-                dataset=dataset, value=value, type_annotation=type_annotation, mode=mode
+                dataset=dataset, value=value, type_annotation=type_annotation
             )
         elif isinstance(poss_values, Sequence):
             if all(isinstance(x, (float, int)) for x in poss_values):

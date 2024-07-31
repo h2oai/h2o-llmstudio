@@ -4,7 +4,7 @@ import os
 import re
 import shutil
 from collections import OrderedDict
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import coolname
 import deepspeed
@@ -46,7 +46,16 @@ from llm_studio.src.utils.utils import save_pickle
 logger = logging.getLogger(__name__)
 
 
-def unwrap_model(model: torch.nn.Module):
+def unwrap_model(model: torch.nn.Module) -> torch.nn.Module:
+    """
+    Unwraps a model from its parallel wrapper (DistributedDataParallel or DataParallel).
+
+    Args:
+        model (torch.nn.Module): The model to unwrap.
+
+    Returns:
+        torch.nn.Module: The unwrapped model.
+    """
     options = (torch.nn.parallel.DistributedDataParallel, torch.nn.DataParallel)
 
     while isinstance(model, options):
@@ -55,8 +64,18 @@ def unwrap_model(model: torch.nn.Module):
     return model
 
 
-def check_disk_space(model: torch.nn.Module, path: str):
-    total, used, free = shutil.disk_usage(path)
+def check_disk_space(model: torch.nn.Module, path: str) -> None:
+    """
+    Checks if there's enough disk space to save the model weights.
+
+    Args:
+        model (torch.nn.Module): The model whose weights will be saved.
+        path (str): The path where the model will be saved.
+
+    Raises:
+        ValueError: If there's not enough disk space to save the model weights.
+    """
+    _, _, free = shutil.disk_usage(path)
 
     model_size_in_bytes = 0
     for param in model.parameters():
@@ -90,11 +109,16 @@ def check_disk_space(model: torch.nn.Module, path: str):
 def save_checkpoint(
     model: torch.nn.Module, path: str, cfg: DefaultConfigProblemBase
 ) -> None:
-    """Saves a model checkpoint if the path is provided.
+    """
+    Saves a model checkpoint.
 
     Args:
-        model: model to save
-        path: path to save the checkpoint to
+        model (torch.nn.Module): The model to save.
+        path (str): The path where to save the checkpoint.
+        cfg (DefaultConfigProblemBase): The configuration object.
+
+    Raises:
+        ValueError: If the path is not provided.
     """
 
     if not path:
@@ -156,7 +180,7 @@ def save_checkpoint(
         )
 
 
-def load_model_weights(
+def _load_model_weights(
     model: torch.nn.Module,
     model_weights: Dict,
     strict: bool,
@@ -219,7 +243,7 @@ def load_checkpoint(
     cfg: DefaultConfigProblemBase,
     model: torch.nn.Module,
     strict: bool = True,
-    weights_path: str = None,
+    weights_path: Optional[str] = None,
 ):
     """Load checkpoint
 
@@ -242,18 +266,18 @@ def load_checkpoint(
 
     if cfg.environment.use_deepspeed:
         if cfg.training.lora:
-            model.backbone.base_model.model = load_model_weights(  # type: ignore
+            model.backbone.base_model.model = _load_model_weights(  # type: ignore
                 model.backbone.base_model.model,  # type: ignore
                 model_weights,
                 strict,
                 cfg,
             )
         else:
-            model.backbone = load_model_weights(
+            model.backbone = _load_model_weights(
                 model.backbone, model_weights, strict, cfg  # type: ignore
             )
     else:
-        model = load_model_weights(model, model_weights, strict, cfg)
+        model = _load_model_weights(model, model_weights, strict, cfg)
 
     del model_weights
     gc.collect()
