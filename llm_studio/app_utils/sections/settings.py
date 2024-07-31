@@ -501,11 +501,12 @@ async def settings(q: Q) -> None:
                             ]
                         ],
                         tooltip=(
-                            "The local device to prepare the model before pushing it to HF or downloading. "
-                            "CPU will never load the weights to the GPU, which can be useful "
+                            "The local device to prepare the model before pushing "
+                            "it to HF or downloading. CPU will never load the weights "
+                            "to the GPU, which can be useful "
                             "for large models, but will be significantly slower. "
-                            "Cpu_shard will first load on CPU and then shard on all GPUs "
-                            "before pushing to HF."
+                            "Cpu_shard will first load on CPU and then shard "
+                            "on all GPUs before pushing to HF."
                         ),
                     ),
                 ]
