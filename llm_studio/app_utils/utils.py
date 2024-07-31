@@ -30,6 +30,7 @@ import yaml
 from azure.storage.filedatalake import DataLakeServiceClient
 from boto3.session import Session
 from botocore.handlers import disable_signing
+from datasets import load_dataset
 from h2o_wave import Choice, Q, ui
 from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
@@ -607,6 +608,42 @@ async def kaggle_download(
             clean_macos_artifacts(kaggle_path)
 
     return kaggle_path, "".join(command.split(" ")[-1].split("/")[-1])
+
+
+async def huggingface_download(
+    q: Q, huggingface_dataset: str, huggingface_split: str
+) -> Tuple[str, str]:
+    """Downloads a dataset from Hugging Face
+
+    Args:
+        q: Q
+        huggingface_dataset: HF dataset
+        huggingface_split: Dataset split
+
+    Returns:
+        Download location path
+    """
+
+    huggingface_path = f"{get_data_dir(q)}/tmp"
+    huggingface_path = get_valid_temp_data_folder(q, huggingface_path)
+
+    if os.path.exists(huggingface_path):
+        shutil.rmtree(huggingface_path)
+    os.makedirs(huggingface_path, exist_ok=True)
+
+    token = q.client["dataset/import/huggingface_api_token"]
+    if token == "":
+        token = None
+
+    # Download the dataset
+    dataset = load_dataset(
+        huggingface_dataset, split=huggingface_split, token=token
+    ).to_pandas()
+    filename = f"{huggingface_dataset.split('/')[-1]}_{huggingface_split}"
+    dataset_path = os.path.join(huggingface_path, f"{filename}.pq")
+    dataset.to_parquet(dataset_path, index=False)
+
+    return huggingface_path, filename
 
 
 async def h2o_drive_download(q: Q, filename) -> Tuple[str, str]:
