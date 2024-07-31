@@ -113,7 +113,7 @@ async def dataset_import(
             ui.choice("Azure", "Azure Datalake"),
             ui.choice("H2O-Drive", "H2O-Drive"),
             ui.choice("Kaggle", "Kaggle"),
-            ui.choice("Huggingface", "Huggingface"),
+            ui.choice("Huggingface", "Hugging Face"),
         ]
 
         items = [
@@ -389,10 +389,10 @@ async def dataset_import(
             items += [
                 ui.textbox(
                     name="dataset/import/huggingface_dataset",
-                    label="Huggingface dataset",
+                    label="Hugging Face dataset",
                     value=q.client["dataset/import/huggingface_dataset"],
                     required=True,
-                    tooltip="Name of the Huggingface dataset",
+                    tooltip="Name of the Hugging Face dataset",
                 ),
                 ui.textbox(
                     name="dataset/import/huggingface_split",
@@ -408,7 +408,7 @@ async def dataset_import(
                     value=q.client["dataset/import/huggingface_api_token"],
                     required=False,
                     password=True,
-                    tooltip="Optional Huggingface API token",
+                    tooltip="Optional Hugging Face API token",
                 ),
             ]
 

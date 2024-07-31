@@ -1974,7 +1974,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             ),
             ui.textbox(
                 name="experiment/display/push_to_huggingface/api_key",
-                label="Huggingface API Key",
+                label="Hugging Face API Key",
                 value=q.client["default_huggingface_api_token"],
                 width="500px",
                 password=True,

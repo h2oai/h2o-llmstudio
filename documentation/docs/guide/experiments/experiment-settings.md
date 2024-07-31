@@ -398,7 +398,7 @@ The settings under each category are listed and described below.
 
 <EStrustremotecode/>
 
-### Huggingface branch
+### Hugging Face branch
 
 <EShuggingfacebranch/>
 
