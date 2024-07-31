@@ -56,17 +56,6 @@ async def settings(q: Q) -> None:
             ui.separator("Appearance"),
             ui.inline(
                 items=[
-                    ui.label("Dark Mode", width=label_width),
-                    ui.toggle(
-                        name="theme_dark",
-                        value=q.client["theme_dark"],
-                        tooltip="Enables Dark Mode as theme.",
-                        trigger=True,
-                    ),
-                ]
-            ),
-            ui.inline(
-                items=[
                     ui.label("Delete Dialogs", width=label_width),
                     ui.toggle(
                         name="delete_dialogs",

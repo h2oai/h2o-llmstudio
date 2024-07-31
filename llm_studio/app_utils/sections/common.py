@@ -79,10 +79,7 @@ async def meta(q: Q) -> None:
         notification_bar=notification_bar,
     )
 
-    if q.client.theme_dark:
-        q.page["meta"].theme = "h2o-dark"
-    else:
-        q.page["meta"].theme = "light"
+    q.page["meta"].theme = "h2o-dark"
 
 
 def heap_analytics(
