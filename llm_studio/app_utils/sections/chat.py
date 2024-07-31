@@ -72,8 +72,24 @@ async def chat_tab(q: Q, load_model=True):
     # Load validation dataframe and texts
     validation_dataframe = get_prediction_dataframe(cfg.output_directory)
     if cfg.dataset.parent_id_column != "None":
+        # sample and parent ids can have any dtype, such as str, int, float, etc.
+        # id column can be int, while parent_id column can be float
+        # (as some values are NaN) so we cast id to the same dtype
+        sample_ids = (
+            validation_dataframe["id"]
+            .astype(validation_dataframe[cfg.dataset.parent_id_column].dtype)
+            .tolist()
+        )
+        parent_ids = validation_dataframe[cfg.dataset.parent_id_column].tolist()
+
+        sample_ids_set = set(sample_ids)
+        is_seed_prompt = [
+            False if idx in sample_ids_set else True for idx in parent_ids
+        ]
+        validation_dataframe["is_seed_prompt"] = is_seed_prompt
+
         validation_dataframe = validation_dataframe.loc[
-            validation_dataframe[cfg.dataset.parent_id_column] is not None
+            validation_dataframe["is_seed_prompt"]
         ]
     validation_texts = get_texts(validation_dataframe, cfg)
 
