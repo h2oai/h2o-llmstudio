@@ -19,7 +19,7 @@ To publish a trained model to Hugging Face Hub:
 
 4. Enter the **Account name** on Hugging Face to push the model to a particular account. Leaving it empty will push it to the default user account.
 
-5. Enter the **Huggingface API** Key with write access.
+5. Enter the **Hugging Face API** Key with write access.
 
 6. Click **Export**.
 

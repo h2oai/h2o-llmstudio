@@ -254,7 +254,7 @@ async def settings(q: Q) -> None:
             ),
             ui.inline(
                 items=[
-                    ui.label("Huggingface API Token", width=label_width),
+                    ui.label("Hugging Face API Token", width=label_width),
                     ui.textbox(
                         name="default_huggingface_api_token",
                         label=None,
@@ -262,14 +262,14 @@ async def settings(q: Q) -> None:
                         width=textbox_width,
                         password=True,
                         trigger=False,
-                        tooltip="Set the value for the Huggingface API token \
+                        tooltip="Set the value for the Hugging Face API token \
                             in the experiment setup.",
                     ),
                 ]
             ),
             ui.inline(
                 items=[
-                    ui.label("Huggingface Hub Enable HF Transfer", width=label_width),
+                    ui.label("Hugging Face Hub Enable HF Transfer", width=label_width),
                     ui.toggle(
                         name="default_hf_hub_enable_hf_transfer",
                         value=(
