@@ -9,7 +9,7 @@ import llm_studio.src.datasets.text_causal_language_modeling_ds
 from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
 from llm_studio.src import possible_values
 from llm_studio.src.augmentations.nlp_aug import BaseNLPAug
-from llm_studio.src.loggers import Loggers
+from llm_studio.src.loggers import ExternalLoggers
 from llm_studio.src.losses import text_causal_language_modeling_losses
 from llm_studio.src.metrics import text_causal_language_modeling_metrics
 from llm_studio.src.models import text_causal_language_modeling_model
@@ -422,7 +422,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
             allow_custom=True,
         )
         self._possible_values["metric_gpt_template"] = possible_values.String(
-            values=(f.split(".")[0] for f in os.listdir("prompts"))
+            values=tuple(f.split(".")[0] for f in os.listdir("prompts"))
         )
 
         self._possible_values["batch_size_inference"] = (0, 512, 1)
@@ -577,7 +577,7 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self._possible_values["logger"] = Loggers.names()
+        self._possible_values["logger"] = ExternalLoggers.names()
 
         self._nesting.add(
             ["neptune_project"],

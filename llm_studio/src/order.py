@@ -75,22 +75,19 @@ class Order:
 
         self._unique_guard(*keys)
 
-        if before is not None:
-            for key in keys[::-1]:
-                self._list.insert(self._list.index(before), key)
-
-            if after is not None:
-                raise ValueError("`after` must be None if `before` is set.")
-
-        if after is not None:
-            for key in keys[::-1]:
-                self._list.insert(self._list.index(after) + 1, key)
-
-            if before is not None:
-                raise ValueError("`before` must be None if `after` is set.")
-
         if before is None and after is None:
             raise ValueError("Either `before` or `after` must be set.")
+
+        if before and after:
+            raise ValueError("Can't set `before` and `after` at the same time.")
+
+        if before is not None:
+            for key in keys:
+                self._list.insert(self._list.index(before), key)
+
+        if after is not None:
+            for key in keys:
+                self._list.insert(self._list.index(after) + 1, key)
 
     def __getitem__(self, idx):
         return self._list[idx]
@@ -100,19 +97,3 @@ class Order:
 
     def __iter__(self):
         return iter(self._list)
-
-
-def test_order():
-    order = Order(["dataset", "training", "validation", "logging"])
-
-    order.insert("architecture", before="training")
-    order.insert("environment", after="validation")
-
-    assert [item for item in order] == [
-        "dataset",
-        "architecture",
-        "training",
-        "validation",
-        "environment",
-        "logging",
-    ]

@@ -155,7 +155,6 @@ Navigate to <http://localhost:10101/> (we recommend using Chrome) to access H2O 
 If you are running H2O LLM Studio with a custom environment other than Pipenv, you need to start the app as follows:
 
 ```bash
-H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 H2O_WAVE_NO_LOG=true \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
@@ -163,7 +162,6 @@ wave run app
 ```
 
 If you are using the [nightly conda environment](#nightly-conda-virtual-environment), you can run ```make llmstudio-conda```.
-
 
 ## Run H2O LLM Studio GUI using Docker from a nightly build
 

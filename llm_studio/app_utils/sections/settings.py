@@ -5,7 +5,7 @@ from h2o_wave import Q, ui
 
 from llm_studio.app_utils.sections.common import clean_dashboard
 from llm_studio.app_utils.setting_utils import Secrets
-from llm_studio.src.loggers import Loggers
+from llm_studio.src.loggers import ExternalLoggers
 
 
 async def settings(q: Q) -> None:
@@ -215,7 +215,9 @@ async def settings(q: Q) -> None:
                     ui.dropdown(
                         name="default_logger",
                         value=q.client["default_logger"],
-                        choices=[ui.choice(name, name) for name in Loggers.names()],
+                        choices=[
+                            ui.choice(name, name) for name in ExternalLoggers.names()
+                        ],
                         trigger=False,
                         width="100px",
                     ),

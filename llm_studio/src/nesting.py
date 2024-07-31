@@ -1,35 +1,36 @@
 from collections import defaultdict
-from dataclasses import dataclass
-from typing import DefaultDict, List, Optional, Set, Union
+from typing import DefaultDict, List, Set, Union
+
+from pydantic.dataclasses import dataclass
 
 
 @dataclass
 class Dependency:
-    """Dependency class.
+    """
+    Represents a dependency with a key, value, and set condition.
 
-    Args:
-        key: key of the dependency
-        value: required value of the dependency, None for empty condition
-        is_set: whether the dependency should be set, or not set
+    Attributes:
+        key (str): The key of the dependency (parent).
+        value (Union[str, bool, int, None]): The value of the dependency to look for. \
+            None for empty condition (dependency only needs to exist).
+        is_set (bool): Whether the value of the dependency should be set (True) or not \
+            set (False).
     """
 
     key: str
-    value: Union[str, bool, int, None] = True
-    is_set: bool = True
+    value: Union[str, bool, int, None]
+    is_set: bool
 
-    def check(self, dependency_values: Optional[List[str]]) -> bool:
+    def check(self, dependency_values: List[str]) -> bool:
         """
         Check if dependency is satisfied
 
         Args:
-            dependency_values: list of dependency values
+            dependency_values (List[str]): List of dependency values to check against.
 
         Returns:
-            True if the dependency is satisfied, False otherwise
+            bool: True if the dependency is satisfied, False otherwise.
         """
-
-        if dependency_values is None:
-            dependency_values = []
 
         if self.value is None and self.is_set and len(dependency_values):
             return False
@@ -47,23 +48,32 @@ class Dependency:
 
 class Nesting:
     """
-    A tree-like structure to specify nested dependencies of key-value pairs
-    In detail it maps dependencies of key requiring any number of key:value pairs
+    A tree-like structure to specify nested dependencies of type `Dependency`.
 
-    Primarily useful for specifying nested dependencies of UI elements shown in Wave.
+    This class maps dependencies of keys requiring any number dependencies of \
+        type `Dependency`. It is primarily useful for specifying nested dependencies \
+        of UI elements shown in Wave.
+
+    Attributes:
+        dependencies (DefaultDict[str, List[Dependency]]): A dictionary mapping keys \
+            to their dependencies of type `Dependency`.
+        triggers (Set[str]): A set of all dependency keys that can trigger changes.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.dependencies: DefaultDict[str, List[Dependency]] = defaultdict(list)
         self.triggers: Set[str] = set()
 
-    def add(self, keys: List[str], dependencies: List[Dependency]):
+    def add(self, keys: List[str], dependencies: List[Dependency]) -> None:
         """
-        Append dependencies (key:value) for a given key
+        Append dependencies of type `Dependency` for given keys.
 
         Args:
-            keys: keys to add dependencies for
-            dependencies: key:value pairs to depend on
+            keys (List[str]): Keys to add dependencies for.
+            dependencies (List[Dependency]): The Dependencys to depend on.
+
+        Raises:
+            ValueError: If the input keys are not unique.
         """
 
         if len(set(keys)) != len(keys):

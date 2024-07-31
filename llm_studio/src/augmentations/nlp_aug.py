@@ -22,7 +22,8 @@ class BaseNLPAug(nn.Module):
 
     @abstractmethod
     def forward(self, batch: Dict) -> Dict:
-        """Augmenting
+        """Augmenting the batch.
+        This is an inplace operation.
 
         Args:
             batch: current batch
