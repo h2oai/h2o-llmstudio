@@ -4,6 +4,8 @@ import os
 import zipfile
 from typing import Optional
 
+import pandas as pd
+
 from llm_studio.src.utils.exceptions import LLMResourceException
 from llm_studio.src.utils.utils import add_file_to_zip
 
@@ -23,6 +25,11 @@ def get_artifact_path_path(
     """
 
     return os.path.join(experiment_path, f"{artifact_type}_{experiment_name}.zip")
+
+
+def get_prediction_dataframe(experiment_path: str):
+    """Return the validation dataframe"""
+    return pd.read_csv(f"{experiment_path}/validation_predictions.csv")
 
 
 def get_predictions_path(experiment_name: str, experiment_path: str):
