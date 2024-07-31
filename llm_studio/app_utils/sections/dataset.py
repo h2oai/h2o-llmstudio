@@ -381,13 +381,18 @@ async def dataset_import(
 
             if q.client["dataset/import/huggingface_split"] is None:
                 q.client["dataset/import/huggingface_split"] = "train"
+            if q.client["dataset/import/huggingface_api_token"] is None:
+                q.client["dataset/import/huggingface_api_token"] = q.client[
+                    "default_huggingface_api_token"
+                ]
 
             items += [
                 ui.textbox(
                     name="dataset/import/huggingface_dataset",
-                    label="Hugging Face dataset",
+                    label="Huggingface dataset",
+                    value=q.client["dataset/import/huggingface_dataset"],
                     required=True,
-                    tooltip="Name of the Hugging Face dataset",
+                    tooltip="Name of the Huggingface dataset",
                 ),
                 ui.textbox(
                     name="dataset/import/huggingface_split",
@@ -396,6 +401,14 @@ async def dataset_import(
                     required=True,
                     password=False,
                     tooltip="Split of the dataset",
+                ),
+                ui.textbox(
+                    name="dataset/import/huggingface_api_token",
+                    label="Kaggle secret key",
+                    value=q.client["dataset/import/huggingface_api_token"],
+                    required=False,
+                    password=True,
+                    tooltip="Optional Huggingface API token",
                 ),
             ]
 

@@ -30,6 +30,7 @@ import yaml
 from azure.storage.filedatalake import DataLakeServiceClient
 from boto3.session import Session
 from botocore.handlers import disable_signing
+from datasets import load_dataset
 from h2o_wave import Choice, Q, ui
 from pandas.core.frame import DataFrame
 from sqlitedict import SqliteDict
@@ -623,8 +624,6 @@ async def huggingface_download(
         Download location path
     """
 
-    from datasets import load_dataset
-
     huggingface_path = f"{get_data_dir(q)}/tmp"
     huggingface_path = get_valid_temp_data_folder(q, huggingface_path)
 
@@ -632,13 +631,17 @@ async def huggingface_download(
         shutil.rmtree(huggingface_path)
     os.makedirs(huggingface_path, exist_ok=True)
 
+    token = q.client["dataset/import/huggingface_api_token"]
+    if token == "":
+        token = None
+
     # Download the dataset
-    dataset = load_dataset(huggingface_dataset, split=huggingface_split).to_pandas()
+    dataset = load_dataset(
+        huggingface_dataset, split=huggingface_split, token=token
+    ).to_pandas()
     filename = f"{huggingface_dataset.split('/')[-1]}_{huggingface_split}"
-    print(filename)
-    dataset_path = os.path.join(huggingface_path, f"{filename}.csv")
-    print("PATH", dataset_path)
-    dataset.to_csv(dataset_path, index=False)
+    dataset_path = os.path.join(huggingface_path, f"{filename}.pq")
+    dataset.to_parquet(dataset_path, index=False)
 
     return huggingface_path, filename
 
