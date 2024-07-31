@@ -45,6 +45,7 @@ import TSuseDora from '../../tooltips/experiments/_use-dora.mdx';
 import TSloraR from '../../tooltips/experiments/_lora-r.mdx';
 import TSloraAlpha from '../../tooltips/experiments/_lora-alpha.mdx';
 import TSloraDropout from '../../tooltips/experiments/_lora-dropout.mdx';
+import TSuseRSlora from '../../tooltips/experiments/_use-rslora.mdx';
 import TSloraTargetModules from '../../tooltips/experiments/_lora-target-modules.mdx';
 import TSloraUnfreezeLayers from '../../tooltips/experiments/_lora-unfreeze-layers.mdx';
 import TSsavecheckpoint from '../../tooltips/experiments/_save-checkpoint.mdx';
@@ -279,6 +280,10 @@ The settings under each category are listed and described below.
 ### Lora dropout
 
 <TSloraDropout/>
+
+### Use RS Lora
+
+<TSuseRSlora/>
 
 ### Lora target modules
 
