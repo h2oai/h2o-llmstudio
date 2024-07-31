@@ -166,6 +166,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     lora_r: int = 4
     lora_alpha: int = 16
     lora_dropout: float = 0.05
+    use_rslora: bool = False
     lora_target_modules: str = ""
     lora_unfreeze_layers: Tuple[str, ...] = ()
 
@@ -298,6 +299,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
                 "lora_r",
                 "lora_alpha",
                 "lora_dropout",
+                "use_rslora",
                 "lora_target_modules",
                 "lora_unfreeze_layers",
             ],
