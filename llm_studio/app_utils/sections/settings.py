@@ -12,7 +12,7 @@ async def settings(q: Q) -> None:
     await clean_dashboard(q, mode="full")
     q.client["nav/active"] = "settings"
 
-    label_width = "250px"
+    label_width = "280px"
     textbox_width = "350px"
 
     q.page["settings/content"] = ui.form_card(
@@ -273,6 +273,27 @@ async def settings(q: Q) -> None:
                         trigger=False,
                         tooltip="Set the value for the Huggingface API token \
                             in the experiment setup.",
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
+                    ui.label("Huggingface Hub Enable HF Transfer", width=label_width),
+                    ui.toggle(
+                        name="default_hf_hub_enable_hf_transfer",
+                        value=(
+                            True
+                            if q.client["default_hf_hub_enable_hf_transfer"]
+                            else False
+                        ),
+                        tooltip=(
+                            "Toggle to enable \
+                            <a href='https://github.com/huggingface/hf_transfer' \
+                            target='_blank'>HF Transfer</a> for faster \
+                            downloads. Toggle, if you are experiencing issues on down-\
+                            or upload. EXPERIMENTAL."
+                        ),
+                        trigger=False,
                     ),
                 ]
             ),

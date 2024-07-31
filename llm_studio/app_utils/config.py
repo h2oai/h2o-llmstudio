@@ -53,9 +53,10 @@ default_cfg = {
     "start_page": "home",
     "problem_types": [
         "text_causal_language_modeling_config",
-        "text_dpo_modeling_config",
-        "text_sequence_to_sequence_modeling_config",
         "text_causal_classification_modeling_config",
+        "text_causal_regression_modeling_config",
+        "text_sequence_to_sequence_modeling_config",
+        "text_dpo_modeling_config",
     ],
     "problem_categories": ["text"],
     "dataset_keys": [
@@ -102,6 +103,9 @@ default_cfg = {
         "default_neptune_project": os.getenv("NEPTUNE_PROJECT", ""),
         "default_neptune_api_token": os.getenv("NEPTUNE_API_TOKEN", ""),
         "default_huggingface_api_token": os.getenv("HUGGINGFACE_TOKEN", ""),
+        "default_hf_hub_enable_hf_transfer": os.getenv(
+            "HF_HUB_ENABLE_HF_TRANSFER", True
+        ),
         "default_openai_azure": os.getenv("OPENAI_API_TYPE", "open_ai") == "azure",
         "default_openai_api_token": os.getenv("OPENAI_API_KEY", ""),
         "default_openai_api_base": os.getenv(
