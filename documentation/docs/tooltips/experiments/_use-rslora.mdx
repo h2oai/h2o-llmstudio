@@ -1,0 +1,1 @@
+When active, H2O LLM Studio uses [Rank-Stabilized LoRA](https://arxiv.org/abs/2312.03732) which sets the LoRA adapter scaling factor to lora_alpha/math.sqrt(lora_r). The creators suggest that this works especially better for very large ranks. Otherwise, it will use the original default value of lora_alpha/lora_r.
