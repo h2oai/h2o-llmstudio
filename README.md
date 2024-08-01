@@ -170,8 +170,7 @@ Install Docker first by following instructions from [NVIDIA Containers](https://
 H2O LLM Studio images are stored in the h2oai GCR vorvan container repository.
 
 ```bash
-mkdir -p `pwd`/data
-mkdir -p `pwd`/output
+mkdir -p `pwd`/llmstudio_mnt
 
 # make sure to pull latest image if you still have a prior version cached
 docker pull gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
@@ -184,8 +183,7 @@ docker run \
     --rm \
     -u `id -u`:`id -g` \
     -p 10101:10101 \
-    -v `pwd`/data:/workspace/data \
-    -v `pwd`/output:/workspace/output \
+    -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
     -v ~/.cache:/home/llmstudio/.cache \
     gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
 ```
@@ -199,8 +197,7 @@ Navigate to <http://localhost:10101/> (we recommend using Chrome) to access H2O 
 ```bash
 docker build -t h2o-llmstudio .
 
-mkdir -p `pwd`/data
-mkdir -p `pwd`/output
+mkdir -p `pwd`/llmstudio_mnt
 
 docker run \
     --runtime=nvidia \
@@ -209,8 +206,7 @@ docker run \
     --rm \
     -u `id -u`:`id -g` \
     -p 10101:10101 \
-    -v `pwd`/data:/workspace/data \
-    -v `pwd`/output:/workspace/output \
+    -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
     -v ~/.cache:/home/llmstudio/.cache \
     h2o-llmstudio
 ```
