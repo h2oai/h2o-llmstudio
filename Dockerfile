@@ -20,10 +20,6 @@ RUN apt-get update \
     python3.10-distutils \
     && rm -rf /var/lib/apt/lists/*
 
-# Make all of the files in the /usr/local directory readable for all users so that the
-# application can access cuda libraries and other things if it wants to.
-# RUN chmod -R a+r /usr/local/
-
 # Pick an unusual UID for the llmstudio user.
 # In particular, don't pick 1000, which is the default ubuntu user number.
 # Force ourselves to test with UID mismatches in the common case.
@@ -56,9 +52,15 @@ ENV H2O_LLM_STUDIO_WORKDIR=/home/llmstudio/mount
 COPY . /workspace
 
 # Remove unnecessary packages remove build packages again
+# Prevent removal of cuda packages
 USER root
-RUN apt-get purge -y linux-libc-dev git curl software-properties-common python3.10-distutils
+# RUN apt-mark manual *cuda*
+# RUN apt-get purge -y linux-libc-dev
+# RUN apt-get purge -y build-essential*
+RUN apt-get purge -y git curl python3.10-distutils software-properties-common
 RUN apt-get autoremove -y
+# clean up apt cache
+RUN rm -rf /var/lib/apt/lists/*
 USER llmstudio
 
 # Set the environment variables for the wave server
