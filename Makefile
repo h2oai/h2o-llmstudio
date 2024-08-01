@@ -207,13 +207,12 @@ stop-llmstudio:
 docker-build-nightly:
 	docker build -t $(DOCKER_IMAGE) .
 
+# Run the Docker container with the nightly image
+# Uses the local `llmstudio_mnt` directory as the mount point for the container
 .PHONY: docker-run-nightly
 docker-run-nightly:
-ifeq (,$(wildcard ./data))
-	mkdir data
-endif
-ifeq (,$(wildcard ./output))
-	mkdir output
+ifeq (,$(wildcard ./llmstudio_mnt))
+	mkdir llmstudio_mnt
 endif
 	docker run \
 		--runtime=nvidia \
@@ -222,8 +221,7 @@ endif
 		--rm \
 		-u `id -u`:`id -g` \
 		-p 10101:10101 \
-		-v `pwd`/data:/workspace/data \
-		-v `pwd`/output:/workspace/output \
+		-v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
 		$(DOCKER_IMAGE)
 
 # Perform a local Trivy scan for CVEs
