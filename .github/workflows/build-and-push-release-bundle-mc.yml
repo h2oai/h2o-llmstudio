@@ -1,9 +1,6 @@
 name: Build and Push Bundle to MC S3 - Release
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
     tags:
       - '**'
@@ -31,4 +28,4 @@ jobs:
         run: |-
           REF_NAME="${{ github.ref_name }}"
           VERSION=${REF_NAME:1}
-          aws s3 cp bundles/ai.h2o.llmstudio.1.10.0-dev.wave ${{ secrets.MC_S3_LLMSTUDIO_BUCKET }}.$VERSION.wave
+          aws s3 cp bundles/ai.h2o.llmstudio.$VERSION.wave ${{ secrets.MC_S3_LLMSTUDIO_BUCKET }}.$VERSION.wave
