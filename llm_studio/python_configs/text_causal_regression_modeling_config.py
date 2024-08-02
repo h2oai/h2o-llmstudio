@@ -109,7 +109,7 @@ class ConfigNLPCausalRegressionEnvironment(ConfigNLPCausalLMEnvironment):
 class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
-    llm_backbone: str = "h2oai/h2o-danube2-1.8b-chat"
+    llm_backbone: str = "h2oai/h2o-danube3-500m-chat"
 
     dataset: ConfigNLPCausalRegressionDataset = field(
         default_factory=ConfigNLPCausalRegressionDataset
@@ -143,22 +143,22 @@ class ConfigProblemBase(DefaultConfigProblemBase):
 
         self._possible_values["llm_backbone"] = possible_values.String(
             values=(
+                "h2oai/h2o-danube3-500m-base",
+                "h2oai/h2o-danube3-500m-chat",
+                "h2oai/h2o-danube3-4b-base",
+                "h2oai/h2o-danube3-4b-chat",
                 "h2oai/h2o-danube2-1.8b-base",
                 "h2oai/h2o-danube2-1.8b-chat",
-                "h2oai/h2ogpt-4096-llama2-7b",
-                "h2oai/h2ogpt-4096-llama2-7b-chat",
-                "h2oai/h2ogpt-4096-llama2-13b",
-                "h2oai/h2ogpt-4096-llama2-13b-chat",
-                "h2oai/h2ogpt-4096-llama2-70b",
-                "h2oai/h2ogpt-4096-llama2-70b-chat",
-                "tiiuae/falcon-7b",
-                "mistralai/Mistral-7B-v0.1",
-                "HuggingFaceH4/zephyr-7b-beta",
-                "google/gemma-2b",
-                "google/gemma-7b",
-                "stabilityai/stablelm-3b-4e1t",
-                "microsoft/phi-2",
-                "facebook/opt-125m",
+                "meta-llama/Meta-Llama-3.1-8B-Instruct",
+                "meta-llama/Meta-Llama-3.1-70B-Instruct",
+                "mistralai/Mistral-7B-v0.3",
+                "mistralai/Mistral-7B-Instruct-v0.2",
+                "google/gemma-2-2b-it",
+                "google/gemma-2-9b-it",
+                "microsoft/Phi-3-mini-4k-instruct",
+                "microsoft/Phi-3-medium-4k-instruct",
+                "Qwen/Qwen2-7B-Instruct",
+                "Qwen/Qwen2-72B-Instruct",
             ),
             allow_custom=True,
         )
