@@ -8,6 +8,7 @@ PIPENV_PYTHON = $(PIPENV) run python
 PIPENV_PIP = $(PIPENV_PYTHON) -m pip
 PWD = $(shell pwd)
 DOCKER_IMAGE ?= gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+APP_VERSION=$(shell sed -n 's/^version = //p' pyproject.toml | tr -d '"')
 
 ifeq ($(origin H2O_LLM_STUDIO_WORKDIR), environment)
     WORKDIR := $(H2O_LLM_STUDIO_WORKDIR)
@@ -238,6 +239,14 @@ docker-clean-all:
 		docker rm $$CONTAINERS; \
 	fi
 	docker rmi $(DOCKER_IMAGE)
+
+.PHONY: bundles
+bundles:
+	rm -f -r bundles
+	mkdir -p bundles
+	cp -r static about.md bundles/
+	sed 's/{{VERSION}}/${APP_VERSION}/g' app.toml.template > bundles/app.toml
+	cd bundles && zip -r ai.h2o.llmstudio.${APP_VERSION}.wave *
 
 .PHONY: shell
 shell:
