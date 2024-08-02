@@ -472,7 +472,34 @@ async def settings(q: Q) -> None:
                     ),
                 ]
             ),
-            ui.separator("Default Chat Settings"),
+            ui.separator("Default System Settings"),
+            ui.inline(
+                items=[
+                    ui.label("GPU used for Download", width=label_width),
+                    ui.dropdown(
+                        name="gpu_used_for_download",
+                        label=None,
+                        value=q.client["gpu_used_for_download"],
+                        width=textbox_width,
+                        choices=[
+                            ui.choice(str(d), str(d))
+                            for d in ["cpu", "cpu_shard"]
+                            + [
+                                f"cuda:{idx}"
+                                for idx in range(torch.cuda.device_count())
+                            ]
+                        ],
+                        tooltip=(
+                            "The local device to prepare the model before pushing "
+                            "it to HF or downloading. CPU will never load the weights "
+                            "to the GPU, which can be useful "
+                            "for large models, but will be significantly slower. "
+                            "Cpu_shard will first load on CPU and then shard "
+                            "on all GPUs before pushing to HF."
+                        ),
+                    ),
+                ]
+            ),
             ui.inline(
                 items=[
                     ui.label("GPU used for Chat", width=label_width),

@@ -105,6 +105,7 @@ default_cfg = {
         "set_max_gradient_clip": 10,
         "set_max_lora_r": 256,
         "set_max_lora_alpha": 256,
+        "gpu_used_for_download": "cuda:0",
         "gpu_used_for_chat": 1,
         "default_number_of_workers": 8,
         "default_logger": "None",
