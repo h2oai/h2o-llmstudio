@@ -39,7 +39,7 @@ jobs:
           df -h
       - name: Docker Build Image
         run: |-
-          docker build -t ${{ secrets.GAR_IMAGE_PATH }}:${{ github.ref_name }} .
+          docker build -t ${{ secrets.GAR_IMAGE_PATH }}:v0.0.1 .
       - name: Push to GAR
         run: |-
-          docker push ${{ secrets.GAR_IMAGE_PATH }}:${{ github.ref_name }}
+          docker push ${{ secrets.GAR_IMAGE_PATH }}:v0.0.1
