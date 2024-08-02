@@ -108,7 +108,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
 
-    llm_backbone: str = "h2oai/h2o-danube3-4b-chat"
+    llm_backbone: str = "h2oai/h2o-danube3-500m-chat"
 
     dataset: ConfigDPODataset = field(default_factory=ConfigDPODataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
