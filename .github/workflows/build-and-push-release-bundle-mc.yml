@@ -1,0 +1,29 @@
+name: Build and Push Bundle to MC S3 - Release
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    tags:
+      - '**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.LLM_STUDIO_AWS_ROLE }}
+          role-session-name: ${{ secrets.LLM_STUDIO_AWS_ROLE_SESSION_NAME }}
+          aws-region: ${{ secrets.LLM_STUDIO_AWS_REGION }}
+      - name: Build Wave Bundle
+        run: |-
+          make bundles
+      - name: Push wave bundle to S3
+        run: |-
+          aws s3 cp bundles/ai.h2o.llmstudio.v1.10.0-dev.wave ${{ secrets.MC_S3_LLMSTUDIO_BUCKET }}.${{ github.ref_name:1 }}.wave
