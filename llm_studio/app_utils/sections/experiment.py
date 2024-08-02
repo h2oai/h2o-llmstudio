@@ -1768,7 +1768,6 @@ async def experiment_download_model(q: Q):
         logger.info(f"Creating {zip_path} on demand")
         cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
 
-        device = "cuda"
         experiments = get_experiments(q)
         num_running_queued = len(
             experiments[experiments["status"].isin(["queued", "running"])]
@@ -1778,6 +1777,12 @@ async def experiment_download_model(q: Q):
         ):
             logger.info("Preparing model on CPU. This might slow down the progress.")
             device = "cpu"
+        else:
+            device = q.client["gpu_used_for_download"]
+            logger.info(
+                f"Preparing model on {device}. In case of issues or OOM consider "
+                "changing the default device for downloading in settings."
+            )
         with set_env(HUGGINGFACE_TOKEN=q.client["default_huggingface_api_token"]):
             cfg, model, tokenizer = load_cfg_model_tokenizer(
                 experiment_path, merge=True, device=device
