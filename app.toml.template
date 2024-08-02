@@ -22,7 +22,7 @@ ResourceVolumeSize = "1Ti"
 EnableSHM = true
 EnableOIDC = true
 RoutingMode = "BASE_URL"
-CustomImage = "gcr.io/vorvan/h2oai/h2o-llmstudio:v{{VERSION}}"
+CustomImage = "docker.io/h2oairelease/h2oai-llmstudio-app:v{{VERSION}}"
 
 [[Env]]
 Name = "H2O_LLM_STUDIO_WORKDIR"
