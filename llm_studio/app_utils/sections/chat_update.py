@@ -91,7 +91,7 @@ async def update_chat_window(q):
 async def chat_copy(q: Q) -> None:
 
     chat_messages = [
-        f"{'USER' if t[1] == USER else 'BOT'}: {t[0]}"
+        f"{'USER' if t[1] == USER else 'ASSISTANT'}: {t[0]}"
         for t in q.client["experiment/display/chat/messages"]
     ]
     chat_to_copy = "\n".join(chat_messages)
