@@ -1,4 +1,15 @@
 .git
 .github
+.mypy_cache
+.neptune
+.pytest_cache
 data
+documentation
+jenkins
+notebooks
 output
+reports
+tests
+.coverage
+*.log
+*.ipynb
