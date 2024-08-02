@@ -26,4 +26,6 @@ jobs:
           make bundles
       - name: Push wave bundle to S3
         run: |-
-          aws s3 cp bundles/ai.h2o.llmstudio.v1.10.0-dev.wave ${{ secrets.MC_S3_LLMSTUDIO_BUCKET }}.${{ github.ref_name:1 }}.wave
+          REF_NAME="${{ github.ref_name }}"
+          VERSION=${REF_NAME:1}
+          aws s3 cp bundles/ai.h2o.llmstudio.v1.10.0-dev.wave ${{ secrets.MC_S3_LLMSTUDIO_BUCKET }}.$VERSION.wave
