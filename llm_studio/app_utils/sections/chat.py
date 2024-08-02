@@ -148,6 +148,11 @@ async def chat_tab(q: Q, load_model=True):
                         label="Clear History",
                         primary=True,
                     ),
+                    ui.button(
+                        name="experiment/display/chat/copy_chat",
+                        label="Copy to clipboard",
+                        primary=True,
+                    ),
                 ]
             ),
             ui.expander(
