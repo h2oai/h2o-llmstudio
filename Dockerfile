@@ -36,13 +36,12 @@ ENV PATH=/workspace/.venv/bin:$PATH
 RUN \
     curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 && \
     chmod -R a+w /home/llmstudio
-COPY Makefile .
-COPY Pipfile .
-COPY Pipfile.lock .
+COPY Makefile Pipfile Pipfile.lock /workspace/
 
 # Python virtualenv is installed in /workspace/.venv/
+# give read and write permissions to the /workspace/.venv/ directory for all users to allow wave to write files
 ENV PIPENV_VENV_IN_PROJECT=1
-RUN make setup
+RUN make setup && chmod -R 777 /workspace/.venv
 
 # We need to create a mount point for the user to mount their volume
 # All persistent data lives in /home/llmstudio/mount
@@ -54,13 +53,10 @@ COPY . /workspace
 # Remove unnecessary packages remove build packages again
 # Prevent removal of cuda packages
 USER root
-# RUN apt-mark manual *cuda*
-# RUN apt-get purge -y linux-libc-dev
-# RUN apt-get purge -y build-essential*
-RUN apt-get purge -y git curl python3.10-distutils software-properties-common
-RUN apt-get autoremove -y
-# clean up apt cache
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get purge -y git curl python3.10-distutils software-properties-common \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
 USER llmstudio
 
 # Set the environment variables for the wave server
@@ -75,8 +71,6 @@ USER root
 # if it wants to. e.g. triton uses /home/llmstudio/.triton as a cache directory.
 RUN chmod -R 777 /home/llmstudio
 
-# give read and write permissions to the /workspace directory for all users to allow wave to write files
-RUN chmod -R 777 /workspace
 USER llmstudio
 
 EXPOSE 10101
