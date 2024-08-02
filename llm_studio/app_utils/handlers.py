@@ -6,7 +6,7 @@ import torch
 from h2o_wave import Q
 
 from llm_studio.app_utils.sections.chat import chat_tab
-from llm_studio.app_utils.sections.chat_update import chat_update
+from llm_studio.app_utils.sections.chat_update import chat_copy, chat_update
 from llm_studio.app_utils.sections.common import delete_dialog
 from llm_studio.app_utils.sections.dataset import (
     dataset_delete_current_datasets,
@@ -65,6 +65,7 @@ async def handle(q: Q) -> None:
     if not (
         q.args.__wave_submission_name__ == "experiment/display/chat/chatbot"
         or q.args.__wave_submission_name__ == "experiment/display/chat/clear_history"
+        or q.args.__wave_submission_name__ == "experiment/display/chat/copy_chat"
     ):
         if "experiment/display/chat/cfg" in q.client:
             del q.client["experiment/display/chat/cfg"]
@@ -368,7 +369,8 @@ async def handle(q: Q) -> None:
             await chat_update(q)
         elif q.args.__wave_submission_name__ == "experiment/display/chat/clear_history":
             await chat_tab(q, load_model=False)
-
+        elif q.args.__wave_submission_name__ == "experiment/display/chat/copy_chat":
+            await chat_copy(q)
         elif q.args.__wave_submission_name__ == "dataset/import/local_upload":
             await dataset_import_uploaded_file(q)
         elif q.args.__wave_submission_name__ == "dataset/import/local_path_list":

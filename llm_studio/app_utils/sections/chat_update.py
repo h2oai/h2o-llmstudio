@@ -88,6 +88,20 @@ async def update_chat_window(q):
     q.page["experiment/display/chat"].data[-1] = message
 
 
+async def chat_copy(q: Q) -> None:
+
+    chat_messages = [
+        f"{'USER' if t[1] == USER else 'ASSISTANT'}: {t[0]}"
+        for t in q.client["experiment/display/chat/messages"]
+    ]
+    chat_to_copy = "\n".join(chat_messages)
+
+    q.page["meta"].script = ui.inline_script(
+        f"navigator.clipboard.writeText(`{chat_to_copy}`);"
+    )
+    await q.page.save()
+
+
 async def answer_chat(q: Q) -> str:
     cfg = q.client["experiment/display/chat/cfg"]
     model: Model = q.client["experiment/display/chat/model"]
