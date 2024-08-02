@@ -1,10 +1,6 @@
 name: Build and Push to GAR - Release
 
 on:
-  # Only for testing purposes
-  pull_request:
-    branches:
-      - main
   push:
     tags:
       - '**'
@@ -39,7 +35,7 @@ jobs:
           df -h
       - name: Docker Build Image
         run: |-
-          docker build -t ${{ secrets.GAR_IMAGE_PATH }}:v0.0.1 . --quiet
+          docker build -t ${{ secrets.GAR_IMAGE_PATH }}:${{ github.ref_name }} . --quiet
       - name: Push to GAR
         run: |-
-          docker push ${{ secrets.GAR_IMAGE_PATH }}:v0.0.1 --quiet
+          docker push ${{ secrets.GAR_IMAGE_PATH }}:${{ github.ref_name }} --quiet
