@@ -254,6 +254,49 @@ async def settings(q: Q) -> None:
             ),
             ui.inline(
                 items=[
+                    ui.label("Wandb Project", width=label_width),
+                    ui.textbox(
+                        name="default_wandb_project",
+                        label=None,
+                        value=q.client["default_wandb_project"],
+                        width=textbox_width,
+                        trigger=False,
+                        tooltip="Set the value for the Wandb project \
+                            in the experiment setup.",
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
+                    ui.label("Wandb Entity", width=label_width),
+                    ui.textbox(
+                        name="default_wandb_entity",
+                        label=None,
+                        value=q.client["default_wandb_entity"],
+                        width=textbox_width,
+                        trigger=False,
+                        tooltip="Set the value for the Wandb entity \
+                            in the experiment setup.",
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
+                    ui.label("Wandb API Token", width=label_width),
+                    ui.textbox(
+                        name="default_wandb_api_token",
+                        label=None,
+                        value=q.client["default_wandb_api_token"],
+                        width=textbox_width,
+                        password=True,
+                        trigger=False,
+                        tooltip="Set the value for the Wandb API token \
+                            in the experiment setup.",
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
                     ui.label("Hugging Face API Token", width=label_width),
                     ui.textbox(
                         name="default_huggingface_api_token",
