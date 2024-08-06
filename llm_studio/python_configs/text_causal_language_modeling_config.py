@@ -568,6 +568,8 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 class ConfigNLPCausalLMLogging(DefaultConfig):
     logger: str = "None"
     neptune_project: str = ""
+    wandb_project: str = ""
+    wandb_entity: str = ""
     _neptune_debug: bool = False
 
     plots_class: Any = text_causal_language_modeling_plots.Plots
@@ -582,6 +584,10 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
         self._nesting.add(
             ["neptune_project"],
             [Dependency(key="logger", value="Neptune", is_set=True)],
+        )
+        self._nesting.add(
+            ["wandb_project", "wandb_entity"],
+            [Dependency(key="logger", value="W&B", is_set=True)],
         )
 
         self._visibility["plots_class"] = -1

@@ -32,7 +32,7 @@ def get_cfg(cfg: Any) -> Dict:
         if k.startswith("_") or cfg._get_visibility(k) < 0:
             continue
 
-        if any([x in k for x in ["api"]]):
+        if any([x in k for x in ["api", "secret", "key"]]):
             continue
 
         if dataclasses.is_dataclass(v):
@@ -188,11 +188,11 @@ class MainLogger:
 class ExternalLoggers:
     """ExternalLoggers factory."""
 
-    _loggers = {"None": DummyLogger, "Neptune": NeptuneLogger}
+    _loggers = {"None": DummyLogger, "Neptune": NeptuneLogger, "W&B": WandbLogger}
 
     @classmethod
     def names(cls) -> List[str]:
-        return sorted(cls._loggers.keys())
+        return cls._loggers.keys()
 
     @classmethod
     def get(cls, name: str) -> Any:
