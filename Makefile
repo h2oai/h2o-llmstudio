@@ -179,6 +179,7 @@ test-ui-github-actions: reports setup-ui
 
 .PHONY: wave
 wave:
+	nvidia-smi && \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
@@ -186,6 +187,7 @@ wave:
 
 .PHONY: llmstudio
 llmstudio:
+	nvidia-smi && \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
@@ -195,6 +197,7 @@ llmstudio:
 llmstudio-conda:
 	CONDA_ACTIVATE="source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate llmstudio" && \
 	bash -c "$$CONDA_ACTIVATE && \
+		nvidia-smi && \
 		H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 		H2O_WAVE_NO_LOG=true \
 		H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
