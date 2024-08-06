@@ -1,3 +1,9 @@
+[project]
+name = "h2o-llmstudio"
+version = "1.10.0-dev"
+readme = "README.md"
+license = {file = "LICENSE"}
+
 [tool.black]
 line-length = 88
 target-version = ["py310"]

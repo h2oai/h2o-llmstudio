@@ -1,0 +1,41 @@
+[App]
+name = "ai.h2o.llmstudio"
+Version = "{{VERSION}}"
+Title = "H2O LLM Studio"
+Description =  "A framework and no-code GUI designed for fine-tuning state-of-the-art large language models (LLMs)"
+LongDescription = "about.md"
+Tags = ["GENERATIVE_AI", "NLP", "DATA_SCIENCE"]
+
+[Runtime]
+# Must be installed in the server config
+RuntimeVersion = "llm_studio"
+AppMode = "container"
+Port = 10101
+CPUReservation = "10"
+MemoryReservation = "118Gi"
+MemoryLimit = "118Gi"
+GPUCount = 1
+GPUType = "training-gpu"
+VolumeMount = "/home/llmstudio/mount"
+VolumeSize = "1Ti"
+ResourceVolumeSize = "1Ti"
+EnableSHM = true
+EnableOIDC = true
+RoutingMode = "BASE_URL"
+CustomImage = "docker.io/h2oairelease/h2oai-llmstudio-app:v{{VERSION}}"
+
+[[Env]]
+Name = "H2O_LLM_STUDIO_WORKDIR"
+Value = "/home/llmstudio/mount"
+
+[[Env]]
+Name = "HOME"
+Value = "/home/llmstudio"
+
+[[Env]]
+Name = "H2O_LLM_STUDIO_ENABLE_HEAP"
+Value = "True"
+
+[[Env]]
+Name = "H2O_WAVE_PRIVATE_DIR"
+Value = "/download/@/home/llmstudio/mount/output/download"

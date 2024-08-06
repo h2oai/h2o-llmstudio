@@ -2,6 +2,17 @@ import os
 import socket
 from types import SimpleNamespace
 
+import toml
+
+toml_root_dir = os.path.abspath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "../..")
+)
+app_toml_filename = os.path.join(toml_root_dir, "pyproject.toml")
+
+toml_loaded = toml.load(app_toml_filename)
+
+version = toml_loaded["project"]["version"]
+
 
 def get_size(x):
     try:
@@ -19,8 +30,6 @@ def get_size(x):
     except Exception:
         return 2**31
 
-
-version = "1.10.0-dev"
 
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
