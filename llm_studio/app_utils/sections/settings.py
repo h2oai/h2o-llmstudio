@@ -423,6 +423,40 @@ async def settings(q: Q) -> None:
             ),
             ui.inline(
                 items=[
+                    ui.label("Num Classes", width=label_width),
+                    ui.spinbox(
+                        name="set_max_num_classes",
+                        label=None,
+                        min=1,
+                        max=16384,
+                        step=1,
+                        value=q.client["set_max_num_classes"],
+                        width=textbox_width,
+                        trigger=False,
+                        tooltip="Set the maximum value for the num classes \
+                            slider in the experiment setup.",
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
+                    ui.label("Max Length", width=label_width),
+                    ui.spinbox(
+                        name="set_max_max_length",
+                        label=None,
+                        min=1,
+                        max=16384 * 8,
+                        step=1,
+                        value=q.client["set_max_max_length"],
+                        width=textbox_width,
+                        trigger=False,
+                        tooltip="Set the maximum value for the max length \
+                            slider in the experiment setup.",
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
                     ui.label("Gradient clip", width=label_width),
                     ui.spinbox(
                         name="set_max_gradient_clip",
