@@ -192,7 +192,7 @@ class ExternalLoggers:
 
     @classmethod
     def names(cls) -> List[str]:
-        return cls._loggers.keys()
+        return list(cls._loggers.keys())
 
     @classmethod
     def get(cls, name: str) -> Any:
