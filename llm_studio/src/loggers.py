@@ -76,6 +76,31 @@ class NeptuneLogger:
         self.logger[name].append(value, step=step)
 
 
+class WandbLogger:
+    def __init__(self, cfg: Any) -> None:
+
+        os.environ["WANDB_DISABLE_CODE"] = "true"
+        os.environ["WANDB_DISABLE_GIT"] = "true"
+        os.environ["WANDB_ERROR_REPORTING"] = "false"
+        os.environ["WANDB_CONSOLE"] = "off"
+        os.environ["WANDB_IGNORE_GLOBS"] = "*.*"
+        os.environ["WANDB_HOST"] = "H2O LLM Studio"
+
+        import wandb
+
+        self.logger = wandb.init(
+            project=cfg.logging.wandb_project,
+            entity=cfg.logging.wandb_entity,
+            name=cfg.experiment_name,
+            config=get_cfg(cfg),
+            save_code=False,
+        )
+
+    def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
+        name = f"{subset}/{name}"
+        self.logger.log({name: value}, step=step)
+
+
 class LocalLogger:
     def __init__(self, cfg: Any):
         logging.getLogger("sqlitedict").setLevel(logging.ERROR)
