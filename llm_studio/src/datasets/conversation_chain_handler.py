@@ -128,7 +128,7 @@ class ConversationChainHandler:
 
     def get_answers(self, df, cfg):
         answer_column = cfg.dataset.answer_column
-        if isinstance(answer_column, list):
+        if isinstance(answer_column, (list, tuple)):
             answers = []
             for col in answer_column:
                 if col in df.columns:

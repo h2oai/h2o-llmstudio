@@ -18,7 +18,6 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
         super().__init__(df=df, cfg=cfg, mode=mode)
         check_for_non_int_answers(cfg, df)
         self.answers_int = df[cfg.dataset.answer_column].astype(int).values
-        print(self.answers_int.shape)
         max_value = np.max(self.answers_int)
         min_value = np.min(self.answers_int)
                             
@@ -58,22 +57,24 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
 
     def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
         output["logits"] = output["logits"].float()
+
+        if cfg.training.loss_function == "CrossEntropyLoss":
+            output["probabilities"] = torch.softmax(output["logits"], dim=-1)
+        else:
+            output["probabilities"] = torch.sigmoid(output["logits"])
+
         if len(cfg.dataset.answer_column) == 1:
             if cfg.dataset.num_classes == 1:
-                preds = output["logits"]
-                preds = np.array((preds > 0.0)).astype(int).astype(str).reshape(-1)
+                output["predictions"] = (output["probabilities"] > 0.5).long()
             else:
-                preds = output["logits"]
-                preds = (
-                    np.array(torch.argmax(preds, dim=1))  # type: ignore[arg-type]
-                    .astype(str)
-                    .reshape(-1)
-                )
+                output["predictions"] = output["probabilities"].argmax(dim=-1)
         else:
-            preds = []
-            for col in np.arange(len(cfg.dataset.answer_column)):
-                preds.append(np.round(torch.sigmoid(output["logits"][:, col]).cpu().numpy(), 3).astype(str))
-            preds = [",".join(pred) for pred in zip(*preds)]
+            output["predictions"] = (output["probabilities"] > 0.5).long()
+
+        preds = []
+        for col in np.arange(len(cfg.dataset.answer_column)):
+            preds.append(np.round(torch.sigmoid(output["probabilities"][:, col]).cpu().numpy(), 3).astype(str))
+        preds = [",".join(pred) for pred in zip(*preds)]
         output["predicted_text"] = preds
         return super().postprocess_output(cfg, df, output)
 

@@ -212,7 +212,6 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     def check(self) -> Dict[str, List]:
         errors: Dict[str, List] = {"title": [], "message": []}
 
-        print("XX", len(self.dataset.answer_column))
         if len(self.dataset.answer_column) > 1:
             if self.training.loss_function == "CrossEntropyLoss":     
                 errors["title"] += [
@@ -231,12 +230,13 @@ class ConfigProblemBase(DefaultConfigProblemBase):
                     )
                 ]
         else:
-            if self.dataset.num_classes == 1:
-                errors["title"] += ["CrossEntropyLoss requires num_classes > 1"]
-                errors["message"] += [
-                    "CrossEntropyLoss requires num_classes > 1, "
-                    "but num_classes is set to 1."
-                ]
+            if self.training.loss_function == "CrossEntropyLoss":
+                if self.dataset.num_classes == 1:
+                    errors["title"] += ["CrossEntropyLoss requires num_classes > 1"]
+                    errors["message"] += [
+                        "CrossEntropyLoss requires num_classes > 1, "
+                        "but num_classes is set to 1."
+                    ]
             elif self.training.loss_function == "BinaryCrossEntropyLoss":
                 if self.dataset.num_classes != 1:
                     errors["title"] += ["BinaryCrossEntropyLoss requires num_classes == 1"]
