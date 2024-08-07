@@ -73,7 +73,8 @@ def auc_score(
         ValueError: If input data is invalid or inconsistent
     """
     logits = np.array(results["logits"])
-    target_text = np.array([int(text) for text in results["target_text"]])
+    target_text = np.array([[int(t) for t in text.split(",")] for text in results["target_text"]])
+    print(logits.shape, target_text.shape)
 
     # Input validation
     if len(target_text) != len(logits):
@@ -84,7 +85,7 @@ def auc_score(
     if len(target_text) == 0:
         raise ValueError("No data to calculate AUC score.")
 
-    if cfg.dataset.num_classes > 1:
+    if target_text.shape[1] == 1 and cfg.dataset.num_classes > 1:
         target_text = np.eye(cfg.dataset.num_classes)[target_text]
     return roc_auc_score(target_text, logits, multi_class="ovr")
 

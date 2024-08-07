@@ -81,7 +81,7 @@ class Model(nn.Module):
 
         if "labels" in batch:
             loss = self.loss_fn(
-                output.logits, batch["class_label"].unsqueeze(1).float()
+                output.logits, batch["class_label"].float()
             )
             outputs["loss"] = loss
 

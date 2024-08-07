@@ -179,6 +179,8 @@ test-ui-github-actions: reports setup-ui
 
 .PHONY: wave
 wave:
+	H2O_WAVE_APP_ACCESS_KEY_ID="dev" \
+	H2O_WAVE_APP_ACCESS_KEY_SECRET="dev" \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \

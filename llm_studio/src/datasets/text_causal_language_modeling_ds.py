@@ -317,6 +317,7 @@ class CustomDataset(Dataset):
             ].values
 
         if "predicted_text" in output.keys():
+            print("OOOO", output["predicted_text"].shape)
             df[f"pred_{cfg.dataset.answer_column}"] = (
                 "NO ANSWER GENERATED. "
                 "ONLY LAST ANSWER OF A CONVERSATION IS PREDICTED."

@@ -128,10 +128,19 @@ class ConversationChainHandler:
 
     def get_answers(self, df, cfg):
         answer_column = cfg.dataset.answer_column
-        if answer_column in df.columns:
-            answers = df[answer_column].astype(str).tolist()
+        if isinstance(answer_column, list):
+            answers = []
+            for col in answer_column:
+                if col in df.columns:
+                    answers.append(df[col].astype(str).tolist())
+                else:
+                    answers.append(["" for _ in range(len(self.prompts))])
+            answers = [",".join(ans) for ans in zip(*answers)]
         else:
-            answers = ["" for _ in range(len(self.prompts))]
+            if answer_column in df.columns:
+                answers = df[answer_column].astype(str).tolist()
+            else:
+                answers = ["" for _ in range(len(self.prompts))]
         return answers
 
     def get_systems(self, cfg, df):
