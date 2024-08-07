@@ -70,7 +70,10 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
                     .reshape(-1)
                 )
         else:
-            preds = output["logits"].cpu().numpy().astype(str)
+            preds = []
+            for col in np.arange(len(cfg.dataset.answer_column)):
+                preds.append(np.round(torch.sigmoid(output["logits"][:, col]).cpu().numpy(), 3).astype(str))
+            preds = [",".join(pred) for pred in zip(*preds)]
         output["predicted_text"] = preds
         return super().postprocess_output(cfg, df, output)
 
