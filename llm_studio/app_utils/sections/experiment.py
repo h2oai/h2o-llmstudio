@@ -341,9 +341,6 @@ async def experiment_start(q: Q) -> None:
         f"{q.client['experiment/start/cfg_experiment']} "
     )
 
-    # set mode to training
-    q.client["experiment/start/cfg_mode/mode"] = "train"
-
     if q.client["experiment/start/cfg_category"] == "experiment":
         logger.info("Starting from experiment")
 

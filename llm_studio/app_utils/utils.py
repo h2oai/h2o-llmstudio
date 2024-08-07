@@ -1279,7 +1279,6 @@ def get_ui_elements(
                 field=k,
                 value=v,
                 type_annotation=type_annotation,
-                mode=q.client[f"{pre}/cfg_mode/mode"],
                 dataset_fn=partial(get_dataset, q=q, limit=limit, pre=pre),
             )
 
