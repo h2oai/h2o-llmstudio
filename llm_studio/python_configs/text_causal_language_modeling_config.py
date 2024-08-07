@@ -319,12 +319,8 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
         self._possible_values["max_length"] = (32, 1024 * 16, 32)
         self._possible_values["padding_quantile"] = (0, 1, 0.01)
 
-        self._grid_search_values["max_length_prompt"] = (256, 512, 1024)
-        self._grid_search_values["max_length_answer"] = (256, 512, 1024)
         self._grid_search_values["max_length"] = (256, 512, 1024)
 
-        self._grid_search_iscustom["max_length_prompt"] = True
-        self._grid_search_iscustom["max_length_answer"] = True
         self._grid_search_iscustom["max_length"] = True
 
         self._padding_side = "left"
