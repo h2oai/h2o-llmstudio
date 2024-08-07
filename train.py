@@ -269,7 +269,8 @@ def run_train(
                 log_plot(cfg, plot, "train_data")
 
             # only need to sync gradients at last step of grad accumulation
-            model.require_backward_grad_sync = itr % cfg.training.grad_accumulation == 0
+            req_grad_sync = itr % cfg.training.grad_accumulation == 0
+            model.require_backward_grad_sync = req_grad_sync  # type: ignore[assignment]
 
             # Forward pass
             with autocast(
