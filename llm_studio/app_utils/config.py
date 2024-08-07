@@ -102,6 +102,8 @@ default_cfg = {
         "default_kaggle_secret_key": "",
         "set_max_epochs": 50,
         "set_max_batch_size": 256,
+        "set_max_num_classes": 100,
+        "set_max_max_length": 16384,
         "set_max_gradient_clip": 10,
         "set_max_lora_r": 256,
         "set_max_lora_alpha": 256,
