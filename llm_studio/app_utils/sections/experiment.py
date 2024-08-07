@@ -386,7 +386,7 @@ async def experiment_start(q: Q) -> None:
         # Configuration flags:
         # from_dataset -- take the values from the dataset config
         # from_cfg -- take the values from the configuration file
-        # from_default -- take the values from the the default settings
+        # from_default -- take the values from the default settings
         # from_dataset_args -- take the values from the dataset's q.args
         # Otherwise -- take the values from the q.args (user input)
 
