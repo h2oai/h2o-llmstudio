@@ -179,7 +179,6 @@ test-ui-github-actions: reports setup-ui
 
 .PHONY: wave
 wave:
-	nvidia-smi && \
 	H2O_WAVE_APP_ACCESS_KEY_ID=dev \
 	H2O_WAVE_APP_ACCESS_KEY_SECRET=dev \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
