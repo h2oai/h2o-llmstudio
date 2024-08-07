@@ -184,7 +184,7 @@ async def experiment_start(q: Q) -> None:
         q.client["experiment/start/cfg_file"] = "experiment"
 
     # get all experiments
-    df_experiments = get_experiments(q, mode="train")
+    df_experiments = get_experiments(q)
 
     # get all problem category choices
     choices_problem_categories = [
@@ -650,9 +650,7 @@ async def experiment_run(q: Q):
             q.client["keep_meta"] = False
 
 
-def get_experiment_table(
-    q, df_viz, predictions, height="calc(100vh - 245px)", actions=None
-):
+def get_experiment_table(q, df_viz, height="calc(100vh - 245px)", actions=None):
     col_remove = [
         "id",
         "path",
@@ -665,8 +663,6 @@ def get_experiment_table(
         "epoch",
         "config_file",
     ]
-    if predictions:
-        col_remove += ["epoch", "val metric"]
 
     for col in col_remove:
         if col in df_viz:
@@ -676,7 +672,7 @@ def get_experiment_table(
     # )
     # df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
 
-    if actions == "experiment" and q.client["experiment/list/mode"] == "train":
+    if actions == "experiment":
         actions_dict = {
             "experiment/list/new": "New experiment",
             "experiment/list/new_gridsearch": "New grid search",
@@ -696,12 +692,8 @@ def get_experiment_table(
         "progress": "85",
         "status": "90",
         "info": "115",
-        "actions": "5" if predictions else "5",
+        "actions": "5",
     }
-
-    if predictions:
-        for k, v in min_widths.items():
-            min_widths[k] = str(int(np.ceil(int(v) * 1.05)))
 
     return ui_table_from_df(
         q=q,
@@ -728,20 +720,13 @@ async def experiment_list(
 ) -> None:
     """List all experiments."""
 
-    if q.client["experiment/list/mode"] is None:
-        q.client["experiment/list/mode"] = "train"
-
-    if q.client["experiment/list/mode"] == "train":
-        q.client["nav/active"] = "experiment/list"
-    else:
-        q.client["nav/active"] = "experiment/list_predictions"
+    q.client["nav/active"] = "experiment/list"
 
     if reset:
         await clean_dashboard(q, mode="full")
 
         q.client["experiment/list/df_experiments"] = get_experiments(
             q,
-            mode=q.client["experiment/list/mode"],
             status=allowed_statuses,
         )
 
@@ -750,7 +735,6 @@ async def experiment_list(
         table = get_experiment_table(
             q,
             df_viz,
-            q.client["experiment/list/mode"] == "predict",
             actions="experiment" if actions else None,
         )
 

@@ -1118,7 +1118,6 @@ def get_dataset_elements(cfg: DefaultConfigProblemBase, q: Q) -> List:
                     field=k,
                     value=v,
                     type_annotation=type_annotation,
-                    mode="train",
                     dataset_fn=lambda k, v: (
                         dataset,
                         dataset[k] if k in dataset else v,
@@ -1823,14 +1822,12 @@ def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
 def get_experiments(
     q: Q,
     status: Union[Optional[str], Optional[List[str]]] = None,
-    mode: Optional[str] = None,
 ) -> pd.DataFrame:
     """Return all experiments given certain restrictions
 
     Args:
         q: Q
         status: option to filter for certain experiment status
-        mode: option to filter for certain experiment mode
     Returns:
         experiment df
     """
@@ -1847,9 +1844,6 @@ def get_experiments(
         if type(status) is str:
             status = [status]
         df = df[df["status"].isin(status)]
-
-    if mode is not None:
-        df = df[df["mode"] == mode]
 
     if len(df) > 0:
         # make sure progress is 100% for finished experiments

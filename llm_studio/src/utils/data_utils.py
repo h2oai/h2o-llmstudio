@@ -282,12 +282,8 @@ def get_data(cfg: DefaultConfigProblemBase) -> Tuple[pd.DataFrame, pd.DataFrame]
     if cfg.training.train_validation_data:
         train_df = pd.concat([train_df, val_df], axis=0)
 
-    train_df = cfg.dataset.dataset_class.preprocess_dataframe(
-        train_df, cfg, mode="train"
-    )
-    val_df = cfg.dataset.dataset_class.preprocess_dataframe(
-        val_df, cfg, mode="validation"
-    )
+    train_df = cfg.dataset.dataset_class.preprocess_dataframe(train_df, cfg)
+    val_df = cfg.dataset.dataset_class.preprocess_dataframe(val_df, cfg)
 
     return train_df.reset_index(drop=True), val_df.reset_index(drop=True)
 
