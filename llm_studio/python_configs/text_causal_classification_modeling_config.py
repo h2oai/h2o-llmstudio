@@ -213,7 +213,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
         errors: Dict[str, List] = {"title": [], "message": []}
 
         if len(self.dataset.answer_column) > 1:
-            if self.training.loss_function == "CrossEntropyLoss":     
+            if self.training.loss_function == "CrossEntropyLoss":
                 errors["title"] += [
                     "CrossEntropyLoss not supported for multilabel classification"
                 ]
@@ -222,7 +222,9 @@ class ConfigProblemBase(DefaultConfigProblemBase):
                     "but multiple answer columns are set."
                 ]
             if self.dataset.num_classes != len(self.dataset.answer_column):
-                errors["title"] += ["Wrong number of classes for multilabel classification"]
+                errors["title"] += [
+                    "Wrong number of classes for multilabel classification"
+                ]
                 errors["message"] += [
                     "Multilabel classification requires num_classes == num_answer_columns, "
                     "but num_classes is set to {} and num_answer_columns is set to {}.".format(
@@ -239,12 +241,14 @@ class ConfigProblemBase(DefaultConfigProblemBase):
                     ]
             elif self.training.loss_function == "BinaryCrossEntropyLoss":
                 if self.dataset.num_classes != 1:
-                    errors["title"] += ["BinaryCrossEntropyLoss requires num_classes == 1"]
+                    errors["title"] += [
+                        "BinaryCrossEntropyLoss requires num_classes == 1"
+                    ]
                     errors["message"] += [
                         "BinaryCrossEntropyLoss requires num_classes == 1, "
                         "but num_classes is set to {}.".format(self.dataset.num_classes)
                     ]
-        
+
         if self.dataset.parent_id_column not in ["None", None]:
             errors["title"] += ["Parent ID column is not supported for classification"]
             errors["message"] += [

@@ -20,26 +20,22 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
         self.answers_int = df[cfg.dataset.answer_column].astype(int).values
         max_value = np.max(self.answers_int)
         min_value = np.min(self.answers_int)
-                            
+
         if 1 < cfg.dataset.num_classes <= max_value:
             raise LLMDataException(
                 "Number of classes is smaller than max label "
                 f"{max_value}. Please increase the setting accordingly."
             )
-        elif cfg.dataset.num_classes == 1 and max_value> 1:
+        elif cfg.dataset.num_classes == 1 and max_value > 1:
             raise LLMDataException(
                 "For binary classification, max label should be 1 but is "
                 f"{max_value}."
             )
         if min_value < 0:
             raise LLMDataException(
-                "Labels should be non-negative but min label is "
-                f"{min_value}."
+                "Labels should be non-negative but min label is " f"{min_value}."
             )
-        if (
-            min_value != 0
-            or max_value != np.unique(self.answers_int).size - 1
-        ):
+        if min_value != 0 or max_value != np.unique(self.answers_int).size - 1:
             logger.warning(
                 "Labels should start at 0 and be continuous but are "
                 f"{sorted(np.unique(self.answers_int))}."
@@ -73,7 +69,11 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
 
         preds = []
         for col in np.arange(len(cfg.dataset.answer_column)):
-            preds.append(np.round(torch.sigmoid(output["probabilities"][:, col]).cpu().numpy(), 3).astype(str))
+            preds.append(
+                np.round(
+                    torch.sigmoid(output["probabilities"][:, col]).cpu().numpy(), 3
+                ).astype(str)
+            )
         preds = [",".join(pred) for pred in zip(*preds)]
         output["predicted_text"] = preds
         return super().postprocess_output(cfg, df, output)

@@ -80,9 +80,7 @@ class Model(nn.Module):
         output.logits = self.classification_head(output[0][:, -1].float())
 
         if "labels" in batch:
-            loss = self.loss_fn(
-                output.logits, batch["class_label"].float()
-            )
+            loss = self.loss_fn(output.logits, batch["class_label"].float())
             outputs["loss"] = loss
 
         outputs["logits"] = output.logits

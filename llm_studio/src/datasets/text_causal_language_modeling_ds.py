@@ -324,9 +324,7 @@ class CustomDataset(Dataset):
                 "NO ANSWER GENERATED. "
                 "ONLY LAST ANSWER OF A CONVERSATION IS PREDICTED."
             )
-            df.loc[end_conversation_ids, f"pred_{col_name}"] = output[
-                "predicted_text"
-            ]
+            df.loc[end_conversation_ids, f"pred_{col_name}"] = output["predicted_text"]
         return output, df
 
     @classmethod

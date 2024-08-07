@@ -34,7 +34,9 @@ def accuracy_score(
         ValueError: If input data is invalid or inconsistent
     """
     logits = np.array(results["logits"])
-    target = np.array([[int(t) for t in text.split(",")] for text in results["target_text"]])
+    target = np.array(
+        [[int(t) for t in text.split(",")] for text in results["target_text"]]
+    )
 
     # multi class or single binary classification
     if len(cfg.dataset.answer_column) == 1:
@@ -86,7 +88,9 @@ def auc_score(
         ValueError: If input data is invalid or inconsistent
     """
     logits = np.array(results["logits"])
-    target = np.array([[int(t) for t in text.split(",")] for text in results["target_text"]])
+    target = np.array(
+        [[int(t) for t in text.split(",")] for text in results["target_text"]]
+    )
 
     # Input validation
     if len(target) != len(logits):
@@ -126,7 +130,9 @@ def logloss_score(
         ValueError: If input data is invalid or inconsistent
     """
     predictions = np.array(results["probabilities"])
-    target = np.array([[int(t) for t in text.split(",")] for text in results["target_text"]])
+    target = np.array(
+        [[int(t) for t in text.split(",")] for text in results["target_text"]]
+    )
 
     # Input validation
     if len(target) != len(predictions):
