@@ -1437,7 +1437,7 @@ async def configs_tab(q):
 
 
 async def logs_tab(q):
-    logs_path = f"{q.client['experiment/display/experiment_path']}/logs.log"
+    logs_path = os.path.join(q.client["experiment/display/experiment_path"], "logs.log")
     text = ""
     in_pre = 0
     # Read log file only if it already exists
