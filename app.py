@@ -29,8 +29,7 @@ async def serve(q: Q):
     if await is_app_blocked_while_streaming(q):
         return
 
-    if not q.app.initialized:
-        await initialize_app(q)
+    await initialize_app(q)
 
     copy_expando(q.args, q.client)
 
