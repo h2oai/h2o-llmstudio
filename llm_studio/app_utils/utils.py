@@ -1709,6 +1709,8 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
                     else:
                         eta = "N/A"
                 else:
+                    # Default values for when charts.db is not available
+                    # (experiment deleted manually)
                     eta = "N/A"
                     total_steps = 1
                     curr_total_step = 0
