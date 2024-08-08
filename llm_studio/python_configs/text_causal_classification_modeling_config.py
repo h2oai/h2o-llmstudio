@@ -28,7 +28,7 @@ class ConfigNLPCausalClassificationDataset(ConfigNLPCausalLMDataset):
     )
     system_column: str = "None"
     prompt_column: Tuple[str, ...] = ("instruction", "input")
-    answer_column: Tuple[str, ...] = ("label", "output")
+    answer_column: Tuple[str, ...] = ("label", "output")  # type: ignore
     num_classes: int = 1
     parent_id_column: str = "None"
 
@@ -225,12 +225,12 @@ class ConfigProblemBase(DefaultConfigProblemBase):
                 errors["title"] += [
                     "Wrong number of classes for multilabel classification"
                 ]
-                errors["message"] += [
-                    "Multilabel classification requires num_classes == num_answer_columns, "
-                    "but num_classes is set to {} and num_answer_columns is set to {}.".format(
-                        self.dataset.num_classes, len(self.dataset.answer_column)
-                    )
-                ]
+                error_msg = (
+                    "Multilabel classification requires "
+                    "num_classes == num_answer_columns, "
+                    "but num_classes is set to {} and num_answer_columns is set to {}."
+                ).format(self.dataset.num_classes, len(self.dataset.answer_column))
+                errors["message"] += [error_msg]
         else:
             if self.training.loss_function == "CrossEntropyLoss":
                 if self.dataset.num_classes == 1:

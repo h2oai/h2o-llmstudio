@@ -88,7 +88,7 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
 
 
 def check_for_non_int_answers(cfg, df):
-    answers_non_int = []
+    answers_non_int: list = []
     for column in cfg.dataset.answer_column:
         answers_non_int.extend(
             x for x in df[column].values if not is_castable_to_int(x)

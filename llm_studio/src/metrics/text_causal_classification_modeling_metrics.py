@@ -46,10 +46,10 @@ def accuracy_score(
             predicted = np.argmax(softmax(logits, axis=-1), axis=-1)
 
     else:
-        predicted = []
+        predicted_cols = []
         for col in range(len(cfg.dataset.answer_column)):
-            predicted.append(np.round(logits[:, col]))
-        predicted = np.array(predicted).T
+            predicted_cols.append(np.round(logits[:, col]))
+        predicted = np.array(predicted_cols).T
 
     # Input validation
     if len(target) != len(predicted):
@@ -114,7 +114,7 @@ def logloss_score(
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
     """Calculate the Log Loss (Cross-Entropy Loss) score.
 
-    This function computes the log loss using the predicted probabilities and target values.
+    This function computes the log loss using the predicted probabilities and target.
     It supports binary, multiclass, and multilabel classification.
 
     Args:
