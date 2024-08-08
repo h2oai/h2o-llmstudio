@@ -221,8 +221,7 @@ def run_train(
             + epoch * cfg.environment._world_size * cfg.environment.number_of_workers
             + cfg.environment._local_rank * cfg.environment.number_of_workers
         )
-        if cfg.environment._local_rank == 0:
-            logger.info(f"Training Epoch: {epoch + 1} / {cfg.training.epochs}")
+        logger.info(f"Training Epoch: {epoch + 1} / {cfg.training.epochs}")
 
         if (
             cfg.environment._distributed
@@ -379,17 +378,15 @@ def run_train(
             if (itr + 1) % evaluation_step == 0:
                 # TODO: Move back after fixing slow generation of deepspeed.
                 if cfg.training.save_checkpoint == "last":
-                    if cfg.environment._local_rank == 0:
-                        logger.info(
-                            f"Saving last model checkpoint to {cfg.output_directory}"
-                        )
+                    logger.info(
+                        f"Saving last model checkpoint to {cfg.output_directory}"
+                    )
                     save_checkpoint(model=model, path=cfg.output_directory, cfg=cfg)
                 elif cfg.training.save_checkpoint == "each_evaluation_epoch":
                     checkpoint_path = os.path.join(
                         cfg.output_directory, f"epoch_{epoch}_step_{itr}"
                     )
-                    if cfg.environment._local_rank == 0:
-                        logger.info(f"Saving model checkpoint to {checkpoint_path}")
+                    logger.info(f"Saving model checkpoint to {checkpoint_path}")
                     save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
                     create_symlinks_in_parent_folder(checkpoint_path)
 
@@ -399,12 +396,11 @@ def run_train(
 
                 if cfg.training.save_checkpoint == "best":
                     if objective_op(val_metric, best_val_metric):
-                        if cfg.environment._local_rank == 0:
-                            logger.info(
-                                f"Saving best model checkpoint: "
-                                f"val_{cfg.prediction.metric} {best_val_metric:.5} -> "
-                                f"{val_metric:.5} to {cfg.output_directory}"
-                            )
+                        logger.info(
+                            f"Saving best model checkpoint: "
+                            f"val_{cfg.prediction.metric} {best_val_metric:.5} -> "
+                            f"{val_metric:.5} to {cfg.output_directory}"
+                        )
                         save_checkpoint(model=model, path=cfg.output_directory, cfg=cfg)
                         best_val_metric = val_metric
 
@@ -502,15 +498,13 @@ def run(cfg: DefaultConfigProblemBase) -> float:
             logger.warning("Training on CPU. This will be slow.")
 
     set_seed(cfg.environment._seed)
-    if cfg.environment._local_rank == 0:
-        logger.info(f"Problem Type: {cfg.problem_type}")
-        logger.info(f"Global random seed: {cfg.environment._seed}")
+    logger.info(f"Problem Type: {cfg.problem_type}")
+    logger.info(f"Global random seed: {cfg.environment._seed}")
 
     cfg = set_environment(cfg)
 
     # we need to get train dataframe and number of labels if not set or in training mode
-    if cfg.environment._local_rank == 0:
-        logger.info("Preparing the data...")
+    logger.info("Preparing the data...")
     train_df, val_df = get_data(cfg)
 
     if (
@@ -525,8 +519,7 @@ def run(cfg: DefaultConfigProblemBase) -> float:
         cfg.prediction.metric = "BLEU"
 
     # prepare data
-    if cfg.environment._local_rank == 0:
-        logger.info("Preparing train and validation data")
+    logger.info("Preparing train and validation data")
     train_dataset = get_train_dataset(train_df=train_df, cfg=cfg)
     val_dataset = get_val_dataset(val_df=val_df, cfg=cfg)
     train_dataloader = get_train_dataloader(train_ds=train_dataset, cfg=cfg)
@@ -651,8 +644,7 @@ def run(cfg: DefaultConfigProblemBase) -> float:
 
     if cfg.training.epochs == 0 and cfg.training.save_checkpoint != "disable":
         checkpoint_path = cfg.output_directory
-        if cfg.environment._local_rank == 0:
-            logger.info(f"Saving last model checkpoint to {checkpoint_path}")
+        logger.info(f"Saving last model checkpoint to {checkpoint_path}")
         save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
     if cfg.environment._local_rank == 0:
