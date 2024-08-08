@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Tuple, Union
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
-from scipy.special import softmax
 from sklearn.metrics import log_loss, roc_auc_score
 
 from llm_studio.python_configs.base import DefaultConfigProblemBase
@@ -33,34 +32,21 @@ def accuracy_score(
     Raises:
         ValueError: If input data is invalid or inconsistent
     """
-    logits = np.array(results["logits"])
+    predictions = np.array(results["predictions"])
     target = np.array(
         [[int(t) for t in text.split(",")] for text in results["target_text"]]
     )
 
-    # multi class or single binary classification
-    if len(cfg.dataset.answer_column) == 1:
-        if cfg.dataset.num_classes == 1:
-            predicted = logits > 0.5
-        else:
-            predicted = np.argmax(softmax(logits, axis=-1), axis=-1)
-
-    else:
-        predicted_cols = []
-        for col in range(len(cfg.dataset.answer_column)):
-            predicted_cols.append(np.round(logits[:, col]))
-        predicted = np.array(predicted_cols).T
-
     # Input validation
-    if len(target) != len(predicted):
+    if len(target) != len(predictions):
         raise ValueError(
-            f"Length of target ({len(target)}) and predicted ({len(predicted)}) "
+            f"Length of target ({len(target)}) and predicted ({len(predictions)}) "
             "should be the same."
         )
     if len(target) == 0:
         raise ValueError("No data to calculate accuracy score")
 
-    return (predicted == target).mean(axis=1).reshape(-1).astype("float")
+    return (predictions == target).mean(axis=1).reshape(-1).astype("float")
 
 
 def auc_score(

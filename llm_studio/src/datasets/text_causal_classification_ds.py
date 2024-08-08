@@ -63,16 +63,16 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
             if cfg.dataset.num_classes == 1:
                 output["predictions"] = (output["probabilities"] > 0.5).long()
             else:
-                output["predictions"] = output["probabilities"].argmax(dim=-1)
+                output["predictions"] = output["probabilities"].argmax(
+                    dim=-1, keepdim=True
+                )
         else:
             output["predictions"] = (output["probabilities"] > 0.5).long()
 
         preds = []
-        for col in np.arange(len(cfg.dataset.answer_column)):
+        for col in np.arange(output["probabilities"].shape[1]):
             preds.append(
-                np.round(
-                    torch.sigmoid(output["probabilities"][:, col]).cpu().numpy(), 3
-                ).astype(str)
+                np.round(output["probabilities"][:, col].cpu().numpy(), 3).astype(str)
             )
         preds = [",".join(pred) for pred in zip(*preds)]
         output["predicted_text"] = preds
@@ -83,7 +83,17 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
 
     @classmethod
     def sanity_check(cls, df: pd.DataFrame, cfg: Any, mode: str = "train"):
-        # TODO: Dataset import in UI is currently using text_causal_language_modeling_ds
+
+        for answer_col in cfg.dataset.answer_column:
+            assert answer_col in df.columns, (
+                f"Answer column {answer_col} not found in the " f"{mode} DataFrame."
+            )
+            assert df.shape[0] == df[answer_col].dropna().shape[0], (
+                f"The {mode} DataFrame"
+                f" column {answer_col}"
+                " contains missing values."
+            )
+
         check_for_non_int_answers(cfg, df)
 
 

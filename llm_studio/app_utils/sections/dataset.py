@@ -220,7 +220,6 @@ async def dataset_import(
                 q.client["dataset/import/azure_conn_string"],
                 q.client["dataset/import/azure_container"],
             )
-            print(files)
 
             if not files:
                 ui_filename = ui.textbox(
@@ -675,7 +674,6 @@ async def dataset_import(
                 plot_item = ui.markup(content=plot.data)
             elif plot.encoding == "df":
                 df = pd.read_parquet(plot.data)
-                print(df)
                 df = df.iloc[:2000]
                 min_widths = {"Content": "800"}
                 plot_item = ui_table_from_df(
