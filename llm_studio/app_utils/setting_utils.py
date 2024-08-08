@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 SECRET_KEYS = [
     key
     for key in default_cfg.user_settings
-    if any(password in key for password in ["token", "key"])
+    if any(password in key for password in ["api", "secret", "key"])
 ]
 USER_SETTING_KEYS = [key for key in default_cfg.user_settings if key not in SECRET_KEYS]
 

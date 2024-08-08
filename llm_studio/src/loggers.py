@@ -32,7 +32,7 @@ def get_cfg(cfg: Any) -> Dict:
         if k.startswith("_") or cfg._get_visibility(k) < 0:
             continue
 
-        if any([x in k for x in ["api"]]):
+        if any([x in k for x in ["api", "secret", "key"]]):
             continue
 
         if dataclasses.is_dataclass(v):
@@ -74,6 +74,31 @@ class NeptuneLogger:
     def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
         name = f"{subset}/{name}"
         self.logger[name].append(value, step=step)
+
+
+class WandbLogger:
+    def __init__(self, cfg: Any) -> None:
+
+        os.environ["WANDB_DISABLE_CODE"] = "true"
+        os.environ["WANDB_DISABLE_GIT"] = "true"
+        os.environ["WANDB_ERROR_REPORTING"] = "false"
+        os.environ["WANDB_CONSOLE"] = "off"
+        os.environ["WANDB_IGNORE_GLOBS"] = "*.*"
+        os.environ["WANDB_HOST"] = "H2O LLM Studio"
+
+        import wandb
+
+        self.logger = wandb.init(
+            project=cfg.logging.wandb_project,
+            entity=cfg.logging.wandb_entity,
+            name=cfg.experiment_name,
+            config=get_cfg(cfg),
+            save_code=False,
+        )
+
+    def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
+        name = f"{subset}/{name}"
+        self.logger.log({name: value}, step=step)
 
 
 class LocalLogger:
@@ -163,11 +188,11 @@ class MainLogger:
 class ExternalLoggers:
     """ExternalLoggers factory."""
 
-    _loggers = {"None": DummyLogger, "Neptune": NeptuneLogger}
+    _loggers = {"None": DummyLogger, "Neptune": NeptuneLogger, "W&B": WandbLogger}
 
     @classmethod
     def names(cls) -> List[str]:
-        return sorted(cls._loggers.keys())
+        return list(cls._loggers.keys())
 
     @classmethod
     def get(cls, name: str) -> Any:

@@ -198,7 +198,7 @@ class Model(nn.Module):
             )
         outputs["loss"] = loss
 
-        # These values will be logged to Neptune if enabled, see train.py
+        # These values will be logged to external logger if enabled, see train.py
         outputs["additional_log_chosen_rewards"] = chosen_rewards.detach()
         outputs["additional_log_rejected_rewards"] = rejected_rewards.detach()
         # Reward margin should increase over time

@@ -37,7 +37,7 @@
 - use recent finetuning techniques such as [Low-Rank Adaptation (LoRA)](https://arxiv.org/abs/2106.09685) and 8-bit model training with a low memory footprint.
 - use Reinforcement Learning (RL) to finetune your model (experimental)
 - use advanced evaluation metrics to judge generated answers by the model.
-- track and compare your model performance visually. In addition, [Neptune](https://neptune.ai/) integration can be used.
+- track and compare your model performance visually. In addition, [Neptune](https://neptune.ai/) and [W&B](https://wandb.ai/) integration can be used.
 - chat with your model and get instant feedback on your model performance.
 - easily export your model to the [Hugging Face Hub](https://huggingface.co/) and share it with the community.
 
