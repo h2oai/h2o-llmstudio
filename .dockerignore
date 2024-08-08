@@ -2,6 +2,7 @@
 .github
 .mypy_cache
 .neptune
+wandb
 .pytest_cache
 data
 documentation

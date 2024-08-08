@@ -1265,7 +1265,7 @@ def get_ui_elements(
     cfg_dict = {key: cfg_dict[key] for key in cfg._get_order()}
 
     for k, v in cfg_dict.items():
-        if "api" in k:
+        if ("api" in k) or ("secret" in k):
             password = True
         else:
             password = False
@@ -2029,6 +2029,7 @@ def start_experiment(
 
     env_vars = {
         "NEPTUNE_API_TOKEN": q.client["default_neptune_api_token"],
+        "WANDB_API_KEY": q.client["default_wandb_api_token"],
         "OPENAI_API_KEY": q.client["default_openai_api_token"],
         "GPT_EVAL_MAX": str(q.client["default_gpt_eval_max"]),
         "HF_HUB_ENABLE_HF_TRANSFER": str(q.client["default_hf_hub_enable_hf_transfer"]),

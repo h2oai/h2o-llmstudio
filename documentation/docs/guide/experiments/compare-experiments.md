@@ -17,5 +17,5 @@ Follow the relevant steps below to compare experiments in H2O LLM Studio.
     The **Charts** tab visually represents the comparison of train/validation loss, metrics, and learning rate of selected experiments. The **Config** tab compares the configuration settings of selected experiments.  
 
 :::info note
-In addition, H2O LLM Studio also integrates with [Neptune](https://neptune.ai/), a powerful experiment tracking platform. By enabling Neptune logging when starting an experiment, you can easily track and visualize all aspects of your experiment in real time. This includes model performance, hyperparameter tuning, and other relevant metrics.
+In addition, H2O LLM Studio also integrates with [Neptune](https://neptune.ai/) and [W&B](https://wandb.ai/), two powerful experiment tracking platforms. By enabling Neptune or W&B logging when starting an experiment, you can easily track and visualize all aspects of your experiment in real time. This includes model performance, hyperparameter tuning, and other relevant metrics.
 :::

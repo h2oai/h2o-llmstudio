@@ -269,6 +269,7 @@ docker run \
     --shm-size=64g \
     --init \
     --rm \
+    --it \
     -p 10101:10101 \
     -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
     -v ~/.cache:/home/llmstudio/.cache \
@@ -291,6 +292,7 @@ docker run \
     --shm-size=64g \
     --init \
     --rm \
+    --it \
     -p 10101:10101 \
     -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
     -v ~/.cache:/home/llmstudio/.cache \

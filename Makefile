@@ -179,8 +179,8 @@ test-ui-github-actions: reports setup-ui
 
 .PHONY: wave
 wave:
-	H2O_WAVE_APP_ACCESS_KEY_ID="dev" \
-	H2O_WAVE_APP_ACCESS_KEY_SECRET="dev" \
+	H2O_WAVE_APP_ACCESS_KEY_ID=dev \
+	H2O_WAVE_APP_ACCESS_KEY_SECRET=dev \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
@@ -188,6 +188,7 @@ wave:
 
 .PHONY: llmstudio
 llmstudio:
+	nvidia-smi && \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
@@ -197,6 +198,7 @@ llmstudio:
 llmstudio-conda:
 	CONDA_ACTIVATE="source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate llmstudio" && \
 	bash -c "$$CONDA_ACTIVATE && \
+		nvidia-smi && \
 		H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 		H2O_WAVE_NO_LOG=true \
 		H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
@@ -222,6 +224,7 @@ endif
 		--shm-size=64g \
 		--init \
 		--rm \
+		--it \
 		-u `id -u`:`id -g` \
 		-p 10101:10101 \
 		-v `pwd`/llmstudio_mnt:/home/llmstudio/mount \

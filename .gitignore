@@ -23,6 +23,7 @@ __pycache__/
 *$py.class
 
 .neptune/*
+wandb/*
 .vscode/*
 
 # C extensions
