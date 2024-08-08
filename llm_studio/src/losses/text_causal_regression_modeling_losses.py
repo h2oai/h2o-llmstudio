@@ -13,7 +13,7 @@ class MSELoss(nn.Module):
         self.loss_fn = nn.MSELoss()
 
     def forward(self, logits: Tensor, labels: Tensor) -> Tensor:
-        return self.loss_fn(logits, labels.reshape(-1))
+        return self.loss_fn(logits, labels)
 
 
 class MAELoss(nn.Module):
@@ -23,7 +23,7 @@ class MAELoss(nn.Module):
         self.loss_fn = nn.L1Loss()
 
     def forward(self, logits: Tensor, labels: Tensor) -> Tensor:
-        return self.loss_fn(logits, labels.reshape(-1))
+        return self.loss_fn(logits, labels)
 
 
 class Losses:

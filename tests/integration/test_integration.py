@@ -55,8 +55,15 @@ def test_oasst_training_gpu(tmp_path, config_name, metric):
 @pytest.mark.parametrize(
     "settings",
     [
-        ["AUC", "test_causal_binary_classification_modeling_cfg"],
-        ["LogLoss", "test_causal_multiclass_classification_modeling_cfg"],
+        # ["AUC", "test_causal_binary_classification_modeling_cfg"],
+        # ["LogLoss", "test_causal_binary_classification_modeling_cfg"],
+        # ["Accuracy", "test_causal_binary_classification_modeling_cfg"],
+        # ["AUC", "test_causal_multiclass_classification_modeling_cfg"],
+        # ["LogLoss", "test_causal_multiclass_classification_modeling_cfg"],
+        # ["Accuracy", "test_causal_multiclass_classification_modeling_cfg"],
+        ["AUC", "test_causal_multilabel_classification_modeling_cfg"],
+        ["LogLoss", "test_causal_multilabel_classification_modeling_cfg"],
+        ["Accuracy", "test_causal_multilabel_classification_modeling_cfg"],
     ],
 )
 def test_oasst_classification_training_gpu(tmp_path, settings):
@@ -72,6 +79,7 @@ def test_oasst_classification_training_gpu(tmp_path, settings):
     "settings",
     [
         ["MSE", "test_causal_regression_modeling_cfg"],
+        ["MAE", "test_causal_regression_modeling_cfg"],
     ],
 )
 def test_oasst_regression_training_gpu(tmp_path, settings):
@@ -87,6 +95,7 @@ def test_oasst_regression_training_gpu(tmp_path, settings):
     "settings",
     [
         ["MSE", "test_causal_regression_modeling_cpu_cfg"],
+        ["MAE", "test_causal_regression_modeling_cpu_cfg"],
     ],
 )
 def test_oasst_regression_training_cpu(tmp_path, settings):
@@ -103,6 +112,7 @@ def test_oasst_regression_training_cpu(tmp_path, settings):
     [
         ["AUC", "test_causal_binary_classification_modeling_cpu_cfg"],
         ["LogLoss", "test_causal_multiclass_classification_modeling_cpu_cfg"],
+        ["Accuracy", "test_causal_multilabel_classification_modeling_cpu_cfg"],
     ],
 )
 def test_oasst_classification_training_cpu(tmp_path, settings):

@@ -14,6 +14,7 @@ dataset:
     add_eos_token_to_system: false
     answer_column: 
     - binary_label
+    - binary_label
     chatbot_author: H2O.ai
     chatbot_name: h2oGPT
     data_sample: 0.03
@@ -22,7 +23,7 @@ dataset:
     - Validation
     limit_chained_samples: false
     mask_prompt_labels: true
-    num_classes: 1
+    num_classes: 2
     parent_id_column: None
     personalize: false
     prompt_column:

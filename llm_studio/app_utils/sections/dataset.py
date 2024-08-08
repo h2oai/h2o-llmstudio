@@ -220,7 +220,6 @@ async def dataset_import(
                 q.client["dataset/import/azure_conn_string"],
                 q.client["dataset/import/azure_container"],
             )
-            print(files)
 
             if not files:
                 ui_filename = ui.textbox(
