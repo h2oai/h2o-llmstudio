@@ -404,7 +404,7 @@ async def dataset_import(
                 ),
                 ui.textbox(
                     name="dataset/import/huggingface_api_token",
-                    label="Kaggle secret key",
+                    label="Hugging Face API token",
                     value=q.client["dataset/import/huggingface_api_token"],
                     required=False,
                     password=True,
