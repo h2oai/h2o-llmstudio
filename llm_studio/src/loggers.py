@@ -105,7 +105,7 @@ class LocalLogger:
     def __init__(self, cfg: Any):
         logging.getLogger("sqlitedict").setLevel(logging.ERROR)
 
-        self.logs = f"{cfg.output_directory}/charts.db"
+        self.logs = os.path.join(cfg.output_directory, "charts.db")
 
         params = get_cfg(cfg)
 

@@ -562,6 +562,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
 @dataclass
 class ConfigNLPCausalLMLogging(DefaultConfig):
+    log_all_ranks: bool = False
     logger: str = "None"
     neptune_project: str = ""
     wandb_project: str = ""
