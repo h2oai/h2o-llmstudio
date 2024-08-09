@@ -457,11 +457,14 @@ def run(cfg: DefaultConfigProblemBase) -> float:
     # Prepare environment
     if "WORLD_SIZE" in os.environ:
         cfg.environment._distributed = int(os.environ["WORLD_SIZE"]) > 1
+        cfg.environment._local_rank = int(os.environ["LOCAL_RANK"])
     else:
         cfg.environment._distributed = False
+        cfg.environment._local_rank = 0
+
+    initialize_logging(cfg)
 
     if cfg.environment._distributed:
-        cfg.environment._local_rank = int(os.environ["LOCAL_RANK"])
         cfg.environment._device = "cuda:%d" % cfg.environment._local_rank
         if cfg.environment.use_deepspeed:
             deepspeed.init_distributed()
@@ -488,7 +491,6 @@ def run(cfg: DefaultConfigProblemBase) -> float:
             )[0]
         )
     else:
-        cfg.environment._local_rank = 0
         cfg.environment._device = (
             "cuda:0"
             if (torch.cuda.is_available() and len(cfg.environment.gpus) > 0)
@@ -707,8 +709,6 @@ if __name__ == "__main__":
 
     out_dir = cfg.output_directory
     os.makedirs(out_dir, exist_ok=True)
-
-    initialize_logging(cfg)
 
     try:
         run(cfg=cfg)

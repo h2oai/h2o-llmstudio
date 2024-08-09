@@ -100,11 +100,10 @@ if __name__ == "__main__":
         write_flag(flag_path.format(""), "status", "running")
         local_rank = 0
 
-    initialize_logging(cfg)
-
     try:
         run(cfg=cfg)
     except Exception as exception:
+        initialize_logging(cfg)
         write_flag(flag_path.format(local_rank), "status", "failed")
         if is_oom_error(exception):
             logging.error(
