@@ -38,7 +38,10 @@ def initialize_logging(cfg: Optional[Any] = None):
     'h2o_llmstudio.log'.
 
     """
-    format = "%(asctime)s - %(levelname)s: %(message)s"
+    if cfg is not None and cfg.logging.log_all_ranks:
+        format = "%(asctime)s - PID %(process)d - %(levelname)s: %(message)s"
+    else:
+        format = "%(asctime)s - %(levelname)s: %(message)s"
     formatter = logging.Formatter(format)
 
     # Suppress sqlitedict logs (charts.db)
