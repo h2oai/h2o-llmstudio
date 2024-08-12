@@ -27,16 +27,18 @@ def check_config_for_errors(cfg: DefaultConfigProblemBase) -> dict:
     problem_type_errors = cfg.check()
     errors["title"].extend(problem_type_errors["title"])
     errors["message"].extend(problem_type_errors["message"])
+    errors["type"].extend(problem_type_errors["type"])
     return errors
 
 
 def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
-    errors: Dict[str, List] = {"title": [], "message": []}
+    errors: Dict[str, List] = {"title": [], "message": [], "type": []}
     if not len(cfg.environment.gpus) > 0:
         errors["title"] += ["No GPU selected"]
         errors["message"] += [
             "Please select at least one GPU to start the experiment! "
         ]
+        errors["type"].append("error")
 
     if len(cfg.environment.gpus) > torch.cuda.device_count():
         errors["title"] += ["More GPUs selected than available"]
@@ -47,6 +49,7 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             "that was created on a different machine. Please deselect all GPUs and "
             "select the GPUs you want to use again. "
         ]
+        errors["type"].append("error")
 
     stats = os.statvfs(".")
     available_size = stats.f_frsize * stats.f_bavail
@@ -60,6 +63,7 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             "Please ensure that you have enough disk space before "
             "starting the experiment."
         ]
+        errors["type"].append("error")
 
     # see create_nlp_backbone
     if (
@@ -71,6 +75,7 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             "Quantization is only supported for pretrained models. "
             "Please enable pretrained model or disable quantization."
         ]
+        errors["type"].append("error")
 
     if (
         not cfg.training.lora
@@ -83,6 +88,7 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             "likely lead to unstable training. "
             "Please use LORA or set Backbone Dtype to bfloat16 or float32."
         ]
+        errors["type"].append("warning")
 
     if cfg.environment.use_deepspeed and cfg.architecture.backbone_dtype in [
         "int8",
@@ -94,10 +100,12 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             f"{cfg.architecture.backbone_dtype}. "
             "Please set backbone type to float16 or bfloat16 for using deepspeed."
         ]
+        errors["type"].append("error")
     if cfg.environment.use_deepspeed and len(cfg.environment.gpus) < 2:
         errors["title"] += ["Deepspeed not supported for single GPU."]
         errors["message"] += [
             "Deepspeed does not support single GPU training. "
             "Please select more than one GPU or disable deepspeed."
         ]
+        errors["type"].append("error")
     return errors

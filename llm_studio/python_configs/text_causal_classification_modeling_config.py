@@ -210,7 +210,16 @@ class ConfigProblemBase(DefaultConfigProblemBase):
         )
 
     def check(self) -> Dict[str, List]:
-        errors: Dict[str, List] = {"title": [], "message": []}
+        errors: Dict[str, List] = {"title": [], "message": [], "type": []}
+
+        if isinstance(self.dataset.answer_column, str):
+            errors["title"].append("Invalid answer_column type")
+            errors["message"].append(
+                "Providing the answer_column as a string is deprecated. "
+                "Please provide the answer_column as a list."
+            )
+            errors["type"].append("deprecated")
+            self.dataset.answer_column = [self.dataset.answer_column]
 
         if len(self.dataset.answer_column) > 1:
             if self.training.loss_function == "CrossEntropyLoss":
@@ -221,6 +230,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
                     "CrossEntropyLoss requires a single multi-class answer column, "
                     "but multiple answer columns are set."
                 ]
+                errors["type"].append("error")
             if self.dataset.num_classes != len(self.dataset.answer_column):
                 errors["title"] += [
                     "Wrong number of classes for multilabel classification"
@@ -231,6 +241,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
                     "but num_classes is set to {} and num_answer_columns is set to {}."
                 ).format(self.dataset.num_classes, len(self.dataset.answer_column))
                 errors["message"] += [error_msg]
+                errors["type"].append("error")
         else:
             if self.training.loss_function == "CrossEntropyLoss":
                 if self.dataset.num_classes == 1:
@@ -239,6 +250,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
                         "CrossEntropyLoss requires num_classes > 1, "
                         "but num_classes is set to 1."
                     ]
+                    errors["type"].append("error")
             elif self.training.loss_function == "BinaryCrossEntropyLoss":
                 if self.dataset.num_classes != 1:
                     errors["title"] += [
@@ -248,11 +260,13 @@ class ConfigProblemBase(DefaultConfigProblemBase):
                         "BinaryCrossEntropyLoss requires num_classes == 1, "
                         "but num_classes is set to {}.".format(self.dataset.num_classes)
                     ]
+                    errors["type"].append("error")
 
         if self.dataset.parent_id_column not in ["None", None]:
             errors["title"] += ["Parent ID column is not supported for classification"]
             errors["message"] += [
                 "Parent ID column is not supported for classification datasets."
             ]
+            errors["type"].append("error")
 
         return errors

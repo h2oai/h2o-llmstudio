@@ -1,0 +1,103 @@
+architecture:
+    backbone_dtype: int4
+    gradient_checkpointing: true
+    intermediate_dropout: 0.0
+    pretrained: true
+    pretrained_weights: ''
+augmentation:
+    neftune_noise_alpha: 0.0
+    random_parent_probability: 0.0
+    skip_parent_probability: 0.0
+    token_mask_probability: 0.0
+dataset:
+    add_eos_token_to_answer: false
+    add_eos_token_to_prompt: false
+    add_eos_token_to_system: false
+    add_prompt_answer_tokens: false
+    answer_column: Physics
+    chatbot_author: H2O.ai
+    chatbot_name: h2oGPT
+    data_sample: 0.02
+    data_sample_choice:
+    - Train
+    - Validation
+    limit_chained_samples: false
+    mask_prompt_labels: true
+    num_classes: 2
+    only_last_answer: false
+    parent_id_column: None
+    personalize: false
+    prompt_column:
+    - TITLE
+    prompt_column_separator: \n\n
+    system_column: None
+    text_answer_separator: ''
+    text_prompt_start: ''
+    text_system_start: ''
+    train_dataframe: /home/philipp/h2o-llmstudio/data/user/train.2/train.csv
+    validation_dataframe: None
+    validation_size: 0.01
+    validation_strategy: automatic
+environment:
+    compile_model: false
+    deepspeed_allgather_bucket_size: 1000000
+    deepspeed_method: ZeRO2
+    deepspeed_reduce_bucket_size: 1000000
+    deepspeed_stage3_param_persistence_threshold: 1000000
+    deepspeed_stage3_prefetch_bucket_size: 1000000
+    find_unused_parameters: false
+    gpus:
+    - '0'
+    - '1'
+    - '2'
+    huggingface_branch: main
+    mixed_precision: true
+    mixed_precision_dtype: bfloat16
+    number_of_workers: 8
+    seed: -1
+    trust_remote_code: true
+    use_deepspeed: false
+experiment_name: attractive-caracal.1.1.1.1.1.1.1
+llm_backbone: h2oai/h2o-danube3-500m-chat
+logging:
+    logger: None
+    neptune_project: ''
+output_directory: /home/philipp/h2o-llmstudio/output/user/attractive-caracal.1.1.1.1.1.1.1/
+prediction:
+    batch_size_inference: 0
+    metric: Accuracy
+problem_type: text_causal_classification_modeling
+tokenizer:
+    add_prompt_answer_tokens: false
+    max_length: 512
+    padding_quantile: 1.0
+    tokenizer_kwargs: '{"use_fast": true, "add_prefix_space": false}'
+training:
+    attention_implementation: auto
+    batch_size: 2
+    differential_learning_rate: 1.0e-05
+    differential_learning_rate_layers:
+    - classification_head
+    drop_last_batch: true
+    epochs: 1
+    evaluate_before_training: true
+    evaluation_epochs: 1.0
+    freeze_layers: []
+    grad_accumulation: 1
+    gradient_clip: 0.0
+    learning_rate: 0.0001
+    lora: true
+    lora_alpha: 16
+    lora_dropout: 0.05
+    lora_r: 4
+    lora_target_modules: ''
+    lora_unfreeze_layers: []
+    loss_function: CrossEntropyLoss
+    optimizer: AdamW
+    save_checkpoint: last
+    schedule: Cosine
+    train_validation_data: false
+    use_dora: false
+    use_rslora: false
+    warmup_epochs: 0.0
+    weight_decay: 0.0
