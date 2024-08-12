@@ -317,13 +317,14 @@ class CustomDataset(Dataset):
             ].values
 
         if "predicted_text" in output.keys():
-            df[f"pred_{cfg.dataset.answer_column}"] = (
+            col_name = cfg.dataset.answer_column
+            if isinstance(col_name, list):
+                col_name = ", ".join(col_name)
+            df[f"pred_{col_name}"] = (
                 "NO ANSWER GENERATED. "
                 "ONLY LAST ANSWER OF A CONVERSATION IS PREDICTED."
             )
-            df.loc[end_conversation_ids, f"pred_{cfg.dataset.answer_column}"] = output[
-                "predicted_text"
-            ]
+            df.loc[end_conversation_ids, f"pred_{col_name}"] = output["predicted_text"]
         return output, df
 
     @classmethod

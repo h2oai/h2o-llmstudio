@@ -148,6 +148,7 @@ def read_dataframe_drop_missing_labels(
     df[input_cols] = df[input_cols].fillna("").astype(str)
     if (
         hasattr(cfg.dataset, "answer_column")
+        and not isinstance(cfg.dataset.answer_column, (list, tuple))
         and cfg.dataset.answer_column in df.columns
     ):
         df[cfg.dataset.answer_column] = (
