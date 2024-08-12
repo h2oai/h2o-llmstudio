@@ -466,6 +466,19 @@ def run(cfg: DefaultConfigProblemBase) -> float:
 
     initialize_logging(cfg)
 
+    # Check for errors in the configuration
+    errors = check_config_for_errors(cfg)
+    for i in range(len(errors["title"])):
+        if errors["type"][i] == "error":
+            logger.error(f"{errors['title'][i]}: {errors['message'][i]}")
+        else:
+            logger.warning(f"{errors['title'][i]}: {errors['message'][i]}")
+
+    if any(error_type == "error" for error_type in errors["type"]):
+        raise ValueError(
+            "Configuration contains errors. Please fix them before proceeding."
+        )
+
     if cfg.environment._distributed:
         cfg.environment._device = "cuda:%d" % cfg.environment._local_rank
         if cfg.environment.use_deepspeed:
@@ -688,20 +701,6 @@ if __name__ == "__main__":
         cfg = load_config_yaml(parser_args.yaml)
     else:
         raise ValueError("Please, provide a configuration file")
-
-    initialize_logging(cfg)
-
-    errors = check_config_for_errors(cfg)
-    for i in range(len(errors["title"])):
-        if errors["type"][i] == "error":
-            logger.error(f"{errors['title'][i]}: {errors['message'][i]}")
-        else:
-            logger.warning(f"{errors['title'][i]}: {errors['message'][i]}")
-
-    if any(error_type == "error" for error_type in errors["type"]):
-        raise ValueError(
-            "Configuration contains errors. Please fix them before proceeding."
-        )
 
     extra_args = []
     for arg_orig in unknown:
