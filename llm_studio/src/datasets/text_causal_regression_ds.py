@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class CustomDataset(TextCausalLanguageModelingCustomDataset):
     def __init__(self, df: pd.DataFrame, cfg: Any, mode: str = "train"):
         super().__init__(df=df, cfg=cfg, mode=mode)
-        self.answers_float = df[cfg.dataset.answer_column].astype(float).values.tolist()
+        self.answers_float = df[cfg.dataset.answer_column].astype(float).values
 
         if cfg.dataset.parent_id_column != "None":
             raise LLMDataException(
@@ -28,11 +28,28 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
         return sample
 
     def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
-        output["logits"] = output["logits"].float()
-        preds = output["logits"]
-        preds = np.array(preds).astype(float).astype(str).reshape(-1)
+        output["predictions"] = output["predictions"].float()
+        preds = []
+        for col in np.arange(len(cfg.dataset.answer_column)):
+            preds.append(
+                np.round(output["predictions"][:, col].cpu().numpy(), 3).astype(str)
+            )
+        preds = [",".join(pred) for pred in zip(*preds)]
         output["predicted_text"] = preds
         return super().postprocess_output(cfg, df, output)
 
     def clean_output(self, output, cfg):
         return output
+
+    @classmethod
+    def sanity_check(cls, df: pd.DataFrame, cfg: Any, mode: str = "train"):
+
+        for answer_col in cfg.dataset.answer_column:
+            assert answer_col in df.columns, (
+                f"Answer column {answer_col} not found in the " f"{mode} DataFrame."
+            )
+            assert df.shape[0] == df[answer_col].dropna().shape[0], (
+                f"The {mode} DataFrame"
+                f" column {answer_col}"
+                " contains missing values."
+            )

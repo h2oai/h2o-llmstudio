@@ -14,9 +14,20 @@ def mse_score(
     val_df: pd.DataFrame,
     raw_results: bool = False,
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
-    predicted_text = np.array([float(text) for text in results["predicted_text"]])
-    target_text = np.array([float(text) for text in results["target_text"]])
-    return ((target_text - predicted_text) ** 2).astype("float")
+    target = np.array(
+        [[float(t) for t in text.split(",")] for text in results["target_text"]]
+    )
+    predictions = np.array(results["predictions"])
+
+    if len(target) != len(predictions):
+        raise ValueError(
+            f"Length of target ({len(target)}) and predictions ({len(predictions)}) "
+            "should be the same."
+        )
+    if len(target) == 0:
+        raise ValueError("No data to calculate MSE score")
+
+    return ((target - predictions) ** 2).mean(axis=1).reshape(-1).astype("float")
 
 
 def mae_score(
@@ -25,9 +36,20 @@ def mae_score(
     val_df: pd.DataFrame,
     raw_results: bool = False,
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
-    predicted_text = np.array([float(text) for text in results["predicted_text"]])
-    target_text = np.array([float(text) for text in results["target_text"]])
-    return np.abs(target_text - predicted_text).astype("float")
+    target = np.array(
+        [[float(t) for t in text.split(",")] for text in results["target_text"]]
+    )
+    predictions = np.array(results["predictions"])
+
+    if len(target) != len(predictions):
+        raise ValueError(
+            f"Length of target ({len(target)}) and predictions ({len(predictions)}) "
+            "should be the same."
+        )
+    if len(target) == 0:
+        raise ValueError("No data to calculate MAE score")
+
+    return np.abs(target - predictions).mean(axis=1).reshape(-1).astype("float")
 
 
 class Metrics:
