@@ -3,4 +3,8 @@ The column in the dataset containing the expected output.
 For classification, this needs to be an integer column starting from zero containing the class label, while for regression, it needs to be a float column.
 
 Multiple target columns can be selected for classification and regression supporting multilabel problems.
-In such a case, for classification, all columns need to be one-hot encoded.
+In detail, we support the following cases:
+- Multi-class classification requires a single column containing the class label
+- Binary classification requires a single column containing a binary integer label
+- Multilabel classification requires each column to refer to one label encoded with a binary integer label
+- For regression, each target column requires a float value
