@@ -14,7 +14,7 @@ dataset:
     add_eos_token_to_system: false
     answer_column: 
     - regression_label
-    - regression_label
+    - regression_label2
     chatbot_author: H2O.ai
     chatbot_name: h2oGPT
     data_sample: 0.03

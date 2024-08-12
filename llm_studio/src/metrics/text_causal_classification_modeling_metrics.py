@@ -16,13 +16,13 @@ def accuracy_score(
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
     """Calculate accuracy score.
 
-    Only considers the predicted value (results["predicted_text"]) and target value
+    Only considers the predicted value (results["predictions"]) and target value
     (results["target_text"]).
     It supports both binary and multiclass classification.
 
     Args:
         cfg: DefaultConfigProblemBase, ignored
-        results: Dict, model results including 'predicted_text' and 'target_text'
+        results: Dict, model results including 'predictions' and 'target_text'
         val_df: pd.DataFrame, validation dataframe
         raw_results: bool, ignored
 

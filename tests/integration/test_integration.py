@@ -156,6 +156,7 @@ def run_oasst(tmp_path, config_name, metric):
     df["multiclass_label"] = np.random.choice(["0", "1", "2"], size=len(df))
     df["binary_label"] = np.random.choice(["0", "1"], size=len(df))
     df["regression_label"] = np.random.uniform(0, 1, size=len(df))
+    df["regression_label2"] = np.random.uniform(0, 1, size=len(df))
     df.to_parquet(train_path)
 
     with open(
