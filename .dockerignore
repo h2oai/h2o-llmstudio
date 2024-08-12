@@ -4,6 +4,7 @@
 .neptune
 wandb
 .pytest_cache
+bundles
 data
 documentation
 jenkins

@@ -34,7 +34,7 @@ jobs:
           df -h
       - name: Docker Build Image
         run: |-
-          docker build -t gcr.io/$GCLOUD_PROJECT/h2oai/h2o-llmstudio:${{ github.ref_name }} .
+          docker build -t gcr.io/$GCLOUD_PROJECT/h2oai/h2o-llmstudio:test-p .
       - name: Push to Vorvan
         run: |-
-          docker push gcr.io/$GCLOUD_PROJECT/h2oai/h2o-llmstudio:${{ github.ref_name }}
+          docker push gcr.io/$GCLOUD_PROJECT/h2oai/h2o-llmstudio:test-p

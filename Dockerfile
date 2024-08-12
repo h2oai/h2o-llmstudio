@@ -38,6 +38,8 @@ RUN \
     chmod -R a+w /home/llmstudio
 COPY Makefile Pipfile Pipfile.lock /workspace/
 
+COPY whl/ /workspace/whl/
+
 # Python virtualenv is installed in /workspace/.venv/
 # give read and write permissions to the /workspace/.venv/ directory for all users to allow wave to write files
 ENV PIPENV_VENV_IN_PROJECT=1
