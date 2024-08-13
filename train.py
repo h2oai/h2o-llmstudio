@@ -1,5 +1,7 @@
 import os
 
+from llm_studio.python_configs.cfg_checks import check_config_for_errors
+
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
@@ -705,6 +707,20 @@ if __name__ == "__main__":
     else:
         raise ValueError("Please, provide a configuration file")
 
+    initialize_logging(cfg)
+
+    errors = check_config_for_errors(cfg)
+    for i in range(len(errors["title"])):
+        if errors["type"][i] == "error":
+            logger.error(f"{errors['title'][i]}: {errors['message'][i]}")
+        else:
+            logger.warning(f"{errors['title'][i]}: {errors['message'][i]}")
+
+    if any(error_type == "error" for error_type in errors["type"]):
+        raise ValueError(
+            "Configuration contains errors. Please fix them before proceeding."
+        )
+
     extra_args = []
     for arg_orig in unknown:
         if arg_orig.startswith(("-", "--")):
@@ -727,8 +743,6 @@ if __name__ == "__main__":
 
     out_dir = cfg.output_directory
     os.makedirs(out_dir, exist_ok=True)
-
-    initialize_logging(cfg)
 
     try:
         run(cfg=cfg)

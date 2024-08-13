@@ -102,6 +102,8 @@ default_cfg = {
         "default_kaggle_secret_key": "",
         "set_max_epochs": 50,
         "set_max_batch_size": 256,
+        "set_max_num_classes": 100,
+        "set_max_max_length": 16384,
         "set_max_gradient_clip": 10,
         "set_max_lora_r": 256,
         "set_max_lora_alpha": 256,
@@ -111,6 +113,9 @@ default_cfg = {
         "default_logger": "None",
         "default_neptune_project": os.getenv("NEPTUNE_PROJECT", ""),
         "default_neptune_api_token": os.getenv("NEPTUNE_API_TOKEN", ""),
+        "default_wandb_api_token": os.getenv("WANDB_API_KEY", ""),
+        "default_wandb_project": os.getenv("WANDB_PROJECT", ""),
+        "default_wandb_entity": os.getenv("WANDB_ENTITY", ""),
         "default_huggingface_api_token": os.getenv("HUGGINGFACE_TOKEN", ""),
         "default_hf_hub_enable_hf_transfer": os.getenv(
             "HF_HUB_ENABLE_HF_TRANSFER", True
