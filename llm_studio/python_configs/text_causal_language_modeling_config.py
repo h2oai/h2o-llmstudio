@@ -566,6 +566,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
 @dataclass
 class ConfigNLPCausalLMLogging(DefaultConfig):
+    log_step_size: str = "absolute"
     logger: str = "None"
     neptune_project: str = ""
     _neptune_debug: bool = False
@@ -577,6 +578,7 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
 
     def __post_init__(self):
         super().__post_init__()
+        self._possible_values["log_step_size"] = ["absolute", "relative"]
         self._possible_values["logger"] = ExternalLoggers.names()
 
         self._nesting.add(
