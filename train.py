@@ -256,7 +256,6 @@ def run_train(
             cfg.environment._curr_step += (
                 cfg.training.batch_size * cfg.environment._world_size
             )
-            # cfg.environment._curr_log_step = cfg.environment._curr_step / cfg.environment._total_training_steps
 
             # Batch to device
             batch = cfg.dataset.dataset_class.batch_to_device(
