@@ -541,30 +541,31 @@ def run(cfg: DefaultConfigProblemBase) -> float:
     train_dataloader = get_train_dataloader(train_ds=train_dataset, cfg=cfg)
     val_dataloader = get_val_dataloader(val_ds=val_dataset, cfg=cfg)
 
-    total_training_steps = (
-        cfg.training.epochs
-        * len(train_dataloader)
-        * cfg.training.batch_size
-        * cfg.environment._world_size
-    )
+    if cfg.environment._local_rank == 0:
+        total_training_steps = (
+            cfg.training.epochs
+            * len(train_dataloader)
+            * cfg.training.batch_size
+            * cfg.environment._world_size
+        )
 
-    num_eval_epochs = get_number_of_validation_epochs(
-        training_epochs=cfg.training.epochs,
-        evaluation_epochs=cfg.training.evaluation_epochs,
-    )
-    val_batch_size = get_inference_batch_size(cfg)
+        num_eval_epochs = get_number_of_validation_epochs(
+            training_epochs=cfg.training.epochs,
+            evaluation_epochs=cfg.training.evaluation_epochs,
+        )
+        val_batch_size = get_inference_batch_size(cfg)
 
-    total_validation_steps = (
-        len(val_dataloader)
-        * (num_eval_epochs + int(cfg.training.evaluate_before_training))
-        * val_batch_size
-        * cfg.environment._world_size
-    )
+        total_validation_steps = (
+            len(val_dataloader)
+            * (num_eval_epochs + int(cfg.training.evaluate_before_training))
+            * val_batch_size
+            * cfg.environment._world_size
+        )
 
-    if cfg.logging.log_step_size == "relative":
-        cfg.environment._step_log_denominator = total_training_steps
-    else:
-        cfg.environment._step_log_denominator = 1
+        if cfg.logging.log_step_size == "relative":
+            cfg.environment._step_log_denominator = total_training_steps
+        else:
+            cfg.environment._step_log_denominator = 1
 
     # Prepare model and optimizer
     if cfg.environment.use_deepspeed:
@@ -617,7 +618,6 @@ def run(cfg: DefaultConfigProblemBase) -> float:
     # reset steps
     cfg.environment._curr_step = 0
     cfg.environment._curr_val_step = 0
-    cfg.environment._curr_log_step = 0
 
     gc.collect()
 

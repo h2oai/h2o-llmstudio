@@ -473,6 +473,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     _local_rank: int = 0
     _world_size: int = 1
     _curr_step: int = 0
+    _step_log_denominator: int = 1
     _curr_val_step: int = 0
     _rank: int = 0  # global rank
     _device: str = "cuda"
