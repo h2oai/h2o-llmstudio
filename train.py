@@ -133,10 +133,13 @@ def run_eval(
                 mode,
                 key,
                 value,
-                step=cfg.environment._curr_step/cfg.environment._step_log_denominator,
+                step=cfg.environment._curr_step / cfg.environment._step_log_denominator,
             )
     cfg.logging._logger.log(
-        mode, cfg.prediction.metric, val_metric, step=cfg.environment._curr_step/cfg.environment._step_log_denominator
+        mode,
+        cfg.prediction.metric,
+        val_metric,
+        step=cfg.environment._curr_step / cfg.environment._step_log_denominator,
     )
 
     # Log plots
@@ -253,7 +256,7 @@ def run_train(
             cfg.environment._curr_step += (
                 cfg.training.batch_size * cfg.environment._world_size
             )
-            #cfg.environment._curr_log_step = cfg.environment._curr_step / cfg.environment._total_training_steps
+            # cfg.environment._curr_log_step = cfg.environment._curr_step / cfg.environment._total_training_steps
 
             # Batch to device
             batch = cfg.dataset.dataset_class.batch_to_device(
@@ -333,20 +336,26 @@ def run_train(
 
             if cfg.environment._local_rank == 0:
                 cfg.logging._logger.log(
-                    "train", "loss", losses[-1], step=cfg.environment._curr_step/cfg.environment._step_log_denominator
+                    "train",
+                    "loss",
+                    losses[-1],
+                    step=cfg.environment._curr_step
+                    / cfg.environment._step_log_denominator,
                 )
                 cfg.logging._logger.log(
                     "meta",
                     "lr",
                     optimizer.param_groups[0]["lr"],
-                    step=cfg.environment._curr_step/cfg.environment._step_log_denominator,
+                    step=cfg.environment._curr_step
+                    / cfg.environment._step_log_denominator,
                 )
                 if cfg.training.differential_learning_rate_layers:
                     cfg.logging._logger.log(
                         "meta",
                         "lr_diff",
                         optimizer.param_groups[2]["lr"],
-                        step=cfg.environment._curr_step/cfg.environment._step_log_denominator,
+                        step=cfg.environment._curr_step
+                        / cfg.environment._step_log_denominator,
                     )
 
                 cfg.logging._logger.log(
@@ -360,7 +369,8 @@ def run_train(
                             "train",
                             key.replace("additional_log_", ""),
                             output_dict[key].item(),
-                            step=cfg.environment._curr_step/cfg.environment._step_log_denominator,
+                            step=cfg.environment._curr_step
+                            / cfg.environment._step_log_denominator,
                         )
 
                 # Show logs each 5% of the epoch (only if doing per epoch evaluation)
@@ -418,9 +428,7 @@ def run_train(
             torch.distributed.barrier()
 
         if cfg.environment._local_rank == 0:
-            cfg.logging._logger.log(
-                "internal", "epoch", epoch + 1
-            )
+            cfg.logging._logger.log("internal", "epoch", epoch + 1)
 
     if cfg.environment._distributed:
         torch.distributed.barrier()
@@ -553,7 +561,10 @@ def run(cfg: DefaultConfigProblemBase) -> float:
             * cfg.environment._world_size
         )
 
-        cfg.environment._step_log_denominator = 1
+        if cfg.logging.log_step_size == "relative":
+            cfg.environment._step_log_denominator = total_training_steps
+        else:
+            cfg.environment._step_log_denominator = 1
 
     # Prepare model and optimizer
     if cfg.environment.use_deepspeed:

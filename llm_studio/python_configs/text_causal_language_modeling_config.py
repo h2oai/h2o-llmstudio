@@ -578,7 +578,13 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self._possible_values["log_step_size"] = ["absolute", "relative"]
+        self._possible_values["log_step_size"] = possible_values.String(
+            values=(
+                ("absolute", "Absolute"),
+                ("relative", "Relative"),
+            ),
+            allow_custom=False,
+        )
         self._possible_values["logger"] = ExternalLoggers.names()
 
         self._nesting.add(
