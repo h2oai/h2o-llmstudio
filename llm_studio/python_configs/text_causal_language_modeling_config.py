@@ -319,12 +319,8 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
         self._possible_values["max_length"] = (32, 1024 * 16, 32)
         self._possible_values["padding_quantile"] = (0, 1, 0.01)
 
-        self._grid_search_values["max_length_prompt"] = (256, 512, 1024)
-        self._grid_search_values["max_length_answer"] = (256, 512, 1024)
         self._grid_search_values["max_length"] = (256, 512, 1024)
 
-        self._grid_search_iscustom["max_length_prompt"] = True
-        self._grid_search_iscustom["max_length_answer"] = True
         self._grid_search_iscustom["max_length"] = True
 
         self._padding_side = "left"
@@ -569,6 +565,8 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
     log_step_size: str = "absolute"
     logger: str = "None"
     neptune_project: str = ""
+    wandb_project: str = ""
+    wandb_entity: str = ""
     _neptune_debug: bool = False
 
     plots_class: Any = text_causal_language_modeling_plots.Plots
@@ -590,6 +588,10 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
         self._nesting.add(
             ["neptune_project"],
             [Dependency(key="logger", value="Neptune", is_set=True)],
+        )
+        self._nesting.add(
+            ["wandb_project", "wandb_entity"],
+            [Dependency(key="logger", value="W&B", is_set=True)],
         )
 
         self._visibility["plots_class"] = -1
@@ -648,15 +650,17 @@ class ConfigProblemBase(DefaultConfigProblemBase):
         )
 
     def check(self) -> Dict[str, List]:
-        errors: Dict[str, List] = {"title": [], "message": []}
+        errors: Dict[str, List] = {"title": [], "message": [], "type": []}
         if self.prediction.temperature > 0 and not self.prediction.do_sample:
             errors["title"] += ["Do sample needs to be enabled for temperature > 0"]
             errors["message"] += [
                 "Please enable do sample if you want to use temperature > 0."
             ]
+            errors["type"].append("warning")
         if self.prediction.temperature == 0 and self.prediction.do_sample:
             errors["title"] += ["Temperature needs to be > 0 for do sample"]
             errors["message"] += [
                 "Please increase temperature if you want to use do sample."
             ]
+            errors["type"].append("warning")
         return errors

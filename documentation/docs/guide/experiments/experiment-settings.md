@@ -79,6 +79,8 @@ import ESnumofworkers from '../../tooltips/experiments/_number-of-workers.mdx';
 import ESseed from '../../tooltips/experiments/_seed.mdx';
 import LSlogger from '../../tooltips/experiments/_logger.mdx';
 import LSneptuneproject from '../../tooltips/experiments/_neptune-project.mdx';
+import LSwandbproject from '../../tooltips/experiments/_wandb-project.mdx';
+import LSwandbentity from '../../tooltips/experiments/_wandb-entity.mdx';
 
 # Experiment settings
 
@@ -425,3 +427,10 @@ The settings under each category are listed and described below.
 
 <LSneptuneproject/>
 
+### W&B project
+
+<LSwandbproject/>
+
+### W&B entity
+
+<LSwandbentity/>

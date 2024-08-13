@@ -36,7 +36,7 @@ class Model(nn.Module):
             self.backbone = prepare_lora(cfg, self.backbone)
 
         self.regression_head = nn.Linear(
-            self.backbone_config.vocab_size, cfg.dataset.num_classes, bias=False
+            self.backbone_config.vocab_size, len(cfg.dataset.answer_column), bias=False
         )
 
         self.loss_fn = self.cfg.training.loss_class.get(
@@ -80,12 +80,10 @@ class Model(nn.Module):
         output.logits = self.regression_head(output[0][:, -1].float())
 
         if "labels" in batch:
-            loss = self.loss_fn(
-                output.logits, batch["class_label"].unsqueeze(1).float()
-            )
+            loss = self.loss_fn(output.logits, batch["class_label"].float())
             outputs["loss"] = loss
 
-        outputs["logits"] = output.logits
+        outputs["predictions"] = output.logits
 
         # enable cache again if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:

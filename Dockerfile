@@ -66,13 +66,17 @@ ENV H2O_WAVE_NO_LOG=true
 ENV H2O_WAVE_PRIVATE_DIR="/download/@/home/llmstudio/mount/output/download"
 
 USER root
+
 # Make all of the files in the llmstudio directory read & writable for all users so that the
 # application can install other (non-persisted) new packages and other things
 # if it wants to. e.g. triton uses /home/llmstudio/.triton as a cache directory.
 RUN chmod -R 777 /home/llmstudio
 
+# Make the entrypoint.sh script executable by all users
+RUN chmod 755 /workspace/entrypoint.sh
+
 USER llmstudio
 
 EXPOSE 10101
 
-ENTRYPOINT [ "wave", "run", "--no-reload", "app" ]
+ENTRYPOINT [ "/workspace/entrypoint.sh" ]

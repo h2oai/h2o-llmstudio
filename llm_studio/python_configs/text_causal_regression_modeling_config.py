@@ -164,12 +164,22 @@ class ConfigProblemBase(DefaultConfigProblemBase):
         )
 
     def check(self) -> Dict[str, List]:
-        errors: Dict[str, List] = {"title": [], "message": []}
+        errors: Dict[str, List] = {"title": [], "message": [], "type": []}
+
+        if isinstance(self.dataset.answer_column, str):
+            errors["title"].append("Invalid answer_column type")
+            errors["message"].append(
+                "Providing the answer_column as a string is deprecated. "
+                "Please provide the answer_column as a list."
+            )
+            errors["type"].append("deprecated")
+            self.dataset.answer_column = [self.dataset.answer_column]
 
         if self.dataset.parent_id_column not in ["None", None]:
             errors["title"] += ["Parent ID column is not supported for regression"]
             errors["message"] += [
                 "Parent ID column is not supported for regression datasets."
             ]
+            errors["type"].append("error")
 
         return errors

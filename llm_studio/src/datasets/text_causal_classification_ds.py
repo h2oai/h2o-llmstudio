@@ -17,30 +17,28 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
     def __init__(self, df: pd.DataFrame, cfg: Any, mode: str = "train"):
         super().__init__(df=df, cfg=cfg, mode=mode)
         check_for_non_int_answers(cfg, df)
-        self.answers_int = df[cfg.dataset.answer_column].astype(int).values.tolist()
+        self.answers_int = df[cfg.dataset.answer_column].astype(int).values
+        max_value = np.max(self.answers_int)
+        min_value = np.min(self.answers_int)
 
-        if 1 < cfg.dataset.num_classes <= max(self.answers_int):
+        if 1 < cfg.dataset.num_classes <= max_value:
             raise LLMDataException(
                 "Number of classes is smaller than max label "
-                f"{max(self.answers_int)}. Please increase the setting accordingly."
+                f"{max_value}. Please increase the setting accordingly."
             )
-        elif cfg.dataset.num_classes == 1 and max(self.answers_int) > 1:
+        elif cfg.dataset.num_classes == 1 and max_value > 1:
             raise LLMDataException(
                 "For binary classification, max label should be 1 but is "
-                f"{max(self.answers_int)}."
+                f"{max_value}."
             )
-        if min(self.answers_int) < 0:
+        if min_value < 0:
             raise LLMDataException(
-                "Labels should be non-negative but min label is "
-                f"{min(self.answers_int)}."
+                "Labels should be non-negative but min label is " f"{min_value}."
             )
-        if (
-            min(self.answers_int) != 0
-            or max(self.answers_int) != len(set(self.answers_int)) - 1
-        ):
+        if min_value != 0 or max_value != np.unique(self.answers_int).size - 1:
             logger.warning(
                 "Labels should start at 0 and be continuous but are "
-                f"{sorted(set(self.answers_int))}."
+                f"{sorted(np.unique(self.answers_int))}."
             )
 
         if cfg.dataset.parent_id_column != "None":
@@ -55,16 +53,28 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
 
     def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
         output["logits"] = output["logits"].float()
-        if cfg.dataset.num_classes == 1:
-            preds = output["logits"]
-            preds = np.array((preds > 0.0)).astype(int).astype(str).reshape(-1)
+
+        if cfg.training.loss_function == "CrossEntropyLoss":
+            output["probabilities"] = torch.softmax(output["logits"], dim=-1)
         else:
-            preds = output["logits"]
-            preds = (
-                np.array(torch.argmax(preds, dim=1))  # type: ignore[arg-type]
-                .astype(str)
-                .reshape(-1)
+            output["probabilities"] = torch.sigmoid(output["logits"])
+
+        if len(cfg.dataset.answer_column) == 1:
+            if cfg.dataset.num_classes == 1:
+                output["predictions"] = (output["probabilities"] > 0.5).long()
+            else:
+                output["predictions"] = output["probabilities"].argmax(
+                    dim=-1, keepdim=True
+                )
+        else:
+            output["predictions"] = (output["probabilities"] > 0.5).long()
+
+        preds = []
+        for col in np.arange(output["probabilities"].shape[1]):
+            preds.append(
+                np.round(output["probabilities"][:, col].cpu().numpy(), 3).astype(str)
             )
+        preds = [",".join(pred) for pred in zip(*preds)]
         output["predicted_text"] = preds
         return super().postprocess_output(cfg, df, output)
 
@@ -73,14 +83,26 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
 
     @classmethod
     def sanity_check(cls, df: pd.DataFrame, cfg: Any, mode: str = "train"):
-        # TODO: Dataset import in UI is currently using text_causal_language_modeling_ds
+
+        for answer_col in cfg.dataset.answer_column:
+            assert answer_col in df.columns, (
+                f"Answer column {answer_col} not found in the " f"{mode} DataFrame."
+            )
+            assert df.shape[0] == df[answer_col].dropna().shape[0], (
+                f"The {mode} DataFrame"
+                f" column {answer_col}"
+                " contains missing values."
+            )
+
         check_for_non_int_answers(cfg, df)
 
 
 def check_for_non_int_answers(cfg, df):
-    answers_non_int = [
-        x for x in df[cfg.dataset.answer_column].values if not is_castable_to_int(x)
-    ]
+    answers_non_int: list = []
+    for column in cfg.dataset.answer_column:
+        answers_non_int.extend(
+            x for x in df[column].values if not is_castable_to_int(x)
+        )
     if len(answers_non_int) > 0:
         raise LLMDataException(
             f"Column {cfg.dataset.answer_column} contains non int items. "

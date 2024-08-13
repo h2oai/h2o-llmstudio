@@ -99,9 +99,9 @@ def convert_cfg_base_to_nested_dictionary(cfg: DefaultConfigProblemBase) -> dict
         if k.startswith("_"):
             continue
 
-        if any([x in k for x in ["api", "secret"]]):
+        if any([x in k for x in ["api", "secret", "key"]]):
             raise AssertionError(
-                "Config item must not contain the word 'api' or 'secret'"
+                "Config item must not contain the word 'api', 'secret', or 'key'"
             )
 
         type_annotation = type_annotations[k]
@@ -156,7 +156,7 @@ def parse_cfg_dataclass(cfg) -> List[Dict]:
         if k.startswith("_"):
             continue
 
-        if any([x in k for x in ["api"]]):
+        if any([x in k for x in ["api", "secret", "key"]]):
             continue
 
         type_annotation = type_annotations[k]
