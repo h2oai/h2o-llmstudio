@@ -491,6 +491,7 @@ def get_scheduler(
         optimizer=optimizer,
         num_warmup_steps=cfg.training.warmup_epochs * epoch_steps,
         num_training_steps=cfg.training.epochs * epoch_steps,
+        min_learning_rate_ratio=cfg.training.min_learning_rate_ratio,
     )
 
     return scheduler
