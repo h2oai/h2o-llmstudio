@@ -308,7 +308,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
             [Dependency(key="lora", value=False, is_set=False)],
         )
         self._nesting.add(
-            ["minimum_learning_rate"],
+            ["min_learning_rate_ratio"],
             [Dependency(key="schedule", value="Constant", is_set=False)],
         )
 
