@@ -66,7 +66,7 @@ from llm_studio.src.utils.modeling_utils import (
 )
 from llm_studio.src.utils.utils import (
     create_symlinks_in_parent_folder,
-    kill_child_processes,
+    kill_child_processes_and_current,
     kill_sibling_ddp_processes,
     set_environment,
     set_seed,
@@ -733,4 +733,4 @@ if __name__ == "__main__":
         if ("WORLD_SIZE" in os.environ) and (int(os.environ["WORLD_SIZE"]) > 1):
             kill_sibling_ddp_processes()
         else:
-            kill_child_processes()
+            kill_child_processes_and_current()

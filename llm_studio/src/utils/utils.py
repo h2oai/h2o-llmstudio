@@ -3,7 +3,7 @@ import os
 import pickle
 import random
 import zipfile
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 import psutil
@@ -36,53 +36,58 @@ def set_environment(cfg):
     return cfg
 
 
-def kill_child_processes(parent_pid: int) -> bool:
-    """Killing a process and all its child processes
+def kill_child_processes(current_pid: int, exclude=None) -> bool:
+    """
+    Killing all child processes of the current process.
+    Optionally, excludes one PID
 
     Args:
-        parent_pid: process id of parent
+        current_pid: current process id
+        exclude: process id to exclude
 
     Returns:
         True or False in case of success or failure
     """
 
-    logger.debug(f"Killing process id: {parent_pid}")
+    logger.debug(f"Killing process id: {current_pid}")
 
     try:
-        parent = psutil.Process(parent_pid)
-        if parent.status() == "zombie":
+        current_process = psutil.Process(current_pid)
+        if current_process.status() == "zombie":
             return False
-        children = parent.children(recursive=True)
+        children = current_process.children(recursive=True)
         for child in children:
+            if child.pid == exclude:
+                continue
             child.kill()
-        parent.kill()
         return True
     except psutil.NoSuchProcess:
-        logger.warning(f"Cannot kill process id: {parent_pid}. No such process.")
+        logger.warning(f"Cannot kill process id: {current_pid}. No such process.")
         return False
 
 
-def kill_child_processes(current_pid, exclude=None) -> None:
+def kill_child_processes_and_current(current_pid: Optional[int] = None) -> bool:
     """
-    Kill all child processes of specified PID
-    Optionally, excludes one PID
-    """
-    current_process = psutil.Process(current_pid)
-    children = current_process.children(recursive=True)[::-1]
-    for child in children:
-        if child.pid == exclude:
-            continue
-        child.kill()
+    Kill all child processes of the current process, then terminates itself.
+    Optionally, specify the current process id.
+    If not specified, uses the current process id.
 
+    Args:
+        current_pid: current process id (default: None)
 
-def kill_child_processes_and_current() -> None:
+    Returns:
+        True or False in case of success or failure
     """
-    Kill all child processes of the current process, then terminates itself
-    """
-    current_pid = os.getpid()
+    if current_pid is None:
+        current_pid = os.getpid()
     kill_child_processes(current_pid)
-    current_process = psutil.Process(current_pid)
-    current_process.kill()
+    try:
+        current_process = psutil.Process(current_pid)
+        current_process.kill()
+        return True
+    except psutil.NoSuchProcess:
+        logger.warning(f"Cannot kill process id: {current_pid}. No such process.")
+        return False
 
 
 def kill_sibling_ddp_processes() -> None:
