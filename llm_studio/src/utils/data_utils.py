@@ -138,12 +138,11 @@ def read_dataframe_drop_missing_labels(
         input_cols = list(cfg.dataset.prompt_column)
     else:
         input_cols = [cfg.dataset.prompt_column]
-    verbose = cfg.environment._local_rank == 0
     fill_columns = get_fill_columns(cfg)
     df = read_dataframe(
         path,
         non_missing_columns=input_cols,
-        verbose=verbose,
+        verbose=True,
         fill_columns=fill_columns,
     )
     df[input_cols] = df[input_cols].fillna("").astype(str)
@@ -266,12 +265,11 @@ def get_data(cfg: DefaultConfigProblemBase) -> Tuple[pd.DataFrame, pd.DataFrame]
         hasattr(cfg.prediction, "metric_gpt_template")
         and cfg.prediction.metric_gpt_template == "mt-bench"
     ):
-        if cfg.environment._local_rank == 0:
-            logger.info(
-                "Overwriting validation data with MT-BENCH data. Please note that "
-                "respective metric is an approximation and might not fully match "
-                "the original implementation."
-            )
+        logger.info(
+            "Overwriting validation data with MT-BENCH data. Please note that "
+            "respective metric is an approximation and might not fully match "
+            "the original implementation."
+        )
         val_df = load_mt_bench_data(cfg)
 
     if cfg.dataset.data_sample < 1.0:
@@ -314,8 +312,7 @@ def load_train_valid_data(cfg) -> Tuple[pd.DataFrame, pd.DataFrame]:
             cfg.dataset.validation_dataframe, cfg
         )
     elif cfg.dataset.validation_strategy == "automatic":
-        if cfg.environment._local_rank == 0:
-            logger.info("Setting up automatic validation split...")
+        logger.info("Setting up automatic validation split...")
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
         if cfg.dataset.parent_id_column != "None" and "id" in df.columns:
             # split based on conversation_chain_ids
@@ -390,8 +387,7 @@ def get_train_dataset(train_df: pd.DataFrame, cfg: DefaultConfigProblemBase) -> 
         Train Dataset
     """
 
-    if cfg.environment._local_rank == 0:
-        logger.info("Loading train dataset...")
+    logger.info("Loading train dataset...")
 
     train_dataset: Dataset = cfg.dataset.dataset_class(
         df=train_df, cfg=cfg, mode="train"
@@ -447,8 +443,7 @@ def get_train_dataloader(train_ds: Any, cfg: DefaultConfigProblemBase) -> DataLo
         worker_init_fn=worker_init_fn,
     )
 
-    if cfg.environment._local_rank == 0:
-        logger.info(f"Number of observations in train dataset: {len(train_ds)}")
+    logger.info(f"Number of observations in train dataset: {len(train_ds)}")
 
     return train_dataloader
 
@@ -464,8 +459,7 @@ def get_val_dataset(val_df: pd.DataFrame, cfg: DefaultConfigProblemBase):
         Validation Dataset
     """
 
-    if cfg.environment._local_rank == 0:
-        logger.info("Loading validation dataset...")
+    logger.info("Loading validation dataset...")
     val_dataset = cfg.dataset.dataset_class(df=val_df, cfg=cfg, mode="validation")
 
     return val_dataset
@@ -504,8 +498,7 @@ def get_val_dataloader(val_ds: Any, cfg: DefaultConfigProblemBase):
         worker_init_fn=worker_init_fn,
     )
 
-    if cfg.environment._local_rank == 0:
-        logger.info(f"Number of observations in validation dataset: {len(val_ds)}")
+    logger.info(f"Number of observations in validation dataset: {len(val_ds)}")
 
     return val_dataloader
 
