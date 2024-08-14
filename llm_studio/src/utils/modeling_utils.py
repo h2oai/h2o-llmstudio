@@ -773,27 +773,18 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
         and cfg.training.attention_implementation != "auto"
     ):
         kwargs["attn_implementation"] = cfg.training.attention_implementation
-    try:
-        config = AutoConfig.from_pretrained(
-            cfg.llm_backbone,
-            trust_remote_code=cfg.environment.trust_remote_code,
-            token=os.getenv("HUGGINGFACE_TOKEN"),
-            revision=cfg.environment.huggingface_branch,
-            **kwargs,
-        )
-        kwargs["token"] = os.getenv("HUGGINGFACE_TOKEN")
-    except TypeError:
-        # TypeError: RWForCausalLM.__init__() got
-        # an unexpected keyword argument 'token'
-        config = AutoConfig.from_pretrained(
-            cfg.llm_backbone,
-            trust_remote_code=cfg.environment.trust_remote_code,
-            revision=cfg.environment.huggingface_branch,
-            **kwargs,
-        )
+
+    config = AutoConfig.from_pretrained(
+        cfg.llm_backbone,
+        trust_remote_code=cfg.environment.trust_remote_code,
+        token=os.getenv("HUGGINGFACE_TOKEN"),
+        revision=cfg.environment.huggingface_branch,
+        **kwargs,
+    )
 
     config = update_backbone_config(config, cfg)
     kwargs = dict()
+    kwargs["token"] = os.getenv("HUGGINGFACE_TOKEN")
 
     quantization_config = None
     if cfg.architecture.backbone_dtype == "int8" and len(cfg.environment.gpus):
