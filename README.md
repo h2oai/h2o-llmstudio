@@ -21,6 +21,7 @@
 - [Run H2O LLM Studio GUI using Docker from a nightly build](#run-h2o-llm-studio-gui-using-docker-from-a-nightly-build)
 - [Run H2O LLM Studio GUI by building your own Docker image](#run-h2o-llm-studio-gui-by-building-your-own-docker-image)
 - [Run H2O LLM Studio with command line interface (CLI)](#run-h2o-llm-studio-with-command-line-interface-cli)
+- [Troubleshooting](#troubleshooting)
 - [Data format and example data](#data-format-and-example-data)
 - [Training your model](#training-your-model)
 - [Example: Run on OASST data via CLI](#example-run-on-oasst-data-via-cli)
@@ -254,6 +255,14 @@ python publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_ke
 `user_id` is the Hugging Face user ID. If user logged in, it can be omitted.
 `model_name` is the name of the model to be published on Hugging Face. It can be omitted.
 `safe_serialization` is a flag indicating whether safe serialization should be used. Default is True.
+
+## Troubleshooting
+
+If running on cloud based machines such as runpod, you may need to set the following environment variable to allow the H2O Wave server to accept connections from the proxy:
+
+```bash
+H2O_WAVE_ALLOWED_ORIGINS="*"
+```
 
 ## Data format and example data
 
