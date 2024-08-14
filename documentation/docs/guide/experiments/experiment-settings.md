@@ -36,6 +36,7 @@ import TSattentionImplementation from '../../tooltips/experiments/_attention-imp
 import TSbatchSize from '../../tooltips/experiments/_batch-size.mdx';
 import TSepochs from '../../tooltips/experiments/_epochs.mdx';
 import TSschedule from '../../tooltips/experiments/_schedule.mdx';
+import TSminLearningRateRatio from '../../tooltips/experiments/_min-learning-rate-ratio.mdx';
 import TSwarmupEpochs from '../../tooltips/experiments/_warmup-epochs.mdx';
 import TSweightDecay from '../../tooltips/experiments/_weight-decay.mdx';
 import TSGradientclip from '../../tooltips/experiments/_gradient-clip.mdx';
@@ -246,6 +247,10 @@ The settings under each category are listed and described below.
 ### Schedule
 
 <TSschedule/>
+
+### Min Learning Rate Ratio
+
+<TSminLearningRateRatio/>
 
 ### Warmup epochs
 
