@@ -22,9 +22,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-.neptune/*
-wandb/*
-.vscode/*
+.neptune/
+wandb/
+.vscode/
 
 # C extensions
 *.so
