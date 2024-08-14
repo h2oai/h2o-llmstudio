@@ -1,0 +1,10 @@
+The minimum learning rate ratio determines the lowest learning rate that will be used during training as a fraction of the initial learning rate. This is particularly useful when using learning rate schedules like "Cosine" or "Linear" that decrease the learning rate over time.
+
+For example, if the initial learning rate is 0.001 and the min_learning_rate_ratio is set to 0.1, the learning rate will never drop below 0.0001 (0.001 * 0.1) during training.
+
+Setting this to a value greater than 0 can help prevent the learning rate from becoming too small, which might slow down training or cause the model to get stuck in local optima.
+
+- A value of 0.0 allows the learning rate to potentially reach zero by the end of training.
+- Typical values range from 0.01 to 0.1, depending on the specific task and model.
+
+This parameter cannot be set when using the **Constant** learning rate schedule.
