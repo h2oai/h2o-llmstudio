@@ -1650,7 +1650,7 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
                 metric = ""
                 loss_function = ""
 
-        charts_db_path = f"{row.path}/charts.db"
+        charts_db_path = os.path.join(row.path, "charts.db")
         if os.path.exists(charts_db_path):
             with SqliteDict(charts_db_path) as logs:
                 if "internal" in logs.keys():
@@ -1709,6 +1709,8 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
                     else:
                         eta = "N/A"
                 else:
+                    # Default values for when charts.db is not available
+                    # (experiment deleted manually)
                     eta = "N/A"
                     total_steps = 1
                     curr_total_step = 0
