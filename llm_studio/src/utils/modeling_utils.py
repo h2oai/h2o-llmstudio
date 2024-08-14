@@ -713,13 +713,15 @@ def update_backbone_config(config: Any, cfg: DefaultConfigProblemBase):
     if config.eos_token_id != tokenizer.eos_token_id:
         logger.warning(
             "EOS token id not matching between config and tokenizer. "
-            f"Overwriting with tokenizer id {tokenizer.eos_token_id}."
+            f"Overwriting {config.eos_token_id} with "
+            f"tokenizer id {tokenizer.eos_token_id}."
         )
         config.eos_token_id = tokenizer.eos_token_id
     if config.pad_token_id != tokenizer.pad_token_id:
         logger.warning(
             "PAD token id not matching between config and tokenizer. "
-            f"Overwriting with tokenizer id {tokenizer.pad_token_id}."
+            f"Overwriting {config.pad_token_id} with "
+            f"tokenizer id {tokenizer.pad_token_id}."
         )
         config.pad_token_id = tokenizer.pad_token_id
     # no warning needed as not used
