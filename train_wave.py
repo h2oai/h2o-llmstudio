@@ -81,7 +81,7 @@ if __name__ == "__main__":
     )
     from llm_studio.src.utils.gpu_utils import is_oom_error
     from llm_studio.src.utils.logging_utils import initialize_logging, write_flag
-    from llm_studio.src.utils.utils import kill_ddp_processes
+    from llm_studio.src.utils.utils import kill_child_processes_and_current
     from train import run
 
     if "config" in parser_args:
@@ -160,6 +160,5 @@ if __name__ == "__main__":
             )
             write_flag(flag_path.format(local_rank), "info", "See logs")
 
-        # Clean up any potential DDP processes
-        # Do not kill parent process, as it is the main/wave process
-        kill_ddp_processes(kill_parent=False)
+        # Clean up any potential processes for this experiment
+        kill_child_processes_and_current()

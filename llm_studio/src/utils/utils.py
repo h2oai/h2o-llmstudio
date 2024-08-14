@@ -62,32 +62,37 @@ def kill_child_processes(parent_pid: int) -> bool:
         return False
 
 
-def kill_ddp_processes(kill_parent=True) -> None:
+def kill_child_processes(current_pid, exclude=None) -> None:
     """
-    Killing all DDP processes from a single process.
-    Firstly kills all children of a single DDP process (dataloader workers)
-    Then kills all other DDP processes
-    Then kills main parent DDP process (if kill_parent is True)
+    Kill all child processes of specified PID
+    Optionally, excludes one PID
     """
-
-    pid = os.getpid()
-    parent_pid = os.getppid()
-
-    current_process = psutil.Process(pid)
-    children = current_process.children(recursive=True)
+    current_process = psutil.Process(current_pid)
+    children = current_process.children(recursive=True)[::-1]
     for child in children:
-        child.kill()
-
-    parent_process = psutil.Process(parent_pid)
-    children = parent_process.children(recursive=True)[::-1]
-    for child in children:
-        if child.pid == pid:
+        if child.pid == exclude:
             continue
         child.kill()
 
-    if kill_parent:
-        parent_process.kill()
 
+def kill_child_processes_and_current() -> None:
+    """
+    Kill all child processes of the current process, then terminates itself
+    """
+    current_pid = os.getpid()
+    kill_child_processes(current_pid)
+    current_process = psutil.Process(current_pid)
+    current_process.kill()
+
+
+def kill_sibling_ddp_processes() -> None:
+    """
+    Killing all sibling DDP processes from a single DDP process.
+    """
+    pid = os.getpid()
+    parent_pid = os.getppid()
+    kill_child_processes(parent_pid, exclude=pid)
+    current_process = psutil.Process(pid)
     current_process.kill()
 
 

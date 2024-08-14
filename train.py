@@ -66,7 +66,8 @@ from llm_studio.src.utils.modeling_utils import (
 )
 from llm_studio.src.utils.utils import (
     create_symlinks_in_parent_folder,
-    kill_ddp_processes,
+    kill_child_processes,
+    kill_sibling_ddp_processes,
     set_environment,
     set_seed,
 )
@@ -475,7 +476,7 @@ def run(cfg: DefaultConfigProblemBase) -> float:
             logger.warning(f"{errors['title'][i]}: {errors['message'][i]}")
 
     if any(error_type == "error" for error_type in errors["type"]):
-        raise ValueError(
+        raise LLMTrainingException(
             "Configuration contains errors. Please fix them before proceeding."
         )
 
@@ -730,4 +731,6 @@ if __name__ == "__main__":
     except Exception:
         logging.error("Exception occurred during the run:", exc_info=True)
         if ("WORLD_SIZE" in os.environ) and (int(os.environ["WORLD_SIZE"]) > 1):
-            kill_ddp_processes()
+            kill_sibling_ddp_processes()
+        else:
+            kill_child_processes()
