@@ -36,6 +36,7 @@ import TSattentionImplementation from '../../tooltips/experiments/_attention-imp
 import TSbatchSize from '../../tooltips/experiments/_batch-size.mdx';
 import TSepochs from '../../tooltips/experiments/_epochs.mdx';
 import TSschedule from '../../tooltips/experiments/_schedule.mdx';
+import TSminLearningRateRatio from '../../tooltips/experiments/_min-learning-rate-ratio.mdx';
 import TSwarmupEpochs from '../../tooltips/experiments/_warmup-epochs.mdx';
 import TSweightDecay from '../../tooltips/experiments/_weight-decay.mdx';
 import TSGradientclip from '../../tooltips/experiments/_gradient-clip.mdx';
@@ -77,6 +78,7 @@ import EStrustremotecode from '../../tooltips/experiments/_trust-remote-code.mdx
 import EShuggingfacebranch from '../../tooltips/experiments/_huggingface-branch.mdx';
 import ESnumofworkers from '../../tooltips/experiments/_number-of-workers.mdx';
 import ESseed from '../../tooltips/experiments/_seed.mdx';
+import LSlogallranks from '../../tooltips/experiments/_log-all-ranks.mdx';
 import LSlogger from '../../tooltips/experiments/_logger.mdx';
 import LSneptuneproject from '../../tooltips/experiments/_neptune-project.mdx';
 import LSwandbproject from '../../tooltips/experiments/_wandb-project.mdx';
@@ -246,6 +248,10 @@ The settings under each category are listed and described below.
 ### Schedule
 
 <TSschedule/>
+
+### Min Learning Rate Ratio
+
+<TSminLearningRateRatio/>
 
 ### Warmup epochs
 
@@ -418,6 +424,10 @@ The settings under each category are listed and described below.
 <ESseed/>
 
 ## Logging settings
+
+### Log all ranks
+
+<LSlogallranks/>
 
 ### Logger
 

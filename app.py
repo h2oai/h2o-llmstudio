@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def on_startup():
     initialize_logging()
-    logger.info("STARTING APP")
+    logger.info("Starting H2O LLM STUDIO")
 
 
 @app("/", on_startup=on_startup)
@@ -29,8 +29,7 @@ async def serve(q: Q):
     if await is_app_blocked_while_streaming(q):
         return
 
-    if not q.app.initialized:
-        await initialize_app(q)
+    await initialize_app(q)
 
     copy_expando(q.args, q.client)
 
