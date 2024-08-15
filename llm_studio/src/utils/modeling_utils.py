@@ -226,12 +226,11 @@ def _load_model_weights(
         if strict:
             raise e
         else:
-            if cfg.environment._local_rank == 0:
-                logger.warning(
-                    "Only a part of the pretrained weights was loaded. "
-                    "Some layers can't be initialized with pretrained "
-                    f"weights: {e}"
-                )
+            logger.warning(
+                "Only a part of the pretrained weights was loaded. "
+                "Some layers can't be initialized with pretrained "
+                f"weights: {e}"
+            )
 
             for layer_name in re.findall("size mismatch for (.*?):", str(e)):
                 model_weights.pop(layer_name, None)
@@ -282,8 +281,7 @@ def load_checkpoint(
     del model_weights
     gc.collect()
 
-    if cfg.environment._local_rank == 0:
-        logger.info(f"Weights loaded from: {weights_path}")
+    logger.info(f"Weights loaded from: {weights_path}")
 
 
 def get_ds_config(cfg: DefaultConfigProblemBase):
@@ -491,6 +489,7 @@ def get_scheduler(
         optimizer=optimizer,
         num_warmup_steps=cfg.training.warmup_epochs * epoch_steps,
         num_training_steps=cfg.training.epochs * epoch_steps,
+        min_learning_rate_ratio=cfg.training.min_learning_rate_ratio,
     )
 
     return scheduler
@@ -579,8 +578,7 @@ def run_inference(
     # Store information for evaluation
     out = dict()
 
-    if cfg.environment._local_rank == 0:
-        logger.info(f"Starting {mode} inference")
+    logger.info(f"Starting {mode} inference")
 
     tqdm_out = TqdmToLogger(logger, level=logging.INFO)
     progress_bar = tqdm(
@@ -823,8 +821,7 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
     kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
 
     if cfg.architecture.pretrained:
-        if cfg.environment._local_rank == 0:
-            logger.info(f"Loading {cfg.llm_backbone}. This may take a while.")
+        logger.info(f"Loading {cfg.llm_backbone}. This may take a while.")
 
         backbone = model_class.from_pretrained(
             cfg.llm_backbone,
@@ -833,23 +830,20 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
             quantization_config=quantization_config,
             **kwargs,
         )
-        if cfg.environment._local_rank == 0:
-            logger.info(f"Loaded {cfg.llm_backbone}.")
+        logger.info(f"Loaded {cfg.llm_backbone}.")
     else:
         kwargs.pop("token", None)
         backbone = model_class.from_config(config, **kwargs)
 
     if cfg.tokenizer._vocab_length > config.vocab_size:
-        if cfg.environment._local_rank == 0:
-            logger.info(f"Resizing token embeddings to {cfg.tokenizer._vocab_length}")
+        logger.info(f"Resizing token embeddings to {cfg.tokenizer._vocab_length}")
         backbone.resize_token_embeddings(cfg.tokenizer._vocab_length)
 
     backbone.model_parallel = False
 
-    if cfg.environment._local_rank == 0:
-        logger.info(
-            f"Attention implementation: {backbone.config._attn_implementation_internal}"
-        )
+    logger.info(
+        f"Attention implementation: {backbone.config._attn_implementation_internal}"
+    )
 
     if cfg.training.lora:
         # if used, gradient checkpointing will be enabled below
@@ -879,8 +873,7 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
         for name, param in backbone.named_parameters():
             # freeze base model's layers
             if any(freeze_layer in name for freeze_layer in cfg.training.freeze_layers):
-                if cfg.environment._local_rank == 0:
-                    logger.info(f"Freezing layer: {name}")
+                logger.info(f"Freezing layer: {name}")
                 param.requires_grad = False
 
     if cfg.architecture.gradient_checkpointing:
@@ -1060,8 +1053,7 @@ def prepare_lora(cfg: DefaultConfigProblemBase, backbone):
                 if name not in target_modules:
                     target_modules.append(name)
 
-    if cfg.environment._local_rank == 0:
-        logger.info(f"Lora module names: {target_modules}")
+    logger.info(f"Lora module names: {target_modules}")
 
     lora_config = LoraConfig(
         use_dora=cfg.training.use_dora,
@@ -1085,15 +1077,13 @@ def prepare_lora(cfg: DefaultConfigProblemBase, backbone):
             unfreeze_layer in name
             for unfreeze_layer in cfg.training.lora_unfreeze_layers
         ):
-            if cfg.environment._local_rank == 0:
-                logger.info(f"Unfreezing layer: {name}")
+            logger.info(f"Unfreezing layer: {name}")
             param.requires_grad = True
 
     trainable_params, all_param = backbone.get_nb_trainable_parameters()
-    if cfg.environment._local_rank == 0:
-        logger.info(f"Trainable parameters count: {trainable_params}")
-        logger.info(f"Total parameters count: {all_param}")
-        logger.info(f"Trainable %: {100 * trainable_params / all_param:.4f}%")
+    logger.info(f"Trainable parameters count: {trainable_params}")
+    logger.info(f"Total parameters count: {all_param}")
+    logger.info(f"Trainable %: {100 * trainable_params / all_param:.4f}%")
 
     return backbone
 

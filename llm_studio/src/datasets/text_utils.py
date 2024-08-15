@@ -135,5 +135,4 @@ def set_stop_token_ids(cfg, tokenizer):
                 "input_ids"
             ][0]
         )
-    if cfg.environment._local_rank == 0:
-        logger.info(f"Stop token ids: {cfg.tokenizer._stop_words_ids}")
+    logger.info(f"Stop token ids: {cfg.tokenizer._stop_words_ids}")

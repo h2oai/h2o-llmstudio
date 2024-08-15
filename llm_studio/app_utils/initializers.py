@@ -115,9 +115,8 @@ def prepare_dpo(q):
 async def initialize_client(q: Q) -> None:
     """Initialize the client."""
 
-    logger.info(f"Initializing client {q.client.client_initialized}")
-
     if not q.client.client_initialized:
+        logger.info("Initializing client ...")
         q.client.delete_cards = set()
         q.client.delete_cards.add("init_app")
 
@@ -140,6 +139,7 @@ async def initialize_client(q: Q) -> None:
 
         await import_default_data(q)
         q.args.__wave_submission_name__ = default_cfg.start_page
+        logger.info("Initializing client ... done")
 
     return
 
@@ -151,27 +151,28 @@ async def initialize_app(q: Q) -> None:
     This function is called once when the app is started and stores values in q.app.
     """
 
-    logger.info("Initializing app ...")
+    if not q.app.initialized:
+        logger.info("Initializing app ...")
 
-    icons_pth = "llm_studio/app_utils/static/"
-    (q.app["icon_path"],) = await q.site.upload([f"{icons_pth}/icon_300.svg"])
+        icons_pth = "llm_studio/app_utils/static/"
+        (q.app["icon_path"],) = await q.site.upload([f"{icons_pth}/icon_300.svg"])
 
-    script_sources = []
+        script_sources = []
 
-    with NamedTemporaryFile(mode="w", suffix=".min.js") as f:
-        # write all Bokeh scripts to one file to make sure
-        # they are loaded sequentially
-        for js_raw in BokehResources(mode="inline").js_raw:
-            f.write(js_raw)
-            f.write("\n")
+        with NamedTemporaryFile(mode="w", suffix=".min.js") as f:
+            # write all Bokeh scripts to one file to make sure
+            # they are loaded sequentially
+            for js_raw in BokehResources(mode="inline").js_raw:
+                f.write(js_raw)
+                f.write("\n")
 
-        (url,) = await q.site.upload([f.name])
-        script_sources.append(url)
+            (url,) = await q.site.upload([f.name])
+            script_sources.append(url)
 
-    q.app["script_sources"] = script_sources
-    q.app["initialized"] = True
-    q.app.version = default_cfg.version
-    q.app.name = default_cfg.name
-    q.app.heap_mode = default_cfg.heap_mode
+        q.app["script_sources"] = script_sources
+        q.app["initialized"] = True
+        q.app.version = default_cfg.version
+        q.app.name = default_cfg.name
+        q.app.heap_mode = default_cfg.heap_mode
 
-    logger.info("Initializing app ... done")
+        logger.info("Initializing app ... done")

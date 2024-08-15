@@ -93,8 +93,7 @@ class Model(nn.Module):
             if cfg.training.lora and not cfg.training.lora_unfreeze_layers:
                 self.backbone_reference = None
             else:
-                if cfg.environment._local_rank == 0:
-                    logger.info("Duplicating backbone for reference model.")
+                logger.info("Duplicating backbone for reference model.")
                 self.backbone_reference, _ = create_nlp_backbone(
                     cfg, model_class=AutoModelForCausalLM
                 )

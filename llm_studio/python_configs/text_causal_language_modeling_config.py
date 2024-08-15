@@ -155,6 +155,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     drop_last_batch: bool = True
     epochs: int = 1
     schedule: str = "Cosine"
+    min_learning_rate_ratio: float = 0.0
     warmup_epochs: float = 0.0
 
     weight_decay: float = 0.0
@@ -211,6 +212,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
         self._possible_values["batch_size"] = (1, 256, 1)
         self._possible_values["epochs"] = (0, 10, 1)
         self._possible_values["schedule"] = Schedulers.names()
+        self._possible_values["min_learning_rate_ratio"] = (0.0, 0.1, 0.0001)
         self._possible_values["warmup_epochs"] = (0.0, 5.0, 0.05)
 
         self._possible_values["weight_decay"] = possible_values.Number(step=1e-5, min=0)
@@ -304,6 +306,10 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
                 "lora_unfreeze_layers",
             ],
             [Dependency(key="lora", value=False, is_set=False)],
+        )
+        self._nesting.add(
+            ["min_learning_rate_ratio"],
+            [Dependency(key="schedule", value="Constant", is_set=False)],
         )
 
 
@@ -562,6 +568,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
 @dataclass
 class ConfigNLPCausalLMLogging(DefaultConfig):
+    log_all_ranks: bool = False
     logger: str = "None"
     neptune_project: str = ""
     wandb_project: str = ""
