@@ -70,6 +70,9 @@ def get_tokenizer(cfg: DefaultConfigProblemBase):
         cfg.tokenizer, "_padding_side", tokenizer.padding_side
     )
 
+    tokenizer.add_bos_token = False
+    tokenizer.add_eos_token = False
+
     # if the eos token is an empty string, we assign it to a token
     if tokenizer.eos_token == "":
         tokenizer.add_special_tokens({"eos_token": "</s>"})
