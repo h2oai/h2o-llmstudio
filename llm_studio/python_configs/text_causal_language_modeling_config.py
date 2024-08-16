@@ -479,6 +479,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
     _local_rank: int = 0
     _world_size: int = 1
     _curr_step: int = 0
+    _step_log_denominator: int = 1
     _curr_val_step: int = 0
     _rank: int = 0  # global rank
     _device: str = "cuda"
@@ -568,6 +569,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 
 @dataclass
 class ConfigNLPCausalLMLogging(DefaultConfig):
+    log_step_size: str = "absolute"
     log_all_ranks: bool = False
     logger: str = "None"
     neptune_project: str = ""
@@ -582,6 +584,13 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
 
     def __post_init__(self):
         super().__post_init__()
+        self._possible_values["log_step_size"] = possible_values.String(
+            values=(
+                ("absolute", "Absolute"),
+                ("relative", "Relative"),
+            ),
+            allow_custom=False,
+        )
         self._possible_values["logger"] = ExternalLoggers.names()
 
         self._nesting.add(

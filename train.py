@@ -136,10 +136,13 @@ def run_eval(
                 mode,
                 key,
                 value,
-                step=cfg.environment._curr_step,
+                step=cfg.environment._curr_step / cfg.environment._step_log_denominator,
             )
     cfg.logging._logger.log(
-        mode, cfg.prediction.metric, val_metric, step=cfg.environment._curr_step
+        mode,
+        cfg.prediction.metric,
+        val_metric,
+        step=cfg.environment._curr_step / cfg.environment._step_log_denominator,
     )
 
     # Log plots
@@ -334,27 +337,32 @@ def run_train(
 
             if cfg.environment._local_rank == 0:
                 cfg.logging._logger.log(
-                    "train", "loss", losses[-1], step=cfg.environment._curr_step
+                    "train",
+                    "loss",
+                    losses[-1],
+                    step=cfg.environment._curr_step
+                    / cfg.environment._step_log_denominator,
                 )
                 cfg.logging._logger.log(
                     "meta",
                     "lr",
                     optimizer.param_groups[0]["lr"],
-                    step=cfg.environment._curr_step,
+                    step=cfg.environment._curr_step
+                    / cfg.environment._step_log_denominator,
                 )
                 if cfg.training.differential_learning_rate_layers:
                     cfg.logging._logger.log(
                         "meta",
                         "lr_diff",
                         optimizer.param_groups[2]["lr"],
-                        step=cfg.environment._curr_step,
+                        step=cfg.environment._curr_step
+                        / cfg.environment._step_log_denominator,
                     )
 
                 cfg.logging._logger.log(
                     "internal",
                     "current_step",
                     cfg.environment._curr_step,
-                    step=cfg.environment._curr_step,
                 )
                 for key in output_dict:
                     if key.startswith("additional_log_"):
@@ -362,7 +370,8 @@ def run_train(
                             "train",
                             key.replace("additional_log_", ""),
                             output_dict[key].item(),
-                            step=cfg.environment._curr_step,
+                            step=cfg.environment._curr_step
+                            / cfg.environment._step_log_denominator,
                         )
 
                 # Show logs each 5% of the epoch (only if doing per epoch evaluation)
@@ -417,9 +426,7 @@ def run_train(
             torch.distributed.barrier()
 
         if cfg.environment._local_rank == 0:
-            cfg.logging._logger.log(
-                "internal", "epoch", epoch + 1, step=cfg.environment._curr_step
-            )
+            cfg.logging._logger.log("internal", "epoch", epoch + 1)
 
     if cfg.environment._distributed:
         torch.distributed.barrier()
@@ -557,13 +564,17 @@ def run(cfg: DefaultConfigProblemBase) -> float:
         )
         val_batch_size = get_inference_batch_size(cfg)
 
-        # if zero shot, validate once before training
         total_validation_steps = (
             len(val_dataloader)
             * (num_eval_epochs + int(cfg.training.evaluate_before_training))
             * val_batch_size
             * cfg.environment._world_size
         )
+
+        if cfg.logging.log_step_size == "relative":
+            cfg.environment._step_log_denominator = total_training_steps
+        else:
+            cfg.environment._step_log_denominator = 1
 
     # Prepare model and optimizer
     if cfg.environment.use_deepspeed:
@@ -627,18 +638,17 @@ def run(cfg: DefaultConfigProblemBase) -> float:
         cfg.logging._logger = MainLogger(cfg)
 
         cfg.logging._logger.log(
-            "internal", "total_training_steps", total_training_steps, step=0
+            "internal", "total_training_steps", total_training_steps
         )
 
         cfg.logging._logger.log(
-            "internal", "total_validation_steps", total_validation_steps, step=0
+            "internal", "total_validation_steps", total_validation_steps
         )
 
         cfg.logging._logger.log(
             "internal",
             "global_start_time",
             global_start_time,
-            step=cfg.environment._curr_step,
         )
         # re-save config
         save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)

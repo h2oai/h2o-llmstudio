@@ -665,7 +665,6 @@ def run_inference(
                 "internal",
                 "current_val_step",
                 cfg.environment._curr_val_step,
-                step=cfg.environment._curr_val_step,
             )
 
         if cfg.environment._distributed:
