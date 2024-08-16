@@ -18,13 +18,18 @@ from llm_studio.src.utils.utils import (
 )
 
 
-def test_check_metric():
+def test_check_metric_key_not_set():
     cfg = MagicMock()
     cfg.prediction.metric = "GPT"
 
     with patch.dict(os.environ, {"OPENAI_API_KEY": ""}):
         cfg = check_metric(cfg)
         assert cfg.prediction.metric == "BLEU"
+
+
+def test_check_metric_key_set():
+    cfg = MagicMock()
+    cfg.prediction.metric = "GPT"
 
     with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key"}):
         cfg = check_metric(cfg)
