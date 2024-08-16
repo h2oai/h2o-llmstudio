@@ -69,7 +69,6 @@ from llm_studio.src.utils.utils import (
     create_symlinks_in_parent_folder,
     kill_child_processes_and_current,
     kill_sibling_ddp_processes,
-    set_environment,
     set_seed,
 )
 
@@ -275,8 +274,7 @@ def run_train(
                 log_plot(cfg, plot, "train_data")
 
             # only need to sync gradients at last step of grad accumulation
-            req_grad_sync = itr % cfg.training.grad_accumulation == 0
-            model.require_backward_grad_sync = req_grad_sync  # type: ignore[assignment]
+            model.require_backward_grad_sync = itr % cfg.training.grad_accumulation == 0
 
             # Forward pass
             with autocast(
