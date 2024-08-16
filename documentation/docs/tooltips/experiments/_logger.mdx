@@ -4,4 +4,6 @@ Options
 - **None**
     - H2O LLM Studio does not use any logger.
 - **Neptune**
-    - H2O LLM Studio uses Neptune as a logger to track the experiment. To use Neptune, you must specify a **Neptune API token** and a **Neptune project**.
+    - H2O LLM Studio uses Neptune as a logger to track the experiment. To use Neptune, you must specify a **Neptune API token** in the settings or as a `NEPTUNE_API_TOKEN` environment variable and a **Neptune project**.
+- **W&B**
+    - H2O LLM Studio uses W&B as a logger to track the experiment. To use W&B, you must specify a **W&B API key** in the settings or as a `WANDB_API_KEY` environment variable and a **W&B project** and **W&B entity**.

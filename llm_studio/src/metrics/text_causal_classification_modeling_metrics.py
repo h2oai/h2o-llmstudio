@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Tuple, Union
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
-from scipy.special import softmax
 from sklearn.metrics import log_loss, roc_auc_score
 
 from llm_studio.python_configs.base import DefaultConfigProblemBase
@@ -17,13 +16,13 @@ def accuracy_score(
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
     """Calculate accuracy score.
 
-    Only considers the predicted value (results["predicted_text"]) and target value
+    Only considers the predicted value (results["predictions"]) and target value
     (results["target_text"]).
     It supports both binary and multiclass classification.
 
     Args:
         cfg: DefaultConfigProblemBase, ignored
-        results: Dict, model results including 'predicted_text' and 'target_text'
+        results: Dict, model results including 'predictions' and 'target_text'
         val_df: pd.DataFrame, validation dataframe
         raw_results: bool, ignored
 
@@ -33,19 +32,21 @@ def accuracy_score(
     Raises:
         ValueError: If input data is invalid or inconsistent
     """
-    predicted_text = np.array([int(text) for text in results["predicted_text"]])
-    target_text = np.array([int(text) for text in results["target_text"]])
+    predictions = np.array(results["predictions"])
+    target = np.array(
+        [[int(t) for t in text.split(",")] for text in results["target_text"]]
+    )
 
     # Input validation
-    if len(target_text) != len(predicted_text):
+    if len(target) != len(predictions):
         raise ValueError(
-            f"Length of target_text ({len(target_text)}) and predicted_text "
-            f"({len(predicted_text)}) should be the same."
+            f"Length of target ({len(target)}) and predicted ({len(predictions)}) "
+            "should be the same."
         )
-    if len(target_text) == 0:
+    if len(target) == 0:
         raise ValueError("No data to calculate accuracy score")
 
-    return (predicted_text == target_text).astype("float")
+    return (predictions == target).mean(axis=1).reshape(-1).astype("float")
 
 
 def auc_score(
@@ -73,20 +74,22 @@ def auc_score(
         ValueError: If input data is invalid or inconsistent
     """
     logits = np.array(results["logits"])
-    target_text = np.array([int(text) for text in results["target_text"]])
+    target = np.array(
+        [[int(t) for t in text.split(",")] for text in results["target_text"]]
+    )
 
     # Input validation
-    if len(target_text) != len(logits):
+    if len(target) != len(logits):
         raise ValueError(
-            f"Length of target_text ({len(target_text)}) and logits ({len(logits)}) "
+            f"Length of target ({len(target)}) and logits ({len(logits)}) "
             "should be the same."
         )
-    if len(target_text) == 0:
+    if len(target) == 0:
         raise ValueError("No data to calculate AUC score.")
 
-    if cfg.dataset.num_classes > 1:
-        target_text = np.eye(cfg.dataset.num_classes)[target_text]
-    return roc_auc_score(target_text, logits, multi_class="ovr")
+    if target.shape[1] == 1 and cfg.dataset.num_classes > 1:
+        target = np.eye(cfg.dataset.num_classes)[target.reshape(-1)]
+    return roc_auc_score(target, logits, multi_class="ovr")
 
 
 def logloss_score(
@@ -97,12 +100,12 @@ def logloss_score(
 ) -> Union[NDArray, Tuple[NDArray, List[str]]]:
     """Calculate the Log Loss (Cross-Entropy Loss) score.
 
-    This function computes the log loss using the predicted logits and target values.
-    It supports both binary and multiclass classification.
+    This function computes the log loss using the predicted probabilities and target.
+    It supports binary, multiclass, and multilabel classification.
 
     Args:
         cfg: DefaultConfigProblemBase, configuration
-        results: Dict, results from the model including 'logits' and 'target_text'
+        results: Dict, model results including 'probabilities' and 'target_text'
         val_df: pd.DataFrame, ignored
         raw_results: bool, ignored
 
@@ -112,22 +115,31 @@ def logloss_score(
     Raises:
         ValueError: If input data is invalid or inconsistent
     """
-    logits = np.array(results["logits"])
-    target_text = np.array([int(text) for text in results["target_text"]])
+    predictions = np.array(results["probabilities"])
+    target = np.array(
+        [[int(t) for t in text.split(",")] for text in results["target_text"]]
+    )
 
     # Input validation
-    if len(target_text) != len(logits):
+    if len(target) != len(predictions):
         raise ValueError(
-            f"Length of target_text ({len(target_text)}) and logits ({len(logits)}) "
+            f"Length of target ({len(target)}) and predictions ({len(predictions)}) "
             "should be the same."
         )
-    if len(target_text) == 0:
+    if len(target) == 0:
         raise ValueError("No data to calculate log loss.")
 
+    # Handle multilabel case
+    if len(cfg.dataset.answer_column) > 1:
+        log_losses = []
+        for col in range(len(cfg.dataset.answer_column)):
+            log_losses.append(log_loss(target[:, col], predictions[:, col]))
+        return np.mean(log_losses)
+
+    # Handle binary and multiclass cases
     if cfg.dataset.num_classes > 1:
-        target_text = np.eye(cfg.dataset.num_classes)[target_text]
-        logits = softmax(logits, axis=1)
-    return log_loss(target_text, logits)
+        target = np.eye(cfg.dataset.num_classes)[target.reshape(-1)]
+    return log_loss(target, predictions)
 
 
 class Metrics:

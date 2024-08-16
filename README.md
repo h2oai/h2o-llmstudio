@@ -21,6 +21,7 @@
 - [Run H2O LLM Studio GUI using Docker from a nightly build](#run-h2o-llm-studio-gui-using-docker-from-a-nightly-build)
 - [Run H2O LLM Studio GUI by building your own Docker image](#run-h2o-llm-studio-gui-by-building-your-own-docker-image)
 - [Run H2O LLM Studio with command line interface (CLI)](#run-h2o-llm-studio-with-command-line-interface-cli)
+- [Troubleshooting](#troubleshooting)
 - [Data format and example data](#data-format-and-example-data)
 - [Training your model](#training-your-model)
 - [Example: Run on OASST data via CLI](#example-run-on-oasst-data-via-cli)
@@ -37,7 +38,7 @@
 - use recent finetuning techniques such as [Low-Rank Adaptation (LoRA)](https://arxiv.org/abs/2106.09685) and 8-bit model training with a low memory footprint.
 - use Reinforcement Learning (RL) to finetune your model (experimental)
 - use advanced evaluation metrics to judge generated answers by the model.
-- track and compare your model performance visually. In addition, [Neptune](https://neptune.ai/) integration can be used.
+- track and compare your model performance visually. In addition, [Neptune](https://neptune.ai/) and [W&B](https://wandb.ai/) integration can be used.
 - chat with your model and get instant feedback on your model performance.
 - easily export your model to the [Hugging Face Hub](https://huggingface.co/) and share it with the community.
 
@@ -181,6 +182,7 @@ docker run \
     --shm-size=64g \
     --init \
     --rm \
+    --it \
     -u `id -u`:`id -g` \
     -p 10101:10101 \
     -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
@@ -204,6 +206,7 @@ docker run \
     --shm-size=64g \
     --init \
     --rm \
+    --it \
     -u `id -u`:`id -g` \
     -p 10101:10101 \
     -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
@@ -252,6 +255,14 @@ python publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_ke
 `user_id` is the Hugging Face user ID. If user logged in, it can be omitted.
 `model_name` is the name of the model to be published on Hugging Face. It can be omitted.
 `safe_serialization` is a flag indicating whether safe serialization should be used. Default is True.
+
+## Troubleshooting
+
+If running on cloud based machines such as runpod, you may need to set the following environment variable to allow the H2O Wave server to accept connections from the proxy:
+
+```bash
+H2O_WAVE_ALLOWED_ORIGINS="*"
+```
 
 ## Data format and example data
 

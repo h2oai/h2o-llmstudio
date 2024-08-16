@@ -1,5 +1,7 @@
 import os
 
+from llm_studio.python_configs.cfg_checks import check_config_for_errors
+
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
@@ -65,7 +67,9 @@ from llm_studio.src.utils.modeling_utils import (
 from llm_studio.src.utils.utils import (
     check_metric,
     create_symlinks_in_parent_folder,
-    kill_ddp_processes,
+    kill_child_processes_and_current,
+    kill_sibling_ddp_processes,
+    set_environment,
     set_seed,
 )
 
@@ -133,10 +137,13 @@ def run_eval(
                 mode,
                 key,
                 value,
-                step=cfg.environment._curr_step,
+                step=cfg.environment._curr_step / cfg.environment._step_log_denominator,
             )
     cfg.logging._logger.log(
-        mode, cfg.prediction.metric, val_metric, step=cfg.environment._curr_step
+        mode,
+        cfg.prediction.metric,
+        val_metric,
+        step=cfg.environment._curr_step / cfg.environment._step_log_denominator,
     )
 
     # Log plots
@@ -221,8 +228,7 @@ def run_train(
             + epoch * cfg.environment._world_size * cfg.environment.number_of_workers
             + cfg.environment._local_rank * cfg.environment.number_of_workers
         )
-        if cfg.environment._local_rank == 0:
-            logger.info(f"Training Epoch: {epoch + 1} / {cfg.training.epochs}")
+        logger.info(f"Training Epoch: {epoch + 1} / {cfg.training.epochs}")
 
         if (
             cfg.environment._distributed
@@ -333,27 +339,32 @@ def run_train(
 
             if cfg.environment._local_rank == 0:
                 cfg.logging._logger.log(
-                    "train", "loss", losses[-1], step=cfg.environment._curr_step
+                    "train",
+                    "loss",
+                    losses[-1],
+                    step=cfg.environment._curr_step
+                    / cfg.environment._step_log_denominator,
                 )
                 cfg.logging._logger.log(
                     "meta",
                     "lr",
                     optimizer.param_groups[0]["lr"],
-                    step=cfg.environment._curr_step,
+                    step=cfg.environment._curr_step
+                    / cfg.environment._step_log_denominator,
                 )
                 if cfg.training.differential_learning_rate_layers:
                     cfg.logging._logger.log(
                         "meta",
                         "lr_diff",
                         optimizer.param_groups[2]["lr"],
-                        step=cfg.environment._curr_step,
+                        step=cfg.environment._curr_step
+                        / cfg.environment._step_log_denominator,
                     )
 
                 cfg.logging._logger.log(
                     "internal",
                     "current_step",
                     cfg.environment._curr_step,
-                    step=cfg.environment._curr_step,
                 )
                 for key in output_dict:
                     if key.startswith("additional_log_"):
@@ -361,7 +372,8 @@ def run_train(
                             "train",
                             key.replace("additional_log_", ""),
                             output_dict[key].item(),
-                            step=cfg.environment._curr_step,
+                            step=cfg.environment._curr_step
+                            / cfg.environment._step_log_denominator,
                         )
 
                 # Show logs each 5% of the epoch (only if doing per epoch evaluation)
@@ -380,17 +392,15 @@ def run_train(
             if (itr + 1) % evaluation_step == 0:
                 # TODO: Move back after fixing slow generation of deepspeed.
                 if cfg.training.save_checkpoint == "last":
-                    if cfg.environment._local_rank == 0:
-                        logger.info(
-                            f"Saving last model checkpoint to {cfg.output_directory}"
-                        )
+                    logger.info(
+                        f"Saving last model checkpoint to {cfg.output_directory}"
+                    )
                     save_checkpoint(model=model, path=cfg.output_directory, cfg=cfg)
                 elif cfg.training.save_checkpoint == "each_evaluation_epoch":
                     checkpoint_path = os.path.join(
                         cfg.output_directory, f"epoch_{epoch}_step_{itr}"
                     )
-                    if cfg.environment._local_rank == 0:
-                        logger.info(f"Saving model checkpoint to {checkpoint_path}")
+                    logger.info(f"Saving model checkpoint to {checkpoint_path}")
                     save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
                     create_symlinks_in_parent_folder(checkpoint_path)
 
@@ -400,12 +410,11 @@ def run_train(
 
                 if cfg.training.save_checkpoint == "best":
                     if objective_op(val_metric, best_val_metric):
-                        if cfg.environment._local_rank == 0:
-                            logger.info(
-                                f"Saving best model checkpoint: "
-                                f"val_{cfg.prediction.metric} {best_val_metric:.5} -> "
-                                f"{val_metric:.5} to {cfg.output_directory}"
-                            )
+                        logger.info(
+                            f"Saving best model checkpoint: "
+                            f"val_{cfg.prediction.metric} {best_val_metric:.5} -> "
+                            f"{val_metric:.5} to {cfg.output_directory}"
+                        )
                         save_checkpoint(model=model, path=cfg.output_directory, cfg=cfg)
                         best_val_metric = val_metric
 
@@ -419,9 +428,7 @@ def run_train(
             torch.distributed.barrier()
 
         if cfg.environment._local_rank == 0:
-            cfg.logging._logger.log(
-                "internal", "epoch", epoch + 1, step=cfg.environment._curr_step
-            )
+            cfg.logging._logger.log("internal", "epoch", epoch + 1)
 
     if cfg.environment._distributed:
         torch.distributed.barrier()
@@ -462,11 +469,27 @@ def run(cfg: DefaultConfigProblemBase) -> float:
     # Prepare environment
     if "WORLD_SIZE" in os.environ:
         cfg.environment._distributed = int(os.environ["WORLD_SIZE"]) > 1
+        cfg.environment._local_rank = int(os.environ["LOCAL_RANK"])
     else:
         cfg.environment._distributed = False
+        cfg.environment._local_rank = 0
+
+    initialize_logging(cfg)
+
+    # Check for errors in the configuration
+    errors = check_config_for_errors(cfg)
+    for i in range(len(errors["title"])):
+        if errors["type"][i] == "error":
+            logger.error(f"{errors['title'][i]}: {errors['message'][i]}")
+        else:
+            logger.warning(f"{errors['title'][i]}: {errors['message'][i]}")
+
+    if any(error_type == "error" for error_type in errors["type"]):
+        raise LLMTrainingException(
+            "Configuration contains errors. Please fix them before proceeding."
+        )
 
     if cfg.environment._distributed:
-        cfg.environment._local_rank = int(os.environ["LOCAL_RANK"])
         cfg.environment._device = "cuda:%d" % cfg.environment._local_rank
         if cfg.environment.use_deepspeed:
             deepspeed.init_distributed()
@@ -493,7 +516,6 @@ def run(cfg: DefaultConfigProblemBase) -> float:
             )[0]
         )
     else:
-        cfg.environment._local_rank = 0
         cfg.environment._device = (
             "cuda:0"
             if (torch.cuda.is_available() and len(cfg.environment.gpus) > 0)
@@ -503,15 +525,13 @@ def run(cfg: DefaultConfigProblemBase) -> float:
             logger.warning("Training on CPU. This will be slow.")
 
     set_seed(cfg.environment._seed)
-    if cfg.environment._local_rank == 0:
-        logger.info(f"Problem Type: {cfg.problem_type}")
-        logger.info(f"Global random seed: {cfg.environment._seed}")
+    logger.info(f"Problem Type: {cfg.problem_type}")
+    logger.info(f"Global random seed: {cfg.environment._seed}")
 
     cfg = check_metric(cfg)
 
     # we need to get train dataframe and number of labels if not set or in training mode
-    if cfg.environment._local_rank == 0:
-        logger.info("Preparing the data...")
+    logger.info("Preparing the data...")
     train_df, val_df = get_data(cfg)
 
     if (
@@ -526,8 +546,7 @@ def run(cfg: DefaultConfigProblemBase) -> float:
         cfg.prediction.metric = "BLEU"
 
     # prepare data
-    if cfg.environment._local_rank == 0:
-        logger.info("Preparing train and validation data")
+    logger.info("Preparing train and validation data")
     train_dataset = get_train_dataset(train_df=train_df, cfg=cfg)
     val_dataset = get_val_dataset(val_df=val_df, cfg=cfg)
     train_dataloader = get_train_dataloader(train_ds=train_dataset, cfg=cfg)
@@ -547,13 +566,17 @@ def run(cfg: DefaultConfigProblemBase) -> float:
         )
         val_batch_size = get_inference_batch_size(cfg)
 
-        # if zero shot, validate once before training
         total_validation_steps = (
             len(val_dataloader)
             * (num_eval_epochs + int(cfg.training.evaluate_before_training))
             * val_batch_size
             * cfg.environment._world_size
         )
+
+        if cfg.logging.log_step_size == "relative":
+            cfg.environment._step_log_denominator = total_training_steps
+        else:
+            cfg.environment._step_log_denominator = 1
 
     # Prepare model and optimizer
     if cfg.environment.use_deepspeed:
@@ -617,18 +640,17 @@ def run(cfg: DefaultConfigProblemBase) -> float:
         cfg.logging._logger = MainLogger(cfg)
 
         cfg.logging._logger.log(
-            "internal", "total_training_steps", total_training_steps, step=0
+            "internal", "total_training_steps", total_training_steps
         )
 
         cfg.logging._logger.log(
-            "internal", "total_validation_steps", total_validation_steps, step=0
+            "internal", "total_validation_steps", total_validation_steps
         )
 
         cfg.logging._logger.log(
             "internal",
             "global_start_time",
             global_start_time,
-            step=cfg.environment._curr_step,
         )
         # re-save config
         save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
@@ -652,8 +674,7 @@ def run(cfg: DefaultConfigProblemBase) -> float:
 
     if cfg.training.epochs == 0 and cfg.training.save_checkpoint != "disable":
         checkpoint_path = cfg.output_directory
-        if cfg.environment._local_rank == 0:
-            logger.info(f"Saving last model checkpoint to {checkpoint_path}")
+        logger.info(f"Saving last model checkpoint to {checkpoint_path}")
         save_checkpoint(model=model, path=checkpoint_path, cfg=cfg)
 
     if cfg.environment._local_rank == 0:
@@ -717,11 +738,11 @@ if __name__ == "__main__":
     out_dir = cfg.output_directory
     os.makedirs(out_dir, exist_ok=True)
 
-    initialize_logging(cfg)
-
     try:
         run(cfg=cfg)
     except Exception:
         logging.error("Exception occurred during the run:", exc_info=True)
         if ("WORLD_SIZE" in os.environ) and (int(os.environ["WORLD_SIZE"]) > 1):
-            kill_ddp_processes()
+            kill_sibling_ddp_processes()
+        else:
+            kill_child_processes_and_current()

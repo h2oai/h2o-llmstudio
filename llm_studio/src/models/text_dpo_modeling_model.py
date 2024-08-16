@@ -93,8 +93,7 @@ class Model(nn.Module):
             if cfg.training.lora and not cfg.training.lora_unfreeze_layers:
                 self.backbone_reference = None
             else:
-                if cfg.environment._local_rank == 0:
-                    logger.info("Duplicating backbone for reference model.")
+                logger.info("Duplicating backbone for reference model.")
                 self.backbone_reference, _ = create_nlp_backbone(
                     cfg, model_class=AutoModelForCausalLM
                 )
@@ -198,7 +197,7 @@ class Model(nn.Module):
             )
         outputs["loss"] = loss
 
-        # These values will be logged to Neptune if enabled, see train.py
+        # These values will be logged to external logger if enabled, see train.py
         outputs["additional_log_chosen_rewards"] = chosen_rewards.detach()
         outputs["additional_log_rejected_rewards"] = rejected_rewards.detach()
         # Reward margin should increase over time

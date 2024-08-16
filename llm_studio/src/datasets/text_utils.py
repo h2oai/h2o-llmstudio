@@ -70,6 +70,9 @@ def get_tokenizer(cfg: DefaultConfigProblemBase):
         cfg.tokenizer, "_padding_side", tokenizer.padding_side
     )
 
+    tokenizer.add_bos_token = False
+    tokenizer.add_eos_token = False
+
     # if the eos token is an empty string, we assign it to a token
     if tokenizer.eos_token == "":
         tokenizer.add_special_tokens({"eos_token": "</s>"})
@@ -132,5 +135,4 @@ def set_stop_token_ids(cfg, tokenizer):
                 "input_ids"
             ][0]
         )
-    if cfg.environment._local_rank == 0:
-        logger.info(f"Stop token ids: {cfg.tokenizer._stop_words_ids}")
+    logger.info(f"Stop token ids: {cfg.tokenizer._stop_words_ids}")

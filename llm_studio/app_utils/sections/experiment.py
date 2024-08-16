@@ -76,7 +76,7 @@ from llm_studio.src.utils.export_utils import (
 from llm_studio.src.utils.logging_utils import write_flag
 from llm_studio.src.utils.modeling_utils import unwrap_model
 from llm_studio.src.utils.plot_utils import PLOT_ENCODINGS
-from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes
+from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes_and_current
 
 logger = logging.getLogger(__name__)
 
@@ -968,7 +968,7 @@ async def experiment_stop(q: Q, experiment_ids: List[int]) -> None:
         experiment = q.client.app_db.get_experiment(experiment_id)
 
         try:
-            ret = kill_child_processes(int(experiment.process_id))
+            ret = kill_child_processes_and_current(int(experiment.process_id))
             if ret:
                 flag_path = os.path.join(experiment.path, "flags.json")
                 write_flag(flag_path, "status", "stopped")
@@ -1418,7 +1418,7 @@ async def configs_tab(q):
 
 
 async def logs_tab(q):
-    logs_path = f"{q.client['experiment/display/experiment_path']}/logs.log"
+    logs_path = os.path.join(q.client["experiment/display/experiment_path"], "logs.log")
     text = ""
     in_pre = 0
     # Read log file only if it already exists

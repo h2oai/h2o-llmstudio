@@ -41,7 +41,6 @@ def test_kill_child_processes(mock_process):
     assert kill_child_processes(1234)
     mock_child_1.kill.assert_called_once()
     mock_child_2.kill.assert_called_once()
-    mock_process.return_value.kill.assert_called_once()
 
 
 def test_add_file_to_zip():

@@ -245,6 +245,7 @@ class DefaultConfigProblemBase(DefaultConfig):
         A dictionary with two keys:
         - "title": A list of error titles.
         - "message": A list of error messages.
+        - "type": A list of error types, can be "error", "warning", "deprecated"
         """
-        errors: Dict[str, List] = {"title": [], "message": []}
+        errors: Dict[str, List] = {"title": [], "message": [], "type": []}
         return errors
