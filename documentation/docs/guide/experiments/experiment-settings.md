@@ -78,6 +78,7 @@ import EStrustremotecode from '../../tooltips/experiments/_trust-remote-code.mdx
 import EShuggingfacebranch from '../../tooltips/experiments/_huggingface-branch.mdx';
 import ESnumofworkers from '../../tooltips/experiments/_number-of-workers.mdx';
 import ESseed from '../../tooltips/experiments/_seed.mdx';
+import LSlogstepsize from '../../tooltips/experiments/_log-step-size.mdx';
 import LSlogallranks from '../../tooltips/experiments/_log-all-ranks.mdx';
 import LSlogger from '../../tooltips/experiments/_logger.mdx';
 import LSneptuneproject from '../../tooltips/experiments/_neptune-project.mdx';
@@ -424,6 +425,10 @@ The settings under each category are listed and described below.
 <ESseed/>
 
 ## Logging settings
+
+### Log step size
+
+<LSlogstepsize/>
 
 ### Log all ranks
 
