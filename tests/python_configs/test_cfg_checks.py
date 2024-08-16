@@ -16,7 +16,7 @@ class MockConfig(DefaultConfigProblemBase):
         self.training = MagicMock()
 
     def check(self):
-        return {"title": [], "message": []}
+        return {"title": [], "message": [], "type": []}
 
 
 @pytest.fixture
