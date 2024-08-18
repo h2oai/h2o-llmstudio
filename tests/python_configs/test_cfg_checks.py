@@ -31,6 +31,7 @@ def test_check_config_for_errors(mock_config):
         mock_common_errors.return_value = {
             "title": ["Common Error"],
             "message": ["Common Error Message"],
+            "type": ["error"],
         }
 
         result = check_config_for_errors(mock_config)
