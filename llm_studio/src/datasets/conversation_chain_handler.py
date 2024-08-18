@@ -147,8 +147,8 @@ class ConversationChainHandler:
         if cfg.dataset.system_column != "None":
             if cfg.dataset.system_column not in df.columns:
                 logger.warning(
-                    f"System column {cfg.dataset.system_column} not found."
-                    f"Disabling functionality."
+                    f"System column '{cfg.dataset.system_column}' not found."
+                    " Disabling functionality."
                 )
                 systems = ["" for _ in range(len(self.prompts))]
             else:
