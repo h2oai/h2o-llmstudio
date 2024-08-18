@@ -69,7 +69,7 @@ def sacrebleu_score(
     return np.array(scores)
 
 
-def call_openai_api(template: str, model: str):
+def get_openai_client() -> AzureOpenAI | OpenAI:
     if os.getenv("OPENAI_API_TYPE", "open_ai") == "azure":
         endpoint = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
         client: AzureOpenAI | OpenAI = AzureOpenAI(
@@ -91,6 +91,11 @@ def call_openai_api(template: str, model: str):
             max_retries=LLM_RETRY_ATTEMPTS,
             timeout=LLM_TIMEOUT,  # unit is seconds
         )
+    return client
+
+
+def call_openai_api(template: str, model: str):
+    client = get_openai_client()
     response = client.chat.completions.create(
         model=model,
         messages=[

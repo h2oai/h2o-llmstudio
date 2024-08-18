@@ -319,6 +319,10 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
     add_prompt_answer_tokens: bool = False
     padding_quantile: float = 1.0
     tokenizer_kwargs: str = '{"use_fast": true, "add_prefix_space": false}'
+    _tokenizer_mask_token_id: int = 0
+    _tokenizer_eos_token: str = "<EOS>"
+    _vocab_length: int = 0
+    _stop_words_ids: List[int] = field(default_factory=list)
 
     def __post_init__(self):
         super().__post_init__()

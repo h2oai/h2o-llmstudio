@@ -393,7 +393,7 @@ def test_preprocess_dataframe_personalize():
     assert df["answer"].str.contains("LAION").any()
 
     dataset = CustomDataset(df, cfg)
-    df = dataset.preprocess_dataframe(df, cfg, mode="train")
+    df = dataset.preprocess_dataframe(df, cfg)
 
     assert df["prompt"].str.contains("Danube").any()
     assert df["answer"].str.contains("H2O.ai").any()
@@ -426,7 +426,7 @@ def test_preprocess_dataframe_no_personalize():
     assert df["answer"].str.contains("LAION").any()
 
     dataset = CustomDataset(df, cfg)
-    df_processed = dataset.preprocess_dataframe(df.copy(), cfg, mode="train")
+    df_processed = dataset.preprocess_dataframe(df.copy(), cfg)
 
     assert df_processed["prompt"].str.contains("Open Assistant").any()
     assert df_processed["answer"].str.contains("LAION").any()

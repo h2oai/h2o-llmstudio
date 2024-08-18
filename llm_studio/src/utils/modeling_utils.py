@@ -316,22 +316,22 @@ def get_ds_config(cfg: DefaultConfigProblemBase):
     }
 
     if cfg.environment.deepspeed_method == "ZeRO2":
-        ds_config["zero_optimization"]["stage"] = 2
-        ds_config["zero_optimization"]["allgather_partitions"] = True
-        ds_config["zero_optimization"][
-            "allgather_bucket_size"
-        ] = cfg.environment.deepspeed_allgather_bucket_size
+        ds_config["zero_optimization"].update(
+            {
+                "stage": 2,
+                "allgather_partitions": True,
+                "allgather_bucket_size": cfg.environment.deepspeed_allgather_bucket_size,  # noqa: E501
+            }
+        )
     elif cfg.environment.deepspeed_method == "ZeRO3":
-        ds_config["zero_optimization"]["stage"] = 3
-        ds_config["zero_optimization"][
-            "stage3_prefetch_bucket_size"
-        ] = cfg.environment.deepspeed_stage3_prefetch_bucket_size
-        ds_config["zero_optimization"][
-            "stage3_param_persistence_threshold"
-        ] = cfg.environment.deepspeed_stage3_param_persistence_threshold
-        ds_config["zero_optimization"][
-            "stage3_gather_16bit_weights_on_model_save"
-        ] = True
+        ds_config["zero_optimization"].update(
+            {
+                "stage": 3,
+                "stage3_prefetch_bucket_size": cfg.environment.deepspeed_stage3_prefetch_bucket_size,  # noqa: E501
+                "stage3_param_persistence_threshold": cfg.environment.deepspeed_stage3_param_persistence_threshold,  # noqa: E501
+                "stage3_gather_16bit_weights_on_model_save": True,
+            }
+        )
 
     # TODO: Do not enable offload cpu for now.
     # if cfg.environment.deepspeed_offload_optimizer:
@@ -764,7 +764,7 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
     This is needed for Gradient Checkpointing in DDP mode.
     """
 
-    kwargs = dict()
+    kwargs: Dict[str, Any] = {}
     if (
         hasattr(cfg.training, "attention_implementation")
         and cfg.training.attention_implementation != "auto"
@@ -817,7 +817,7 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
 
     logger.info(f"Using {cfg.architecture.backbone_dtype} for backbone")
 
-    kwargs["trust_remote_code"] = cfg.environment.trust_remote_code
+    kwargs.update({"trust_remote_code": cfg.environment.trust_remote_code})
 
     if cfg.architecture.pretrained:
         logger.info(f"Loading {cfg.llm_backbone}. This may take a while.")
