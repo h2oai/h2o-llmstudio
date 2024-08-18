@@ -532,12 +532,13 @@ def run(cfg: DefaultConfigProblemBase) -> float:
     logger.info("Preparing the data...")
     train_df, val_df = get_data(cfg)
 
-    # We allow system prompt column to be missing in validation DataFrame, but let us assert
-    # that it does exist in the train DataFrame.
+    # We allow system prompt column to be missing in validation DataFrame, but let us
+    # assert that it does exist in the train DataFrame.
     if hasattr(cfg.dataset, "system_column") and cfg.dataset.system_column != "None":
         if cfg.dataset.system_column not in train_df.columns:
             raise LLMTrainingException(
-                f"System column '{cfg.dataset.system_column}' not found in train DataFrame."
+                f"System column '{cfg.dataset.system_column}' not found in train "
+                "DataFrame."
             )
 
     if (
