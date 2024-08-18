@@ -187,7 +187,6 @@ async def handle(q: Q) -> None:
                 )
                 q.client.delete_cards.add("experiment/start")
                 await experiment_run(q)
-                q.client["experiment/list/mode"] = "train"
 
         elif (
             q.args.__wave_submission_name__ == "experiment/start_experiment"
@@ -230,7 +229,6 @@ async def handle(q: Q) -> None:
             await experiment_download_predictions(q)
 
         elif q.args.__wave_submission_name__ == "experiment/list":
-            q.client["experiment/list/mode"] = "train"
             await experiment_list(q)
         elif q.args.__wave_submission_name__ == "experiment/list/current":
             await list_current_experiments(q)

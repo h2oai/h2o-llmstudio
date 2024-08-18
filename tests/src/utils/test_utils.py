@@ -12,9 +12,28 @@ from llm_studio.python_configs.text_dpo_modeling_config import (
 from llm_studio.src.utils.utils import (
     PatchedAttribute,
     add_file_to_zip,
+    check_metric,
     create_symlinks_in_parent_folder,
     kill_child_processes,
 )
+
+
+def test_check_metric_key_not_set():
+    cfg = MagicMock()
+    cfg.prediction.metric = "GPT"
+
+    with patch.dict(os.environ, {"OPENAI_API_KEY": ""}):
+        cfg = check_metric(cfg)
+        assert cfg.prediction.metric == "BLEU"
+
+
+def test_check_metric_key_set():
+    cfg = MagicMock()
+    cfg.prediction.metric = "GPT"
+
+    with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key"}):
+        cfg = check_metric(cfg)
+        assert cfg.prediction.metric == "GPT"
 
 
 @patch("psutil.Process")
