@@ -58,6 +58,16 @@ def prepare_default_dataset_dpo_modeling() -> pd.DataFrame:
     return df
 
 
+def prepare_default_dataset_classification_modeling() -> pd.DataFrame:
+    df = load_dataset("stanfordnlp/imdb")["train"].to_pandas()
+    return df
+
+
+def prepare_default_dataset_regression_modeling() -> pd.DataFrame:
+    df = load_dataset("nvidia/HelpSteer2")["train"].to_pandas()
+    return df
+
+
 def extract_anthropic_prompt(prompt_and_response):
     """Extract the anthropic prompt from a prompt and response pair."""
     search_term = "\n\nAssistant:"

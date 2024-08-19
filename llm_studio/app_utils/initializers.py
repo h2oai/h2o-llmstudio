@@ -10,7 +10,9 @@ from llm_studio.app_utils.config import default_cfg
 from llm_studio.app_utils.db import Database, Dataset
 from llm_studio.app_utils.default_datasets import (
     prepare_default_dataset_causal_language_modeling,
+    prepare_default_dataset_classification_modeling,
     prepare_default_dataset_dpo_modeling,
+    prepare_default_dataset_regression_modeling,
 )
 from llm_studio.app_utils.sections.common import interface
 from llm_studio.app_utils.setting_utils import load_user_settings_and_secrets
@@ -43,6 +45,10 @@ async def import_default_data(q: Q):
             dataset = prepare_oasst(q)
             q.client.app_db.add_dataset(dataset)
             dataset = prepare_dpo(q)
+            q.client.app_db.add_dataset(dataset)
+            dataset = prepare_imdb(q)
+            q.client.app_db.add_dataset(dataset)
+            dataset = prepare_helpsteer(q)
             q.client.app_db.add_dataset(dataset)
 
     except Exception as e:
@@ -105,6 +111,82 @@ def prepare_dpo(q):
     dataset = Dataset(
         id=2,
         name="dpo",
+        path=path,
+        config_file=cfg_path,
+        train_rows=train_df.shape[0],
+    )
+    return dataset
+
+
+def prepare_imdb(q):
+    path = f"{get_data_dir(q)}/imdb"
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path, exist_ok=True)
+    train_df = prepare_default_dataset_classification_modeling()
+    train_df.to_parquet(os.path.join(path, "train.pq"), index=False)
+
+    from llm_studio.python_configs.text_causal_classification_modeling_config import (
+        ConfigNLPCausalClassificationDataset,
+    )
+    from llm_studio.python_configs.text_causal_classification_modeling_config import (
+        ConfigProblemBase as ConfigProblemBaseClassification,
+    )
+
+    cfg: ConfigProblemBaseClassification = ConfigProblemBaseClassification(
+        dataset=ConfigNLPCausalClassificationDataset(
+            train_dataframe=os.path.join(path, "train.pq"),
+            prompt_column=("text",),
+            answer_column=("label",),
+        ),
+    )
+
+    cfg_path = os.path.join(path, "text_causal_classification_modeling_config.yaml")
+    save_config_yaml(cfg_path, cfg)
+    dataset = Dataset(
+        id=3,
+        name="imdb",
+        path=path,
+        config_file=cfg_path,
+        train_rows=train_df.shape[0],
+    )
+    return dataset
+
+
+def prepare_helpsteer(q):
+    path = f"{get_data_dir(q)}/helpsteer"
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path, exist_ok=True)
+    train_df = prepare_default_dataset_regression_modeling()
+    train_df.to_parquet(os.path.join(path, "train.pq"), index=False)
+
+    from llm_studio.python_configs.text_causal_regression_modeling_config import (
+        ConfigNLPCausalRegressionDataset,
+    )
+    from llm_studio.python_configs.text_causal_regression_modeling_config import (
+        ConfigProblemBase as ConfigProblemBaseRegression,
+    )
+
+    cfg: ConfigProblemBaseRegression = ConfigProblemBaseRegression(
+        dataset=ConfigNLPCausalRegressionDataset(
+            train_dataframe=os.path.join(path, "train.pq"),
+            prompt_column=("prompt", "response"),
+            answer_column=(
+                "helpfulness",
+                "correctness",
+                "coherence",
+                "complexity",
+                "verbosity",
+            ),
+        ),
+    )
+
+    cfg_path = os.path.join(path, "text_causal_regression_modeling_config.yaml")
+    save_config_yaml(cfg_path, cfg)
+    dataset = Dataset(
+        id=4,
+        name="helpsteer",
         path=path,
         config_file=cfg_path,
         train_rows=train_df.shape[0],
