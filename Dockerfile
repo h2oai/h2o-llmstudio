@@ -48,6 +48,12 @@ RUN make setup && chmod -R 777 /workspace/.venv
 RUN mkdir -p /home/llmstudio/mount
 ENV H2O_LLM_STUDIO_WORKDIR=/home/llmstudio/mount
 
+# Download the demo datasets and place in the /workspace/demo directory
+# Set the environment variable for the demo datasets
+ENV H2O_LLM_STUDIO_DEMO_DATASETS=/workspace/demo
+COPY download_default_datasets.py /workspace/
+RUN python -m download_default_datasets
+
 COPY . /workspace
 
 # Remove unnecessary packages remove build packages again
