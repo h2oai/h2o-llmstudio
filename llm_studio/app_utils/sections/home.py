@@ -98,8 +98,6 @@ async def home(q: Q) -> None:
     q.client.delete_cards.add("home/disk_usage")
     q.client.delete_cards.add("home/experiments_stats")
 
-    q.client["experiment/list/mode"] = "train"
-
     q.client["dataset/list/df_datasets"] = get_datasets(q)
     df_viz = q.client["dataset/list/df_datasets"].copy()
     df_viz = df_viz[df_viz.columns.intersection(["name", "problem type"])]
@@ -134,9 +132,7 @@ async def home(q: Q) -> None:
     )
     q.client.delete_cards.add("dataset/list")
 
-    q.client["experiment/list/df_experiments"] = get_experiments(
-        q, mode=q.client["experiment/list/mode"], status="finished"
-    )
+    q.client["experiment/list/df_experiments"] = get_experiments(q, status="finished")
 
     df_viz = q.client["experiment/list/df_experiments"].copy()
     df_viz = df_viz.rename(columns={"process_id": "pid", "config_file": "problem type"})

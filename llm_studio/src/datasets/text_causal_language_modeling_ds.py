@@ -165,14 +165,13 @@ class CustomDataset(Dataset):
             raise ValueError(f"Can not move {type(batch)} to device.")
 
     @staticmethod
-    def preprocess_dataframe(df: pd.DataFrame, cfg: Any, mode: str) -> pd.DataFrame:
+    def preprocess_dataframe(df: pd.DataFrame, cfg: Any) -> pd.DataFrame:
         """
         Preprocesses the input dataframe
 
         Args:
             df: the full training dataframe
             cfg: config
-            mode: the mode. One of {"train", "validation"}
         Returns:
             the processed dataframe
         """

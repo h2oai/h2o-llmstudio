@@ -24,7 +24,7 @@ import torch
 from torch.cuda.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers.deepspeed import HfDeepSpeedConfig
+from transformers.integrations import HfDeepSpeedConfig
 
 from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.loggers import MainLogger
@@ -65,10 +65,10 @@ from llm_studio.src.utils.modeling_utils import (
     wrap_model_distributed,
 )
 from llm_studio.src.utils.utils import (
+    check_metric,
     create_symlinks_in_parent_folder,
     kill_child_processes_and_current,
     kill_sibling_ddp_processes,
-    set_environment,
     set_seed,
 )
 
@@ -526,7 +526,7 @@ def run(cfg: DefaultConfigProblemBase) -> float:
     logger.info(f"Problem Type: {cfg.problem_type}")
     logger.info(f"Global random seed: {cfg.environment._seed}")
 
-    cfg = set_environment(cfg)
+    cfg = check_metric(cfg)
 
     # we need to get train dataframe and number of labels if not set or in training mode
     logger.info("Preparing the data...")

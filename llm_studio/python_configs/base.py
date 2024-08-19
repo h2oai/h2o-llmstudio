@@ -55,7 +55,7 @@ class DefaultConfig:
         self._nesting = Nesting()
 
     def _get_possible_values(
-        self, field: str, value: Any, type_annotation: type, mode: str, dataset_fn=None
+        self, field: str, value: Any, type_annotation: type, dataset_fn=None
     ) -> Optional[Tuple[Optional[possible_values.Value], Any]]:
         """
         Returns a set of possible values for the field provided, and the current value.
@@ -64,7 +64,6 @@ class DefaultConfig:
             field: the field
             value: the preliminary value of the field.
             type_annotation: Type Annotation of the field.
-            mode: current mode, one of {"train", "test", "predict"}.
             dataset_fn: A function returning a tuple (dataset, value). Will be called
                 if the possible values depend on the dataset.
 

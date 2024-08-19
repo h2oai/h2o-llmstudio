@@ -13,10 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 def set_seed(seed: int = 1234) -> None:
-    """Sets the random seed.
+    """
+    Sets the random seed for various Python libraries to ensure reproducibility
+    of results across different runs.
 
     Args:
-        seed: seed value
+        seed (int, optional): seed value. Defaults to 1234.
     """
 
     random.seed(seed)
@@ -28,8 +30,12 @@ def set_seed(seed: int = 1234) -> None:
     torch.backends.cudnn.benchmark = True
 
 
-def set_environment(cfg):
-    """Sets and checks environment settings"""
+def check_metric(cfg):
+    """
+    Checks if the metric is set to GPT and if the OpenAI API key is set.
+    If not, sets the metric to BLEU and logs a warning.
+    """
+
     if "GPT" in cfg.prediction.metric and os.getenv("OPENAI_API_KEY", "") == "":
         logger.warning("No OpenAI API Key set. Setting metric to BLEU. ")
         cfg.prediction.metric = "BLEU"
