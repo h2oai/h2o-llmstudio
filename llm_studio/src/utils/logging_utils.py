@@ -65,7 +65,10 @@ def initialize_logging(cfg: Optional[Any] = None):
             os.makedirs(logs_dir, exist_ok=True)
             file_handler = logging.FileHandler(filename=f"{logs_dir}/logs.log")
     else:
-        file_handler = logging.FileHandler(filename="h2o_llmstudio.log")
+        try:
+            file_handler = logging.FileHandler(filename="h2o_llmstudio.log")
+        except PermissionError:
+            file_handler = None
 
     if file_handler is not None:
         file_handler.addFilter(IgnorePatchRequestsFilter())
