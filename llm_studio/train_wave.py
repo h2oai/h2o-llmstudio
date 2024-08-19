@@ -15,6 +15,8 @@ import time
 
 import psutil
 
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 
 def check_for_done(process_queue):
     """Checks for finished process ids
@@ -82,7 +84,7 @@ if __name__ == "__main__":
     from llm_studio.src.utils.gpu_utils import is_oom_error
     from llm_studio.src.utils.logging_utils import initialize_logging, write_flag
     from llm_studio.src.utils.utils import kill_child_processes_and_current
-    from train import run
+    from llm_studio.train import run
 
     if "config" in parser_args:
         cfg = load_config_py(parser_args.config)
