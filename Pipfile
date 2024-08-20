@@ -70,6 +70,6 @@ types-requests = ">=2.31"
 types-toml = ">=0.10"
 wheel = "==0.43.0"
 pytest-bdd = "==7.1.2"
-hac-playwright = { file = "http://h2o-public-test-data.s3.amazonaws.com/e2e-testing/hac_playwright-1.38.0-py3-none-any.whl" }
+hac-playwright = { file = "http://h2o-public-test-data.s3.amazonaws.com/e2e-testing/hac_playwright-1.45.0-py3-none-any.whl" }
 pytest-base-url = "==2.1.0"
 pytest-mock = "==3.14.0"
