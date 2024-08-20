@@ -171,6 +171,7 @@ def run_oasst(tmp_path, config_name, metric):
     cfg["output_directory"] = os.path.join(tmp_path, "output")
     # set metric
     cfg["prediction"]["metric"] = metric
+    cfg["prediction"]["max_length_inference"] = 2
     modifed_config_path = os.path.join(tmp_path, "cfg.yaml")
     with open(modifed_config_path, "w") as fp:
         yaml.dump(cfg, fp)
