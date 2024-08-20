@@ -134,9 +134,12 @@ class LLMStudioPage(BasePage):
         self.page.get_by_role("button", name="Create experiment").click()
         self.experiment_name(name)
 
-    def slider(self, slider_selector, target_value: str, step: float = 1.0):
+    def slider(self, slider_selector, target_value: str, step: float = 0.1):
         """
         Moves the slider to the target value.
+
+        WARNING: step = 1.0 works only without headless mode.
+        Possible bug in playwright!
 
         Args:
             slider_selector (str): The selector for the slider element.
@@ -154,6 +157,8 @@ class LLMStudioPage(BasePage):
         y = bounding_box["y"] + bounding_box["height"] / 2
 
         while not is_completed:
+            if i > 100:
+                raise Exception("Could not find the target value")
             self.page.mouse.move(x1, y)
             self.page.mouse.down()
             x2 = bounding_box["x"] + bounding_box["width"] * float(i) / 100

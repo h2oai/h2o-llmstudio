@@ -12,6 +12,7 @@ scenarios("llm_studio.feature")
 
 @given("LLM Studio home page is opened")
 def open_llm_studio(page: Page, base_url):
+    page.set_viewport_size({"width": 1920, "height": 1080})
     page.goto(base_url)
 
 
