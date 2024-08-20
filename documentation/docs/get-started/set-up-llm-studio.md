@@ -306,7 +306,7 @@ You can also use H2O LLM Studio with the command line interface (CLI) and specif
 To specify the path to the configuration file that contains the experiment parameters, run:
 
 ```sh
-python train.py -Y {path_to_config_yaml_file}
+python llm_studio.train.py -Y {path_to_config_yaml_file}
 ```
 
 To run on multiple GPUs in DDP mode, run:
@@ -322,7 +322,7 @@ By default, the framework will run on the first `k` GPUs. If you want to specify
 To start an interactive chat with your trained model, run:
 
 ```sh
-python prompt.py -e {experiment_name}
+python llm_studio.prompt.py -e {experiment_name}
 ```
 
 `experiment_name` is the output folder of the experiment you want to chat with. The interactive chat will also work with models that were fine-tuned using the GUI.
