@@ -52,7 +52,7 @@ ENV H2O_LLM_STUDIO_WORKDIR=/home/llmstudio/mount
 # Set the environment variable for the demo datasets
 ENV H2O_LLM_STUDIO_DEMO_DATASETS=/workspace/demo
 COPY download_default_datasets.py /workspace/
-RUN python -m download_default_datasets
+RUN python download_default_datasets.py
 
 COPY . /workspace
 
