@@ -86,6 +86,11 @@ def tweak_max_length(llm_studio: LLMStudioPage, value: str):
     llm_studio.max_length(value)
 
 
+@when(parsers.parse("I select {value} metric"))
+def select_metric(llm_studio: LLMStudioPage, value: str):
+    llm_studio.metric(value)
+
+
 @when("I run the experiment")
 def run_experiment(llm_studio: LLMStudioPage):
     llm_studio.run_experiment()
