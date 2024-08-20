@@ -31,6 +31,5 @@ jobs:
           docker build -t h2o-llmstudio .
       - name: Run the Docker Image
         run: |-
-          nvidia-smi
           mkdir llmstudio_mnt
           docker run --runtime=nvidia --shm-size=64g --init --rm -it -u `id -u`:`id -g` -p 10101:10101 -v $(pwd)/llmstudio_mnt:/home/llmstudio/mount h2o-llmstudio
