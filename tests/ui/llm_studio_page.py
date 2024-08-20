@@ -214,7 +214,6 @@ class LLMStudioPage(BasePage):
         while True:
             if status in ["queued", "running"]:
                 self.get_by_test_id(self.EXPERIMENT_REFRESH_SELECTOR).click()
-                self.view_experiment_page()
                 status = self.page.locator(
                     f"{self.EXPERIMENT_STATUS_SELECTOR} >> nth={i}"
                 ).inner_text()
