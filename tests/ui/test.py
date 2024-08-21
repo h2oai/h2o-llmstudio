@@ -12,6 +12,7 @@ scenarios("llm_studio.feature")
 
 @given("LLM Studio home page is opened")
 def open_llm_studio(page: Page, base_url):
+    page.set_viewport_size({"width": 1920, "height": 1080})
     page.goto(base_url)
 
 
@@ -84,6 +85,11 @@ def update_mixed_precision(llm_studio: LLMStudioPage, value: bool):
 @when(parsers.parse("I tweak max length to {value}"))
 def tweak_max_length(llm_studio: LLMStudioPage, value: str):
     llm_studio.max_length(value)
+
+
+@when(parsers.parse("I select {value} metric"))
+def select_metric(llm_studio: LLMStudioPage, value: str):
+    llm_studio.metric(value)
 
 
 @when("I run the experiment")

@@ -268,6 +268,17 @@ If running on cloud based machines such as runpod, you may need to set the follo
 H2O_WAVE_ALLOWED_ORIGINS="*"
 ```
 
+If you are experiencing timeouts when running the H2O Wave server remotely, you can increase the timeout by setting the following environment variables:
+
+```bash
+H2O_WAVE_APP_CONNECT_TIMEOUT="15"
+H2O_WAVE_APP_WRITE_TIMEOUT="15"
+H2O_WAVE_APP_READ_TIMEOUT="15"
+H2O_WAVE_APP_POOL_TIMEOUT="15"
+```
+
+All default to 5 (seconds). Increase them if you are experiencing timeouts. Use -1 to disable the timeout.
+
 ## Data format and example data
 
 For details on the data format required when importing your data or example data that you can use to try out H2O LLM Studio, see [Data format](https://docs.h2o.ai/h2o-llmstudio/guide/datasets/data-connectors-format#data-format) in the H2O LLM Studio documentation.

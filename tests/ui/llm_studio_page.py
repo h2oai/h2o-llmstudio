@@ -16,6 +16,7 @@ class LLMStudioPage(BasePage):
     DATASET_DELETE_SELECTOR = "dataset/delete"
     EXPERIMENT_RUN_SELECTOR = "experiment/start/run"
     EXPERIMENT_NAME_SELECTOR = "experiment/start/cfg/experiment_name"
+    EXPERIMENT_METRIC_SELECTOR = "experiment/start/cfg/metric"
     EXPERIMENT_LIST_DELETE_SELECTOR = "experiment/list/delete"
     EXPERIMENT_DELETE_DIALOG_SELECTOR = "experiment/delete/dialog"
     EXPERIMENT_DELETE_SELECTOR = "experiment/delete"
@@ -133,7 +134,18 @@ class LLMStudioPage(BasePage):
         self.page.get_by_role("button", name="Create experiment").click()
         self.experiment_name(name)
 
-    def slider(self, slider_selector, target_value: str):
+    def slider(self, slider_selector, target_value: str, step: float = 0.1):
+        """
+        Moves the slider to the target value.
+
+        WARNING: step = 1.0 works only without headless mode.
+        Possible bug in playwright!
+
+        Args:
+            slider_selector (str): The selector for the slider element.
+            target_value (str): The target value for the slider.
+            step (float, optional): The step size for moving the slider.
+        """
         is_completed = False
         i = 0.0
         # Get the slider element
@@ -145,18 +157,18 @@ class LLMStudioPage(BasePage):
         y = bounding_box["y"] + bounding_box["height"] / 2
 
         while not is_completed:
+            if i > 100:
+                raise Exception("Could not find the target value")
             self.page.mouse.move(x1, y)
             self.page.mouse.down()
             x2 = bounding_box["x"] + bounding_box["width"] * float(i) / 100
             self.page.mouse.move(x2, y)
             self.page.mouse.up()
             value_now = slider.get_attribute("aria-valuenow")
-
-            if value_now == target_value:
+            if float(value_now) == float(target_value):
                 is_completed = True
             else:
                 # Move the slider a little bit (adjust the step as needed)
-                step = 0.1  # Adjust this value based on your requirements
                 x1 = x2
                 i += step
 
@@ -191,6 +203,10 @@ class LLMStudioPage(BasePage):
     def max_length_inference(self, value):
         self.slider(self.MAX_LENGTH_INFERENCE, value)
 
+    def metric(self, value):
+        self.get_by_test_id(self.EXPERIMENT_METRIC_SELECTOR).click()
+        self.page.get_by_role("option", name=f"{value}").click()
+
     def view_experiment_page(self):
         self.page.get_by_role("button", name="View experiments").click()
 
@@ -200,11 +216,9 @@ class LLMStudioPage(BasePage):
         status = self.page.locator(
             f"{self.EXPERIMENT_STATUS_SELECTOR} >> nth={i}"
         ).inner_text()
-        self.page.reload()
         while True:
             if status in ["queued", "running"]:
-                self.page.reload()
-                self.view_experiment_page()
+                self.get_by_test_id(self.EXPERIMENT_REFRESH_SELECTOR).click()
                 status = self.page.locator(
                     f"{self.EXPERIMENT_STATUS_SELECTOR} >> nth={i}"
                 ).inner_text()

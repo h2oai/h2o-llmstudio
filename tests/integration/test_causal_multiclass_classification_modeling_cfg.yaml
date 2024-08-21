@@ -51,7 +51,7 @@ environment:
     trust_remote_code: true
     use_deepspeed: false
 experiment_name: solid-spaniel
-llm_backbone: facebook/opt-125m
+llm_backbone: h2oai/llama2-0b-unit-test
 logging:
     logger: None
     neptune_project: ''

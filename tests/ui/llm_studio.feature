@@ -16,8 +16,9 @@ Feature: LLM Studio
         When I create experiment test-experiment
         And I update LLM Backbone to h2oai/llama2-0b-unit-test
         I set Mixed Precision to false
-        And I tweak data sampling to 0.5
+        And I tweak data sampling to 0.03
         And I tweak max length to 32
+        And I select Perplexity metric
         And I run the experiment
         Then I should see the test-experiment should finish successfully 
         When I delete experiment test-experiment
