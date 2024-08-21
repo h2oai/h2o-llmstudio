@@ -2,7 +2,7 @@ name: Style
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, docker_test ]
   pull_request:
 
 jobs:
