@@ -3,8 +3,6 @@ name: Test Docker Image - Nightly
 on:
   push:
     branches: [ docker_test ]
-  schedule:
-    - cron: "0 5 * * *"
   workflow_dispatch:
 
 jobs:
