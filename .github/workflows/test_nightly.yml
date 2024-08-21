@@ -2,8 +2,8 @@ name: Test Docker Image - Nightly
 
 on:
   push:
-    branches: [ docker_test ]
-  workflow_dispatch:
+    branches: [ main, docker_test ]
+  pull_request:
 
 jobs:
   test-ui-nightly:
