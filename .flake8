@@ -10,6 +10,7 @@ per-file-ignores =
     prompt.py: E402
     train_wave.py: E402, I001, I003
     app.py: E402
+    publish_to_hugging_face.py: E402
     tests/src/datasets/test_text_dpo_modeling_ds.py: E501
     tests/src/models/test_dpo_modeling_model.py: E501
 

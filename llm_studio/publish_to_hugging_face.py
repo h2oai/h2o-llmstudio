@@ -3,6 +3,8 @@ import logging
 import os
 import sys
 
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from llm_studio.app_utils import hugging_face_utils
 from llm_studio.app_utils.utils import hf_repo_friendly_name
 

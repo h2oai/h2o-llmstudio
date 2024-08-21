@@ -51,18 +51,18 @@ The steps below provide an example of how to to run an experiment on [OASST](htt
 3. Run the following command to run the experiment. 
 
  ```bash
- python llm_studio.train.py -Y examples/example_oasst2.yaml
+ python llm_studio/train.py -Y examples/example_oasst2.yaml
  ```
 
 After the experiment is completed, you can find all output artifacts in the `examples/output_oasst2` folder.
 You can then use the `prompt.py` script to chat with your model.
 
 ```bash
-python llm_studio.prompt.py -e examples/output_oasst2
+python llm_studio/prompt.py -e examples/output_oasst2
 ```
 
 4. To publish the model to Hugging Face, use the following command:
 
  ```bash
- python llm_studio.publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_key} -u {user_id} -m {model_name} -s {safe_serialization}
+ python llm_studio/publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_key} -u {user_id} -m {model_name} -s {safe_serialization}
  ```
