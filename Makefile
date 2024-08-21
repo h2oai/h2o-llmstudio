@@ -156,10 +156,11 @@ test-ui: reports setup-ui
 test-ui-headed: setup-ui
 	$(PW_DEBUG) $(PIPENV) run pytest \
 	-vvs \
+	-s \
 	--headed \
 	--video=on \
 	--screenshot=on \
-	--slowmo=100 \
+	--slowmo=1000 \
 	tests/ui/test.py 2>&1 | tee reports/tests.log
 
 .PHONY: test-ui-github-actions  # Run UI tests in GitHub Actions. Starts the Wave server and runs the tests locally.

@@ -45,7 +45,7 @@ environment:
     seed: -1
     trust_remote_code: true
 experiment_name: test-causal-language-modeling-oasst
-llm_backbone: facebook/opt-125m
+llm_backbone: h2oai/llama2-0b-unit-test
 logging:
     logger: None
     neptune_project: test_org/test_project

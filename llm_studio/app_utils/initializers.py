@@ -83,7 +83,7 @@ def prepare_oasst(q: Q) -> Dataset:
     return dataset
 
 
-def prepare_dpo(q):
+def prepare_dpo(q: Q) -> Dataset:
     path = f"{get_data_dir(q)}/dpo"
     if os.path.exists(path):
         shutil.rmtree(path)
@@ -118,7 +118,7 @@ def prepare_dpo(q):
     return dataset
 
 
-def prepare_imdb(q):
+def prepare_imdb(q: Q) -> Dataset:
     path = f"{get_data_dir(q)}/imdb"
     if os.path.exists(path):
         shutil.rmtree(path)
@@ -153,7 +153,7 @@ def prepare_imdb(q):
     return dataset
 
 
-def prepare_helpsteer(q):
+def prepare_helpsteer(q: Q) -> Dataset:
     path = f"{get_data_dir(q)}/helpsteer"
     if os.path.exists(path):
         shutil.rmtree(path)
