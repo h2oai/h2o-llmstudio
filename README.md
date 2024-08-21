@@ -9,6 +9,8 @@
 
 <a href="https://user-images.githubusercontent.com/1069138/233859311-32aa1f8c-4d68-47ac-8cd9-9313171ff9f9.png"><img width="50%" alt="home" src="https://user-images.githubusercontent.com/1069138/233859311-32aa1f8c-4d68-47ac-8cd9-9313171ff9f9.png"></a><a href="https://user-images.githubusercontent.com/1069138/233859315-e6928aa7-28d2-420b-8366-bc7323c368ca.png"><img width="50%" alt="logs" src="https://user-images.githubusercontent.com/1069138/233859315-e6928aa7-28d2-420b-8366-bc7323c368ca.png"></a>
 
+[![Build Docker Image - Nightly](https://github.com/h2oai/h2o-llmstudio/actions/workflows/build-and-push-nightly.yml/badge.svg)](https://github.com/h2oai/h2o-llmstudio/actions/workflows/build-and-push-nightly.yml)
+
 ## Jump to
 
 - [With H2O LLM Studio, you can](#with-h2o-llm-studio-you-can)

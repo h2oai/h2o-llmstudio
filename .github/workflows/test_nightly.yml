@@ -1,0 +1,17 @@
+name: Test Docker Image - Nightly
+
+on:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  test-ui-nightly:
+    runs-on: self-hosted
+    steps:
+      - name: Run the Docker Image
+        run: |-
+          mkdir llmstudio_mnt
+          docker run --runtime=nvidia --shm-size=64g --init --rm -u `id -u`:`id -g` -p 10101:10101 -v $(pwd)/llmstudio_mnt:/home/llmstudio/mount h2o-llmstudio
+      - name: Run UI Tests
+        run: LOCAL_LOGIN=True PYTEST_BASE_URL=localhost:10101 make test-ui
