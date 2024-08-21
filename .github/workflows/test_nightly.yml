@@ -7,11 +7,11 @@ on:
 
 jobs:
   test-ui-nightly:
-    runs-on: self-hosted
+    runs-on: [ self-hosted, gpu ]
     steps:
       - name: Run the Docker Image
         run: |-
           mkdir llmstudio_mnt
-          docker run --runtime=nvidia --shm-size=64g --init --rm -u `id -u`:`id -g` -p 10101:10101 -v $(pwd)/llmstudio_mnt:/home/llmstudio/mount gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+          docker run --runtime=nvidia --shm-size=64g --init --rm -u -d `id -u`:`id -g` -p 10101:10101 -v $(pwd)/llmstudio_mnt:/home/llmstudio/mount gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
       - name: Run UI Tests
         run: LOCAL_LOGIN=True PYTEST_BASE_URL=localhost:10101 make test-ui
