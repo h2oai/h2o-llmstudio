@@ -18,6 +18,12 @@ jobs:
         run: |-
           mkdir llmstudio_mnt
           docker run --runtime=nvidia --shm-size=64g --init --rm -d -u `id -u`:`id -g` -p 10101:10101 -v $(pwd)/llmstudio_mnt:/home/llmstudio/mount gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.10.11
       - name: Run UI Tests
         run: LOCAL_LOGIN=True PYTEST_BASE_URL=localhost:10101 make test-ui
 
