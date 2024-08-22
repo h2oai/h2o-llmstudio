@@ -9,9 +9,20 @@ jobs:
   test-ui-nightly:
     runs-on: [ self-hosted, gpu ]
     steps:
+      # Pre-Action Cleanup
+      - name: Clean workspace pre action
+        run: |
+          rm -rf ${{ github.workspace }}/*
+
       - name: Run the Docker Image
         run: |-
           mkdir llmstudio_mnt
           docker run --runtime=nvidia --shm-size=64g --init --rm -d -u `id -u`:`id -g` -p 10101:10101 -v $(pwd)/llmstudio_mnt:/home/llmstudio/mount gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
       - name: Run UI Tests
         run: LOCAL_LOGIN=True PYTEST_BASE_URL=localhost:10101 make test-ui
+
+      # Post-Action Cleanup
+      - name: Clean workspace after action
+        if: ${{ always() }}
+        run: |
+          rm -rf ${{ github.workspace }}/*

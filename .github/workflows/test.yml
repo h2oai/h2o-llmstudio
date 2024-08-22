@@ -9,6 +9,11 @@ jobs:
   test:
     runs-on: self-hosted
     steps:
+      # Pre-Action Cleanup
+      - name: Clean workspace pre action
+        run: |
+          rm -rf ${{ github.workspace }}/*
+
       - uses: actions/checkout@v4
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -17,3 +22,9 @@ jobs:
       - run: nvidia-smi
       - run: make setup-dev
       - run: make test
+
+      # Post-Action Cleanup
+      - name: Clean workspace after action
+        if: ${{ always() }}
+        run: |
+          rm -rf ${{ github.workspace }}/*
