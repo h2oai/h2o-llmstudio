@@ -21,6 +21,22 @@ jobs:
       - name: Run UI Tests
         run: LOCAL_LOGIN=True PYTEST_BASE_URL=localhost:10101 make test-ui
 
+      - name: Stop the Docker Image
+        if: ${{ always() }}
+        run: |-
+          docker stop $(docker ps -q --filter ancestor=gcr.io/vorvan/h2oai/h2o-llmstudio:nightly)
+      - name: Remove the Docker Image
+        if: ${{ always() }}
+        run: |-
+          docker rmi gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+      - name: Clean up dangling images
+        if: ${{ always() }}
+        run: |-
+          docker image prune --force
+          docker volume prune --force
+          docker network prune --force
+          docker container prune --force
+
       # Post-Action Cleanup
       - name: Clean workspace after action
         if: ${{ always() }}
