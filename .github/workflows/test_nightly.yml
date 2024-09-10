@@ -17,7 +17,7 @@ jobs:
       - name: Run the Docker Image
         run: |-
           mkdir llmstudio_mnt
-          docker run --runtime=nvidia --shm-size=64g --init --rm -d -u `id -u`:`id -g` -p 10101:10101 -v /var/run/docker.sock:/var/run/docker.sock:ro -v $(pwd)/llmstudio_mnt:/home/llmstudio/mount gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+          docker run --runtime=nvidia --shm-size=64g --init --name llmstudio --rm -d -u `id -u`:`id -g` -p 10101:10101 -v /var/run/docker.sock:/var/run/docker.sock:ro -v $(pwd)/llmstudio_mnt:/home/llmstudio/mount gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
 
       - uses: actions/checkout@v4
       - name: Setup Python
@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: 3.10.11
       - name: Run UI Tests
-        run: H2O_LLM_STUDIO_WORKDIR=/home/llmstudio/mount/ LOCAL_LOGIN=True PYTEST_BASE_URL=localhost:10101 make test-ui
+        run: docker exec -it llmstudio bash "H2O_LLM_STUDIO_WORKDIR=/home/llmstudio/mount/ LOCAL_LOGIN=True PYTEST_BASE_URL=localhost:10101 make test-ui"
 
       - name: Stop the Docker Image
         if: ${{ always() }}
