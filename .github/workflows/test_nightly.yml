@@ -17,7 +17,7 @@ jobs:
       - name: Run the Docker Image
         run: |-
           mkdir llmstudio_mnt
-          docker run --runtime=nvidia --shm-size=64g --init --rm -d -u `id -u`:`id -g` -p 10101:10101 -v $(pwd)/llmstudio_mnt:/home/llmstudio/mount gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+          docker run --runtime=nvidia --shm-size=64g --init --rm -d -u `id -u`:`id -g` -p 10101:10101 -v /var/run/docker.sock:/var/run/docker.sock:ro -v $(pwd)/llmstudio_mnt:/home/llmstudio/mount gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
 
       - uses: actions/checkout@v4
       - name: Setup Python
