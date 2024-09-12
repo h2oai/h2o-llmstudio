@@ -184,7 +184,7 @@ docker run \
     --shm-size=64g \
     --init \
     --rm \
-    --it \
+    -it \
     -u `id -u`:`id -g` \
     -p 10101:10101 \
     -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
@@ -208,7 +208,7 @@ docker run \
     --shm-size=64g \
     --init \
     --rm \
-    --it \
+    -it \
     -u `id -u`:`id -g` \
     -p 10101:10101 \
     -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \

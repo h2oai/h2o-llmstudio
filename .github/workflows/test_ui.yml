@@ -17,3 +17,9 @@ jobs:
       - run: nvidia-smi
       - run: make setup-dev
       - run: make test-ui-github-actions
+
+      # Post-Action Cleanup
+      - name: Clean workspace after action
+        if: ${{ always() }}
+        run: |
+          rm -rf ${{ github.workspace }}/*

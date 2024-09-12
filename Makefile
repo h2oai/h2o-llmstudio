@@ -22,7 +22,7 @@ else
     PW_DEBUG =
 endif
 
-PHONY: pipenv
+.PHONY: pipenv
 pipenv:
 	$(PIP) install pip==24.2
 	$(PIP) install pipenv==2024.0.1
@@ -56,6 +56,7 @@ setup-conda:
 		python -m pip install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir; \
 	'
 
+.PHONY: setup-ui
 setup-ui: pipenv
 	$(PIPENV) install --verbose --categories=dev-packages --python $(PYTHON_VERSION)
 	$(PIPENV) run playwright install
@@ -225,7 +226,7 @@ endif
 		--shm-size=64g \
 		--init \
 		--rm \
-		--it \
+		-it \
 		-u `id -u`:`id -g` \
 		-p 10101:10101 \
 		-v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
