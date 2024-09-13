@@ -13,7 +13,7 @@ anyio==4.4.0; python_version >= '3.8'
 arrow==1.3.0; python_version >= '3.8'
 async-timeout==4.0.3; python_version < '3.11'
 attrs==24.2.0; python_version >= '3.7'
-azure-core==1.30.2; python_version >= '3.8'
+azure-core==1.31.0; python_version >= '3.8'
 azure-storage-blob==12.22.0; python_version >= '3.8'
 azure-storage-file-datalake==12.16.0; python_version >= '3.8'
 backports.tarfile==1.2.0; python_version < '3.12'
@@ -38,6 +38,7 @@ cryptography==43.0.1; python_version >= '3.7'
 datasets==2.21.0; python_full_version >= '3.8.0'
 deepspeed==0.14.4
 dill==0.3.8; python_version >= '3.8'
+distlib==0.3.8
 distro==1.9.0; python_version >= '3.6'
 docker-pycreds==0.4.0
 editor==1.6.6; python_version >= '3.8'
@@ -52,7 +53,7 @@ future==1.0.0; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2,
 gitdb==4.0.11; python_version >= '3.7'
 gitpython==3.1.43; python_version >= '3.7'
 gputil==1.4.0
-greenlet==3.0.3; python_version < '3.13' and platform_machine == 'aarch64' or (platform_machine == 'ppc64le' or (platform_machine == 'x86_64' or (platform_machine == 'amd64' or (platform_machine == 'AMD64' or (platform_machine == 'win32' or platform_machine == 'WIN32')))))
+greenlet==3.1.0; python_version < '3.13' and platform_machine == 'aarch64' or (platform_machine == 'ppc64le' or (platform_machine == 'x86_64' or (platform_machine == 'amd64' or (platform_machine == 'AMD64' or (platform_machine == 'win32' or platform_machine == 'WIN32')))))
 h11==0.14.0; python_version >= '3.7'
 h2o-authn[discovery]==2.1.0; python_version >= '3.8'
 h2o-cloud-discovery==2.1.0; python_version >= '3.8'
@@ -64,7 +65,7 @@ httpcore==1.0.5; python_version >= '3.8'
 httpx==0.27.2; python_version >= '3.8'
 huggingface-hub==0.24.6; python_full_version >= '3.8.0'
 idna==3.8; python_version >= '3.6'
-importlib-metadata==8.4.0; python_version < '3.12'
+importlib-metadata==8.5.0; python_version < '3.12'
 importlib-resources==6.4.5; python_version >= '3.8'
 inquirer==3.4.0; python_full_version >= '3.8.1'
 isodate==0.6.1
@@ -108,11 +109,12 @@ nvidia-nccl-cu12==2.20.5; platform_system == 'Linux' and platform_machine == 'x8
 nvidia-nvjitlink-cu12==12.6.68; python_version >= '3'
 nvidia-nvtx-cu12==12.1.105; platform_system == 'Linux' and platform_machine == 'x86_64'
 oauthlib==3.2.2; python_version >= '3.6'
-openai==1.44.1; python_full_version >= '3.7.1'
+openai==1.45.0; python_full_version >= '3.7.1'
 packaging==24.1; python_version >= '3.8'
 pandas==2.2.2; python_version >= '3.9'
 peft==0.12.0; python_full_version >= '3.8.0'
 pillow==10.4.0; python_version >= '3.8'
+pipenv==2024.0.1; python_version >= '3.8'
 platformdirs==4.3.2; python_version >= '3.8'
 portalocker==2.10.1; python_version >= '3.8'
 protobuf==3.20.3; python_version >= '3.7'
@@ -125,11 +127,11 @@ pydantic-core==2.23.3; python_version >= '3.8'
 pyjwt==2.9.0; python_version >= '3.8'
 python-dateutil==2.9.0.post0; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'
 python-slugify==8.0.4; python_version >= '3.7'
-pytz==2024.1
+pytz==2024.2
 pyyaml==6.0.2; python_version >= '3.8'
 readchar==4.2.0; python_version >= '3.8'
 referencing==0.35.1; python_version >= '3.8'
-regex==2024.7.24; python_version >= '3.8'
+regex==2024.9.11; python_version >= '3.8'
 requests==2.32.3; python_version >= '3.8'
 requests-oauthlib==2.0.0; python_version >= '3.4'
 rfc3339-validator==0.1.4
@@ -139,7 +141,7 @@ runs==1.2.2; python_version >= '3.8'
 s3transfer==0.10.2; python_version >= '3.8'
 sacrebleu==2.0.0; python_version >= '3.6'
 safetensors==0.4.5; python_version >= '3.7'
-scikit-learn==1.5.1; python_version >= '3.9'
+scikit-learn==1.5.2; python_version >= '3.9'
 scipy==1.14.1; python_version >= '3.10'
 secretstorage==3.3.3; sys_platform == 'linux'
 sentencepiece==0.1.99
@@ -172,9 +174,10 @@ types-python-dateutil==2.9.0.20240906; python_version >= '3.8'
 typing-extensions==4.12.2; python_version >= '3.8'
 tzdata==2024.1; python_version >= '2'
 uri-template==1.3.0
-urllib3==2.2.2; python_version >= '3.8'
+urllib3==2.2.3; python_version >= '3.8'
 uvicorn==0.30.6; python_version >= '3.8'
-wandb==0.17.9; python_version >= '3.7'
+virtualenv==20.26.4; python_version >= '3.7'
+wandb==0.18.0; python_version >= '3.7'
 wcwidth==0.2.13
 webcolors==24.8.0
 webencodings==0.5.1
