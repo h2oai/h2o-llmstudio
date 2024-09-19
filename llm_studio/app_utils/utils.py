@@ -2143,6 +2143,10 @@ def get_download_link(q: Q, artifact_path):
     # behind a reverse proxy or being accessed by a public IP in a public
     # cloud.
 
+    # add the BASE_URL to the path
+    if "H2O_CLOUD_ENVIRONMENT" in os.environ:
+        url_path = f"{os.environ['H2O_WAVE_BASE_URL']}/{url_path}"
+
     return url_path
 
 

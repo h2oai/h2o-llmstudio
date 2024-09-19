@@ -30,9 +30,7 @@ ENV HOME=/home/llmstudio
 # Static application code lives in /workspace/
 WORKDIR /workspace
 
-# Add pip to the PATH
 ENV PATH=/home/llmstudio/.local/bin:$PATH
-ENV PATH=/workspace/.venv/bin:$PATH
 RUN \
     curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 && \
     chmod -R a+w /home/llmstudio
@@ -42,6 +40,9 @@ COPY Makefile Pipfile Pipfile.lock /workspace/
 # give read and write permissions to the /workspace/.venv/ directory for all users to allow wave to write files
 ENV PIPENV_VENV_IN_PROJECT=1
 RUN make setup && chmod -R 777 /workspace/.venv
+
+# Add the venv to the PATH
+ENV PATH=/workspace/.venv/bin:$PATH
 
 # We need to create a mount point for the user to mount their volume
 # All persistent data lives in /home/llmstudio/mount
