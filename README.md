@@ -103,7 +103,7 @@ sudo apt-get update
 sudo apt-get -y install cuda
 ```
 
-alternatively, one can install cudatoolkits in a cuda environment:
+alternatively, one can install cudatoolkits in a conda environment:
 
 ```bash
 conda create -n llmstudio python=3.10
