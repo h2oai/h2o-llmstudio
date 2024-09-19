@@ -176,13 +176,13 @@ def run_oasst(tmp_path, config_name, metric):
     with open(modifed_config_path, "w") as fp:
         yaml.dump(cfg, fp)
 
-    # llm studio root directory.
-    root_dir = os.path.abspath(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../")
+    # llm studio directory (relative to this file)
+    llm_studio_dir = os.path.abspath(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../llm_studio/")
     )
     cmd = [
         f"{sys.executable}",
-        os.path.join(root_dir, "train.py"),
+        os.path.join(llm_studio_dir, "train.py"),
         "-Y",
         f"{modifed_config_path}",
     ]

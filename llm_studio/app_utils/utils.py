@@ -122,7 +122,7 @@ def start_process(
     if num_gpus == 0:
         cmd = [
             "python",
-            "train_wave.py",
+            "llm_studio/train_wave.py",
             "-Y",
             config_name,
         ]
@@ -133,7 +133,7 @@ def start_process(
     #         f"CUDA_VISIBLE_DEVICES={','.join(gpu_list)}",
     #         "python",
     #         "-u",
-    #         "train_wave.py",
+    #         "llm_studio/train_wave.py",
     #         "-P",
     #         config_name,
     #     ]
@@ -148,7 +148,7 @@ def start_process(
                 f"localhost:{','.join(gpu_list)}",
                 "--master_port",
                 f"{str(free_port)}",
-                "train_wave.py",
+                "llm_studio/train_wave.py",
                 "-Y",
                 config_name,
             ]
@@ -160,7 +160,7 @@ def start_process(
                 "torchrun",
                 f"--nproc_per_node={str(num_gpus)}",
                 f"--master_port={str(free_port)}",
-                "train_wave.py",
+                "llm_studio/train_wave.py",
                 "-Y",
                 config_name,
             ]
