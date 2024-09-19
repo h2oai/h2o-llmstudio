@@ -1851,7 +1851,8 @@ def get_experiments(
         df.loc[df.status == "finished", "progress"] = "1.0"
 
         # make sure that if experiment is running the progress is at most 99%
-        df.loc[(df.status == "running") & (pd.to_numeric(df.progress, errors='coerce') > 0.99), "progress"] = ".99"
+        df.loc[(df.status == "running") &
+               (pd.to_numeric(df.progress, errors='coerce') > 0.99), "progress"] = ".99"
 
         df["info"] = np.where(
             (df["status"] == "running") & (df["eta"] != ""),
