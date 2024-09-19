@@ -20,12 +20,12 @@ class Order:
         else:
             self._list = list()
 
-    def _unique_guard(self, *keys: str):
+    def _unique_guard(self, *keys: str) -> None:
         for key in keys:
             if key in self._list:
                 raise ValueError(f"`{key}` is already in the list!")
 
-    def append(self, key: str):
+    def append(self, key: str) -> None:
         """
         Append a key at the end of the list:
 
@@ -40,7 +40,7 @@ class Order:
 
         self._list.append(key)
 
-    def extend(self, keys: Iterable[str]):
+    def extend(self, keys: Iterable[str]) -> None:
         """
         Extend the list by multiple keys.
 
@@ -57,7 +57,7 @@ class Order:
 
     def insert(
         self, *keys: str, before: Optional[str] = None, after: Optional[str] = None
-    ):
+    ) -> None:
         """
         Insert one or more keys. Either `before` or `after`, but not both, must be set
         to determine position.
@@ -92,7 +92,7 @@ class Order:
     def __getitem__(self, idx):
         return self._list[idx]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._list)
 
     def __iter__(self):

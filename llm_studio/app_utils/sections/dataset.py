@@ -1364,7 +1364,7 @@ async def show_statistics_tab(q: Q, dataset_filename, config_filename):
 
 
 @functools.lru_cache()
-def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str):
+def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str) -> dict:
     """
     Compute various statistics for a dataset.
     - text length distribution for prompts and answers
@@ -1406,7 +1406,7 @@ def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str):
     return stats_dict
 
 
-async def dataset_import_uploaded_file(q: Q):
+async def dataset_import_uploaded_file(q: Q) -> None:
     local_path = await q.site.download(
         q.args["dataset/import/local_upload"][0],
         f"{get_data_dir(q)}/"
@@ -1422,7 +1422,7 @@ async def dataset_import_uploaded_file(q: Q):
         await dataset_import(q, step=1, error=error)
 
 
-async def dataset_delete_current_datasets(q: Q):
+async def dataset_delete_current_datasets(q: Q) -> None:
     dataset_ids = list(
         q.client["dataset/list/df_datasets"]["id"].iloc[
             list(map(int, q.client["dataset/list/table"]))
