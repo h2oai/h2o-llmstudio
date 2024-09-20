@@ -36,7 +36,7 @@ def get_tokenizer(cfg: DefaultConfigProblemBase):
     kwargs = dict(
         revision=cfg.environment.huggingface_branch,
         trust_remote_code=cfg.environment.trust_remote_code,
-        token=os.getenv("HUGGINGFACE_TOKEN"),
+        token=os.getenv("HF_TOKEN"),
     )
 
     # We will be able to remove this after

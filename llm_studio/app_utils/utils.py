@@ -2044,7 +2044,7 @@ def start_experiment(
         )
     if q.client["default_huggingface_api_token"]:
         env_vars.update(
-            {"HUGGINGFACE_TOKEN": q.client["default_huggingface_api_token"]}
+            {"HF_TOKEN": q.client["default_huggingface_api_token"]}
         )
 
     env_vars = {k: v or "" for k, v in env_vars.items()}

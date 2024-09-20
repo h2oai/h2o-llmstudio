@@ -53,7 +53,7 @@ async def chat_tab(q: Q, load_model=True):
     logger.info(torch.cuda.memory_allocated())
 
     if load_model:
-        with set_env(HUGGINGFACE_TOKEN=q.client["default_huggingface_api_token"]):
+        with set_env(HF_TOKEN=q.client["default_huggingface_api_token"]):
             gpu_id = q.client["gpu_used_for_chat"] - 1
             cfg, model, tokenizer = load_cfg_model_tokenizer(
                 q.client["experiment/display/experiment_path"], device=f"cuda:{gpu_id}"

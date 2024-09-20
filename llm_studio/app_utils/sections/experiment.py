@@ -1764,7 +1764,7 @@ async def experiment_download_model(q: Q):
                 f"Preparing model on {device}. In case of issues or OOM consider "
                 "changing the default device for downloading in settings."
             )
-        with set_env(HUGGINGFACE_TOKEN=q.client["default_huggingface_api_token"]):
+        with set_env(HF_TOKEN=q.client["default_huggingface_api_token"]):
             cfg, model, tokenizer = load_cfg_model_tokenizer(
                 experiment_path, merge=True, device=device
             )
