@@ -214,9 +214,9 @@ class WaveChatStreamer(TextStreamer):
         **decode_kwargs,
     ):
         super().__init__(tokenizer, skip_prompt=True, **decode_kwargs)
-        self.text_cleaner = text_cleaner
+        self.text_cleaner: Optional[Callable] = text_cleaner
         self.words_predicted_answer: List[str] = []
-        self.q = q
+        self.q: Q = q
         self.loop = asyncio.get_event_loop()
         self.finished = False
 

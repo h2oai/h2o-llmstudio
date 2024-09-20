@@ -1232,6 +1232,7 @@ async def show_data_tab(q: Q, cfg, filename: str):
                 df=df,
                 name="dataset/display/data/table",
                 sortables=list(df.columns),
+                markdown_cells=None,  # render all cells as raw text
                 height="calc(100vh - 265px)",
                 cell_overflow="wrap",
             )

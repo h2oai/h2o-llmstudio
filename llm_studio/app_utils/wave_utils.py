@@ -1,7 +1,7 @@
 import subprocess
 import sys
 import traceback
-from typing import TypedDict
+from typing import TypedDict, Literal
 
 import pandas as pd
 from h2o_wave import Q, expando_to_dict, ui
@@ -56,7 +56,7 @@ def ui_table_from_df(
     sortables: list = None,
     filterables: list = None,
     searchables: list = None,
-    markdown_cells=None,
+    markdown_cells: list = None,
     numerics: list = None,
     times: list = None,
     tags: list = None,
@@ -72,7 +72,7 @@ def ui_table_from_df(
     checkbox_visibility: str = None,
     actions: dict = None,
     max_char_length: int = 500,
-    cell_overflow="tooltip",
+    cell_overflow: Literal["tooltip", "wrap"] = "tooltip",
 ) -> Component:
     """
     Convert a Pandas dataframe into Wave ui.table format.
@@ -91,7 +91,7 @@ def ui_table_from_df(
     max_widths = max_widths or {}
 
     if numerics == []:
-        numerics = df.select_dtypes(include=["float64", "float32"]).columns.tolist()
+        numerics = df.select_dtypes(include=["number"]).columns.tolist()
 
     cell_types = {}
     for col in tags:
