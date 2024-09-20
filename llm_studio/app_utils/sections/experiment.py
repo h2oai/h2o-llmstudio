@@ -42,7 +42,7 @@ from llm_studio.app_utils.utils import (
     get_model_types,
     get_problem_categories,
     get_problem_types,
-    get_ui_elements,
+    get_ui_elements_for_cfg,
     get_unique_name,
     hf_repo_friendly_name,
     parse_ui_elements,
@@ -463,7 +463,7 @@ async def experiment_start(q: Q) -> None:
     logger.info(f"From default {q.client['experiment/start/cfg_mode/from_default']}")
     logger.info(f"Config file: {q.client['experiment/start/cfg_file']}")
 
-    option_items = get_ui_elements(cfg=q.client["experiment/start/cfg"], q=q)
+    option_items = get_ui_elements_for_cfg(cfg=q.client["experiment/start/cfg"], q=q)
     items.extend(option_items)
 
     if q.client["experiment/start/cfg_mode/from_cfg"]:

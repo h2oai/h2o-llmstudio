@@ -10,7 +10,7 @@ from h2o_wave import Q
 from h2o_wave import data as chat_data
 from h2o_wave import ui
 
-from llm_studio.app_utils.utils import get_experiments, get_ui_elements, set_env
+from llm_studio.app_utils.utils import get_experiments, get_ui_elements_for_cfg, set_env
 from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
 from llm_studio.src.utils.config_utils import (
@@ -133,7 +133,7 @@ async def chat_tab(q: Q, load_model=True):
     )
     q.page["experiment/display/chat"].data += [initial_message, False]
 
-    option_items = get_ui_elements(
+    option_items = get_ui_elements_for_cfg(
         cfg=q.client["experiment/display/chat/cfg"].prediction,
         q=q,
         pre="chat/cfg_predictions",
