@@ -2006,6 +2006,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             user_id=user_id,
             model_name=model_name,
             safe_serialization=safe_serialization,
+            hf_transfer=q.client["default_hf_hub_enable_hf_transfer"],
         )
 
         dialog_items = [
