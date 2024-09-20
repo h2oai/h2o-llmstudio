@@ -116,7 +116,7 @@ default_cfg = {
         "default_wandb_api_token": os.getenv("WANDB_API_KEY", ""),
         "default_wandb_project": os.getenv("WANDB_PROJECT", ""),
         "default_wandb_entity": os.getenv("WANDB_ENTITY", ""),
-        "default_huggingface_api_token": os.getenv("HUGGINGFACE_TOKEN", ""),
+        "default_huggingface_api_token": os.getenv("HF_TOKEN", ""),
         "default_hf_hub_enable_hf_transfer": os.getenv(
             "HF_HUB_ENABLE_HF_TRANSFER", True
         ),

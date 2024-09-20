@@ -3,9 +3,11 @@ import logging
 import os
 import sys
 
+from huggingface_hub.constants import _is_true
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from llm_studio.app_utils import hugging_face_utils
+from llm_studio.app_utils.hugging_face_utils import publish_model_to_hugging_face
 from llm_studio.app_utils.utils import hf_repo_friendly_name
 
 if __name__ == "__main__":
@@ -75,13 +77,14 @@ if __name__ == "__main__":
         model_name = hf_repo_friendly_name(os.path.basename(path_to_experiment))
 
     try:
-        hugging_face_utils.publish_model_to_hugging_face(
+        publish_model_to_hugging_face(
             path_to_experiment=path_to_experiment,
             device=device,
             api_key=api_key,
             user_id=user_id,
             model_name=model_name,
             safe_serialization=safe_serialization,
+            hf_transfer=_is_true(os.getenv("HF_HUB_ENABLE_HF_TRANSFER", "1")),
         )
     except Exception:
         logging.error("Exception occurred during the run:", exc_info=True)

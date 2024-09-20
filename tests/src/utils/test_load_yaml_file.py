@@ -1,6 +1,7 @@
 import os
+import pathlib
 
-from llm_studio.src.utils.config_utils import load_config_yaml
+from llm_studio.src.utils.config_utils import load_config_yaml, save_config_yaml
 
 
 def test_load_config_yaml():
@@ -72,3 +73,11 @@ def test_load_config_yaml():
     assert cfg.training.train_validation_data is False
     assert cfg.training.warmup_epochs == 0.0
     assert cfg.training.weight_decay == 0.0
+
+
+def test_save_config_yaml(tmp_path: pathlib.Path):
+    test_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
+    cfg_path = os.path.join(test_directory, "test_data/cfg.yaml")
+    cfg = load_config_yaml(cfg_path)
+
+    save_config_yaml(os.path.join(tmp_path, "cfg.yaml"), cfg)

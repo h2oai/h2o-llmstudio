@@ -774,14 +774,14 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
     config = AutoConfig.from_pretrained(
         cfg.llm_backbone,
         trust_remote_code=cfg.environment.trust_remote_code,
-        token=os.getenv("HUGGINGFACE_TOKEN"),
+        token=os.getenv("HF_TOKEN"),
         revision=cfg.environment.huggingface_branch,
         **kwargs,
     )
 
     config = update_backbone_config(config, cfg)
     kwargs = dict()
-    kwargs["token"] = os.getenv("HUGGINGFACE_TOKEN")
+    kwargs["token"] = os.getenv("HF_TOKEN")
 
     quantization_config = None
     if cfg.architecture.backbone_dtype == "int8" and len(cfg.environment.gpus):

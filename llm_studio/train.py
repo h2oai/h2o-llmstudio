@@ -712,12 +712,17 @@ def run(cfg: DefaultConfigProblemBase) -> float:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument(
-        "-C", "--config", help="config filename", default=argparse.SUPPRESS
+        "-C", "--config", help="config filename", type=(str), default=argparse.SUPPRESS
     )
-    parser.add_argument("-Y", "--yaml", help="yaml filename", default=argparse.SUPPRESS)
+    parser.add_argument(
+        "-Y", "--yaml", help="yaml filename", type=(str), default=argparse.SUPPRESS
+    )
     parser_args, unknown = parser.parse_known_args(sys.argv)
 
     if "config" in parser_args:
+        logging.warning(
+            "Using deprecated -C argument. Please use -Y instead to load yaml."
+        )
         cfg: DefaultConfigProblemBase = load_config_py(parser_args.config)
     elif "yaml" in parser_args:
         cfg = load_config_yaml(parser_args.yaml)
