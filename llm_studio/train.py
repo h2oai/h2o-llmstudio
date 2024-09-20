@@ -1,6 +1,7 @@
 import os
+import sys
 
-from llm_studio.python_configs.cfg_checks import check_config_for_errors
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
@@ -27,6 +28,7 @@ from tqdm import tqdm
 from transformers.integrations import HfDeepSpeedConfig
 
 from llm_studio.python_configs.base import DefaultConfigProblemBase
+from llm_studio.python_configs.cfg_checks import check_config_for_errors
 from llm_studio.src.loggers import MainLogger
 from llm_studio.src.utils.config_utils import (
     load_config_py,

@@ -186,7 +186,7 @@ wave:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
-	$(PIPENV) run wave run app
+	$(PIPENV) run wave run llm_studio.app
 
 .PHONY: llmstudio
 llmstudio:
@@ -194,7 +194,7 @@ llmstudio:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
-	$(PIPENV) run wave run --no-reload app
+	$(PIPENV) run wave run --no-reload llm_studio.app
 
 .PHONY: llmstudio-conda
 llmstudio-conda:
@@ -204,7 +204,7 @@ llmstudio-conda:
 		H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 		H2O_WAVE_NO_LOG=true \
 		H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
-		wave run --no-reload app"
+		wave run --no-reload llm_studio.app"
 
 .PHONY: stop-llmstudio
 stop-llmstudio:

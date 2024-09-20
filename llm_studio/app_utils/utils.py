@@ -122,7 +122,7 @@ def start_process(
     if num_gpus == 0:
         cmd = [
             "python",
-            "train_wave.py",
+            "llm_studio/train_wave.py",
             "-Y",
             config_name,
         ]
@@ -133,7 +133,7 @@ def start_process(
     #         f"CUDA_VISIBLE_DEVICES={','.join(gpu_list)}",
     #         "python",
     #         "-u",
-    #         "train_wave.py",
+    #         "llm_studio/train_wave.py",
     #         "-P",
     #         config_name,
     #     ]
@@ -148,7 +148,7 @@ def start_process(
                 f"localhost:{','.join(gpu_list)}",
                 "--master_port",
                 f"{str(free_port)}",
-                "train_wave.py",
+                "llm_studio/train_wave.py",
                 "-Y",
                 config_name,
             ]
@@ -160,7 +160,7 @@ def start_process(
                 "torchrun",
                 f"--nproc_per_node={str(num_gpus)}",
                 f"--master_port={str(free_port)}",
-                "train_wave.py",
+                "llm_studio/train_wave.py",
                 "-Y",
                 config_name,
             ]
@@ -1849,6 +1849,13 @@ def get_experiments(
     if len(df) > 0:
         # make sure progress is 100% for finished experiments
         df.loc[df.status == "finished", "progress"] = "1.0"
+
+        # make sure that if experiment is running the progress is at most 99%
+        df.loc[
+            (df.status == "running")
+            & (pd.to_numeric(df.progress, errors="coerce") > 0.99),
+            "progress",
+        ] = ".99"
 
         df["info"] = np.where(
             (df["status"] == "running") & (df["eta"] != ""),

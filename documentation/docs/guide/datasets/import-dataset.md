@@ -8,6 +8,7 @@ import upload_dataset from './upload-dataset.png';
 import upload_local_file from './upload-local-file.png';
 import import_s3_bucket from './import-s3-bucket.png';
 import import_kaggle_dataset from './import-kaggle-dataset.png';
+import import_h2odrive_dataset from './import-h2o-drive-dataset.png';
 import DatasetNameTooltip from '../../tooltips/experiments/_dataset-name.mdx';
 import ProblemTypeTooltip from '../../tooltips/experiments/_problem-type.mdx';
 import TrainDataframeTooltip from '../../tooltips/experiments/_train-dataframe.mdx';
@@ -86,6 +87,17 @@ Follow the relevant steps below to import a dataset to H2O LLM Studio.
         <li>
         Click <b>Continue</b>.
         <img src={import_s3_bucket} alt="import-s3-bucket" />
+        </li>
+        </ol>
+    </TabItem>
+    <TabItem value="h2o-drive" label="H2O-Drive">
+        <ol>
+        <li>
+        Select the dataset you want to upload from the list of datasets in H2O Drive.
+        </li>
+        <li>
+        Click <b>Continue</b>.
+        <img src={import_h2odrive_dataset} alt="import-h2odrive-dataset" />
         </li>
         </ol>
     </TabItem>
