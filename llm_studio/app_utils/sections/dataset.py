@@ -705,6 +705,27 @@ async def dataset_import(
             time.sleep(1)
             sanity_check(cfg)
 
+        except AssertionError as exception:
+            logger.error(
+                f"Error while validating data: {exception}", exc_info=True
+            )
+            text = (
+                "# Error while validating data\n"
+                "Please go back and verify whether the problem type and other settings were set properly.\n"
+                "\n"
+                "**Details of the Validation Error**:\n"
+                f"```\n{exception}\n```"
+            )
+
+            items = [
+                ui.markup(content=header),
+                ui.message_bar(text=text, type="error"),
+                ui.expander(
+                    name="expander",
+                    label="Expand Error Traceback",
+                    items=[ui.markup(f"<pre>{traceback.format_exc()}</pre>")],
+                ),
+            ]
         except Exception as exception:
             logger.error(
                 f"Error while plotting data preview: {exception}", exc_info=True

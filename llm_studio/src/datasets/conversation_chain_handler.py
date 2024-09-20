@@ -84,9 +84,10 @@ class ConversationChainHandler:
             # is a conversation chain
             return [[idx] for idx in range(len(df))]
 
+        logging.info(f"Dataset columns:{df.columns}")
         assert "id" in df.columns, (
-            f"id column required for conversation chaining, "
-            f"DataFrame only has {df.columns}."
+            f"id column is required for conversation chaining, "
+            f"Dataset has the following columns: {df.columns.to_list()}."
         )
         # sample and parent ids can have any dtype, such as str, int, float, etc.
         # id column can be int, while parent_id column can be float

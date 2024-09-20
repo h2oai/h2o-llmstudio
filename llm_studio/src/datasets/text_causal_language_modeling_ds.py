@@ -338,10 +338,16 @@ class CustomDataset(Dataset):
         ):
             assert (
                 df[cfg.dataset.parent_id_column] != df["id"]
-            ).all(), "Parent id column is the same as id column for some rows"
+            ).all(), f"Parent id column:{cfg.dataset.parent_id_column} is the same as id column for some rows"
             assert (df[cfg.dataset.parent_id_column].fillna("") == "").sum() > 0, (
-                "Did not find any conversation start. "
+                "Did not find any conversation chain. "
                 "Please ensure that some parent ids are empty."
+                "\n"
+                "Conversations are chained using parent id, start conversation record should not have parent id populated"
+                "\n"
+                f"Parent id column checked:{cfg.dataset.parent_id_column}"
+                "\n"
+                f"Number of records with empty <{cfg.dataset.parent_id_column}> column:{(df[cfg.dataset.parent_id_column].fillna('') == '').sum()}"
             )
 
         assert cfg.dataset.answer_column in df.columns, (
