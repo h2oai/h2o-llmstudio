@@ -706,12 +706,11 @@ async def dataset_import(
             sanity_check(cfg)
 
         except AssertionError as exception:
-            logger.error(
-                f"Error while validating data: {exception}", exc_info=True
-            )
+            logger.error(f"Error while validating data: {exception}", exc_info=True)
             text = (
                 "# Error while validating data\n"
-                "Please go back and verify whether the problem type and other settings were set properly.\n"
+                "Please go back and verify whether the problem type and other "
+                "settings were set properly.\n"
                 "\n"
                 "**Details of the Validation Error**:\n"
                 f"```\n{exception}\n```"
