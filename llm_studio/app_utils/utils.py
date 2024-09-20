@@ -862,13 +862,12 @@ def get_dataset(
     return dataset, v
 
 
-def get_ui_element(
+def _get_ui_element(
     k: str,
     v: Any,
     poss_values: Any,
     type_annotation: Type,
     tooltip: str,
-    password: bool,
     trigger: bool,
     q: Q,
     pre: str = "",
@@ -881,7 +880,6 @@ def get_ui_element(
         poss_values: possible values
         type_annotation: type annotation
         tooltip: tooltip
-        password: flag for whether it is a password
         trigger: flag for triggering the element
         q: Q
         pre: optional prefix for ui key
@@ -978,7 +976,7 @@ def get_ui_element(
                     label=title_label,
                     value=val,
                     required=False,
-                    password=password,
+                    password=False,
                     tooltip=tooltip,
                     trigger=trigger,
                     multiline=False,
@@ -1129,13 +1127,12 @@ def get_dataset_elements(cfg: DefaultConfigProblemBase, q: Q) -> List:
 
                 q.client[f"dataset/import/cfg/{k}"] = v
 
-                t = get_ui_element(
+                t = _get_ui_element(
                     k,
                     v,
                     poss_values,
                     type_annotation,
                     tooltip=tooltip,
-                    password=False,
                     trigger=trigger,
                     q=q,
                     pre="dataset/import/cfg/",
@@ -1264,11 +1261,6 @@ def get_ui_elements_for_cfg(
     cfg_dict = {key: cfg_dict[key] for key in cfg._get_order()}
 
     for k, v in cfg_dict.items():
-        if ("api" in k) or ("secret" in k):
-            password = True
-        else:
-            password = False
-
         if k.startswith("_") or cfg._get_visibility(k) < 0:
             if q.client[f"{pre}/cfg_mode/from_cfg"]:
                 q.client[f"{pre}/cfg/{k}"] = v
@@ -1380,13 +1372,12 @@ def get_ui_elements_for_cfg(
             if limit is not None and k not in limit:
                 continue
 
-            t = get_ui_element(
+            t = _get_ui_element(
                 k=k,
                 v=v,
                 poss_values=poss_values,
                 type_annotation=type_annotation,
                 tooltip=tooltip,
-                password=password,
                 trigger=trigger,
                 q=q,
                 pre=f"{pre}/cfg/",
