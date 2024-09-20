@@ -1384,9 +1384,13 @@ def get_ui_elements_for_cfg(
             )
         elif dataclasses.is_dataclass(v):
             if limit is not None and k in limit:
-                elements_group = get_ui_elements_for_cfg(cfg=v, q=q, limit=None, pre=pre)
+                elements_group = get_ui_elements_for_cfg(
+                    cfg=v, q=q, limit=None, pre=pre
+                )
             else:
-                elements_group = get_ui_elements_for_cfg(cfg=v, q=q, limit=limit, pre=pre)
+                elements_group = get_ui_elements_for_cfg(
+                    cfg=v, q=q, limit=limit, pre=pre
+                )
 
             if k == "dataset" and pre != "experiment/start":
                 # get all the datasets available
