@@ -1,7 +1,7 @@
 import subprocess
 import sys
 import traceback
-from typing import TypedDict, Literal
+from typing import Literal, TypedDict
 
 import pandas as pd
 from h2o_wave import Q, expando_to_dict, ui
