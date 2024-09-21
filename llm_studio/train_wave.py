@@ -44,9 +44,8 @@ def check_for_done(process_queue):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument(
-        "-C", "--config", help="config filename", default=argparse.SUPPRESS
+        "-Y", "--yaml", help="yaml filename", type=(str), default=argparse.SUPPRESS
     )
-    parser.add_argument("-Y", "--yaml", help="yaml filename", default=argparse.SUPPRESS)
     parser.add_argument(
         "-Q",
         "--process-queue",
@@ -73,7 +72,7 @@ if __name__ == "__main__":
 
     import torch
 
-    from llm_studio.src.utils.config_utils import load_config_py, load_config_yaml
+    from llm_studio.src.utils.config_utils import load_config_yaml
     from llm_studio.src.utils.exceptions import (
         LLMAugmentationsException,
         LLMDataException,
@@ -86,10 +85,7 @@ if __name__ == "__main__":
     from llm_studio.src.utils.utils import kill_child_processes_and_current
     from llm_studio.train import run
 
-    if "config" in parser_args:
-        cfg = load_config_py(parser_args.config)
-    elif "yaml" in parser_args:
-        cfg = load_config_yaml(parser_args.yaml)
+    cfg = load_config_yaml(parser_args.yaml)
 
     flag_path = os.path.join(cfg.output_directory, "flags{}.json")
 

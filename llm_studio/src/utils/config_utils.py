@@ -9,7 +9,7 @@ from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 
 
-def rreload(module):
+def _recursive_reload(module):
     """Recursively reload modules.
 
     Args:
@@ -43,7 +43,7 @@ def _load_cls(module_path: str, cls_name: str) -> DefaultConfigProblemBase:
 
     module = importlib.import_module(module_path_fixed)
     module = importlib.reload(module)
-    rreload(module)
+    _recursive_reload(module)
     module = importlib.reload(module)
 
     assert hasattr(module, cls_name), "{} file should contain {} class".format(
@@ -193,7 +193,7 @@ def save_config_yaml(path: str, cfg: DefaultConfigProblemBase) -> None:
         yaml.dump(cfg_dict, fp, indent=4)
 
 
-def load_config_yaml(path: str):
+def load_config_yaml(path: str) -> DefaultConfigProblemBase:
     """Loads config from yaml file
 
     Args:
