@@ -338,7 +338,7 @@ class CustomDataset(Dataset):
         ):
             assert (df[cfg.dataset.parent_id_column] != df["id"]).all(), (
                 f"Parent id column:{cfg.dataset.parent_id_column}"
-                "is the same as id column for some rows"
+                " is the same as id column for some rows"
             )
             assert (df[cfg.dataset.parent_id_column].fillna("") == "").sum() > 0, (
                 "Did not find any conversation chain. "
