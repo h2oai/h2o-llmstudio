@@ -7,7 +7,10 @@ H2O LLM Studio supports the following data connectors to access or upload extern
 - **Upload**: Upload a local dataset from your machine. 
 - **Local**: Specify the file location of the dataset on your machine. 
 - **AWS S3 (Amazon AWS S3)**: Connect to an Amazon AWS S3 data bucket. 
-- **Kaggle**: Connect to a Kaggle dataset. 
+- **Azure Datalake**: Connect to a dataset in Azure Datalake. 
+- **H2O Drive**: Upload a dataset from H2O Drive.
+- **Kaggle**: Connect to a dataset hosted on Kaggle.
+- **Hugging Face**: Connect to a dataset on Hugging Face.
 
 ## Data format 
 
