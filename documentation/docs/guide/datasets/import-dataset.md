@@ -165,7 +165,7 @@ Follow the relevant steps below to import a dataset to H2O LLM Studio.
             </li>
             <li>
             <b>Hugging Face API token (optional): </b><br></br>
-            Enter your Hugging Face API token to authenticate access to private datasets or specific features.
+            Enter your Hugging Face API token to authenticate access to private datasets or datasets with gated access.
             </li>
             </ul>
         </li>
