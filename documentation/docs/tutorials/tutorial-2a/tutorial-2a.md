@@ -64,7 +64,7 @@ Now that the dataset is imported, let's create a new experiment for causal regre
 
 ## Step 4: Evaluate experiment
 
-Once the new experiment created successfully, click the name of the experiment, to see the experiment tabs that provide details and different aspects of your experiment. For more information about the experiment tabs, see [Experiment tabs](../../guide/experiments/view-an-experiment.md#experiment-tabs)
+After successfully creating the new experiment, click on the experiment name to access the experiment tabs. These tabs provide detailed information and insights into various aspects of your experiment. For more information about the experiment tabs, see [Experiment tabs](../../guide/experiments/view-an-experiment.md#experiment-tabs).
 
 ![Evaluate experiment](evaluate-experiment.png)
 
