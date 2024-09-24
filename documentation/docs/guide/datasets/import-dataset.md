@@ -199,7 +199,9 @@ You can upload a `.zip` file with both training and validation sets to avoid hav
 
 - **Rejected Prompt Column:** <RejectedPromptColumnTooltip/>
 
-- **Answer Column:** <AnswerColumnTooltip/>
+- #### **Answer Column:** 
+
+  <AnswerColumnTooltip/>
 
 - **Rejected Answer Column:** <RejectedAnswerColumnTooltip/>
 

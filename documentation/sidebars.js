@@ -15,8 +15,8 @@ module.exports = {
       type: "category",
       label: "Tutorials",
       items: [
-        "tutorials/tutorial-1a",
-        "tutorials/tutorial-2a",
+        "tutorials/tutorial-1a/tutorial-1a",
+        "tutorials/tutorial-2a/tutorial-2a",
       ],
     },
     "concepts",
