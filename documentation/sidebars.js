@@ -11,6 +11,14 @@ module.exports = {
         "get-started/videos",
       ],
     },
+    {
+      type: "category",
+      label: "Tutorials",
+      items: [
+        "tutorials/tutorial-1a",
+        "tutorials/tutorial-2a",
+      ],
+    },
     "concepts",
     {
       type: "category",
@@ -30,6 +38,7 @@ module.exports = {
           type: "category",
           label: "Experiments",
           items: [
+            "guide/experiments/supported-problem-types",
             "guide/experiments/experiment-settings",
             "guide/experiments/create-an-experiment",
             "guide/experiments/view-an-experiment",
