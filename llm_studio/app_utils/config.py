@@ -55,6 +55,8 @@ else:
         "h2oai/h2o-danube3-4b-chat",
         "h2oai/h2o-danube2-1.8b-base",
         "h2oai/h2o-danube2-1.8b-chat",
+        "meta-llama/Llama-3.2-1B-Instruct",
+        "meta-llama/Llama-3.2-3B-Instruct",
         "meta-llama/Meta-Llama-3.1-8B-Instruct",
         "meta-llama/Meta-Llama-3.1-70B-Instruct",
         "mistralai/Mistral-7B-v0.3",
