@@ -75,8 +75,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     experiment_name: str = field(default_factory=generate_experiment_name)
     llm_backbone: str = (
         "t5-small"
-        if "t5-small"
-        in default_cfg.default_sequence_to_sequence_models
+        if "t5-small" in default_cfg.default_sequence_to_sequence_models
         else default_cfg.default_sequence_to_sequence_models[0]
     )
 

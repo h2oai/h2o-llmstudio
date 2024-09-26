@@ -112,8 +112,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
     experiment_name: str = field(default_factory=generate_experiment_name)
     llm_backbone: str = (
         "h2oai/h2o-danube3-500m-chat"
-        if "h2oai/h2o-danube3-500m-chat"
-        in default_cfg.default_causal_language_models
+        if "h2oai/h2o-danube3-500m-chat" in default_cfg.default_causal_language_models
         else default_cfg.default_causal_language_models[0]
     )
 
