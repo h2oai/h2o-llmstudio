@@ -8,7 +8,7 @@ import Icon from "@material-ui/core/Icon";
 
 ## Overview
 
-This tutorial will guide you through the process of setting up and conducting an experiment for causal regression modeling using H2O LLM Studio. It covers how to import datasets from Hugging Face, configure key experiment settings, and create a new experiment. By following these steps, you will learn how to design experiments that can identify causal relationships in regression tasks.
+This tutorial will guide you through the process of setting up and conducting an experiment for causal regression modeling [problem type](../../guide/experiments/supported-problem-types.md) using H2O LLM Studio. It covers how to import datasets from Hugging Face, configure key experiment settings, and create a new experiment. By following these steps, you will learn how to design experiments that can identify causal relationships in regression tasks.
 
 ## Objectives
 
@@ -70,4 +70,4 @@ After successfully creating the new experiment, click on the experiment name to 
 
 ## Summary
 
-In this tutorial, we covered the process of setting up a causal regression experiment using H2O LLM Studio. You learned how to import a dataset from Hugging Face, configure both dataset and experiment settings, and create a new experiment. With these steps, you're now ready to explore other datasets and experiment with various configurations for causal regression problems in H2O LLM Studio.
+In this tutorial, we covered the process of setting up a causal regression experiment using H2O LLM Studio. You learned how to import a dataset from Hugging Face, configure both dataset and experiment settings, and create a new experiment. With these steps, you're now ready to explore other datasets and experiment with various configurations for causal regression [problem type](../../guide/experiments/supported-problem-types.md) in H2O LLM Studio.

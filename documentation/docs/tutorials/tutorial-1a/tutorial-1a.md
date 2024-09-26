@@ -8,7 +8,7 @@ import Icon from "@material-ui/core/Icon";
 
 ## Overview
 
-This tutorial will guide you through the process of setting up and conducting an experiment for causal classification modeling using H2O LLM Studio. It covers how to import datasets, configure key experiment settings, and create a new experiment. By following these steps, you will learn how to design experiments that can identify causal relationships in classification tasks.
+This tutorial will guide you through the process of setting up and conducting an experiment for causal classification modeling [problem type](../../guide/experiments/supported-problem-types.md) using H2O LLM Studio. It covers how to import datasets, configure key experiment settings, and create a new experiment. By following these steps, you will learn how to design experiments that can identify causal relationships in classification tasks.
 
 ## Objectives
 
@@ -38,6 +38,9 @@ In this step, we'll review and adjust the dataset settings for our experiment.
 
 1. In the **Dataset name** field, enter `classification`.
 2. In the **Problem type** dropdown, select **Causal classification modeling**.
+ :::info note
+ If the dataset is configured correctly, the **Causal classification modeling** problem type will be pre-selected automatically.
+ :::
 3. In the **Train dataframe** dropdown, leave the default train dataframe as `imdb_train.pq`.
 4. In the **Validation dataframe** dropdown, leave the default value as `None`. 
 5. In the **Prompt column** dropdown, select **Text**.
@@ -71,5 +74,5 @@ After successfully creating the new experiment, click on the experiment name to 
 
 ## Summary
 
-In this tutorial, we walked through the process of setting up a causal classification experiment using H2O LLM Studio. You learned how to import the IMDb dataset from Hugging Face, configure the dataset and experiment settings, and create a new experiment. With these steps, you're now ready to explore different datasets and experiment with various configurations for causal classification problems in H2O LLM Studio.
+In this tutorial, we walked through the process of setting up a causal classification experiment using H2O LLM Studio. You learned how to import the IMDb dataset from Hugging Face, configure the dataset and experiment settings, and create a new experiment. With these steps, you're now ready to explore different datasets and experiment with various configurations for causal classification [problem type](../../guide/experiments/supported-problem-types.md) in H2O LLM Studio.
 
