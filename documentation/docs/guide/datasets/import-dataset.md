@@ -90,6 +90,30 @@ Follow the relevant steps below to import a dataset to H2O LLM Studio.
         </li>
         </ol>
     </TabItem>
+    <TabItem value="azure datalake" label="Azure Datalake">
+        <ol>
+        <li>
+        Enter values for the following fields:
+            <ul>
+            <li>
+            <b>Datalake connection string: </b><br></br>
+            Enter your Azure connection string to connect to Datalake storage.
+            </li>
+            <li>
+            <b>Datalake container name: </b><br></br>
+            Enter the name of the Azure Data Lake container where your dataset is stored, including the relative path to the file within the container. 
+            </li>
+            <li>
+            <b>File name: </b><br></br>
+            Specify the exact name of the file you want to import.
+            </li>
+            </ul>
+        </li>
+        <li>
+        Click <b>Continue</b>.
+        </li>
+        </ol>
+    </TabItem>
     <TabItem value="h2o-drive" label="H2O-Drive">
         <ol>
         <li>
@@ -123,6 +147,30 @@ Follow the relevant steps below to import a dataset to H2O LLM Studio.
         <li>
         Click <b>Continue</b>.
         <img src={import_kaggle_dataset} alt="import-kaggle-dataset" />
+        </li>
+        </ol>
+    </TabItem>
+    <TabItem value="hugging face" label="Hugging Face">
+        <ol>
+        <li>
+        Enter values for the following fields:
+            <ul>
+            <li>
+            <b>Hugging Face dataset: </b><br></br>
+            Enter the name of the Hugging Face dataset.
+            </li>
+            <li>
+            <b>Split: </b><br></br>
+            Enter the specific data split you want to import (e.g., "train", "test").
+            </li>
+            <li>
+            <b>Hugging Face API token (optional): </b><br></br>
+            Enter your Hugging Face API token to authenticate access to private datasets or datasets with gated access.
+            </li>
+            </ul>
+        </li>
+        <li>
+        Click <b>Continue</b>.
         </li>
         </ol>
     </TabItem>
