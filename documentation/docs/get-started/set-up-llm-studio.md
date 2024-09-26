@@ -199,7 +199,7 @@ H2O LLM Studio requires the following minimum requirements:
           H2O_WAVE_MAX_REQUEST_SIZE=25MB \ <br></br>
           H2O_WAVE_NO_LOG=True \ <br></br>
           H2O_WAVE_PRIVATE_DIR="/download/@output/download" \ <br></br>
-          wave run app
+          wave run llm_studio.app
         </code>
       </pre>
     </p>
@@ -255,7 +255,7 @@ If you are running H2O LLM Studio with a custom environment other than Pipenv, s
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 H2O_WAVE_NO_LOG=True \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
-wave run app
+wave run llm_studio.app
 ```
 
 ### Run using Docker from a nightly build
