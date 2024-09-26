@@ -162,7 +162,7 @@ default_cfg = {
         "default_wandb_entity": os.getenv("WANDB_ENTITY", ""),
         "default_huggingface_api_token": os.getenv("HF_TOKEN", ""),
         "default_hf_hub_enable_hf_transfer": _is_true(
-            os.getenv("HF_HUB_ENABLE_HF_TRANSFER", True)
+            os.getenv("HF_HUB_ENABLE_HF_TRANSFER", "1")
         ),
         "default_openai_azure": os.getenv("OPENAI_API_TYPE", "open_ai") == "azure",
         "default_openai_api_token": os.getenv("OPENAI_API_KEY", ""),
