@@ -2,6 +2,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
+from llm_studio.app_utils.config import default_cfg
 from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPAugmentation,
@@ -72,7 +73,11 @@ class ConfigNLPSeq2SeqEnvironment(ConfigNLPCausalLMEnvironment):
 class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
-    llm_backbone: str = "t5-small"
+    llm_backbone: str = (
+        "t5-small"
+        if "t5-small" in default_cfg.default_sequence_to_sequence_models
+        else default_cfg.default_sequence_to_sequence_models[0]
+    )
 
     dataset: ConfigNLPSeq2SeqDataset = field(default_factory=ConfigNLPSeq2SeqDataset)
     tokenizer: ConfigNLPCausalLMTokenizer = field(
@@ -99,15 +104,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
         self._visibility["output_directory"] = -1
 
         self._possible_values["llm_backbone"] = possible_values.String(
-            values=(
-                "t5-small",
-                "t5-base",
-                "t5-large",
-                "google/flan-t5-small",
-                "google/flan-t5-base",
-                "google/flan-t5-large",
-                "google/flan-ul2",
-            ),
+            values=default_cfg.default_sequence_to_sequence_models,
             allow_custom=True,
         )
 

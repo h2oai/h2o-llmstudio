@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Tuple
 
 import llm_studio.src.datasets.text_causal_regression_ds
 import llm_studio.src.plots.text_causal_classification_modeling_plots
+from llm_studio.app_utils.config import default_cfg
 from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
 from llm_studio.python_configs.text_causal_classification_modeling_config import (
     ConfigNLPCausalClassificationAugmentation as ConfigNLPCausalRegressionAugmentation,
@@ -109,7 +110,11 @@ class ConfigNLPCausalRegressionEnvironment(ConfigNLPCausalLMEnvironment):
 class ConfigProblemBase(DefaultConfigProblemBase):
     output_directory: str = f"output/{os.path.basename(__file__).split('.')[0]}"
     experiment_name: str = field(default_factory=generate_experiment_name)
-    llm_backbone: str = "h2oai/h2o-danube3-500m-chat"
+    llm_backbone: str = (
+        "h2oai/h2o-danube3-500m-chat"
+        if "h2oai/h2o-danube3-500m-chat" in default_cfg.default_causal_language_models
+        else default_cfg.default_causal_language_models[0]
+    )
 
     dataset: ConfigNLPCausalRegressionDataset = field(
         default_factory=ConfigNLPCausalRegressionDataset
@@ -142,26 +147,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
         self._visibility["output_directory"] = -1
 
         self._possible_values["llm_backbone"] = possible_values.String(
-            values=(
-                "h2oai/h2o-danube3-500m-base",
-                "h2oai/h2o-danube3-500m-chat",
-                "h2oai/h2o-danube3-4b-base",
-                "h2oai/h2o-danube3-4b-chat",
-                "h2oai/h2o-danube2-1.8b-base",
-                "h2oai/h2o-danube2-1.8b-chat",
-                "meta-llama/Llama-3.2-1B-Instruct",
-                "meta-llama/Llama-3.2-3B-Instruct",
-                "meta-llama/Meta-Llama-3.1-8B-Instruct",
-                "meta-llama/Meta-Llama-3.1-70B-Instruct",
-                "mistralai/Mistral-7B-v0.3",
-                "mistralai/Mistral-7B-Instruct-v0.2",
-                "google/gemma-2-2b-it",
-                "google/gemma-2-9b-it",
-                "microsoft/Phi-3-mini-4k-instruct",
-                "microsoft/Phi-3-medium-4k-instruct",
-                "Qwen/Qwen2-7B-Instruct",
-                "Qwen/Qwen2-72B-Instruct",
-            ),
+            values=default_cfg.default_causal_language_models,
             allow_custom=True,
         )
 
