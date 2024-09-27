@@ -66,6 +66,9 @@ RUN apt-get purge -y git curl python3.10-distutils software-properties-common \
 
 USER llmstudio
 
+ENV HF_HUB_DISABLE_TELEMETRY=1
+ENV DO_NOT_TRACK=1
+
 # Set the environment variables for the wave server
 ENV H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756
 ENV H2O_WAVE_MAX_REQUEST_SIZE=25MB

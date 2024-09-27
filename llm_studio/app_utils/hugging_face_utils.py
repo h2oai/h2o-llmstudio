@@ -185,6 +185,7 @@ def publish_model_to_hugging_face(
     api_key: str = None,
     device: str = "cuda:0",
     safe_serialization: bool = True,
+    hf_transfer: bool = False,
 ) -> None:
     """
     Method to publish the model to Hugging Face.
@@ -197,6 +198,8 @@ def publish_model_to_hugging_face(
         api_key: The Hugging Face API Key.
         model_name: The name of the model to be published on Hugging Face.
         safe_serialization: A flag indicating whether safe serialization should be used.
+        hf_transfer: A flag indicating whether to use hf_transfer
+            (https://pypi.org/project/hf-transfer/) for model upload.
 
     Returns:
         None. The model is published to the specified Hugging Face repository.
@@ -212,7 +215,13 @@ def publish_model_to_hugging_face(
             "Invalid device value. Use 'cpu', 'cpu_shard' or 'cuda:INTEGER'."
         )
 
-    with set_env(HUGGINGFACE_TOKEN=api_key):
+    # update the environment variable for hf_transfer
+    if hf_transfer:
+        os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
+    else:
+        os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "false"
+
+    with set_env(HF_TOKEN=api_key):
         cfg, model, tokenizer = load_cfg_model_tokenizer(
             path_to_experiment,
             merge=True,

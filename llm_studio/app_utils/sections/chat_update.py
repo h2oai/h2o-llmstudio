@@ -214,9 +214,9 @@ class WaveChatStreamer(TextStreamer):
         **decode_kwargs,
     ):
         super().__init__(tokenizer, skip_prompt=True, **decode_kwargs)
-        self.text_cleaner = text_cleaner
+        self.text_cleaner: Optional[Callable] = text_cleaner
         self.words_predicted_answer: List[str] = []
-        self.q = q
+        self.q: Q = q
         self.loop = asyncio.get_event_loop()
         self.finished = False
 
@@ -279,7 +279,7 @@ async def show_stream_is_aborted_dialog(q):
     await q.page.save()
 
 
-async def is_app_blocked_while_streaming(q: Q):
+async def is_app_blocked_while_streaming(q: Q) -> bool:
     """
     Check whether the app is blocked with current answer generation.
     """

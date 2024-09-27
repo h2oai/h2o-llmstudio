@@ -15,13 +15,13 @@ from llm_studio.app_utils.sections.common import heap_redact, interface
 logger = logging.getLogger(__name__)
 
 
-def on_startup():
+def on_startup() -> None:
     initialize_logging()
     logger.info("Starting H2O LLM STUDIO")
 
 
 @app("/", on_startup=on_startup)
-async def serve(q: Q):
+async def serve(q: Q) -> None:
     """Serving function."""
 
     # Chat is still being streamed but user clicks on another button.

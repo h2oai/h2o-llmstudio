@@ -6,7 +6,9 @@ from torch.optim.lr_scheduler import LambdaLR
 from transformers import get_constant_schedule_with_warmup
 
 
-def constant_schedule_with_warmup(optimizer, num_warmup_steps, **kwargs):
+def constant_schedule_with_warmup(
+    optimizer: Optimizer, num_warmup_steps: int, **kwargs
+) -> LambdaLR:
     return get_constant_schedule_with_warmup(
         optimizer=optimizer, num_warmup_steps=num_warmup_steps
     )

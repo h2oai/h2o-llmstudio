@@ -3,6 +3,7 @@ import socket
 from types import SimpleNamespace
 
 import toml
+from huggingface_hub.constants import _is_true
 
 toml_root_dir = os.path.abspath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "../..")
@@ -43,6 +44,47 @@ port = "10101"
 url = f"http://{host}:{port}/"
 
 
+if os.getenv("H2O_LLM_STUDIO_DEFAULT_LM_MODELS"):
+    default_causal_language_models = [
+        mdl.strip() for mdl in os.getenv("H2O_LLM_STUDIO_DEFAULT_LM_MODELS").split(",")
+    ]
+else:
+    default_causal_language_models = [
+        "h2oai/h2o-danube3-500m-base",
+        "h2oai/h2o-danube3-500m-chat",
+        "h2oai/h2o-danube3-4b-base",
+        "h2oai/h2o-danube3-4b-chat",
+        "h2oai/h2o-danube2-1.8b-base",
+        "h2oai/h2o-danube2-1.8b-chat",
+        "meta-llama/Llama-3.2-1B-Instruct",
+        "meta-llama/Llama-3.2-3B-Instruct",
+        "meta-llama/Meta-Llama-3.1-8B-Instruct",
+        "meta-llama/Meta-Llama-3.1-70B-Instruct",
+        "mistralai/Mistral-7B-v0.3",
+        "mistralai/Mistral-7B-Instruct-v0.2",
+        "google/gemma-2-2b-it",
+        "google/gemma-2-9b-it",
+        "microsoft/Phi-3-mini-4k-instruct",
+        "microsoft/Phi-3-medium-4k-instruct",
+        "Qwen/Qwen2-7B-Instruct",
+        "Qwen/Qwen2-72B-Instruct",
+    ]
+
+if os.getenv("H2O_LLM_STUDIO_DEFAULT_S2S_MODELS"):
+    default_sequence_to_sequence_models = [
+        mdl.strip() for mdl in os.getenv("H2O_LLM_STUDIO_DEFAULT_S2S_MODELS").split(",")
+    ]
+else:
+    default_sequence_to_sequence_models = [
+        "t5-small",
+        "t5-base",
+        "t5-large",
+        "google/flan-t5-small",
+        "google/flan-t5-base",
+        "google/flan-t5-large",
+        "google/flan-ul2",
+    ]
+
 default_cfg = {
     "url": url,
     "name": "H2O LLM Studio",
@@ -67,6 +109,8 @@ default_cfg = {
         "text_sequence_to_sequence_modeling_config",
         "text_dpo_modeling_config",
     ],
+    "default_causal_language_models": default_causal_language_models,
+    "default_sequence_to_sequence_models": default_sequence_to_sequence_models,
     "problem_categories": ["text"],
     "dataset_keys": [
         "train_dataframe",
@@ -116,9 +160,9 @@ default_cfg = {
         "default_wandb_api_token": os.getenv("WANDB_API_KEY", ""),
         "default_wandb_project": os.getenv("WANDB_PROJECT", ""),
         "default_wandb_entity": os.getenv("WANDB_ENTITY", ""),
-        "default_huggingface_api_token": os.getenv("HUGGINGFACE_TOKEN", ""),
-        "default_hf_hub_enable_hf_transfer": os.getenv(
-            "HF_HUB_ENABLE_HF_TRANSFER", True
+        "default_huggingface_api_token": os.getenv("HF_TOKEN", ""),
+        "default_hf_hub_enable_hf_transfer": _is_true(
+            os.getenv("HF_HUB_ENABLE_HF_TRANSFER", "1")
         ),
         "default_openai_azure": os.getenv("OPENAI_API_TYPE", "open_ai") == "azure",
         "default_openai_api_token": os.getenv("OPENAI_API_KEY", ""),

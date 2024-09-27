@@ -42,7 +42,7 @@ from llm_studio.app_utils.utils import (
     get_model_types,
     get_problem_categories,
     get_problem_types,
-    get_ui_elements,
+    get_ui_elements_for_cfg,
     get_unique_name,
     hf_repo_friendly_name,
     parse_ui_elements,
@@ -463,7 +463,7 @@ async def experiment_start(q: Q) -> None:
     logger.info(f"From default {q.client['experiment/start/cfg_mode/from_default']}")
     logger.info(f"Config file: {q.client['experiment/start/cfg_file']}")
 
-    option_items = get_ui_elements(cfg=q.client["experiment/start/cfg"], q=q)
+    option_items = get_ui_elements_for_cfg(cfg=q.client["experiment/start/cfg"], q=q)
     items.extend(option_items)
 
     if q.client["experiment/start/cfg_mode/from_cfg"]:
@@ -1764,7 +1764,7 @@ async def experiment_download_model(q: Q):
                 f"Preparing model on {device}. In case of issues or OOM consider "
                 "changing the default device for downloading in settings."
             )
-        with set_env(HUGGINGFACE_TOKEN=q.client["default_huggingface_api_token"]):
+        with set_env(HF_TOKEN=q.client["default_huggingface_api_token"]):
             cfg, model, tokenizer = load_cfg_model_tokenizer(
                 experiment_path, merge=True, device=device
             )
@@ -2006,6 +2006,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             user_id=user_id,
             model_name=model_name,
             safe_serialization=safe_serialization,
+            hf_transfer=q.client["default_hf_hub_enable_hf_transfer"],
         )
 
         dialog_items = [

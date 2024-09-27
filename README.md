@@ -103,7 +103,7 @@ sudo apt-get update
 sudo apt-get -y install cuda
 ```
 
-alternatively, one can install cudatoolkits in a cuda environment:
+alternatively, one can install cudatoolkits in a conda environment:
 
 ```bash
 conda create -n llmstudio python=3.10
@@ -161,7 +161,7 @@ If you are running H2O LLM Studio with a custom environment other than Pipenv, y
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 H2O_WAVE_NO_LOG=true \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
-wave run app
+wave run llm_studio.app
 ```
 
 If you are using the [nightly conda environment](#nightly-conda-virtual-environment), you can run ```make llmstudio-conda```.

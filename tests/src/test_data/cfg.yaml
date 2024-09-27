@@ -35,7 +35,6 @@ llm_backbone: EleutherAI/pythia-12b-deduped
 logging:
     logger: None
     neptune_project: ''
-    number_of_texts: 10
 output_directory: output/user/test/
 prediction:
     batch_size_inference: 0
