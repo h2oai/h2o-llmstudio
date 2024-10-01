@@ -334,9 +334,11 @@ class CustomDataset(Dataset):
         if (
             cfg.dataset.parent_id_column is not None
             and cfg.dataset.parent_id_column in df.columns
-            and "id" in df.columns
+            and cfg.dataset.id_column in df.columns
         ):
-            assert (df[cfg.dataset.parent_id_column] != df["id"]).all(), (
+            assert (
+                df[cfg.dataset.parent_id_column] != df[cfg.dataset.id_column]
+            ).all(), (
                 f"Parent id column:{cfg.dataset.parent_id_column}"
                 " is the same as id column for some rows"
             )
@@ -345,13 +347,9 @@ class CustomDataset(Dataset):
                 "Please ensure that some parent ids are empty."
                 "\n"
                 "Conversations are chained using parent id, "
-                "start conversation record should "
-                "not have parent id populated"
+                "start conversation record should have empty parent id."
                 "\n"
                 f"Parent id column checked:{cfg.dataset.parent_id_column}"
-                "\n"
-                f"Number of records with empty <{cfg.dataset.parent_id_column}>"
-                "column:{(df[cfg.dataset.parent_id_column].fillna('') == '').sum()}"
             )
 
         assert cfg.dataset.answer_column in df.columns, (
@@ -365,8 +363,12 @@ class CustomDataset(Dataset):
         )
         if cfg.dataset.parent_id_column != "None":
             assert (
-                "id" in df.columns
-            ), "When using parent column, the dataframe requires an 'id' column. "
+                cfg.dataset.id_column in df.columns
+            ), "When using Parent Column, set 'Id Column' in the previous screen. "
+        if cfg.dataset.parent_id_column != "None":
+            assert (
+                cfg.dataset.id_column != cfg.dataset.parent_id_column
+            ), "'Id Column' should be different from 'Parent column'"
 
     def get_labels(self, prompt_encodings, answer_encodings):
         labels = torch.cat(

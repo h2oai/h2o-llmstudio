@@ -59,6 +59,7 @@ def test_clean_output():
 def test_sanity_check_raises_error():
     mock_config = MagicMock()
     mock_config.dataset.parent_id_column = "parent_id"
+    mock_config.dataset.id_column = "id"
     mock_config.dataset.answer_column = "answer"
 
     df_1 = pd.DataFrame(
@@ -109,13 +110,9 @@ def test_sanity_check_raises_error():
             "Please ensure that some parent ids are empty."
             "\n"
             "Conversations are chained using parent id, "
-            "start conversation record should "
-            "not have parent id populated"
+            "start conversation record should have empty parent id."
             "\n"
-            "Parent id column checked:parent_id"
-            "\n"
-            "Number of records with empty <parent_id>"
-            "column:{(df[cfg.dataset.parent_id_column].fillna('') == '').sum()}"
+            f"Parent id column checked:{mock_config.dataset.parent_id_column}"
         ),
     ):
         CustomDataset.sanity_check(invalid_df_2, mock_config)

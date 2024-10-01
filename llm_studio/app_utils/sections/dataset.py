@@ -656,6 +656,7 @@ async def dataset_import(
     elif step == 5:  # visualize dataset
         header = "<h2>Sample Data Visualization</h2>"
         valid_visualization = False
+        continue_visible = True
         try:
             cfg = q.client["dataset/import/cfg"]
             cfg = parse_ui_elements(
@@ -709,8 +710,7 @@ async def dataset_import(
             logger.error(f"Error while validating data: {exception}", exc_info=True)
             text = (
                 "# Error while validating data\n"
-                "Please go back and verify whether the problem type and other "
-                "settings were set properly.\n"
+                "Please review the error message below \n"
                 "\n"
                 "**Details of the Validation Error**:\n"
                 f"```\n{exception}\n```"
@@ -725,6 +725,7 @@ async def dataset_import(
                     items=[ui.markup(f"<pre>{traceback.format_exc()}</pre>")],
                 ),
             ]
+            continue_visible = False
         except Exception as exception:
             logger.error(
                 f"Error while plotting data preview: {exception}", exc_info=True
@@ -742,10 +743,14 @@ async def dataset_import(
                     items=[ui.markup(f"<pre>{traceback.format_exc()}</pre>")],
                 ),
             ]
+            continue_visible = False
 
         buttons = [
             ui.button(
-                name="dataset/import/6", label="Continue", primary=valid_visualization
+                name="dataset/import/6",
+                label="Continue",
+                primary=valid_visualization,
+                visible=continue_visible,
             ),
             ui.button(
                 name="dataset/import/3/edit",

@@ -85,14 +85,19 @@ class ConversationChainHandler:
             return [[idx] for idx in range(len(df))]
 
         logging.info(f"Dataset columns:{df.columns}")
-        assert "id" in df.columns, (
-            f"id column is required for conversation chaining, "
+        assert cfg.dataset.id_column in df.columns, (
+            "ID column is required for conversation chaining, \n"
+            "Set Id Column in the dataset configuration screen. \n"
             f"Dataset has the following columns: {df.columns.to_list()}."
         )
         # sample and parent ids can have any dtype, such as str, int, float, etc.
         # id column can be int, while parent_id column can be float
         # (as some values are NaN) so we cast id to the same dtype
-        sample_ids = df["id"].astype(df[cfg.dataset.parent_id_column].dtype).tolist()
+        sample_ids = (
+            df[cfg.dataset.id_column]
+            .astype(df[cfg.dataset.parent_id_column].dtype)
+            .tolist()
+        )
         parent_ids = df[cfg.dataset.parent_id_column].tolist()
         # Some datasets may include parent ids that are not in the dataset.
         sample_ids_set = set(sample_ids)
