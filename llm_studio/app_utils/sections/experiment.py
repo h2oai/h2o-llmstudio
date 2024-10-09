@@ -658,16 +658,16 @@ def get_experiment_table(q, df_viz, height="calc(100vh - 245px)", actions=None):
         "loss",
         "eta",
         "epoch",
-        "config_file",
     ]
 
     for col in col_remove:
         if col in df_viz:
             del df_viz[col]
-    # df_viz = df_viz.rename(
-    #     columns={"process_id": "pid", "config_file": "problem type"},
-    # )
-    # df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
+
+    df_viz = df_viz.rename(
+        columns={"config_file": "problem type"},
+    )
+    df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
 
     if actions == "experiment":
         actions_dict = {
@@ -683,7 +683,7 @@ def get_experiment_table(q, df_viz, height="calc(100vh - 245px)", actions=None):
     min_widths = {
         "name": "350",
         "dataset": "150",
-        # "problem type": "190",
+        "problem type": "195",
         "metric": "75",
         "val metric": "102",
         "progress": "85",
