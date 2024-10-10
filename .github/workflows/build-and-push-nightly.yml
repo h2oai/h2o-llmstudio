@@ -11,17 +11,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - id: 'auth'
-        uses: google-github-actions/auth@v2
+      - id: auth
+        uses: google-github-actions/auth@v0.4.0
         with:
-          credentials_json: '${{ secrets.GCP_CRED_JSON }}'
+          workload_identity_provider: 'projects/135982812994/locations/global/workloadIdentityPools/cicd-tooling/providers/github-actions'
+          service_account: 'artifact-rw@vorvan.iam.gserviceaccount.com'
       - name: Configure Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
       - run: ls -al
       - name: Configure Docker Client
         run: |-
           gcloud auth configure-docker --quiet # authenticate to gcr
-          ls -al
       - name: Clean Docker images
         run: |-
           echo "Available storage before cleaning:"
