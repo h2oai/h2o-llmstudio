@@ -32,7 +32,8 @@ async def meta(q: Q) -> None:
         box="",
         title="H2O LLM Studio",
         layouts=[
-            ui.layout(breakpoint="0px", width="1430px", zones=zones),
+            ui.layout(breakpoint="0px", width="100%", zones=zones),
+            ui.layout(breakpoint="1920px", width="1920px", zones=zones),
         ],
         scripts=[
             ui.script(source, asynchronous=True) for source in q.app["script_sources"]

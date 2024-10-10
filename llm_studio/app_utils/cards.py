@@ -19,9 +19,9 @@ def navigation_zone() -> ui.Zone:
 
     zone = ui.zone(
         "navigation",
-        size="13%",
+        size="max(13%, 180px)",
         zones=[
-            ui.zone(name="nav", size="99.5%"),
+            ui.zone(name="nav", size="100%"),
         ],
     )
 
@@ -51,7 +51,7 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                     ui.zone(
                         "content_all",
                         direction=ui.ZoneDirection.COLUMN,
-                        size="87.5%",
+                        size="min(calc(100% - 180px), 87%)",
                         zones=[
                             ui.zone(
                                 "content",
@@ -76,7 +76,7 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                     ui.zone(
                         "content_all",
                         direction=ui.ZoneDirection.COLUMN,
-                        size="87.5%",
+                        size="min(calc(100% - 180px), 87%)",
                         zones=[
                             ui.zone(
                                 "content",
@@ -101,7 +101,7 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                     ui.zone(
                         "content_all",
                         direction=ui.ZoneDirection.COLUMN,
-                        size="87.5%",
+                        size="min(calc(100% - 180px), 87%)",
                         zones=[
                             ui.zone(
                                 "content",
@@ -143,18 +143,26 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                     ui.zone(
                         "content_all",
                         direction=ui.ZoneDirection.COLUMN,
-                        size="87.5%",
+                        size="min(calc(100% - 180px), 87%)",
                         zones=[
-                            ui.zone("nav2", size="60px"),
+                            ui.zone("nav2", size="62px"),
                             ui.zone(
-                                "first",
-                                size="calc((100vh - 220px)*0.5)",
+                                "first_row",
+                                size="max(calc((100vh - 222px)*0.5), 300px)",
                                 direction=ui.ZoneDirection.ROW,
+                                zones=[
+                                    ui.zone("top_left", size="50%"),
+                                    ui.zone("top_right", size="50%"),
+                                ],
                             ),
                             ui.zone(
-                                "second",
-                                size="calc((100vh - 220px)*0.5)",
+                                "second_row",
+                                size="max(calc((100vh - 222px)*0.5), 300px)",
                                 direction=ui.ZoneDirection.ROW,
+                                zones=[
+                                    ui.zone("bottom_left", size="50%"),
+                                    ui.zone("bottom_right", size="50%"),
+                                ],
                             ),
                             ui.zone("footer", size="80px"),
                         ],
@@ -177,17 +185,17 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                     ui.zone(
                         "content_all",
                         direction=ui.ZoneDirection.COLUMN,
-                        size="87.5%",
+                        size="min(calc(100% - 180px), 87%)",
                         zones=[
-                            ui.zone("nav2", size="60px"),
+                            ui.zone("nav2", size="62px"),
                             ui.zone(
                                 "first",
-                                size="calc((100vh - 220px)*0.65)",
+                                size="calc((100vh - 222px)*0.65)",
                                 direction=ui.ZoneDirection.ROW,
                             ),
                             ui.zone(
                                 "second",
-                                size="calc((100vh - 220px)*0.35)",
+                                size="calc((100vh - 222px)*0.35)",
                                 direction=ui.ZoneDirection.ROW,
                             ),
                             ui.zone("footer", size="80px"),
@@ -208,22 +216,22 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                     ui.zone(
                         "content_all",
                         direction=ui.ZoneDirection.COLUMN,
-                        size="87.5%",
+                        size="min(calc(100% - 180px), 87%)",
                         zones=[
-                            ui.zone("nav2", size="60px"),
+                            ui.zone("nav2", size="62px"),
                             ui.zone(
                                 "first",
-                                size="calc(0.25*(100vh - 220px))",
+                                size="235px",
                                 direction=ui.ZoneDirection.ROW,
                             ),
                             ui.zone(
                                 "second",
-                                size="calc(0.25*(100vh - 220px))",
+                                size="235px",
                                 direction=ui.ZoneDirection.ROW,
                             ),
                             ui.zone(
                                 "third",
-                                size="calc(0.5*(100vh - 220px))",
+                                size="max(calc(100vh - 692px), 400px)",
                                 direction=ui.ZoneDirection.ROW,
                             ),
                             ui.zone("footer", size="80px"),
@@ -244,22 +252,22 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                     ui.zone(
                         "content_all",
                         direction=ui.ZoneDirection.COLUMN,
-                        size="87.5%",
+                        size="min(calc(100% - 180px), 87%)",
                         zones=[
-                            ui.zone("nav2", size="60px"),
+                            ui.zone("nav2", size="62px"),
                             ui.zone(
                                 "first",
-                                size="calc(0.5*(100vh - 220px))",
+                                size="max(calc(0.33*(100vh - 222px)), 400px)",
                                 direction=ui.ZoneDirection.ROW,
                             ),
                             ui.zone(
                                 "second",
-                                size="calc(0.5*(100vh - 220px))",
+                                size="max(calc(0.33*(100vh - 222px)), 400px)",
                                 direction=ui.ZoneDirection.ROW,
                             ),
                             ui.zone(
                                 "third",
-                                size="calc(0.5*(100vh - 220px))",
+                                size="max(calc(0.34*(100vh - 222px)), 200px)",
                                 direction=ui.ZoneDirection.ROW,
                             ),
                             ui.zone("footer", size="80px"),
@@ -289,12 +297,12 @@ def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
                     ui.zone(
                         "content_all",
                         direction=ui.ZoneDirection.COLUMN,
-                        size="87.5%",
+                        size="min(calc(100% - 180px), 87%)",
                         zones=[
-                            ui.zone("nav2", size="60px"),
+                            ui.zone("nav2", size="62px"),
                             ui.zone(
                                 "first",
-                                size="calc(100vh - 220px)",
+                                size="calc(100vh - 222px)",
                                 direction=ui.ZoneDirection.ROW,
                             ),
                             ui.zone("footer", size="80px"),

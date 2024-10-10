@@ -658,16 +658,16 @@ def get_experiment_table(q, df_viz, height="calc(100vh - 245px)", actions=None):
         "loss",
         "eta",
         "epoch",
-        "config_file",
     ]
 
     for col in col_remove:
         if col in df_viz:
             del df_viz[col]
-    # df_viz = df_viz.rename(
-    #     columns={"process_id": "pid", "config_file": "problem type"},
-    # )
-    # df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
+
+    df_viz = df_viz.rename(
+        columns={"config_file": "problem type"},
+    )
+    df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
 
     if actions == "experiment":
         actions_dict = {
@@ -683,7 +683,7 @@ def get_experiment_table(q, df_viz, height="calc(100vh - 245px)", actions=None):
     min_widths = {
         "name": "350",
         "dataset": "150",
-        # "problem type": "190",
+        "problem type": "195",
         "metric": "75",
         "val metric": "102",
         "progress": "85",
@@ -1225,7 +1225,7 @@ async def insights_tab(charts, q):
                             downloadable=True,
                             resettable=True,
                             min_widths=min_widths,
-                            height="calc(100vh - 245px)",
+                            height="calc(100vh - 267px)",
                             max_char_length=50_000,
                             cell_overflow="tooltip",
                         )
@@ -1479,7 +1479,7 @@ def unite_validation_metric_charts(charts_list):
 async def charts_tab(q, charts_list, legend_labels):
     charts_list = unite_validation_metric_charts(charts_list)
 
-    box = ["first", "first", "second", "second"]
+    box = ["top_left", "top_right", "bottom_left", "bottom_right"]
     cnt = 0
     for k1 in ["meta", "train", "validation"]:
         if all([k1 not in charts for charts in charts_list]):
@@ -1502,7 +1502,6 @@ async def charts_tab(q, charts_list, legend_labels):
 
             items = []
 
-            tooltip = ""
             if k1 == "meta" and k2 == "lr":
                 tooltip = "Current learning rate throughout the training process."
             elif k1 == "train" and k2 == "loss":
@@ -1598,8 +1597,8 @@ async def charts_tab(q, charts_list, legend_labels):
                 ),
                 data=d,  # type: ignore
                 interactions=["brush"],
-                height="calc((100vh - 275px)*0.41)",
-                width="560px",
+                height="max(calc((100vh - 275px)*0.41), 225px)",
+                width="100%",
             )
 
             items.append(viz)
