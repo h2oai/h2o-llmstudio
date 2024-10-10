@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - id: auth
-        uses: google-github-actions/auth@v0.4.0
+        uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: 'projects/135982812994/locations/global/workloadIdentityPools/cicd-tooling/providers/github-actions'
           service_account: 'gcr-readwrite@vorvan.iam.gserviceaccount.com'
