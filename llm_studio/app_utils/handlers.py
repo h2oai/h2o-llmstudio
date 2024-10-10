@@ -378,7 +378,7 @@ async def handle(q: Q) -> None:
         elif q.args.__wave_submission_name__ == "dataset/import/3":
             await dataset_import(q, step=3)
         elif q.args.__wave_submission_name__ == "dataset/import/cfg/parent_id_column":
-            await dataset_import(q, step=3, edit=True)
+            await dataset_import(q, step=31, edit=True)
         elif q.args.__wave_submission_name__ == "dataset/import/3/edit":
             await dataset_import(q, step=3, edit=True)
         elif q.args.__wave_submission_name__ == "dataset/import/4":

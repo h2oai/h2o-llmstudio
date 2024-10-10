@@ -7,6 +7,7 @@ import shutil
 import time
 import traceback
 from typing import List, Optional
+import textwrap
 
 import pandas as pd
 from h2o_wave import Q, ui
@@ -640,6 +641,14 @@ async def dataset_import(
             await clean_dashboard(q, mode="full")
             await dataset_import(q, step=1, error=str(error))
 
+    elif step == 31:  # activities after change in Parent ID columns
+        logger.info("Step 31")
+        cfg = q.client["dataset/import/cfg"]
+        cfg = parse_ui_elements(
+            cfg=cfg, q=q, limit=default_cfg.dataset_keys, pre="dataset/import/cfg/"
+        )
+        q.client["dataset/import/cfg"] = cfg
+        await dataset_import(q, 3, edit=True)
     elif step == 4:  # verify if dataset does not exist already
         dataset_name = q.client["dataset/import/name"]
         original_name = q.client["dataset/import/original_name"]  # used in edit mode
@@ -708,12 +717,19 @@ async def dataset_import(
 
         except AssertionError as exception:
             logger.error(f"Error while validating data: {exception}", exc_info=True)
+            # Wrap the exception text to limit the line length to 100 characters
+            wrapped_exception_lines = textwrap.fill(str(exception), width=100).splitlines()
+
+            # Join the wrapped exception lines with an extra newline to separate each
+            wrapped_exception = "\n".join(wrapped_exception_lines)
             text = (
                 "# Error while validating data\n"
                 "Please review the error message below \n"
                 "\n"
                 "**Details of the Validation Error**:\n"
-                f"```\n{exception}\n```"
+                "\n"
+                f"{wrapped_exception}"
+                "\n"
             )
 
             items = [
