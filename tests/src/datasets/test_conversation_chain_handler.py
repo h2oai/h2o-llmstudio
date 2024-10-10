@@ -68,6 +68,7 @@ def df_short():
 def cfg():
     cfg = MagicMock()
     cfg.dataset.parent_id_column = "parent_id"
+    cfg.dataset.id_column = "id"
     cfg.dataset.system_column = "system"
     cfg.dataset.prompt_column = "prompt"
     cfg.dataset.answer_column = "answer"
@@ -270,6 +271,7 @@ def test_oasst_conversation_chain_handler(tmp_path):
     cfg.dataset.prompt_column = "instruction"
     cfg.dataset.answer_column = "output"
     cfg.dataset.parent_id_column = "parent_id"
+    cfg.dataset.id_column = "id"
     cfg.dataset.system_column = "None"
 
     for limit_chained_samples in [False, True]:
@@ -309,6 +311,7 @@ def test_oasst_conversation_chain_handler_is_fast(tmp_path):
     cfg.dataset.prompt_column = "instruction"
     cfg.dataset.answer_column = "output"
     cfg.dataset.parent_id_column = "parent_id"
+    cfg.dataset.id_column = "id"
     cfg.dataset.system_column = "None"
     cfg.dataset.limit_chained_samples = True
     dfs = []

@@ -161,6 +161,10 @@ The settings under each category are listed and described below.
 
 <DSparentIdColumn/>
 
+### ID column
+
+<DSidColumn/>
+
 ### Text prompt start
 
 <DStextPromptStart/>

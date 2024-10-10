@@ -44,6 +44,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     prompt_column_separator: str = "\\n\\n"
     answer_column: str = "output"
     parent_id_column: str = "parent_id"
+    id_column: str = "id"
 
     text_system_start: str = "<|system|>"
     text_prompt_start: str = "<|prompt|>"
@@ -99,6 +100,10 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
             prefer_with=lambda column: column in ("parent", "parent_id"), add_none=True
         )
 
+        self._possible_values["id_column"] = possible_values.Columns(
+            prefer_with=lambda column: column in ("id", "ID", "index"), add_none=True
+        )
+
         self._nesting.add(
             ["chatbot_name", "chatbot_author"],
             [Dependency(key="personalize", value=True, is_set=True)],
@@ -121,6 +126,11 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
 
         self._nesting.add(
             ["limit_chained_samples"],
+            [Dependency(key="parent_id_column", value="None", is_set=False)],
+        )
+
+        self._nesting.add(
+            ["id_column"],
             [Dependency(key="parent_id_column", value="None", is_set=False)],
         )
 

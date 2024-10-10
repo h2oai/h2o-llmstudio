@@ -121,10 +121,12 @@ default_cfg = {
         "answer_column",
         "rejected_answer_column",
         "parent_id_column",
+        "id_column",
     ],
     "dataset_trigger_keys": [
         "train_dataframe",
         "validation_dataframe",
+        "parent_id_column",
     ],
     "dataset_extra_keys": [
         "validation_strategy",
