@@ -1,4 +1,4 @@
-name: Build and Push to Vorvan - Nightly
+name: Build Docker Image - Nightly
 
 on:
   schedule:
