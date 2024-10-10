@@ -4,10 +4,10 @@ import logging
 import os
 import re
 import shutil
+import textwrap
 import time
 import traceback
 from typing import List, Optional
-import textwrap
 
 import pandas as pd
 from h2o_wave import Q, ui
@@ -718,7 +718,9 @@ async def dataset_import(
         except AssertionError as exception:
             logger.error(f"Error while validating data: {exception}", exc_info=True)
             # Wrap the exception text to limit the line length to 100 characters
-            wrapped_exception_lines = textwrap.fill(str(exception), width=100).splitlines()
+            wrapped_exception_lines = textwrap.fill(
+                str(exception), width=100
+            ).splitlines()
 
             # Join the wrapped exception lines with an extra newline to separate each
             wrapped_exception = "\n".join(wrapped_exception_lines)
