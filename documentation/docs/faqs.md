@@ -167,8 +167,15 @@ When it comes to hardware requirements, it is important to note that the primary
 
 ----
 
+### I am seeing an OS error during the H2O LLM Studio training session. What should I do? 
 
+If you recieve the following error, it is most likely because of network issues either with your own connection or on the Hugging Face Hub side. 
 
+```title="Error"
+OSError: Consistency check failed: file should be of size 4999819336 but has size 
+14099570832 ((…)ve/main/ model-00002-of-00003.safetensors). 
+```
 
+In most cases, rerunning the experiment will solve it as the download of the model weights will be re-initiated.
 
-
+---
