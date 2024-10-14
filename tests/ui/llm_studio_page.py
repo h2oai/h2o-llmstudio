@@ -64,10 +64,11 @@ class LLMStudioPage(BasePage):
 
     def import_dataset_from_filesystem(self, filepath: str):
         self.import_dataset("Local")
-        if "LOCAL_LOGIN" in os.environ:
-            path = f"{LOCAL_FILESYSTEM_PATH}/{filepath}"
+        if "H2O_LLM_STUDIO_WORKDIR" in os.environ:
+            path = os.path.join(os.getenv("H2O_LLM_STUDIO_WORKDIR"), "data/user/oasst")
         else:
-            path = f"{CLOUD_FILESYSTEM_PATH}/{filepath}"
+            path = os.path.join(os.getcwd(), "data/user/oasst")
+        path = os.path.join(path, filepath)
         self.get_by_test_id(self.FILESYSTEM_SELECTOR).fill(path)
         self.continue_button().click()
 
