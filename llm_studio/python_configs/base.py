@@ -242,7 +242,7 @@ class DefaultConfigProblemBase(DefaultConfig):
         """
         Checks for errors (incompatible settings) for the specific problem type.
         Returns:
-        A dictionary with two keys:
+        A dictionary with three keys:
         - "title": A list of error titles.
         - "message": A list of error messages.
         - "type": A list of error types, can be "error", "warning", "deprecated"

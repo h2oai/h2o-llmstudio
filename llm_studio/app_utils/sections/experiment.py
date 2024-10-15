@@ -1,3 +1,4 @@
+import asyncio
 import glob
 import itertools
 import logging
@@ -5,6 +6,7 @@ import os
 import random
 import shutil
 import time
+import traceback
 import zipfile
 from pathlib import Path
 from typing import Callable, List, Optional, Set, Union
@@ -81,6 +83,29 @@ from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes_and
 logger = logging.getLogger(__name__)
 
 
+def trace_calls(func):
+    """
+    Trace calls to the function by printing the function name and the stack trace.
+    """
+
+    async def async_wrapper(*args, **kwargs):
+        logger.debug(f"Async function {func.__name__} called from:")
+        logger.debug("".join(traceback.format_stack(limit=2)))
+        return await func(*args, **kwargs)
+
+    def sync_wrapper(*args, **kwargs):
+        logger.debug(f"Function {func.__name__} called from:")
+        logger.debug("".join(traceback.format_stack(limit=2)))
+        return func(*args, **kwargs)
+
+    # Check if the function is asynchronous
+    if asyncio.iscoroutinefunction(func):
+        return async_wrapper
+    else:
+        return sync_wrapper
+
+
+@trace_calls
 async def experiment_start(q: Q) -> None:
     """Display experiment start cards."""
 
