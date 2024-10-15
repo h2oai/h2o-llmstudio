@@ -1,3 +1,4 @@
+import logging
 import multiprocessing
 import os
 from dataclasses import dataclass, field
@@ -18,7 +19,10 @@ from llm_studio.src.nesting import Dependency
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.plots import text_causal_language_modeling_plots
 from llm_studio.src.schedulers import Schedulers
+from llm_studio.src.utils.data_utils import sanity_check
 from llm_studio.src.utils.modeling_utils import generate_experiment_name
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -660,7 +664,20 @@ class ConfigProblemBase(DefaultConfigProblemBase):
         )
 
     def check(self) -> Dict[str, List]:
+        # Define returned dictionary of errors/warnings
         errors: Dict[str, List] = {"title": [], "message": [], "type": []}
+        logger.debug("Checking for common errors in the configuration.")
+        try:
+            sanity_check(self)
+        except AssertionError as exception:
+            logger.error(f"Experiment start. Sanity check failed: {exception}")
+            logger.error(f"Error while validating data: {exception}", exc_info=True)
+            # Remove end-of-line from exception
+            exception_str = str(exception).replace("\n", " ")
+            errors["title"] += ["Dataset Validation Error"]
+            errors["message"] += [exception_str]
+            errors["type"].append("error")
+
         if self.prediction.temperature > 0 and not self.prediction.do_sample:
             errors["title"] += ["Do sample needs to be enabled for temperature > 0"]
             errors["message"] += [
