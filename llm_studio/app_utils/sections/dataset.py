@@ -695,7 +695,7 @@ async def dataset_import(
                     downloadable=False,
                     resettable=False,
                     min_widths=min_widths,
-                    height="calc(100vh - 245px)",
+                    height="calc(100vh - 267px)",
                     max_char_length=5_000,
                     cell_overflow="tooltip",
                 )
@@ -1017,7 +1017,7 @@ async def dataset_list_table(
                 searchables=[],
                 min_widths=widths,
                 link_col="name",
-                height="calc(100vh - 245px)",
+                height="calc(100vh - 267px)",
                 actions=actions_dict,
             ),
             ui.message_bar(type="info", text=""),
@@ -1276,7 +1276,7 @@ async def show_data_tab(q: Q, cfg, filename: str):
                 name="dataset/display/data/table",
                 sortables=list(df.columns),
                 markdown_cells=None,  # render all cells as raw text
-                height="calc(100vh - 265px)",
+                height="calc(100vh - 267px)",
                 cell_overflow="wrap",
             )
         ],
@@ -1311,7 +1311,7 @@ async def show_visualization_tab(q: Q, cfg):
                     downloadable=True,
                     resettable=True,
                     min_widths=min_widths,
-                    height="calc(100vh - 245px)",
+                    height="calc(100vh - 267px)",
                     max_char_length=50_000,
                     cell_overflow="tooltip",
                 )
