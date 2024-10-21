@@ -8,7 +8,7 @@ Tags = ["GENERATIVE_AI", "NLP", "DATA_SCIENCE"]
 
 [Runtime]
 # Must be installed in the server config
-RuntimeVersion = "llm_studio"
+RuntimeVersion = "base_runtime"
 AppMode = "container"
 Port = 10101
 CPUReservation = "10"
