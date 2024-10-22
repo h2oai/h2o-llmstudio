@@ -1,3 +1,4 @@
+import logging
 import multiprocessing
 import os
 from dataclasses import dataclass, field
@@ -18,7 +19,10 @@ from llm_studio.src.nesting import Dependency
 from llm_studio.src.optimizers import Optimizers
 from llm_studio.src.plots import text_causal_language_modeling_plots
 from llm_studio.src.schedulers import Schedulers
+from llm_studio.src.utils.data_utils import sanity_check
 from llm_studio.src.utils.modeling_utils import generate_experiment_name
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -44,6 +48,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     prompt_column_separator: str = "\\n\\n"
     answer_column: str = "output"
     parent_id_column: str = "parent_id"
+    id_column: str = "id"
 
     text_system_start: str = "<|system|>"
     text_prompt_start: str = "<|prompt|>"
@@ -99,6 +104,10 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
             prefer_with=lambda column: column in ("parent", "parent_id"), add_none=True
         )
 
+        self._possible_values["id_column"] = possible_values.Columns(
+            prefer_with=lambda column: column in ("id", "ID", "index"), add_none=True
+        )
+
         self._nesting.add(
             ["chatbot_name", "chatbot_author"],
             [Dependency(key="personalize", value=True, is_set=True)],
@@ -121,6 +130,11 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
 
         self._nesting.add(
             ["limit_chained_samples"],
+            [Dependency(key="parent_id_column", value="None", is_set=False)],
+        )
+
+        self._nesting.add(
+            ["id_column"],
             [Dependency(key="parent_id_column", value="None", is_set=False)],
         )
 
@@ -650,7 +664,20 @@ class ConfigProblemBase(DefaultConfigProblemBase):
         )
 
     def check(self) -> Dict[str, List]:
+        # Define returned dictionary of errors/warnings
         errors: Dict[str, List] = {"title": [], "message": [], "type": []}
+        logger.debug("Checking for common errors in the configuration.")
+        try:
+            sanity_check(self)
+        except AssertionError as exception:
+            logger.error(f"Experiment start. Sanity check failed: {exception}")
+            logger.error(f"Error while validating data: {exception}", exc_info=True)
+            # Remove end-of-line from exception
+            exception_str = str(exception).replace("\n", " ")
+            errors["title"] += ["Dataset Validation Error"]
+            errors["message"] += [exception_str]
+            errors["type"].append("error")
+
         if self.prediction.temperature > 0 and not self.prediction.do_sample:
             errors["title"] += ["Do sample needs to be enabled for temperature > 0"]
             errors["message"] += [

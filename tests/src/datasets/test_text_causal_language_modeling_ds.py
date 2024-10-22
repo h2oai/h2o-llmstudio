@@ -1,3 +1,4 @@
+import re
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
@@ -58,6 +59,7 @@ def test_clean_output():
 def test_sanity_check_raises_error():
     mock_config = MagicMock()
     mock_config.dataset.parent_id_column = "parent_id"
+    mock_config.dataset.id_column = "id"
     mock_config.dataset.answer_column = "answer"
 
     df_1 = pd.DataFrame(
@@ -89,7 +91,8 @@ def test_sanity_check_raises_error():
         }
     )
     with pytest.raises(
-        AssertionError, match="Parent id column is the same as id column for some rows"
+        AssertionError,
+        match=r"Parent id column:.* is the same as id column for some rows",
     ):
         CustomDataset.sanity_check(invalid_df_1, mock_config)
 
@@ -102,8 +105,15 @@ def test_sanity_check_raises_error():
     )
     with pytest.raises(
         AssertionError,
-        match="Did not find any conversation start. "
-        "Please ensure that some parent ids are empty.",
+        match=re.escape(
+            "Did not find any conversation chain. "
+            "Please ensure that some parent ids are empty."
+            "\n"
+            "Conversations are chained using parent id, "
+            "start conversation record should have empty parent id."
+            "\n"
+            f"Parent id column checked:{mock_config.dataset.parent_id_column}"
+        ),
     ):
         CustomDataset.sanity_check(invalid_df_2, mock_config)
 

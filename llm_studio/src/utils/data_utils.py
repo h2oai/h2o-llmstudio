@@ -310,7 +310,7 @@ def load_train_valid_data(cfg) -> Tuple[pd.DataFrame, pd.DataFrame]:
     elif cfg.dataset.validation_strategy == "automatic":
         logger.info("Setting up automatic validation split...")
         df = read_dataframe_drop_missing_labels(cfg.dataset.train_dataframe, cfg)
-        if cfg.dataset.parent_id_column != "None" and "id" in df.columns:
+        if cfg.dataset.parent_id_column != "None":
             # split based on conversation_chain_ids
             # this ensures that all samples from the
             # same conversation are in the same fold

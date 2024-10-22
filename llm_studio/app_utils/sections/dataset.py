@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import shutil
+import textwrap
 import time
 import traceback
 from typing import List, Optional
@@ -640,6 +641,14 @@ async def dataset_import(
             await clean_dashboard(q, mode="full")
             await dataset_import(q, step=1, error=str(error))
 
+    elif step == 31:  # activities after change in Parent ID columns
+        logger.info("Step 31")
+        cfg = q.client["dataset/import/cfg"]
+        cfg = parse_ui_elements(
+            cfg=cfg, q=q, limit=default_cfg.dataset_keys, pre="dataset/import/cfg/"
+        )
+        q.client["dataset/import/cfg"] = cfg
+        await dataset_import(q, 3, edit=True)
     elif step == 4:  # verify if dataset does not exist already
         dataset_name = q.client["dataset/import/name"]
         original_name = q.client["dataset/import/original_name"]  # used in edit mode
@@ -656,6 +665,7 @@ async def dataset_import(
     elif step == 5:  # visualize dataset
         header = "<h2>Sample Data Visualization</h2>"
         valid_visualization = False
+        continue_visible = True
         try:
             cfg = q.client["dataset/import/cfg"]
             cfg = parse_ui_elements(
@@ -663,6 +673,17 @@ async def dataset_import(
             )
 
             q.client["dataset/import/cfg"] = cfg
+
+            await busy_dialog(
+                q=q,
+                title="Performing sanity checks on the data",
+                text="Please be patient...",
+            )
+            # add one-second delay for datasets where sanity check is instant
+            # to avoid flickering dialog
+            time.sleep(1)
+            sanity_check(cfg)
+
             plot = cfg.logging.plots_class.plot_data(cfg)
             text = (
                 "Data Validity Check. Click <strong>Continue</strong> if the input "
@@ -695,16 +716,35 @@ async def dataset_import(
             items = [ui.markup(content=header), ui.message_bar(text=text), plot_item]
             valid_visualization = True
 
-            await busy_dialog(
-                q=q,
-                title="Performing sanity checks on the data",
-                text="Please be patient...",
-            )
-            # add one-second delay for datasets where sanity check is instant
-            # to avoid flickering dialog
-            time.sleep(1)
-            sanity_check(cfg)
+        except AssertionError as exception:
+            logger.error(f"Error while validating data: {exception}", exc_info=True)
+            # Wrap the exception text to limit the line length to 100 characters
+            wrapped_exception_lines = textwrap.fill(
+                str(exception), width=100
+            ).splitlines()
 
+            # Join the wrapped exception lines with an extra newline to separate each
+            wrapped_exception = "\n".join(wrapped_exception_lines)
+            text = (
+                "# Error while validating data\n"
+                "Please review the error message below \n"
+                "\n"
+                "**Details of the Validation Error**:\n"
+                "\n"
+                f"{wrapped_exception}"
+                "\n"
+            )
+
+            items = [
+                ui.markup(content=header),
+                ui.message_bar(text=text, type="error"),
+                ui.expander(
+                    name="expander",
+                    label="Expand Error Traceback",
+                    items=[ui.markup(f"<pre>{traceback.format_exc()}</pre>")],
+                ),
+            ]
+            continue_visible = False
         except Exception as exception:
             logger.error(
                 f"Error while plotting data preview: {exception}", exc_info=True
@@ -722,10 +762,14 @@ async def dataset_import(
                     items=[ui.markup(f"<pre>{traceback.format_exc()}</pre>")],
                 ),
             ]
+            continue_visible = False
 
         buttons = [
             ui.button(
-                name="dataset/import/6", label="Continue", primary=valid_visualization
+                name="dataset/import/6",
+                label="Continue",
+                primary=valid_visualization,
+                visible=continue_visible,
             ),
             ui.button(
                 name="dataset/import/3/edit",
