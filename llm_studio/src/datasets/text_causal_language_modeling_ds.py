@@ -371,8 +371,10 @@ class CustomDataset(Dataset):
                 cfg.dataset.id_column in df.columns
             ), "When using Parent Column, set 'Id Column' in the previous screen. "
 
-        if cfg.dataset.parent_id_column != "None" and \
-            df[cfg.dataset.parent_id_column].notna().any():
+        if (
+            cfg.dataset.parent_id_column != "None"
+            and df[cfg.dataset.parent_id_column].notna().any()
+        ):
             # Comprehensive checks for conversation chaining
             parent_id_list = df[cfg.dataset.parent_id_column].tolist()
             id_list = df[cfg.dataset.id_column].tolist()
