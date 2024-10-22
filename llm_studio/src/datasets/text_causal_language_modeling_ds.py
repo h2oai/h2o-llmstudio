@@ -331,6 +331,11 @@ class CustomDataset(Dataset):
         """
         Quick check whether Dataframe and configurations are correctly set.
         """
+        if cfg.dataset.parent_id_column != "None":
+            assert (
+                cfg.dataset.id_column != cfg.dataset.parent_id_column
+            ), "'Id Column' should be different from 'Parent column'"
+
         if (
             cfg.dataset.parent_id_column is not None
             and cfg.dataset.parent_id_column in df.columns
@@ -365,10 +370,65 @@ class CustomDataset(Dataset):
             assert (
                 cfg.dataset.id_column in df.columns
             ), "When using Parent Column, set 'Id Column' in the previous screen. "
-        if cfg.dataset.parent_id_column != "None":
-            assert (
-                cfg.dataset.id_column != cfg.dataset.parent_id_column
-            ), "'Id Column' should be different from 'Parent column'"
+
+        if cfg.dataset.parent_id_column != "None" and \
+            df[cfg.dataset.parent_id_column].notna().any():
+            # Comprehensive checks for conversation chaining
+            parent_id_list = df[cfg.dataset.parent_id_column].tolist()
+            id_list = df[cfg.dataset.id_column].tolist()
+            # Track if any valid parent_id is found in the id_list
+            found_valid_parent = False
+
+            # 1. Check if at least one parent_id element is present in id_list
+            for pid in parent_id_list:
+                if pid is not None and not pd.isna(pid) and pid in id_list:
+                    found_valid_parent = True
+                    break
+
+            # If no valid parent_id is found in the id_list, raise an error
+            if not found_valid_parent:
+                raise AssertionError(
+                    "None of the Parent IDs in the 'Parent Id Column' were found "
+                    "in the 'Id Column'. "
+                    "Please ensure that at least one ID in 'Parent Id Column' "
+                    "is present in the 'Id Column'. "
+                    f"Checked 'Parent Id Column': '{cfg.dataset.parent_id_column}', "
+                    f"and 'Id Column': '{cfg.dataset.id_column}'."
+                )
+            # 2. Check if all elements in id_list are unique
+            if len(id_list) != len(set(id_list)):
+                raise AssertionError("ID list contains duplicate values.")
+            # 3. Check if parent_id[i] is not the same as id_list[i] (self-referencing)
+            for i in range(len(id_list)):
+                if parent_id_list[i] == id_list[i]:
+                    raise AssertionError(f"ID '{id_list[i]}' is self-referencing.")
+            # 4. Check if there is at least one root element (where parent_id is None)
+            if not (None in parent_id_list or pd.isna(parent_id_list).any()):
+                raise AssertionError(
+                    "There must be at least one root element (with no parent). "
+                    "Currently, all records have a parent."
+                )
+
+            # 5. Check for circular references
+            def find_ancestor(node, parent_map):
+                seen = set()
+                while node in parent_map:
+                    if node in seen:
+                        raise AssertionError(
+                            f"Circular reference detected for ID '{node}'."
+                        )
+                    seen.add(node)
+                    node = parent_map[node]
+                return False
+
+            parent_map = {
+                id_list[i]: parent_id_list[i]
+                for i in range(len(id_list))
+                if parent_id_list[i] is not None
+            }
+
+            for id_ in id_list:
+                find_ancestor(id_, parent_map)
 
     def get_labels(self, prompt_encodings, answer_encodings):
         labels = torch.cat(

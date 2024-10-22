@@ -673,6 +673,17 @@ async def dataset_import(
             )
 
             q.client["dataset/import/cfg"] = cfg
+
+            await busy_dialog(
+                q=q,
+                title="Performing sanity checks on the data",
+                text="Please be patient...",
+            )
+            # add one-second delay for datasets where sanity check is instant
+            # to avoid flickering dialog
+            time.sleep(1)
+            sanity_check(cfg)
+
             plot = cfg.logging.plots_class.plot_data(cfg)
             text = (
                 "Data Validity Check. Click <strong>Continue</strong> if the input "
@@ -705,15 +716,16 @@ async def dataset_import(
             items = [ui.markup(content=header), ui.message_bar(text=text), plot_item]
             valid_visualization = True
 
-            await busy_dialog(
-                q=q,
-                title="Performing sanity checks on the data",
-                text="Please be patient...",
-            )
+            # await busy_dialog(
+            #     q=q,
+            #     title="Performing sanity checks on the data",
+            #     text="Please be patient...",
+            # )
             # add one-second delay for datasets where sanity check is instant
             # to avoid flickering dialog
-            time.sleep(1)
-            sanity_check(cfg)
+            # Move sanity check to the beginning of step 5
+            # time.sleep(1)
+            # sanity_check(cfg)
 
         except AssertionError as exception:
             logger.error(f"Error while validating data: {exception}", exc_info=True)
