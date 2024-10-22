@@ -716,17 +716,6 @@ async def dataset_import(
             items = [ui.markup(content=header), ui.message_bar(text=text), plot_item]
             valid_visualization = True
 
-            # await busy_dialog(
-            #     q=q,
-            #     title="Performing sanity checks on the data",
-            #     text="Please be patient...",
-            # )
-            # add one-second delay for datasets where sanity check is instant
-            # to avoid flickering dialog
-            # Move sanity check to the beginning of step 5
-            # time.sleep(1)
-            # sanity_check(cfg)
-
         except AssertionError as exception:
             logger.error(f"Error while validating data: {exception}", exc_info=True)
             # Wrap the exception text to limit the line length to 100 characters
