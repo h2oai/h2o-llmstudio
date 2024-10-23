@@ -181,30 +181,33 @@ test-ui-github-actions: reports setup-ui
 
 .PHONY: wave
 wave:
+	HF_HUB_DISABLE_TELEMETRY=1 \
 	H2O_WAVE_APP_ACCESS_KEY_ID=dev \
 	H2O_WAVE_APP_ACCESS_KEY_SECRET=dev \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
-	$(PIPENV) run wave run app
+	$(PIPENV) run wave run llm_studio.app
 
 .PHONY: llmstudio
 llmstudio:
 	nvidia-smi && \
+	HF_HUB_DISABLE_TELEMETRY=1 \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
-	$(PIPENV) run wave run --no-reload app
+	$(PIPENV) run wave run --no-reload llm_studio.app
 
 .PHONY: llmstudio-conda
 llmstudio-conda:
 	CONDA_ACTIVATE="source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate llmstudio" && \
 	bash -c "$$CONDA_ACTIVATE && \
 		nvidia-smi && \
+		HF_HUB_DISABLE_TELEMETRY=1 \
 		H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 		H2O_WAVE_NO_LOG=true \
 		H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
-		wave run --no-reload app"
+		wave run --no-reload llm_studio.app"
 
 .PHONY: stop-llmstudio
 stop-llmstudio:

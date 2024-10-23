@@ -10,7 +10,7 @@ from h2o_wave import Q
 from h2o_wave import data as chat_data
 from h2o_wave import ui
 
-from llm_studio.app_utils.utils import get_experiments, get_ui_elements, set_env
+from llm_studio.app_utils.utils import get_experiments, get_ui_elements_for_cfg, set_env
 from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.src.datasets.text_utils import get_texts, get_tokenizer
 from llm_studio.src.utils.config_utils import (
@@ -53,7 +53,7 @@ async def chat_tab(q: Q, load_model=True):
     logger.info(torch.cuda.memory_allocated())
 
     if load_model:
-        with set_env(HUGGINGFACE_TOKEN=q.client["default_huggingface_api_token"]):
+        with set_env(HF_TOKEN=q.client["default_huggingface_api_token"]):
             gpu_id = q.client["gpu_used_for_chat"] - 1
             cfg, model, tokenizer = load_cfg_model_tokenizer(
                 q.client["experiment/display/experiment_path"], device=f"cuda:{gpu_id}"
@@ -133,7 +133,7 @@ async def chat_tab(q: Q, load_model=True):
     )
     q.page["experiment/display/chat"].data += [initial_message, False]
 
-    option_items = get_ui_elements(
+    option_items = get_ui_elements_for_cfg(
         cfg=q.client["experiment/display/chat/cfg"].prediction,
         q=q,
         pre="chat/cfg_predictions",
@@ -221,6 +221,7 @@ def gpu_is_blocked(q, gpu_id):
 def load_cfg_model_tokenizer(
     experiment_path: str, merge: bool = False, device: str = "cuda:0"
 ):
+    """Loads the model, tokenizer and configuration from the experiment path."""
     cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
     cfg.architecture.pretrained = False
     cfg.architecture.gradient_checkpointing = False

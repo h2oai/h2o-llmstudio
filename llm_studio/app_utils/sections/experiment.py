@@ -1,3 +1,4 @@
+import asyncio
 import glob
 import itertools
 import logging
@@ -5,6 +6,7 @@ import os
 import random
 import shutil
 import time
+import traceback
 import zipfile
 from pathlib import Path
 from typing import Callable, List, Optional, Set, Union
@@ -42,7 +44,7 @@ from llm_studio.app_utils.utils import (
     get_model_types,
     get_problem_categories,
     get_problem_types,
-    get_ui_elements,
+    get_ui_elements_for_cfg,
     get_unique_name,
     hf_repo_friendly_name,
     parse_ui_elements,
@@ -81,6 +83,29 @@ from llm_studio.src.utils.utils import add_file_to_zip, kill_child_processes_and
 logger = logging.getLogger(__name__)
 
 
+def trace_calls(func):
+    """
+    Trace calls to the function by printing the function name and the stack trace.
+    """
+
+    async def async_wrapper(*args, **kwargs):
+        logger.debug(f"Async function {func.__name__} called from:")
+        logger.debug("".join(traceback.format_stack(limit=2)))
+        return await func(*args, **kwargs)
+
+    def sync_wrapper(*args, **kwargs):
+        logger.debug(f"Function {func.__name__} called from:")
+        logger.debug("".join(traceback.format_stack(limit=2)))
+        return func(*args, **kwargs)
+
+    # Check if the function is asynchronous
+    if asyncio.iscoroutinefunction(func):
+        return async_wrapper
+    else:
+        return sync_wrapper
+
+
+@trace_calls
 async def experiment_start(q: Q) -> None:
     """Display experiment start cards."""
 
@@ -463,7 +488,7 @@ async def experiment_start(q: Q) -> None:
     logger.info(f"From default {q.client['experiment/start/cfg_mode/from_default']}")
     logger.info(f"Config file: {q.client['experiment/start/cfg_file']}")
 
-    option_items = get_ui_elements(cfg=q.client["experiment/start/cfg"], q=q)
+    option_items = get_ui_elements_for_cfg(cfg=q.client["experiment/start/cfg"], q=q)
     items.extend(option_items)
 
     if q.client["experiment/start/cfg_mode/from_cfg"]:
@@ -658,16 +683,16 @@ def get_experiment_table(q, df_viz, height="calc(100vh - 245px)", actions=None):
         "loss",
         "eta",
         "epoch",
-        "config_file",
     ]
 
     for col in col_remove:
         if col in df_viz:
             del df_viz[col]
-    # df_viz = df_viz.rename(
-    #     columns={"process_id": "pid", "config_file": "problem type"},
-    # )
-    # df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
+
+    df_viz = df_viz.rename(
+        columns={"config_file": "problem type"},
+    )
+    df_viz["problem type"] = df_viz["problem type"].str.replace("Text ", "")
 
     if actions == "experiment":
         actions_dict = {
@@ -683,7 +708,7 @@ def get_experiment_table(q, df_viz, height="calc(100vh - 245px)", actions=None):
     min_widths = {
         "name": "350",
         "dataset": "150",
-        # "problem type": "190",
+        "problem type": "195",
         "metric": "75",
         "val metric": "102",
         "progress": "85",
@@ -1225,7 +1250,7 @@ async def insights_tab(charts, q):
                             downloadable=True,
                             resettable=True,
                             min_widths=min_widths,
-                            height="calc(100vh - 245px)",
+                            height="calc(100vh - 267px)",
                             max_char_length=50_000,
                             cell_overflow="tooltip",
                         )
@@ -1479,7 +1504,7 @@ def unite_validation_metric_charts(charts_list):
 async def charts_tab(q, charts_list, legend_labels):
     charts_list = unite_validation_metric_charts(charts_list)
 
-    box = ["first", "first", "second", "second"]
+    box = ["top_left", "top_right", "bottom_left", "bottom_right"]
     cnt = 0
     for k1 in ["meta", "train", "validation"]:
         if all([k1 not in charts for charts in charts_list]):
@@ -1502,7 +1527,6 @@ async def charts_tab(q, charts_list, legend_labels):
 
             items = []
 
-            tooltip = ""
             if k1 == "meta" and k2 == "lr":
                 tooltip = "Current learning rate throughout the training process."
             elif k1 == "train" and k2 == "loss":
@@ -1598,8 +1622,8 @@ async def charts_tab(q, charts_list, legend_labels):
                 ),
                 data=d,  # type: ignore
                 interactions=["brush"],
-                height="calc((100vh - 275px)*0.41)",
-                width="560px",
+                height="max(calc((100vh - 275px)*0.41), 225px)",
+                width="100%",
             )
 
             items.append(viz)
@@ -1764,7 +1788,7 @@ async def experiment_download_model(q: Q):
                 f"Preparing model on {device}. In case of issues or OOM consider "
                 "changing the default device for downloading in settings."
             )
-        with set_env(HUGGINGFACE_TOKEN=q.client["default_huggingface_api_token"]):
+        with set_env(HF_TOKEN=q.client["default_huggingface_api_token"]):
             cfg, model, tokenizer = load_cfg_model_tokenizer(
                 experiment_path, merge=True, device=device
             )
@@ -2006,6 +2030,7 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
             user_id=user_id,
             model_name=model_name,
             safe_serialization=safe_serialization,
+            hf_transfer=q.client["default_hf_hub_enable_hf_transfer"],
         )
 
         dialog_items = [

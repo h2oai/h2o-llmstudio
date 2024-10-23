@@ -5,6 +5,8 @@ on:
     tags:
       - '**'
   workflow_dispatch:
+permissions:
+  id-token: write
 
 jobs:
   build:
@@ -12,10 +14,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - id: 'auth'
+      - id: auth
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GCP_CRED_JSON }}'
+          workload_identity_provider: 'projects/135982812994/locations/global/workloadIdentityPools/cicd-tooling/providers/github-actions'
+          service_account: 'gcr-readwrite@vorvan.iam.gserviceaccount.com'
       - name: Configure Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
       - name: Configure Docker Client

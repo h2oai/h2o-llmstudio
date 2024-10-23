@@ -122,7 +122,7 @@ def start_process(
     if num_gpus == 0:
         cmd = [
             "python",
-            "train_wave.py",
+            "llm_studio/train_wave.py",
             "-Y",
             config_name,
         ]
@@ -133,7 +133,7 @@ def start_process(
     #         f"CUDA_VISIBLE_DEVICES={','.join(gpu_list)}",
     #         "python",
     #         "-u",
-    #         "train_wave.py",
+    #         "llm_studio/train_wave.py",
     #         "-P",
     #         config_name,
     #     ]
@@ -148,7 +148,7 @@ def start_process(
                 f"localhost:{','.join(gpu_list)}",
                 "--master_port",
                 f"{str(free_port)}",
-                "train_wave.py",
+                "llm_studio/train_wave.py",
                 "-Y",
                 config_name,
             ]
@@ -160,7 +160,7 @@ def start_process(
                 "torchrun",
                 f"--nproc_per_node={str(num_gpus)}",
                 f"--master_port={str(free_port)}",
-                "train_wave.py",
+                "llm_studio/train_wave.py",
                 "-Y",
                 config_name,
             ]
@@ -862,13 +862,12 @@ def get_dataset(
     return dataset, v
 
 
-def get_ui_element(
+def _get_ui_element(
     k: str,
     v: Any,
     poss_values: Any,
     type_annotation: Type,
     tooltip: str,
-    password: bool,
     trigger: bool,
     q: Q,
     pre: str = "",
@@ -881,7 +880,6 @@ def get_ui_element(
         poss_values: possible values
         type_annotation: type annotation
         tooltip: tooltip
-        password: flag for whether it is a password
         trigger: flag for triggering the element
         q: Q
         pre: optional prefix for ui key
@@ -978,7 +976,7 @@ def get_ui_element(
                     label=title_label,
                     value=val,
                     required=False,
-                    password=password,
+                    password=False,
                     tooltip=tooltip,
                     trigger=trigger,
                     multiline=False,
@@ -1129,13 +1127,12 @@ def get_dataset_elements(cfg: DefaultConfigProblemBase, q: Q) -> List:
 
                 q.client[f"dataset/import/cfg/{k}"] = v
 
-                t = get_ui_element(
+                t = _get_ui_element(
                     k,
                     v,
                     poss_values,
                     type_annotation,
                     tooltip=tooltip,
-                    password=False,
                     trigger=trigger,
                     q=q,
                     pre="dataset/import/cfg/",
@@ -1238,7 +1235,7 @@ def get_grid_value(v: Any, type_annotation: Any) -> List[str]:
     return [v]
 
 
-def get_ui_elements(
+def get_ui_elements_for_cfg(
     cfg: DefaultConfigProblemBase,
     q: Q,
     limit: Optional[List[str]] = None,
@@ -1264,11 +1261,6 @@ def get_ui_elements(
     cfg_dict = {key: cfg_dict[key] for key in cfg._get_order()}
 
     for k, v in cfg_dict.items():
-        if ("api" in k) or ("secret" in k):
-            password = True
-        else:
-            password = False
-
         if k.startswith("_") or cfg._get_visibility(k) < 0:
             if q.client[f"{pre}/cfg_mode/from_cfg"]:
                 q.client[f"{pre}/cfg/{k}"] = v
@@ -1304,7 +1296,7 @@ def get_ui_elements(
 
         if not is_visible(k=k, cfg=cfg, q=q):
             if type_annotation not in KNOWN_TYPE_ANNOTATIONS:
-                _ = get_ui_elements(cfg=v, q=q, limit=limit, pre=pre)
+                _ = get_ui_elements_for_cfg(cfg=v, q=q, limit=limit, pre=pre)
             elif q.client[f"{pre}/cfg_mode/from_cfg"]:
                 q.client[f"{pre}/cfg/{k}"] = v
 
@@ -1380,22 +1372,25 @@ def get_ui_elements(
             if limit is not None and k not in limit:
                 continue
 
-            t = get_ui_element(
+            t = _get_ui_element(
                 k=k,
                 v=v,
                 poss_values=poss_values,
                 type_annotation=type_annotation,
                 tooltip=tooltip,
-                password=password,
                 trigger=trigger,
                 q=q,
                 pre=f"{pre}/cfg/",
             )
         elif dataclasses.is_dataclass(v):
             if limit is not None and k in limit:
-                elements_group = get_ui_elements(cfg=v, q=q, limit=None, pre=pre)
+                elements_group = get_ui_elements_for_cfg(
+                    cfg=v, q=q, limit=None, pre=pre
+                )
             else:
-                elements_group = get_ui_elements(cfg=v, q=q, limit=limit, pre=pre)
+                elements_group = get_ui_elements_for_cfg(
+                    cfg=v, q=q, limit=limit, pre=pre
+                )
 
             if k == "dataset" and pre != "experiment/start":
                 # get all the datasets available
@@ -1850,6 +1845,13 @@ def get_experiments(
         # make sure progress is 100% for finished experiments
         df.loc[df.status == "finished", "progress"] = "1.0"
 
+        # make sure that if experiment is running the progress is at most 99%
+        df.loc[
+            (df.status == "running")
+            & (pd.to_numeric(df.progress, errors="coerce") > 0.99),
+            "progress",
+        ] = ".99"
+
         df["info"] = np.where(
             (df["status"] == "running") & (df["eta"] != ""),
             df["eta"].apply(lambda x: f"ETA: {x}"),
@@ -2041,9 +2043,7 @@ def start_experiment(
             }
         )
     if q.client["default_huggingface_api_token"]:
-        env_vars.update(
-            {"HUGGINGFACE_TOKEN": q.client["default_huggingface_api_token"]}
-        )
+        env_vars.update({"HF_TOKEN": q.client["default_huggingface_api_token"]})
 
     env_vars = {k: v or "" for k, v in env_vars.items()}
 

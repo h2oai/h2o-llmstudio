@@ -84,6 +84,7 @@ import LSlogger from '../../tooltips/experiments/_logger.mdx';
 import LSneptuneproject from '../../tooltips/experiments/_neptune-project.mdx';
 import LSwandbproject from '../../tooltips/experiments/_wandb-project.mdx';
 import LSwandbentity from '../../tooltips/experiments/_wandb-entity.mdx';
+import NumClasses from '../../tooltips/experiments/_num-classes.mdx';
 
 # Experiment settings
 
@@ -160,6 +161,10 @@ The settings under each category are listed and described below.
 
 <DSparentIdColumn/>
 
+### ID column
+
+<DSidColumn/>
+
 ### Text prompt start
 
 <DStextPromptStart/>
@@ -179,6 +184,12 @@ The settings under each category are listed and described below.
 ### Mask prompt labels
 
 <DSmaskPromptlabels/>
+
+### Num classes 
+
+<NumClasses/>
+
+The **Num classes** field should be set to the total number of classes in the [answer column](../datasets/import-dataset.md#answer-column) of the dataset.
 
 ## Tokenizer settings
 
@@ -218,6 +229,8 @@ The settings under each category are listed and described below.
 
 <TSlossfunction/>
 
+For multiclass classification problems, set the loss function to **Cross-entropy**.
+
 ### Optimizer
 
 <TSoptimizer/>
@@ -229,6 +242,8 @@ The settings under each category are listed and described below.
 ### Differential learning rate layers
 
 <TSdifferentialLearningRateLayers/>
+
+By default, H2O LLM Studio applies **Differential learning rate Layers**, with the learning rate for the `classification_head` being 10 times smaller than the learning rate for the rest of the model.
 
 ### Freeze layers
 
@@ -449,3 +464,5 @@ The settings under each category are listed and described below.
 ### W&B entity
 
 <LSwandbentity/>
+
+

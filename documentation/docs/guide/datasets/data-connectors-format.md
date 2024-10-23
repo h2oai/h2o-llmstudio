@@ -7,7 +7,10 @@ H2O LLM Studio supports the following data connectors to access or upload extern
 - **Upload**: Upload a local dataset from your machine. 
 - **Local**: Specify the file location of the dataset on your machine. 
 - **AWS S3 (Amazon AWS S3)**: Connect to an Amazon AWS S3 data bucket. 
-- **Kaggle**: Connect to a Kaggle dataset. 
+- **Azure Datalake**: Connect to a dataset in Azure Datalake. 
+- **H2O Drive**: Upload a dataset from H2O Drive.
+- **Kaggle**: Connect to a dataset hosted on Kaggle.
+- **Hugging Face**: Connect to a dataset on Hugging Face.
 
 ## Data format 
 
@@ -21,6 +24,7 @@ H2O LLM Studio supports the following data connectors to access or upload extern
     - **Prompt Column:** The column in the dataset containing the user prompt.
     - **Answer Column:** The column in the dataset containing the expected output.
     - **Parent Id Column:** An optional column specifying the parent id to be used for chained conversations. The value of this column needs to match an additional column with the name `id`. If provided, the prompt will be concatenated after preceding parent rows.
+    - **Id Column:**  This column is only required when the `Parent Id` is set. It identifies the record ID used for linked conversations. The value in the `Parent Id` column must match this column's value.
 
 :::info
 To train a chatbot style model, you need to convert your data into a question and answer format. There are other enterprise solutions by H2O.ai that may help you prep your data. For more information, see [H2O.ai's Generative AI page](https://h2o.ai/) and this blogpost about [H2O LLM DataStudio: Streamlining Data Curation and Data Preparation for LLMs related tasks](https://h2o.ai/blog/2023/streamlining-data-preparation-for-fine-tuning-of-large-language-models/).

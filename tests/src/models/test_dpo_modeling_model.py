@@ -19,7 +19,7 @@ from llm_studio.python_configs.text_dpo_modeling_config import (
 from llm_studio.src.datasets.text_dpo_modeling_ds import CustomDataset
 from llm_studio.src.models.text_dpo_modeling_model import Model
 from llm_studio.src.utils.data_utils import batch_padding
-from train import run_eval
+from llm_studio.train import run_eval
 
 
 @pytest.fixture

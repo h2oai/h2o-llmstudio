@@ -377,6 +377,8 @@ async def handle(q: Q) -> None:
             await dataset_import(q, step=2)
         elif q.args.__wave_submission_name__ == "dataset/import/3":
             await dataset_import(q, step=3)
+        elif q.args.__wave_submission_name__ == "dataset/import/cfg/parent_id_column":
+            await dataset_import(q, step=31, edit=True)
         elif q.args.__wave_submission_name__ == "dataset/import/3/edit":
             await dataset_import(q, step=3, edit=True)
         elif q.args.__wave_submission_name__ == "dataset/import/4":
@@ -424,7 +426,7 @@ async def handle(q: Q) -> None:
         )
 
 
-async def experiment_delete_all_artifacts(q: Q, experiment_ids: List[int]):
+async def experiment_delete_all_artifacts(q: Q, experiment_ids: List[int]) -> None:
     await experiment_stop(q, experiment_ids)
     await experiment_delete(q, experiment_ids)
     await list_current_experiments(q)

@@ -5,21 +5,25 @@ on:
     - cron: "0 4 * * *"
   workflow_dispatch:
 
+permissions:
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - id: 'auth'
+      - id: auth
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GCP_CRED_JSON }}'
+          workload_identity_provider: 'projects/135982812994/locations/global/workloadIdentityPools/cicd-tooling/providers/github-actions'
+          service_account: 'gcr-readwrite@vorvan.iam.gserviceaccount.com'
       - name: Configure Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
       - name: Configure Docker Client
         run: |-
-          gcloud auth configure-docker --quiet #authenticate to gcr
+          gcloud auth configure-docker --quiet # authenticate to gcr
       - name: Clean Docker images
         run: |-
           echo "Available storage before cleaning:"

@@ -199,7 +199,7 @@ H2O LLM Studio requires the following minimum requirements:
           H2O_WAVE_MAX_REQUEST_SIZE=25MB \ <br></br>
           H2O_WAVE_NO_LOG=True \ <br></br>
           H2O_WAVE_PRIVATE_DIR="/download/@output/download" \ <br></br>
-          wave run app
+          wave run llm_studio.app
         </code>
       </pre>
     </p>
@@ -255,7 +255,7 @@ If you are running H2O LLM Studio with a custom environment other than Pipenv, s
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 H2O_WAVE_NO_LOG=True \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
-wave run app
+wave run llm_studio.app
 ```
 
 ### Run using Docker from a nightly build
@@ -306,7 +306,7 @@ You can also use H2O LLM Studio with the command line interface (CLI) and specif
 To specify the path to the configuration file that contains the experiment parameters, run:
 
 ```sh
-python train.py -Y {path_to_config_yaml_file}
+python llm_studio/train.py -Y {path_to_config_yaml_file}
 ```
 
 To run on multiple GPUs in DDP mode, run:
@@ -322,7 +322,7 @@ By default, the framework will run on the first `k` GPUs. If you want to specify
 To start an interactive chat with your trained model, run:
 
 ```sh
-python prompt.py -e {experiment_name}
+python llm_studio/prompt.py -e {experiment_name}
 ```
 
 `experiment_name` is the output folder of the experiment you want to chat with. The interactive chat will also work with models that were fine-tuned using the GUI.

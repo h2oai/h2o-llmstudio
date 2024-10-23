@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import shutil
+import textwrap
 import time
 import traceback
 from typing import List, Optional
@@ -640,6 +641,14 @@ async def dataset_import(
             await clean_dashboard(q, mode="full")
             await dataset_import(q, step=1, error=str(error))
 
+    elif step == 31:  # activities after change in Parent ID columns
+        logger.info("Step 31")
+        cfg = q.client["dataset/import/cfg"]
+        cfg = parse_ui_elements(
+            cfg=cfg, q=q, limit=default_cfg.dataset_keys, pre="dataset/import/cfg/"
+        )
+        q.client["dataset/import/cfg"] = cfg
+        await dataset_import(q, 3, edit=True)
     elif step == 4:  # verify if dataset does not exist already
         dataset_name = q.client["dataset/import/name"]
         original_name = q.client["dataset/import/original_name"]  # used in edit mode
@@ -656,6 +665,7 @@ async def dataset_import(
     elif step == 5:  # visualize dataset
         header = "<h2>Sample Data Visualization</h2>"
         valid_visualization = False
+        continue_visible = True
         try:
             cfg = q.client["dataset/import/cfg"]
             cfg = parse_ui_elements(
@@ -663,6 +673,17 @@ async def dataset_import(
             )
 
             q.client["dataset/import/cfg"] = cfg
+
+            await busy_dialog(
+                q=q,
+                title="Performing sanity checks on the data",
+                text="Please be patient...",
+            )
+            # add one-second delay for datasets where sanity check is instant
+            # to avoid flickering dialog
+            time.sleep(1)
+            sanity_check(cfg)
+
             plot = cfg.logging.plots_class.plot_data(cfg)
             text = (
                 "Data Validity Check. Click <strong>Continue</strong> if the input "
@@ -680,12 +701,12 @@ async def dataset_import(
                     q=q,
                     df=df,
                     name="experiment/display/table",
-                    markdown_cells=list(df.columns),
+                    markdown_cells=list(df.select_dtypes(include=["object"]).columns),
                     searchables=list(df.columns),
                     downloadable=False,
                     resettable=False,
                     min_widths=min_widths,
-                    height="calc(100vh - 245px)",
+                    height="calc(100vh - 267px)",
                     max_char_length=5_000,
                     cell_overflow="tooltip",
                 )
@@ -695,16 +716,35 @@ async def dataset_import(
             items = [ui.markup(content=header), ui.message_bar(text=text), plot_item]
             valid_visualization = True
 
-            await busy_dialog(
-                q=q,
-                title="Performing sanity checks on the data",
-                text="Please be patient...",
-            )
-            # add one-second delay for datasets where sanity check is instant
-            # to avoid flickering dialog
-            time.sleep(1)
-            sanity_check(cfg)
+        except AssertionError as exception:
+            logger.error(f"Error while validating data: {exception}", exc_info=True)
+            # Wrap the exception text to limit the line length to 100 characters
+            wrapped_exception_lines = textwrap.fill(
+                str(exception), width=100
+            ).splitlines()
 
+            # Join the wrapped exception lines with an extra newline to separate each
+            wrapped_exception = "\n".join(wrapped_exception_lines)
+            text = (
+                "# Error while validating data\n"
+                "Please review the error message below \n"
+                "\n"
+                "**Details of the Validation Error**:\n"
+                "\n"
+                f"{wrapped_exception}"
+                "\n"
+            )
+
+            items = [
+                ui.markup(content=header),
+                ui.message_bar(text=text, type="error"),
+                ui.expander(
+                    name="expander",
+                    label="Expand Error Traceback",
+                    items=[ui.markup(f"<pre>{traceback.format_exc()}</pre>")],
+                ),
+            ]
+            continue_visible = False
         except Exception as exception:
             logger.error(
                 f"Error while plotting data preview: {exception}", exc_info=True
@@ -722,10 +762,14 @@ async def dataset_import(
                     items=[ui.markup(f"<pre>{traceback.format_exc()}</pre>")],
                 ),
             ]
+            continue_visible = False
 
         buttons = [
             ui.button(
-                name="dataset/import/6", label="Continue", primary=valid_visualization
+                name="dataset/import/6",
+                label="Continue",
+                primary=valid_visualization,
+                visible=continue_visible,
             ),
             ui.button(
                 name="dataset/import/3/edit",
@@ -974,7 +1018,7 @@ async def dataset_list_table(
                 searchables=[],
                 min_widths=widths,
                 link_col="name",
-                height="calc(100vh - 245px)",
+                height="calc(100vh - 267px)",
                 actions=actions_dict,
             ),
             ui.message_bar(type="info", text=""),
@@ -1232,7 +1276,8 @@ async def show_data_tab(q: Q, cfg, filename: str):
                 df=df,
                 name="dataset/display/data/table",
                 sortables=list(df.columns),
-                height="calc(100vh - 265px)",
+                markdown_cells=None,  # render all cells as raw text
+                height="calc(100vh - 267px)",
                 cell_overflow="wrap",
             )
         ],
@@ -1262,12 +1307,12 @@ async def show_visualization_tab(q: Q, cfg):
                     q=q,
                     df=df,
                     name="dataset/display/visualization/table",
-                    markdown_cells=list(df.columns),
+                    markdown_cells=list(df.select_dtypes(include=["object"]).columns),
                     searchables=list(df.columns),
                     downloadable=True,
                     resettable=True,
                     min_widths=min_widths,
-                    height="calc(100vh - 245px)",
+                    height="calc(100vh - 267px)",
                     max_char_length=50_000,
                     cell_overflow="tooltip",
                 )
@@ -1364,7 +1409,7 @@ async def show_statistics_tab(q: Q, dataset_filename, config_filename):
 
 
 @functools.lru_cache()
-def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str):
+def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str) -> dict:
     """
     Compute various statistics for a dataset.
     - text length distribution for prompts and answers
@@ -1406,7 +1451,7 @@ def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str):
     return stats_dict
 
 
-async def dataset_import_uploaded_file(q: Q):
+async def dataset_import_uploaded_file(q: Q) -> None:
     local_path = await q.site.download(
         q.args["dataset/import/local_upload"][0],
         f"{get_data_dir(q)}/"
@@ -1422,7 +1467,7 @@ async def dataset_import_uploaded_file(q: Q):
         await dataset_import(q, step=1, error=error)
 
 
-async def dataset_delete_current_datasets(q: Q):
+async def dataset_delete_current_datasets(q: Q) -> None:
     dataset_ids = list(
         q.client["dataset/list/df_datasets"]["id"].iloc[
             list(map(int, q.client["dataset/list/table"]))

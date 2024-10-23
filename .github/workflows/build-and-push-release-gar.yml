@@ -6,17 +6,20 @@ on:
       - '**'
   workflow_dispatch:
 
+permissions:
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - id: 'auth'
+      - id: auth
         uses: google-github-actions/auth@v2
         with:
-          project_id: "vorvan"
-          credentials_json: "${{ secrets.GAR_PUSH_CREDENTIALS }}"
+          workload_identity_provider: 'projects/135982812994/locations/global/workloadIdentityPools/cicd-tooling/providers/github-actions'
+          service_account: 'artifact-rw@vorvan.iam.gserviceaccount.com'
       - name: Configure Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
       - name: Configure Docker Client
