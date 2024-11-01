@@ -3,8 +3,10 @@ import glob
 import itertools
 import logging
 import os
+import pathlib
 import random
 import shutil
+import tempfile
 import time
 import traceback
 import zipfile
@@ -13,6 +15,7 @@ from typing import Callable, List, Optional, Set, Union
 
 import accelerate
 import einops
+import h2o_drive
 import huggingface_hub
 import numpy as np
 import pandas as pd
@@ -1175,6 +1178,17 @@ async def experiment_display(q: Q) -> None:
         if checkpoints_exists:
             buttons += [
                 ui.button(
+                    name="experiment/display/push_model_to_model_hub",
+                    label="Push model to model hub",
+                    primary=False,
+                    disabled=False,
+                    tooltip=None,
+                ),
+            ]
+
+        if checkpoints_exists:
+            buttons += [
+                ui.button(
                     name="experiment/display/push_to_huggingface",
                     label="Push checkpoint to huggingface",
                     primary=False,
@@ -1764,6 +1778,114 @@ def get_experiment_list_message_bar(q):
     return msg_bar
 
 
+def save_model(q, experiment_path, zip_path):
+    cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
+
+    experiments = get_experiments(q)
+    num_running_queued = len(
+        experiments[experiments["status"].isin(["queued", "running"])]
+    )
+    if num_running_queued > 0 or (
+        cfg.training.lora and cfg.architecture.backbone_dtype in ("int4", "int8")
+    ):
+        logger.info("Preparing model on CPU. This might slow down the progress.")
+        device = "cpu"
+    else:
+        device = q.client["gpu_used_for_download"]
+        logger.info(
+            f"Preparing model on {device}. In case of issues or OOM consider "
+            "changing the default device for downloading in settings."
+        )
+    with set_env(HF_TOKEN=q.client["default_huggingface_api_token"]):
+        cfg, model, tokenizer = load_cfg_model_tokenizer(
+            experiment_path, merge=True, device=device
+        )
+
+    model = unwrap_model(model)
+    checkpoint_path = cfg.output_directory
+
+    model_save_time = time.time()
+    model.backbone.save_pretrained(checkpoint_path)
+    # See PreTrainedTokenizerBase.save_pretrained for documentation
+    # Safeguard against None return if tokenizer class is
+    # not inherited from PreTrainedTokenizerBase
+    if cfg.problem_type in GENERATION_PROBLEM_TYPES:
+        tokenizer.chat_template = get_chat_template(cfg)
+    tokenizer_files = list(tokenizer.save_pretrained(checkpoint_path) or [])
+
+    card = get_model_card(cfg, model, repo_id="<path_to_local_folder>")
+    card.save(os.path.join(experiment_path, "model_card.md"))
+
+    logger.info(f"Creating Zip File at {zip_path}")
+    zf = zipfile.ZipFile(zip_path, "w")
+
+    FILES_TO_PUSH = [
+        "vocab.json",
+        "sentencepiece.bpe.model",
+        "bpe_encoder.bin",
+        "tokenizer_config.json",
+        "tokenizer.json",
+        "special_tokens_map.json",
+        "merges.txt",
+        "generation_config.json",
+        "config.json",
+        "added_tokens.json",
+        "model_card.md",
+        "classification_head.pth",
+        "regression_head.pth",
+    ]
+    FILES_TO_PUSH = set(
+        FILES_TO_PUSH
+        + [os.path.split(tokenizer_file)[-1] for tokenizer_file in tokenizer_files]
+    )
+
+    # Add tokenizer and config.json files, as well as potential classification head
+    paths_added = []
+    for file in FILES_TO_PUSH:
+        path = os.path.join(experiment_path, file)
+        if os.path.isfile(path):
+            paths_added.append(path)
+            add_file_to_zip(zf=zf, path=path)
+
+    # Add model weight files. save_pretrained() does not return the saved files
+    weight_paths = glob.glob(os.path.join(checkpoint_path, "pytorch_model*.*"))
+    for path in weight_paths:
+        paths_added.append(path)
+        add_file_to_zip(zf=zf, path=path)
+
+    # Add all files that were created after the model was saved.
+    # This is useful for potential changes/different
+    # naming conventions across different backbones.
+    # Also adds newly generated safetensor files.
+    for file in os.listdir(checkpoint_path):
+        file_path = os.path.join(checkpoint_path, file)
+        if (
+            os.path.getmtime(file_path) > model_save_time
+            and file_path not in paths_added
+            and file_path != zip_path
+        ):
+            add_file_to_zip(zf=zf, path=file_path)
+            paths_added.append(file_path)
+            logger.info(
+                f"Added {file_path} to zip file as it "
+                "was created when saving the model state."
+            )
+
+    # Add all files from subdirectories, which include the intermediate checkpoints
+    subdirectories = [
+        d
+        for d in os.listdir(checkpoint_path)
+        if os.path.isdir(os.path.join(checkpoint_path, d))
+    ]
+    for subdirectory in subdirectories:
+        for file in os.listdir(os.path.join(checkpoint_path, subdirectory)):
+            file_path = os.path.join(checkpoint_path, subdirectory, file)
+            add_file_to_zip(zf=zf, path=file_path, folder=subdirectory)
+            paths_added.append(file_path)
+            logger.info(f"Added {file_path} to zip file.")
+    zf.close()
+
+
 async def experiment_download_model(q: Q):
     experiment = q.client["experiment/display/experiment"]
     experiment_path = q.client["experiment/display/experiment_path"]
@@ -1771,111 +1893,7 @@ async def experiment_download_model(q: Q):
 
     if not os.path.exists(zip_path):
         logger.info(f"Creating {zip_path} on demand")
-        cfg = load_config_yaml(os.path.join(experiment_path, "cfg.yaml"))
-
-        experiments = get_experiments(q)
-        num_running_queued = len(
-            experiments[experiments["status"].isin(["queued", "running"])]
-        )
-        if num_running_queued > 0 or (
-            cfg.training.lora and cfg.architecture.backbone_dtype in ("int4", "int8")
-        ):
-            logger.info("Preparing model on CPU. This might slow down the progress.")
-            device = "cpu"
-        else:
-            device = q.client["gpu_used_for_download"]
-            logger.info(
-                f"Preparing model on {device}. In case of issues or OOM consider "
-                "changing the default device for downloading in settings."
-            )
-        with set_env(HF_TOKEN=q.client["default_huggingface_api_token"]):
-            cfg, model, tokenizer = load_cfg_model_tokenizer(
-                experiment_path, merge=True, device=device
-            )
-
-        model = unwrap_model(model)
-        checkpoint_path = cfg.output_directory
-
-        model_save_time = time.time()
-        model.backbone.save_pretrained(checkpoint_path)
-        # See PreTrainedTokenizerBase.save_pretrained for documentation
-        # Safeguard against None return if tokenizer class is
-        # not inherited from PreTrainedTokenizerBase
-        if cfg.problem_type in GENERATION_PROBLEM_TYPES:
-            tokenizer.chat_template = get_chat_template(cfg)
-        tokenizer_files = list(tokenizer.save_pretrained(checkpoint_path) or [])
-
-        card = get_model_card(cfg, model, repo_id="<path_to_local_folder>")
-        card.save(os.path.join(experiment_path, "model_card.md"))
-
-        logger.info(f"Creating Zip File at {zip_path}")
-        zf = zipfile.ZipFile(zip_path, "w")
-
-        FILES_TO_PUSH = [
-            "vocab.json",
-            "sentencepiece.bpe.model",
-            "bpe_encoder.bin",
-            "tokenizer_config.json",
-            "tokenizer.json",
-            "special_tokens_map.json",
-            "merges.txt",
-            "generation_config.json",
-            "config.json",
-            "added_tokens.json",
-            "model_card.md",
-            "classification_head.pth",
-            "regression_head.pth",
-        ]
-        FILES_TO_PUSH = set(
-            FILES_TO_PUSH
-            + [os.path.split(tokenizer_file)[-1] for tokenizer_file in tokenizer_files]
-        )
-
-        # Add tokenizer and config.json files, as well as potential classification head
-        paths_added = []
-        for file in FILES_TO_PUSH:
-            path = os.path.join(experiment_path, file)
-            if os.path.isfile(path):
-                paths_added.append(path)
-                add_file_to_zip(zf=zf, path=path)
-
-        # Add model weight files. save_pretrained() does not return the saved files
-        weight_paths = glob.glob(os.path.join(checkpoint_path, "pytorch_model*.*"))
-        for path in weight_paths:
-            paths_added.append(path)
-            add_file_to_zip(zf=zf, path=path)
-
-        # Add all files that were created after the model was saved.
-        # This is useful for potential changes/different
-        # naming conventions across different backbones.
-        # Also adds newly generated safetensor files.
-        for file in os.listdir(checkpoint_path):
-            file_path = os.path.join(checkpoint_path, file)
-            if (
-                os.path.getmtime(file_path) > model_save_time
-                and file_path not in paths_added
-                and file_path != zip_path
-            ):
-                add_file_to_zip(zf=zf, path=file_path)
-                paths_added.append(file_path)
-                logger.info(
-                    f"Added {file_path} to zip file as it "
-                    "was created when saving the model state."
-                )
-
-        # Add all files from subdirectories, which include the intermediate checkpoints
-        subdirectories = [
-            d
-            for d in os.listdir(checkpoint_path)
-            if os.path.isdir(os.path.join(checkpoint_path, d))
-        ]
-        for subdirectory in subdirectories:
-            for file in os.listdir(os.path.join(checkpoint_path, subdirectory)):
-                file_path = os.path.join(checkpoint_path, subdirectory, file)
-                add_file_to_zip(zf=zf, path=file_path, folder=subdirectory)
-                paths_added.append(file_path)
-                logger.info(f"Added {file_path} to zip file.")
-        zf.close()
+        save_model(q, experiment_path, zip_path)
 
     download_url = get_download_link(q, zip_path)
     logger.info(f"Logs URL: {download_url}")
@@ -1883,6 +1901,40 @@ async def experiment_download_model(q: Q):
     q.page["meta"].script = ui.inline_script(
         f'window.open("{download_url}", "_blank");'
     )
+    await q.page.save()
+
+
+async def experiment_push_model_to_model_hub(q: Q):
+
+    revision = "main"
+    workspace = "default"
+    _MODELHUB_BUCKET_PREFIX = ".modelhub/data/"
+
+    await busy_dialog(
+        q=q,
+        title="Pushing model to Model Hub",
+        text="Model size can affect the export time significantly.",
+    )
+
+    drive = h2o_drive.connect()
+    bucket = drive.workspace_bucket(workspace).with_prefix(_MODELHUB_BUCKET_PREFIX)
+
+    experiment = q.client["experiment/display/experiment"]
+    experiment_path = q.client["experiment/display/experiment_path"]
+    zip_path = get_model_path(experiment.name, experiment_path)
+    if not os.path.exists(zip_path):
+        logger.info(f"Creating {zip_path} on demand")
+        save_model(q, experiment_path, zip_path)
+
+    repo_id = hf_repo_friendly_name(experiment.name)
+    with tempfile.TemporaryDirectory() as td:
+        with zipfile.ZipFile(zip_path) as zf:
+            zf.extractall(td)
+        for f in pathlib.Path(td).rglob("*"):
+            if f.is_file():
+                key = f"llmstudio/{repo_id}/{revision}/{f.name}"
+                await bucket.upload_file(f.absolute(), key)
+
     await q.page.save()
 
 
