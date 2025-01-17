@@ -36,8 +36,14 @@ jobs:
         run: |
           echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV
 
+      - name: Install Python
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip
+
       - name: Read version from pyproject.toml or default to 0.0.0
         run: |
+          pip install toml
           VERSION=$(python -c "import toml; print(toml.load('pyproject.toml')['project']['version'])")
           if [ -z "$VERSION" ]; then
             VERSION="0.0.0"
@@ -48,11 +54,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'  # Specify the Node.js version you need
-
-      - name: Install Python
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3 python3-pip
 
       - name: Install LaTeX, Pandoc, and Required Packages
         run: |
