@@ -5,6 +5,9 @@ on:
     branches:
       - 'main'
       - 'pdf-documentation'
+    paths:
+      - 'documentation/**'
+      - '.github/workflows/combined-docs-md-ci.yml'
   workflow_dispatch:
     inputs:
       folder_path:
