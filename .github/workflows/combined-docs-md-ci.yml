@@ -36,15 +36,13 @@ jobs:
         run: |
           echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV
 
-      - name: Read version from VERSION file or default to 0.0.0
+      - name: Read version from pyproject.toml or default to 0.0.0
         run: |
-          if [ -f VERSION ]; then
-            VERSION=$(cat VERSION)
-          else
+          VERSION=$(python -c "import toml; print(toml.load('pyproject.toml')['project']['version'])")
+          if [ -z "$VERSION" ]; then
             VERSION="0.0.0"
           fi
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
-
 
       - name: Install Node.js
         uses: actions/setup-node@v4
