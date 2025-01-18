@@ -30,6 +30,7 @@ from llm_studio.app_utils.sections.experiment import (
     experiment_input_type_error,
     experiment_list,
     experiment_push_to_huggingface_dialog,
+    experiment_push_model_to_model_hub,
     experiment_rename_ui_workflow,
     experiment_run,
     experiment_start,
@@ -346,6 +347,8 @@ async def handle(q: Q) -> None:
             q.args.__wave_submission_name__ == "experiment/display/push_to_huggingface"
         ):
             await experiment_push_to_huggingface_dialog(q)
+        elif q.args.__wave_submission_name__ == "experiment/display/push_model_to_model_hub":
+            await experiment_push_model_to_model_hub(q)
         elif q.args.__wave_submission_name__ == "experiment/display/download_model":
             await experiment_download_model(q)
         elif q.args.__wave_submission_name__ == "experiment/display/download_adapter":
