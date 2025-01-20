@@ -1,0 +1,125 @@
+name: Generate PDF Documentation
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+      - 'pdf-documentation'
+    paths:
+      - 'documentation/**'
+      - '.github/workflows/combined-docs-md-ci.yml'
+  workflow_dispatch:
+    inputs:
+      folder_path:
+        description: 'Path to the documentation folder'
+        required: true
+        default: './docs'
+      sidebar_path:
+        description: 'Path to the sidebar.js file'
+        required: true
+        default: './sidebars.js'
+      combined_md_file_path:
+        description: 'Path to the combined docs markdown file'
+        required: true
+        default: './combined_docs.md'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  generate_docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set repository name as an environment variable
+        run: |
+          echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV
+
+      - name: Install Python
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip
+
+      - name: Read version from pyproject.toml or default to 0.0.0
+        run: |
+          pip install toml
+          VERSION=$(python -c "import toml; print(toml.load('pyproject.toml')['project']['version'])")
+          if [ -z "$VERSION" ]; then
+            VERSION="0.0.0"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'  # Specify the Node.js version you need
+
+      - name: Install LaTeX, Pandoc, and Required Packages
+        run: |
+          sudo apt-get install -y pandoc
+          sudo apt-get install texlive-latex-base
+          sudo apt-get install texlive-luatex
+          sudo apt-get install lmodern
+          sudo apt-get install texlive-fonts-recommended
+          sudo apt-get install texlive-fonts-extra
+          sudo apt-get install texlive-latex-extra
+
+      - name: Set environment variables
+        env:
+          FOLDER_PATH: ${{ github.event.inputs.folder_path || './docs' }}  # For manual runs or PR body
+          SIDEBAR_PATH: ${{ github.event.inputs.sidebar_path || './sidebars.js' }}  # For manual runs or PR body
+          COMBINED_DOC_PATH: ${{ github.event.inputs.combined_md_file_path || './combined_docs.md' }}  # For manual runs or PR body
+          BRANCH_NAME: ${{ github.head_ref || github.ref }}
+        run: |
+          echo "FOLDER_PATH=${FOLDER_PATH}" >> $GITHUB_ENV
+          echo "SIDEBAR_PATH=${SIDEBAR_PATH}" >> $GITHUB_ENV
+          echo "COMBINED_DOC_PATH=${COMBINED_DOC_PATH}" >> $GITHUB_ENV
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
+
+      # Download the script from another repository (replace with correct repo and script path)
+      - name: Download script and make it executable
+        run: |
+          curl -H "Authorization: bearer ${{ secrets.GH_ACTIONS_RUNNERS_H2O_OPS_TOKEN }}" -L -o ./documentation/generate_combined_md.py "https://raw.githubusercontent.com/h2oai/makersaurus/refs/heads/main/documentation/generate_combined_md.py"
+          curl -H "Authorization: bearer ${{ secrets.GH_ACTIONS_RUNNERS_H2O_OPS_TOKEN }}" -L -o ./documentation/generate_pdf_doc.py "https://raw.githubusercontent.com/h2oai/makersaurus/refs/heads/main/documentation/generate_pdf_doc.py"
+          curl -H "Authorization: bearer ${{ secrets.GH_ACTIONS_RUNNERS_H2O_OPS_TOKEN }}" -L -o ./documentation/parse_sidebar.js "https://raw.githubusercontent.com/h2oai/makersaurus/refs/heads/main/documentation/parse_sidebar.js"
+          chmod +x ./documentation/generate_combined_md.py
+          chmod +x ./documentation/generate_pdf_doc.py
+          chmod +x ./documentation/parse_sidebar.js
+
+      - name: Navigate to documentation directory and run script
+        run: |
+          cd documentation
+          if [[ "${{ env.BRANCH_NAME }}" =~ ^refs/heads/pdf-documentation ]]; then
+            python3 generate_pdf_doc.py "${{ env.FOLDER_PATH }}" "${{ env.SIDEBAR_PATH }}" "${{ env.COMBINED_DOC_PATH }}"
+          else
+            python3 generate_combined_md.py "${{ env.FOLDER_PATH }}" "${{ env.SIDEBAR_PATH }}"
+          fi
+          
+
+      - name: Upload generated documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation_artifacts
+          path: |
+            documentation/combined_docs.md
+            documentation/documentation.pdf
+
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::730335347609:role/GitHub-OIDC-Role
+          role-session-name: h2oai-llm-studio-documentation
+          aws-region: us-east-1
+
+
+      - name: Publish documentation
+        run: |
+          if [[ "${{ env.BRANCH_NAME }}" =~ ^refs/heads/pdf-documentation ]]; then
+            mv documentation/documentation.pdf documentation/${{ env.REPO_NAME }}_${{ env.VERSION }}.pdf
+            aws s3 cp documentation/${{ env.REPO_NAME }}_${{ env.VERSION }}.pdf s3://pdf-documentation/llm-studio-documentation/
+          fi
