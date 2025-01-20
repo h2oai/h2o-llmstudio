@@ -5,9 +5,9 @@ description: H2O LLM Studio is an open-source, no-code LLM graphical user interf
 ---
 # What is H2O LLM Studio?
 
-H2O LLM Studio is an open-source, no-code [LLM](../concepts#llm) graphical user interface (GUI) designed for fine-tuning state-of-the-art large language models. 
+H2O LLM Studio is an open-source, no-code [LLM](#llm) graphical user interface (GUI) designed for fine-tuning state-of-the-art large language models. 
 
-[Fine-tuning](../concepts#fine-tuning) a pretrained language model requires coding expertise and extensive knowledge about the model and its [hyperparameters](../concepts#parameters-and-hyperparameters), however  H2O LLM Studio enables NLP practitioners to fine-tune their LLMs easily with no need for coding and better flexibility over customization. 
+[Fine-tuning](#fine-tuning) a pretrained language model requires coding expertise and extensive knowledge about the model and its [hyperparameters](#parameters-and-hyperparameters), however  H2O LLM Studio enables NLP practitioners to fine-tune their LLMs easily with no need for coding and better flexibility over customization. 
 
 H2O LLM Studio also lets you chat with the fine-tuned model and receive instant feedback about model performance.
 
@@ -22,6 +22,8 @@ NLP practitioners and data scientists in particular may find it useful to easily
 ---
 description: Learn how to set up LLM Studio.
 ---
+
+
 
 # Set up H2O LLM Studio
 
@@ -43,21 +45,19 @@ H2O LLM Studio requires the following minimum requirements:
   - download.pytorch.org
   - cdn-lfs.huggingface.co
 
+
 **Notes:**
 
 - Atleast 24GB of GPU memory is recommended for larger models.
-- For more information on performance benchmarks based on the hardware setup, see [H2O LLM Studio performance](#llm-studio-performance).
+
+- For more information on performance benchmarks based on the hardware setup, see [H2O LLM Studio performance](#h2o-llm-studio-performance).
+
 - The required URLs are accessible by default when you start a GCP instance, however, if you have network rules or custom firewalls in place, it is recommended to confirm that the URLs are accessible before running `make setup`.
 
 
 ## Installation
 
-note Installation methods
-
-
-**Linux/Ubuntu installation (recommended)"
-default
->
+### Linux/Ubuntu installation (recommended)
 
 The recommended way to install H2O LLM Studio is using pipenv with Python
 3.10. To install Python 3.10 on Ubuntu 16.04+, execute the following
@@ -66,14 +66,12 @@ commands.
 
 **System installs (Python 3.10)**
 
-
-
+```sh
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt install python3.10
 sudo apt-get install python3.10-distutils
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
-
-
+```
 
 **Install NVIDIA drivers (if required)**
 
@@ -82,8 +80,7 @@ to install the required Nvidia drivers and CUDA. The following commands show
 how to retrieve the latest drivers for a machine running Ubuntu 20.04 as an
 example. You can update the following based on your respective operating system.
 
-
-
+```sh
 wget
 https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin{" "}
 
@@ -97,142 +94,122 @@ cuda-repo-ubuntu2004-11-4-local_11.4.3-470.82.01-1_amd64.deb
 sudo apt-key add /var/cuda-repo-ubuntu2004-11-4-local/7fa2af80.pub
 sudo apt-get -y update
 sudo apt-get -y install cuda
+```
 
 
-
-**Create virtual environment (pipenv) **
+**Create virtual environment (pipenv)**
 
 The following command creates a virtual environment using pipenv and will install
 the dependencies using pipenv.
 
+```sh
 make setup
+```
 
-
-
+### Using the requirements.txt file
 
 If you wish to use conda or another virtual environment, you can also
-install the dependencies using the requirements.txt{" "}
-file.{" "}
+install the dependencies using the `requirements.txt` file.
 
-
+```sh
 pip install -r requirements.txt
+```
 
-
-**Windows installation**
+### Windows installation
 
 Follow the steps below to install H2O LLM Studio on a Windows machine
-using Windows Subsystem for Linux{" "}
-WSL2
+using Windows Subsystem for Linux [WSL2](https://learn.microsoft.com/en-us/windows/wsl/).
 
 
-1. Download the{" "}
-
-latest nvidia driver
-{" "}
-for Windows.{" "}
+1. Download the [latest nvidia driver](https://www.nvidia.com/download/index.aspx) for Windows.
 
 
 2. Open PowerShell or a Windows Command Prompt window in administrator
-mode.{" "}
+mode.
 
 
 3. Run the following command to confirm that the driver is installed
 properly and see the driver version.
 
-nvidia-smi
-
-
+    ```sh
+    nvidia-smi
+    ```
 
 4. Run the following command to install WSL2.
 
-wsl --install
-
+    ```sh
+    wsl --install
+    ```
 
 5. Launch the WSL2 Ubuntu installation.
 
-6. Install the{" "}
+6. Install the WSL2 Nvidia Cuda Drivers.
 
-WSL2 Nvidia Cuda Drivers
+    ```sh
+    wget
+    https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin{" "}
 
-.
+    sudo mv cuda-ubuntu2004.pin
+    /etc/apt/preferences.d/cuda-repository-pin-600
+    wget
+    https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda-repo-wsl-ubuntu-12-2-local_12.2.0-1_amd64.deb{" "}
 
-
-wget
-https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin{" "}
-
-sudo mv cuda-ubuntu2004.pin
-/etc/apt/preferences.d/cuda-repository-pin-600
-wget
-https://developer.download.nvidia.com/compute/cuda/12.2.0/local_installers/cuda-repo-wsl-ubuntu-12-2-local_12.2.0-1_amd64.deb{" "}
-
-sudo dpkg -i cuda-repo-wsl-ubuntu-12-2-local_12.2.0-1_amd64.deb
-sudo cp /var/cuda-repo-wsl-ubuntu-12-2-local/cuda-*-keyring.gpg
-/usr/share/keyrings/
-sudo apt-get update
-sudo apt-get -y install cuda
-
-
-
+    sudo dpkg -i cuda-repo-wsl-ubuntu-12-2-local_12.2.0-1_amd64.deb
+    sudo cp /var/cuda-repo-wsl-ubuntu-12-2-local/cuda-*-keyring.gpg
+    /usr/share/keyrings/
+    sudo apt-get update
+    sudo apt-get -y install cuda
+    ```
 
 7. Set up the required python system installs (Python 3.10).
 
-
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt install python3.10
-sudo apt-get install python3.10-distutils
-curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
-
-
-
+    ```sh
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt install python3.10
+    sudo apt-get install python3.10-distutils
+    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+    ```
 
 8. Create the virtual environment.
 
+    ```sh
+    sudo apt install -y python3.10-venv
+    python3 -m venv llmstudio
+    source llmstudio/bin/activate
+    ```
 
-sudo apt install -y python3.10-venv
-python3 -m venv llmstudio
-source llmstudio/bin/activate
+9. Clone the H2O LLM Studio repository locally.
 
-
-
-
-9.Clone the H2O LLM Studio repository locally.
-
-
-git clone https://github.com/h2oai/h2o-llmstudio.git
-cd h2o-llmstudio
-
-
-
+    ```sh
+    git clone https://github.com/h2oai/h2o-llmstudio.git
+    cd h2o-llmstudio
+    ```
 
 10. Install H2O LLM Studio using the `requirements.txt`.
 
-pip install -r requirements.txt
-
-
+    ```sh
+    pip install -r requirements.txt
+    ```
 
 11. Run the H2O LLM Studio application.
 
-
-H2O_WAVE_MAX_REQUEST_SIZE=25MB \
-H2O_WAVE_NO_LOG=True \
-H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
-wave run llm_studio.app
-
-
+    ```sh
+    H2O_WAVE_MAX_REQUEST_SIZE=25MB \
+    H2O_WAVE_NO_LOG=True \
+    H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
+    wave run app
+    ```
 
 
 This will start the H2O Wave server and the H2O LLM Studio app. Navigate
 to http://localhost:10101/ (we recommend using Chrome) to access
 H2O LLM Studio and start fine-tuning your models.
 
-
-
-
 ## Install custom package
 
 If required, you can install additional Python packages into your environment. This can be done using pip after activating your virtual environment via `make shell`. For example, to install flash-attention, you would use the following commands:
 
-```bash
+```sh
 make shell
 pip install flash-attn --no-build-isolation
 pip install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
@@ -240,7 +217,7 @@ pip install git+https://github.com/HazyResearch/flash-attention.git#subdirectory
 
 Alternatively, you can also directly install the custom package by running the following command.
 
-```bash
+```sh
 pipenv install package_name
 ```
 
@@ -268,10 +245,11 @@ This will start the H2O Wave server and the H2O LLM Studio app. Navigate to [htt
 If you are running H2O LLM Studio with a custom environment other than Pipenv, start the app as follows:
 
 ```sh
+H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756 \
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 H2O_WAVE_NO_LOG=True \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
-wave run llm_studio.app
+wave run app
 ```
 
 ### Run using Docker from a nightly build
@@ -279,22 +257,23 @@ wave run llm_studio.app
 First, install Docker by following the instructions from the [NVIDIA Container Installation Guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker). H2O LLM Studio images are stored in the `h2oai GCR vorvan` container repository.
 
 ```sh
-mkdir -p `pwd`/llmstudio_mnt
+mkdir -p `pwd`/data
+mkdir -p `pwd`/output
 docker run \
     --runtime=nvidia \
     --shm-size=64g \
     --init \
     --rm \
-    -it \
     -p 10101:10101 \
-    -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
+    -v `pwd`/data:/workspace/data \
+    -v `pwd`/output:/workspace/output \
     -v ~/.cache:/home/llmstudio/.cache \
     gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
 ```
 
 Navigate to [http://localhost:10101/](http://localhost:10101/) (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models.
 
-**Note:**
+- **Note:**
 Other helpful docker commands are `docker ps` and `docker kill`.
 
 
@@ -302,15 +281,14 @@ Other helpful docker commands are `docker ps` and `docker kill`.
 
 ```sh
 docker build -t h2o-llmstudio .
-mkdir -p `pwd`/llmstudio_mnt
 docker run \
     --runtime=nvidia \
     --shm-size=64g \
     --init \
     --rm \
-    -it \
     -p 10101:10101 \
-    -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
+    -v `pwd`/data:/workspace/data \
+    -v `pwd`/output:/workspace/output \
     -v ~/.cache:/home/llmstudio/.cache \
     h2o-llmstudio
 ```
@@ -322,7 +300,7 @@ You can also use H2O LLM Studio with the command line interface (CLI) and specif
 To specify the path to the configuration file that contains the experiment parameters, run:
 
 ```sh
-python llm_studio/train.py -Y {path_to_config_yaml_file}
+python train.py -Y {path_to_config_yaml_file}
 ```
 
 To run on multiple GPUs in DDP mode, run:
@@ -331,14 +309,14 @@ To run on multiple GPUs in DDP mode, run:
 bash distributed_train.sh {NR_OF_GPUS} -Y {path_to_config_yaml_file}
 ```
 
-**Note:**
+- **Note:**
 By default, the framework will run on the first `k` GPUs. If you want to specify specific GPUs to run on, use the `CUDA_VISIBLE_DEVICES` environment variable before the command.
 
 
 To start an interactive chat with your trained model, run:
 
 ```sh
-python llm_studio/prompt.py -e {experiment_name}
+python prompt.py -e {experiment_name}
 ```
 
 `experiment_name` is the output folder of the experiment you want to chat with. The interactive chat will also work with models that were fine-tuned using the GUI.
@@ -399,7 +377,7 @@ The following metrics were measured.
 | 2xA100 80GB | h2oai/h2ogpt-4096-llama2-70b | nf4 | 2:20:44 | 1:33:42 |
 | 1xA100 80GB | h2oai/h2ogpt-4096-llama2-70b | nf4 | 4:23:57 | 2:44:51 |
 
-**Note:**
+- **Note:**
 The runtimes were gathered using the default parameters. 
 
 <details>
@@ -425,7 +403,6 @@ dataset:
     chatbot_name: h2oGPT
     data_sample: 1.0
     data_sample_choice:
-
     - Train
     - Validation
     limit_chained_samples: false
@@ -433,7 +410,6 @@ dataset:
     parent_id_column: None
     personalize: false
     prompt_column:
-
     - instruction
     system_column: None
     text_answer_separator: <|answer|>
@@ -447,7 +423,6 @@ environment:
     compile_model: false
     find_unused_parameters: false
     gpus:
-
     - '0'
     - '1'
     - '2'
@@ -461,6 +436,7 @@ environment:
     number_of_workers: 8
     seed: -1
     trust_remote_code: true
+    use_fsdp: false
 experiment_name: default-8-a10g
 llm_backbone: h2oai/h2ogpt-4096-llama2-7b
 logging:
@@ -534,20 +510,20 @@ The flow of creating and fine-tuning large language models using H2O LLM Studio 
 
 As the first step in the experiment flow, prep your data and import your dataset to H2O LLM Studio. 
 
-- To learn about supported data connectors and data format, see [Supported data connectors and format](../guide/datasets/data-connectors-format).
-- To learn about how to import a dataset to H2O LLM Studio, see [Import a dataset](../guide/datasets/import-dataset).
+- To learn about supported data connectors and data format, see [Supported data connectors and format](#supported-data-connectors-and-format).
+- To learn about how to import a dataset to H2O LLM Studio, see [Import a dataset](#import-a-dataset).
 - To learn about reviewing and editing a dataset, see [View and manage dataset](#view-dataset).
 
 ## Step 2: Create an experiment
 
-As the second step in the experiment flow, create an experiment using the imported dataset. H2O LLM Studio offers several hyperparameter settings that you can adjust for your experiment model. To ensure that your training process is effective, you may need to specify the [hyperparameters](../concepts#parameters-and-hyperparameters) like learning rate, batch size, and the number of epochs. H2O LLM Studio provides an overview of all the parameters you’ll need to specify for your experiment.
+As the second step in the experiment flow, create an experiment using the imported dataset. H2O LLM Studio offers several hyperparameter settings that you can adjust for your experiment model. To ensure that your training process is effective, you may need to specify the [hyperparameters](#parameters-and-hyperparameters) like learning rate, batch size, and the number of epochs. H2O LLM Studio provides an overview of all the parameters you’ll need to specify for your experiment.
 
 - To learn about creating a new experiment, see [Create an experiment](#create-an-experiment).
 - To learn about the settings available for creating an experiment, see [Experiment settings](#experiment-settings).
 
 ## Step 3: Monitor an experiment
 
-As the third step in the experiment flow, monitor the launched experiment. H2O LLM Studio allows you to inspect your experiment (model) during and after model training. Simple interactive graphs in H2O LLM Studio allow you to understand the impact of selected hyperparameter values during and after model training. You can then adjust the [hyperparameters](../concepts#parameters-and-hyperparameters) to further optimize model performance. 
+As the third step in the experiment flow, monitor the launched experiment. H2O LLM Studio allows you to inspect your experiment (model) during and after model training. Simple interactive graphs in H2O LLM Studio allow you to understand the impact of selected hyperparameter values during and after model training. You can then adjust the [hyperparameters](#parameters-and-hyperparameters) to further optimize model performance. 
 
 To learn about viewing and monitoring an experiment, see [View and manage experiments](#view-an-experiment).
 
@@ -561,7 +537,7 @@ To learn about comparing multiple experiments, see [Compare experiments](#compar
 
 As the final step in the experiment flow, you can export the fine-tuned model to Hugging Face with a single click.
 
-To learn about exporting a trained model to Hugging Face Hub, see, [Export trained model to Hugging Face](#export-trained-model).
+To learn about exporting a trained model to Hugging Face Hub, see, [Export trained model to Hugging Face](#publish-model-to-huggingface).
 
 \newpage
 
@@ -572,18 +548,18 @@ description: Learn about the core features of LLM Studio.
 
 ## No-code fine-tuning
 
-NLP practitioners can easily fine-tune models without the need for code expertise. The user interface, which is specifically designed for LLMs, allows users to upload large datasets easily and configure [hyperparameters](../concepts#parameters-and-hyperparameters) to fine-tune the model. 
+NLP practitioners can easily fine-tune models without the need for code expertise. The user interface, which is specifically designed for LLMs, allows users to upload large datasets easily and configure [hyperparameters](#parameters-and-hyperparameters) to fine-tune the model. 
 
 ## Highly customizable (wide range of hyperparameters)
 
 H2O LLM Studio supports a wide variety of hyperparameters that can be used to fine-tune the model and supports the following fine-tuning techniques to enable advanced customization:
 
-- [Low-Rank Adaptation (LoRA)](../concepts#lora-low-rank-adaptation)
-- [8-bit model training with a low memory footprint](../concepts#8-bit-model-training-with-a-low-memory-footprint)
+- [Low-Rank Adaptation (LoRA)](#lora-low-rank-adaptation)
+- [8-bit model training with a low memory footprint](#quantization)
 
 ## Advanced evaluation metrics and experiment comparison
 
-Advanced evaluation metrics in H2O LLM Studio can be used to validate the answers generated by the LLM. This helps to make data-driven decisions about the model. It also offers visual tracking and comparison of experiment performance, making it easy to analyze and compare different fine-tuned models.You can also visualize how different parameters affect the model performance, and optionally use the [Neptune](https://neptune.ai/) or [W&B](https://wandb.ai/) integration to track and log your experiments. 
+Advanced evaluation metrics in H2O LLM Studio can be used to validate the answers generated by the LLM. This helps to make data-driven decisions about the model. It also offers visual tracking and comparison of experiment performance, making it easy to analyze and compare different fine-tuned models.You can also visualize how different parameters affect the model performance, and optionally use the [Neptune](https://neptune.ai/) integration to track and log your experiments. 
 
 ## Instant publishing models
 
@@ -592,170 +568,6 @@ H2O LLM Studio enables easy model sharing with the community by allowing you to 
 ## Instant feedback on model performance
 
 Additionally, H2O LLM Studio lets you chat with the fine-tuned model and receive instant feedback about model performance.
-
-\newpage
-
----
-description: Learn from a collection of videos about LLM Studio.
----
-
-
-# Create an experiment for causal classification modeling
-
-## Overview
-
-This tutorial will guide you through the process of setting up and conducting an experiment for causal classification modeling [problem type](#supported-problem-types) using H2O LLM Studio. It covers how to import datasets, configure key experiment settings, and create a new experiment. By following these steps, you will learn how to design experiments that can identify causal relationships in classification tasks.
-
-## Objectives
-
-1. Learn how to import datasets from Hugging Face into H2O LLM Studio.
-2. Set up an experiment for causal classification modeling with appropriate parameters.
-
-## Prerequisites
-
-1. Access to the latest version of H2O LLM Studio.
-2. Basic understanding of classification and causal models.
-
-## Step 1: Import dataset
-
-For this tutorial, we'll use the IMDb movie review dataset on Hugging Face. The dataset contains 25,000 movie reviews for training, each labeled as either positive or negative. Let's import the dataset.
-
-1. Click on **Import dataset**.
-2. Select **Hugging Face** as the data source from the **Source** dropdown. 
-3. In the **Hugging Face dataset** field, enter `stanfordnlp/imdb`.
-4. In the **Split** field, enter `train`.
-5. Click **Continue**.
-
-![](import-dataset.png)
-
-## Step 2: Configure dataset
-
-In this step, we'll review and adjust the dataset settings for our experiment.
-
-1. In the **Dataset name** field, enter `classification`.
-2. In the **Problem type** dropdown, select **Causal classification modeling**.
-**Note:**
- If the dataset is configured correctly, the **Causal classification modeling** problem type will be pre-selected automatically.
- 
-3. In the **Train dataframe** dropdown, leave the default train dataframe as `imdb_train.pq`.
-4. In the **Validation dataframe** dropdown, leave the default value as `None`. 
-5. In the **Prompt column** dropdown, select **Text**.
-6. In the **Answer column** dropdown, select **Label**.
-7. Click **Continue**.
-
-![](configure-dataset.png)
-8. In the **Sample data visualization** page, click **Continue** if the input data and labels appear correctly.
-
-## Step 3: Create a new experiment
-
-Now that the dataset is imported, it's time to start a new experiment for causal classification modeling.
-
-1. From the **View datasets** page, click on the <Icon>more_vert</Icon> Kebab menu next to the `imdb_train` dataset, then select **New experiment**. 
-2. In **General settings**, enter `tutorial-1a` in the **Experiment name** text box.
-
- ![](experiment-name.png)
-3. In **Dataset settings**, set the **Data sample** to 0.1.
-4. In **Dataset settings**, set the **Num classes** to 1.
-
- ![](dataset-settings.png)
-5. In **Training settings**, select the **BinaryCrossEntrophyLoss** from the **Loss function** dropdown. 
-
- ![](training-settings.png)
-6. In **Prediction settings**, select **LogLoss** from the **Metric** dropdown.
-
- ![](prediction-settings.png)
-7. Leave the other configurations at their default values.
-8. Click **Run experiment**. 
-
-## Step 4: Evaluate experiment
-
-After successfully creating the new experiment, click on the experiment name to access the experiment tabs. These tabs provide detailed information and insights into various aspects of your experiment. For more information about the experiment tabs, see [Experiment tabs](#experiment-tabs).
-
-![](evaluate-experiment.png)
-
-## Summary
-
-In this tutorial, we walked through the process of setting up a causal classification experiment using H2O LLM Studio. You learned how to import the IMDb dataset from Hugging Face, configure the dataset and experiment settings, and create a new experiment. With these steps, you're now ready to explore different datasets and experiment with various configurations for causal classification [problem type](#supported-problem-types) in H2O LLM Studio.
-
-\newpage
-
----
-description: This tutorial will guide you through the process of setting up and conducting an experiment for causal regression modeling using H2O LLM Studio. It covers how to import datasets from Hugging Face, configure key experiment settings, and create a new experiment.
----
-
-
-# Create an experiment for causal regression modeling
-
-## Overview
-
-This tutorial will guide you through the process of setting up and conducting an experiment for causal regression modeling [problem type](#supported-problem-types) using H2O LLM Studio. It covers how to import datasets from Hugging Face, configure key experiment settings, and create a new experiment. By following these steps, you will learn how to design experiments that can identify causal relationships in regression tasks.
-
-## Objectives
-
-1. Learn how to import datasets from Hugging Face into H2O LLM Studio.
-2. Set up an experiment for causal regression modeling with appropriate parameters.
-
-## Prerequisites
-
-1. Access to the latest version of H2O LLM Studio.
-2. Basic understanding of regression and causal models.
-
-## Step 1: Import dataset
-
-For this tutorial, we'll use the open-source **Helpfulness Dataset (CC-BY-4.0)** from Hugging Face. The dataset contains 21, 362 samples, each containing a prompt, a response, and five human-annotated attributes of the response, each ranging between 0 and 4 where higher means better for each attribute.
-
-1. Click on **Import dataset**.
-2. Select **Hugging Face** as the data source from the **Source** dropdown. 
-3. In the **Hugging Face dataset** field, enter `nvidia/HelpSteer2`.
-4. In the **Split** field, enter `train`.
-5. Click **Continue**.
-
-![](import-dataset.png)
-
-## Step 2: Configure dataset
-
-In this step, we'll review and adjust the dataset settings for our experiment.
-
-1. In the **Dataset name** field, enter `regression`.
-2. In the **Problem type** dropdown, select **Causal regression modeling**.
-3. In the **Train dataframe** dropdown, leave the default train dataframe.
-4. In the **Validation dataframe** dropdown, leave the default validation dataframe. 
-5. In the **Prompt column** dropdown, select **Prompt**.
-6. In the **Answer column** dropdown, select **helpfulness**.
-7. Click **Continue**.
-
- ![](configure-dataset.png)
-8. On the **Sample data visualization** page, click **Continue** if the input data and labels appear correctly.
-
-## Step 3: Create a new experiment
-
-Now that the dataset is imported, let's create a new experiment for causal regression modeling.
-
-1. From the **View datasets** page, click on the <Icon>more_vert</Icon> Kebab menu next to the `regression` dataset, then select **New experiment**. 
-2. In **General settings**, enter `tutorial-2a` in the **Experiment name** text box.
-
- ![](general-settings.png)
-3. In **Dataset settings**, set the **Data Sample** to 0.1.
-
- ![](dataset-settings.png)
-4. In **Training settings**, select the **MSELoss** from the **Loss function** dropdown.
-
- ![](training-settings.png)
-5. In **Prediction settings**, select **MSE** from the **Metric** dropdown.
-
- ![](prediction-settings.png)
-6. Leave the other configurations at their default values.
-7. Click **Run experiment**.
-
-## Step 4: Evaluate experiment
-
-After successfully creating the new experiment, click on the experiment name to access the experiment tabs. These tabs provide detailed information and insights into various aspects of your experiment. For more information about the experiment tabs, see [Experiment tabs](#experiment-tabs).
-
-![](evaluate-experiment.png)
-
-## Summary
-
-In this tutorial, we covered the process of setting up a causal regression experiment using H2O LLM Studio. You learned how to import a dataset from Hugging Face, configure both dataset and experiment settings, and create a new experiment. With these steps, you're now ready to explore other datasets and experiment with various configurations for causal regression [problem type](#supported-problem-types) in H2O LLM Studio.
 
 \newpage
 
@@ -771,7 +583,6 @@ H2O LLM Studio is based on a few key concepts and uses several key terms across 
 A Large Language Model (LLM) is a type of AI model that uses deep learning techniques and uses massive datasets to analyze and generate human-like language. For example, many AI chatbots or AI search engines are powered by LLMs.  
 
 Generally speaking, LLMs can be characterized by the following parameters: 
-
 - size of the training dataset
 - cost of training (computational power)
 - size of the model (parameters)
@@ -785,7 +596,7 @@ In the context of an LLM, parameters and hyperparameters are a crucial part of d
 
 - **Hyperparameters:** The configuration choices that are set before training the model and are not learned directly from the data (e.g., number of epochs, batch size etc.). These choices impact the learning process and influence the model's overall behavior. Hyperparameters need to be tuned and optimized to achieve the best performance. H2O LLM Studio GUI shows tooltips next to each hyperparameter to explain what each hyperparameter is for. You can also see the following references for more details about hyperparameters in H2O LLM Studio.
     - Dataset settings
-    - [Experiment settings](./guide/experiments/experiment-settings)
+    - [Experiment settings](#experiment-settings)
 
 
 ## LLM Backbone
@@ -839,10 +650,7 @@ H2O LLM Studio supports the following data connectors to access or upload extern
 - **Upload**: Upload a local dataset from your machine. 
 - **Local**: Specify the file location of the dataset on your machine. 
 - **AWS S3 (Amazon AWS S3)**: Connect to an Amazon AWS S3 data bucket. 
-- **Azure Datalake**: Connect to a dataset in Azure Datalake. 
-- **H2O Drive**: Upload a dataset from H2O Drive.
-- **Kaggle**: Connect to a dataset hosted on Kaggle.
-- **Hugging Face**: Connect to a dataset on Hugging Face.
+- **Kaggle**: Connect to a Kaggle dataset. 
 
 ## Data format 
 
@@ -856,9 +664,8 @@ H2O LLM Studio supports the following data connectors to access or upload extern
     - **Prompt Column:** The column in the dataset containing the user prompt.
     - **Answer Column:** The column in the dataset containing the expected output.
     - **Parent Id Column:** An optional column specifying the parent id to be used for chained conversations. The value of this column needs to match an additional column with the name `id`. If provided, the prompt will be concatenated after preceding parent rows.
-    - **Id Column:**  This column is only required when the `Parent Id` is set. It identifies the record ID used for linked conversations. The value in the `Parent Id` column must match this column's value.
 
-**Note:**
+- **Note:**
 To train a chatbot style model, you need to convert your data into a question and answer format. There are other enterprise solutions by H2O.ai that may help you prep your data. For more information, see [H2O.ai's Generative AI page](https://h2o.ai/) and this blogpost about [H2O LLM DataStudio: Streamlining Data Curation and Data Preparation for LLMs related tasks](https://h2o.ai/blog/2023/streamlining-data-preparation-for-fine-tuning-of-large-language-models/).
 
 ## Example data
@@ -872,21 +679,11 @@ that can be downloaded [here](https://www.kaggle.com/code/philippsinger/openassi
 description: H2O LLM Studio provides a number of data connectors to support importing data from local or external sources and requires your data to be in a certain format for successful importing of data.
 ---
 
-
-
-
-
-
-
-
-
-
-
 # Import a dataset
 
 H2O LLM Studio provides a number of data connectors to support importing data from local or external sources and requires your data to be in a certain format for successful importing of data. 
 
-For more information, see [Supported data connectors and format](data-connectors-format).
+For more information, see [Supported data connectors and format](#supported-data-connectors-and-format).
 
 ## Import data
 
@@ -894,158 +691,79 @@ Follow the relevant steps below to import a dataset to H2O LLM Studio.
 
 1. On the H2O LLM Studio left-navigation pane, click **Import dataset**.
 2. Select the relevant **Source** (data connector) that you want to use from the dropdown list .
-    note Data sources
-    
+
+### Data Sources 
+
 **Upload**
 
--
-Drag and drop the file, or click **Browse** and select the file you want to upload.
+1. Drag and drop the file, or click **Browse** and select the file you want to upload.
 
--
-Click **Upload**.
+2. Click **Upload**.
 
-
-
+    ![](upload-dataset.png)
 
 **Local**
 
--
-Enter the file path as the **File Location** or select the relevant local directory that the dataset is located in.
+1. Enter the file path as the **File Location** or select the relevant local directory that the dataset is located in.
 
--
-Click **Continue**.
+2. Click **Continue**.
 
-
-
+    ![](upload-local-file.png)
 
 **AWS S3**
 
--
-Enter values for the following fields:
+1. Enter values for the following fields:
 
--
-**S3 bucket name: **
-The name of the S3 bucket including the reletive file paths.
+    -
+    **S3 bucket name: **
+    The name of the S3 bucket including the reletive file paths.
 
--
-**AWS access key: **
-The access key associated with your S3 bucket. This field is optional. If the S3 bucket is public, you can leave this empty for anonymous access.
+    -
+    **AWS access key: **
+    The access key associated with your S3 bucket. This field is optional. If the S3 bucket is public, you can leave this empty for anonymous access.
 
--
-**AWS access secret: **
-The access secret associated with your S3 bucket. This field is optional. If the S3 bucket is public, you can leave this empty for anonymous access.
+    -
+    **AWS access secret: **
+    The access secret associated with your S3 bucket. This field is optional. If the S3 bucket is public, you can leave this empty for anonymous access.
 
--
-**File name: **
-Enter the file name of the dataset that you want to import.
+    -
+    **File name: **
+    Enter the file name of the dataset that you want to import.
 
-
-
-
-For more information, see AWS credentials and Methods for accessing a bucket in the AWS Documentation.
+    ![](import-s3-bucket.png)
 
 
+For more information, see [AWS credentials](https://docs.aws.amazon.com/IAM/latest/UserGuide/security-creds.html#access-keys-and-secret-access-keys) and [Methods for accessing a bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-bucket-intro.html) in the AWS Documentation.
 
--
-Click **Continue**.
-
-
-
-
-**Azure Datalake**
-
--
-Enter values for the following fields:
-
--
-**Datalake connection string: **
-Enter your Azure connection string to connect to Datalake storage.
-
--
-**Datalake container name: **
-Enter the name of the Azure Data Lake container where your dataset is stored, including the relative path to the file within the container.
-
--
-**File name: **
-Specify the exact name of the file you want to import.
-
-
-
--
-Click **Continue**.
-
-
-
-**H2O-Drive**
-
--
-Select the dataset you want to upload from the list of datasets in H2O Drive.
-
--
-Click **Continue**.
-
-
+2. Click **Continue**.
 
 
 **Kaggle**
 
--
-Enter values for the following fields:
+1. Enter values for the following fields:
 
--
-**Kaggle API command: **
-Enter the Kaggle API command that you want to execute.
+    -
+    **Kaggle API command: **
+    Enter the Kaggle API command that you want to execute.
 
--
-**Kaggle username: **
-Your Kaggle username for API authentication
+    -
+    **Kaggle username: **
+    Your Kaggle username for API authentication
 
--
-**Kaggle secret key: **
-Your Kaggle secret key for API authentication.
+    -
+    **Kaggle secret key: **
+    Your Kaggle secret key for API authentication.
 
+    ![](import-kaggle-dataset.png)
 
+2. Click **Continue**.
 
--
-Click **Continue**.
-
-
-
-
-**Hugging Face**
-
--
-Enter values for the following fields:
-
--
-**Hugging Face dataset: **
-Enter the name of the Hugging Face dataset.
-
--
-**Split: **
-Enter the specific data split you want to import (e.g., "train", "test").
-
--
-**Hugging Face API token (optional): **
-Enter your Hugging Face API token to authenticate access to private datasets or datasets with gated access.
-
-
-
--
-Click **Continue**.
-
-
-
-
-    
- 
 ## Configure dataset
 
 Once you have successfully uploaded or imported your dataset, you can configure the dataset settings. Depending on the problem type, you may need to specify the following:
 
-**Note:** Tip
+- **Tip:** 
 You can upload a `.zip` file with both training and validation sets to avoid having to separately upload files.
-
 
 - **Dataset name:** A suitable name for the whole dataset which includes both the train dataframe and validation dataframe.
 
@@ -1053,13 +771,11 @@ You can upload a `.zip` file with both training and validation sets to avoid hav
 
 - Causal Language Modeling: Used to fine-tune large language models
 
-- Causal Classification Modeling: Used to fine-tune causal classification models
-
-- Causal Regression Modeling: Used to fine-tune causal regression models
+- DPO Modeling: Used to fine-tune large language models using Direct Preference Optimization
 
 - Sequence To Sequence Modeling: Used to fine-tune large sequence to sequence models
 
-- DPO Modeling: Used to fine-tune large language models using Direct Preference Optimization
+- Causal Classification Modeling: Used to fine-tune causal classification models
 
 - **Train Dataframe:** Defines a `.csv` or `.pq` file containing a dataframe with training records that H2O LLM Studio uses to *train* the model.
 
@@ -1075,23 +791,11 @@ You can upload a `.zip` file with both training and validation sets to avoid hav
 
 - **Rejected Prompt Column:** The column in the dataset containing the user prompt for the rejected answer. By default this can be set to None to take the same prompt as for the accepted answer and should only be changed if the accepted and rejected answers exhibit different prompts, such as when using KTOPairLoss.
 
-- #### **Answer Column:** 
-
-  The column in the dataset containing the expected output.
-
-For classification, this needs to be an integer column starting from zero containing the class label, while for regression, it needs to be a float column.
-
-Multiple target columns can be selected for classification and regression supporting multilabel problems.
-In detail, we support the following cases:
-
-- Multi-class classification requires a single column containing the class label
-- Binary classification requires a single column containing a binary integer label
-- Multilabel classification requires each column to refer to one label encoded with a binary integer label
-- For regression, each target column requires a float value
+- **Answer Column:** The column in the dataset containing the expected output.
+    For classification, this needs to be an integer column starting from zero containing the class label.
 
 - **Rejected Answer Column:** The column in the dataset containing the rejected response, i.e. an answer that is not preferred by the user.
-
-See https://arxiv.org/abs/2305.18290 for more details.
+    See https://arxiv.org/abs/2305.18290 for more details.
 
 - **Parent Id Column:** An optional column specifying the parent id to be used for chained conversations. The value of this column needs to match an additional column with the name `id`. If provided, the prompt will be concatenated after preceding parent rows.
 
@@ -1107,13 +811,14 @@ You will now be redirected to the **View datasets** screen. You should be able t
 
 ![](view-imported-dataset.png)
 
-For more information about viewing dataset summary and statistics, see [View and manage datasets](view-dataset)
+For more information about viewing dataset summary and statistics, see [View and manage datasets](#view-dataset)
 
 \newpage
 
 ---
 description: You can view, review, edit, or delete your datasets once you have imported them. You can also start a new experiment using a dataset you have imported.
 ---
+
 
 # View and manage dataset
 
@@ -1129,8 +834,8 @@ To view an imported dataset:
 
     ![](view-imported-dataset.png)
 
-**Note:**
-    For more information about the dataset details you see on the table above, see [dataset configurations](#configure-a-dataset).
+    - **Note:**
+    For more information about the dataset details you see on the table above, see [dataset configurations](#configure-dataset).
     
 
 ## Dataset tabs
@@ -1163,7 +868,7 @@ To edit an imported dataset,
 1. On the H2O LLM Studio left-navigation pane, click **View datasets**. You will see the datasets table with a list of all the datasets you have imported so far.
 2. Locate the row of the dataset you want to edit and click the <Icon>more_vert</Icon> Kebab menu.
 3. Select **Edit dataset**.
-4. Make the desired changes to the dataset configuration. You can also [merge the dataset with an existing dataset](merge-datasets) at this point.
+4. Make the desired changes to the dataset configuration. You can also [merge the dataset with an existing dataset](#merge-datasets) at this point.
 5. Click **Continue** and review the dataset with your changes. 
 
 <!-- 
@@ -1177,7 +882,7 @@ link to start a new experiment page in the experiments sub page.  -->
 When a dataset is no longer needed, you can delete it. Deleted datasets are permanently removed from the H2O LLM Studio instance.
 
 **Caution:**
-You can only delete datasets that are not linked to any experiments. If you wish to delete a dataset that is linked to an experiment, first [delete the experiment](../experiments/view-an-experiment#delete-an-experiment), and then delete the dataset. 
+You can only delete datasets that are not linked to any experiments. If you wish to delete a dataset that is linked to an experiment, first [delete the experiment](#delete-an-experiment), and then delete the dataset. 
 
 
 1. On the H2O LLM Studio left-navigation pane, click **View datasets**.
@@ -1191,11 +896,12 @@ You can only delete datasets that are not linked to any experiments. If you wish
 description: H2O LLM Studio enables you to merge imported datasets into one main dataset. This functionality can be used to merge training and validation data together into one dataset or extend your existing dataset with more data and increase your dataset size. 
 ---
 
+
 # Merge datasets
 
 H2O LLM Studio enables you to merge imported datasets into one main dataset. This functionality can be used to merge training and validation data together into one dataset or extend your existing dataset with more data and increase your dataset size. 
 
-**Note:**
+- **Note:**
 H2O LLM Studio does not merge dataset files in the sense that rows are combined, and duplicate rows are removed. "Merge", in this case, refers to bringing the dataset files a dataset might have to a single dataset (another dataset), continuing other dataset files already.
 
 
@@ -1208,48 +914,17 @@ Generally, you might want to merge datasets in H2O LLM Studio to have both the t
 5. Select the dataset you want that you want to merge with. 
 
     ![](merge-datasets.png)
+    
 6. Click **Merge**.
-7. Adjust the dataset configuration if needed. For more information about the configurations, see [Configure dataset](./import-dataset#configure-dataset). 
+7. Adjust the dataset configuration if needed. For more information about the configurations, see [Configure dataset](#configure-dataset). 
 8. Click **Continue**.
 9. Review the text to ensure that the input and output is as intended, and then click **Continue**.
 
 Your datasets are now merged. 
 
-**Note:**
-Alternatively, you can also merge datasets at the point of [importing a dataset](./import-dataset) or combine both datasets (.csv files) into a `.zip` file before uploading it as a whole dataset. 
+- **Note:**
+Alternatively, you can also merge datasets at the point of [importing a dataset](#import-a-dataset) or combine both datasets (.csv files) into a `.zip` file before uploading it as a whole dataset. 
 
-
-\newpage
-
-# Supported problem types
-
-## Overview
-
-H2O LLM Studio supports various problem types that allow users to fine-tune models for different tasks. The five supported problem types are explained below.
-
-## Causal language modeling 
-
-- **Description:** Causal language modeling involves predicting the next token in a sequence, based only on the preceding tokens (i.e., the left side of the sequence). It is commonly used for tasks such as text generation. It is used to fine-tune large language models.
-
-## Causal classification modeling
-
-- **Description:** Causal classification modeling involves assigning one or more categorical target labels to an input text. It is used for fine-tuning models to perform text classification tasks.
-
-- **Supported classification tasks:** Binary, multi-class, and multi-label classification.
-
-## Causal regression modeling
-
-- **Description:** Causal regression modeling assigns one or more continuous target labels to an input text. It is used to fine-tune models for text regression tasks. 
-
-- **Supported regression tasks:** Multi-label regression.
-
-## Sequence to sequence modeling
-
-- **Description:** A type of machine learning architecture designed to transform one sequence into another. It is commonly used for tasks like machine translation, text summarization, and speech recognition.
-
-## DPO modeling
-
-- **Description:** The DPO modeling is used to fine-tune large language models using Direct Preference Optimization (DPO), a method that helps large, unsupervised language models better match human preferences using a simple classification approach.
 
 \newpage
 
@@ -1257,103 +932,19 @@ H2O LLM Studio supports various problem types that allow users to fine-tune mode
 description: All the settings needed for creating an experiment are explored in this page.
 ---
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Experiment settings
 
 The settings for creating an experiment are grouped into the following sections: 
 
- - [General settings](#general-settings) 
- - [Dataset settings](#dataset-settings)
- - [Tokenizer settings](#tokenizer-settings)
- - [Architecture settings](#architecture-settings)
- - [Training settings](#training-settings)
- - [Augmentation settings](#augmentation-settings)
- - [Prediction settings](#prediction-settings)
- - [Environment settings](#environment-settings)
- - [Logging settings](#logging-settings)
+- [General settings](#general-settings) 
+- [Dataset settings](#dataset-settings)
+- [Tokenizer settings](#tokenizer-settings)
+- [Architecture settings](#architecture-settings)
+- [Training settings](#training-settings)
+- [Augmentation settings](#augmentation-settings)
+- [Prediction settings](#prediction-settings)
+- [Environment settings](#environment-settings)
+- [Logging settings](#logging-settings)
 
 The settings under each category are listed and described below.
 
@@ -1369,13 +960,11 @@ Defines the problem type of the experiment, which also defines the settings H2O 
 
 - Causal Language Modeling: Used to fine-tune large language models
 
-- Causal Classification Modeling: Used to fine-tune causal classification models
-
-- Causal Regression Modeling: Used to fine-tune causal regression models
+- DPO Modeling: Used to fine-tune large language models using Direct Preference Optimization
 
 - Sequence To Sequence Modeling: Used to fine-tune large sequence to sequence models
 
-- DPO Modeling: Used to fine-tune large language models using Direct Preference Optimization
+- Causal Classification Modeling: Used to fine-tune causal classification models
 
 ### Import config from YAML
 
@@ -1410,7 +999,6 @@ Specifies the validation strategy H2O LLM Studio uses for the experiment.
 To properly assess the performance of your trained models, it is common practice to evaluate it on separate holdout data that the model has not seen during training. H2O LLM Studio allows you to specify different strategies for this task fitting your needs.
 
 Options
-
 - **Custom holdout validation**
     - Specifies a separate holdout dataframe.
 - **Automatic holdout validation**
@@ -1443,23 +1031,11 @@ If multiple prompt columns are selected, the columns are concatenated with the s
 
 The column in the dataset containing the expected output.
 
-For classification, this needs to be an integer column starting from zero containing the class label, while for regression, it needs to be a float column.
-
-Multiple target columns can be selected for classification and regression supporting multilabel problems.
-In detail, we support the following cases:
-
-- Multi-class classification requires a single column containing the class label
-- Binary classification requires a single column containing a binary integer label
-- Multilabel classification requires each column to refer to one label encoded with a binary integer label
-- For regression, each target column requires a float value
+For classification, this needs to be an integer column starting from zero containing the class label.
 
 ### Parent ID column
 
 An optional column specifying the parent id to be used for chained conversations. The value of this column needs to match an additional column with the name `id`. If provided, the prompt will be concatenated after preceding parent rows.
-
-### ID column
-
-<DSidColumn/>
 
 ### Text prompt start
 
@@ -1480,12 +1056,6 @@ Adds EOS token at end of answer.
 ### Mask prompt labels
 
 Whether to mask the prompt labels during training and only train on the loss of the answer.
-
-### Num classes 
-
-The number of possible classes for the classification task. For binary classification, a single class should be selected.
-
-The **Num classes** field should be set to the total number of classes in the [answer column](#answer-column) of the dataset.
 
 ## Tokenizer settings
 
@@ -1542,8 +1112,6 @@ Allows you to specify a local path to the pretrained weights.
 
 Defines the loss function H2O LLM Studio utilizes during model training. The loss function is a differentiable function measuring the prediction error. The model utilizes gradients of the loss function to update the model weights during training. The options depend on the selected Problem Type.
 
-For multiclass classification problems, set the loss function to **Cross-entropy**.
-
 ### Optimizer
 
 Defines the algorithm or method (optimizer) to use for model training. The selected algorithm or method defines how the model should change the attributes of the neural network, such as weights and learning rate. Optimizers solve optimization problems and make more accurate updates to attributes to reduce learning losses.
@@ -1582,20 +1150,17 @@ Defines the learning rate to apply to certain layers of a model. H2O LLM Studio 
 
 A common strategy is to apply a lower learning rate to the backbone of a model for better convergence and training stability.
 
-By default, H2O LLM Studio applies **Differential learning rate Layers**, with the learning rate for the `classification_head` being 10 times smaller than the learning rate for the rest of the model.
-
 ### Freeze layers
 
 An optional list of layers to freeze during training. Full layer names will be matched against selected substrings. Only available without LoRA training.
 
-### Attention Implementation
+### Use Flash Attention 2
 
-Allows to change the utilized attention implementation. 
+If enabled, Flash Attention 2 will be used to compute the attention. Otherwise, the attention will be computed using the standard attention mechanism. 
 
-- **Auto** selection will automatically choose the implementation based on system availability.
-- **Eager** relies on vanilla attention implementation in Python.
-- **SDPA** uses scaled dot product attention in PyTorch.
-- **Flash Attention 2** explicitly uses FA2 which requires the flash_attn package.
+Flash Attention 2 is a new attention mechanism that is faster and more memory efficient than the standard attention mechanism. Only newer GPUs support this feature.
+
+See https://arxiv.org/abs/2205.14135 for more details.
 
 ### Batch size
 
@@ -1617,26 +1182,12 @@ Defines the learning rate schedule H2O LLM Studio utilizes during model training
 
 
 Options
-
 - **Constant**
     - H2O LLM Studio applies a constant learning rate during the training process.
 - **Cosine**
     - H2O LLM Studio applies a cosine learning rate that follows the values of the cosine function.
 - **Linear**
     - H2O LLM Studio applies a linear learning rate that decreases the learning rate linearly.
-
-### Min Learning Rate Ratio
-
-The minimum learning rate ratio determines the lowest learning rate that will be used during training as a fraction of the initial learning rate. This is particularly useful when using learning rate schedules like "Cosine" or "Linear" that decrease the learning rate over time.
-
-For example, if the initial learning rate is 0.001 and the min_learning_rate_ratio is set to 0.1, the learning rate will never drop below 0.0001 (0.001 * 0.1) during training.
-
-Setting this to a value greater than 0 can help prevent the learning rate from becoming too small, which might slow down training or cause the model to get stuck in local optima.
-
-- A value of 0.0 allows the learning rate to potentially reach zero by the end of training.
-- Typical values range from 0.01 to 0.1, depending on the specific task and model.
-
-This parameter cannot be set when using the **Constant** learning rate schedule.
 
 ### Warmup epochs
 
@@ -1681,10 +1232,6 @@ The scaling factor for the lora weights.
 
 The probability of applying dropout to the LoRA weights during training.
 
-### Use RS Lora
-
-When active, H2O LLM Studio uses [Rank-Stabilized LoRA](https://arxiv.org/abs/2312.03732) which sets the LoRA adapter scaling factor to lora_alpha/math.sqrt(lora_r). The creators suggest that this works especially better for very large ranks. Otherwise, it will use the original default value of lora_alpha/lora_r.
-
 ### Lora target modules
 
 The modules in the model to apply the LoRA approximation to. Defaults to all linear layers.
@@ -1702,13 +1249,11 @@ Specifies how H2O LLM Studio should save the model checkpoints.
 When set to **Last** it will always save the last checkpoint, this is the recommended setting.
 
 When set to **Best** it saves the model weights for the epoch exhibiting the best validation metric.
-
 - This setting should be turned on with care as it has the potential to lead to overfitting of the validation data. 
 - The default goal should be to attempt to tune models so that the last epoch is the best epoch.  
 - Suppose an evident decline for later epochs is observed in logging. In that case, it is usually better to adjust hyperparameters, such as reducing the number of epochs or increasing regularization, instead of turning this setting on.
 
 When set to **Each evaluation epoch** it will save the model weights for each evaluation epoch. 
-
 - This can be useful for debugging and experimenting, but will consume more disk space.
 - Models uploaded to Hugging Face Hub will only contain the last checkpoint.
 - Local downloads will contain all checkpoints.
@@ -1767,23 +1312,15 @@ Defines the metric to evaluate the model's performance.
 We provide several metric options for evaluating the performance of your model. The options depend on the selected Problem Type:
 
 Causal Language Modeling, DPO Modeling, Sequence to Sequence Modeling
-
 - In addition to the BLEU and the Perplexity score, we offer GPT metrics that utilize the OpenAI API to determine whether
 the predicted answer is more favorable than the ground truth answer.
-
 - To use these metrics, you can either export your OpenAI API key as an environment variable before starting LLM Studio,
 or you can specify it in the Settings Menu within the UI.
 
 Causal Classification Modeling
-
 - AUC: Compute Area Under the Receiver Operating Characteristic Curve (ROC AUC).
 - Accuracy: Compute the accuracy of the model.
 - LogLoss: Compute the log loss of the model.
-
-Causal Regression Modeling
-
-- MSE: Compute Mean Squared Error of the model.
-- MAE: Compute Mean Absolute Error of the model.
 
 ### Metric GPT model
 
@@ -1869,9 +1406,9 @@ Note that traversing the autograd graph introduces extra overheads, so applicati
 
 Trust remote code. This can be necessary for some models that use code which is not (yet) part of the `transformers` package. Should always be checked with this option being switched **Off** first.
 
-### Hugging Face branch
+### Huggingface branch
 
-The **Hugging Face Branch** defines which branch to use in a Hugging Face repository. The default value is "main".
+The **Huggingface Branch** defines which branch to use in a Huggingface repository. The default value is "main".
 
 ### Number of workers
 
@@ -1879,51 +1416,30 @@ Defines the number of workers H2O LLM Studio uses for the *DataLoader*. In other
 
 ### Seed
 
-Defines the random seed value that H2O LLM Studio uses during model training. It defaults to -1, an arbitrary value. When the value is modified (not -1), the random seed allows results to be reproducible---defining a seed aids in obtaining predictable and repeatable results every time. Otherwise, not modifying the default seed value (-1) leads to random numbers at every invocation.
+Defines the random seed value that H2O LLM Studio uses during model training. It defaults to -1, an arbitrary value. When the value is modified (not -1), the random seed allows results to be reproducible—defining a seed aids in obtaining predictable and repeatable results every time. Otherwise, not modifying the default seed value (-1) leads to random numbers at every invocation.
 
 ## Logging settings
-
-### Log step size
-
-Specifies the interval for logging during training. Two options are available:
-
-- **Absolute**: The default setting. Uses the total number of training samples processed as the x-axis for logging.
-- **Relative**: Uses the proportion of training data seen so far as the x-axis for logging.
-
-### Log all ranks
-
-If used, the local logging will include the output of all ranks (DDP mode).
 
 ### Logger
 
 Defines the logger type that H2O LLM Studio uses for model training
 
 Options
-
 - **None**
     - H2O LLM Studio does not use any logger.
 - **Neptune**
-    - H2O LLM Studio uses Neptune as a logger to track the experiment. To use Neptune, you must specify a **Neptune API token** in the settings or as a `NEPTUNE_API_TOKEN` environment variable and a **Neptune project**.
-- **W&B**
-    - H2O LLM Studio uses W&B as a logger to track the experiment. To use W&B, you must specify a **W&B API key** in the settings or as a `WANDB_API_KEY` environment variable and a **W&B project** and **W&B entity**.
+    - H2O LLM Studio uses Neptune as a logger to track the experiment. To use Neptune, you must specify a **Neptune API token** and a **Neptune project**.
 
 ### Neptune project
 
 Defines the <a href="https://neptune.ai/" target="_blank" >Neptune</a> project to access if you selected Neptune in the **Logger** setting.
-
-### W&B project
-
-This is the name of the project in your W&B account.
-
-### W&B entity
-
-This is the name of the entity (user name or organization name) in your W&B account. If you are using W&B as a logger, you will need to set this.
 
 \newpage
 
 ---
 description: This page highlights the steps needed to create an experiment in H2O LLM Studio.
 ---
+
 
 # Create an experiment
 
@@ -1938,7 +1454,6 @@ Follow the relevant steps below to create an experiment in H2O LLM Studio.
 4. Provide a meaningful **Experiment name**.
 
 5. Define the parameters. The most important parameters are:
-
     - **LLM Backbone**: This parameter determines the LLM architecture to use. It is the foundation model that you continue training. H2O LLM Studio has a predefined list of recommended foundation models available in the dropdown list. You can also type in the name of a [Hugging Face model](https://huggingface.co/models) that is not in the list, for example: `h2oai/h2o-danube2-1.8b-sft` or the path of a local folder that has the model you would like to fine-tune.
     - **Mask Prompt Labels**: This option controls whether to mask the prompt labels during training and only train on the loss of the answer.
     - Hyperparameters such as **Learning rate**, **Batch size**, and number of epochs determine the training process. You can refer to the tooltips that are shown next to each hyperparameter in the GUI to learn more about them.
@@ -1946,7 +1461,7 @@ Follow the relevant steps below to create an experiment in H2O LLM Studio.
 
     H2O LLM Studio provides several metric options for evaluating the performance of your model. In addition to the BLEU score, H2O LLM Studio also offers the GPT3.5 and GPT4 metrics that utilize the OpenAI API to determine whether the predicted answer is more favorable than the ground truth answer. To use these metrics, you can either export your OpenAI API key as an environment variable before starting LLM Studio, or you can specify it in the **Settings** menu within the UI.
 
-**Note:**
+    - **Note:**
     H2O LLM Studio provides an overview of all the parameters you need to specify for your experiment. The default settings are suitable when you first start an experiment. To learn more about the parameters, see [Experiment settings](#experiment-settings).
     
 
@@ -1960,41 +1475,36 @@ The steps below provide an example of how to to run an experiment on [OASST](htt
 
 1. Get the training dataset (`train_full.csv`), [OpenAssistant Conversations Dataset OASST2](https://www.kaggle.com/code/philippsinger/openassistant-conversations-dataset-oasst2?scriptVersionId=160485459) and place it into the `examples/data_oasst2` folder; or download it directly using the [Kaggle API](https://www.kaggle.com/docs/api) command given below.
 
- ```bash
- kaggle kernels output philippsinger/openassistant-conversations-dataset-oasst2 -p examples/data_oasst2/
- ```
+    ```bash
+    kaggle kernels output philippsinger/openassistant-conversations-dataset-oasst2 -p examples/data_oasst2/
+    ```
 
 2. Go into the interactive shell or open a new terminal window. Install the dependencies first, if you have not installed them already. 
 
- ```bash
- make setup  # installs all dependencies
- make shell
- ```
+    ```bash
+    make setup  # installs all dependencies
+    make shell
+    ```
 
 3. Run the following command to run the experiment. 
 
- ```bash
- python llm_studio/train.py -Y examples/example_oasst2.yaml
- ```
+    ```bash
+    python train.py -Y examples/example_oasst2.yaml
+    ```
 
 After the experiment is completed, you can find all output artifacts in the `examples/output_oasst2` folder.
 You can then use the `prompt.py` script to chat with your model.
 
 ```bash
-python llm_studio/prompt.py -e examples/output_oasst2
+python prompt.py -e examples/output_oasst2
 ```
-
-4. To publish the model to Hugging Face, use the following command:
-
- ```bash
- python llm_studio/publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_key} -u {user_id} -m {model_name} -s {safe_serialization}
- ```
 
 \newpage
 
 ---
 description: You can view, rename, stop, or delete your experiments once you launch them. You can also create a new experiment based on an experiment you have already launched.
 ---
+
 
 # View and manage experiments
 
@@ -2045,7 +1555,7 @@ Once you click the name of the experiment, you will see the following tabs that 
 
 - **Chat** : This tab provides a unique opportunity to interact with your trained model and get instant feedback on its performance. The **Chat** tab becomes available after the training is completed and can be used to evaluate how well your model performs in a conversational setting. 
 
-**Note:**
+ - **Note:**
  You can use the **Chat** feature only when there are no other experiments running. The chatbot is unavailable if the GPU is occupied by another experiment.
  
 
@@ -2097,8 +1607,8 @@ Follow the relevant steps below to compare experiments in H2O LLM Studio.
 
     The **Charts** tab visually represents the comparison of train/validation loss, metrics, and learning rate of selected experiments. The **Config** tab compares the configuration settings of selected experiments.  
 
-**Note:**
-In addition, H2O LLM Studio also integrates with [Neptune](https://neptune.ai/) and [W&B](https://wandb.ai/), two powerful experiment tracking platforms. By enabling Neptune or W&B logging when starting an experiment, you can easily track and visualize all aspects of your experiment in real time. This includes model performance, hyperparameter tuning, and other relevant metrics.
+- **Note:**
+In addition, H2O LLM Studio also integrates with [Neptune](https://neptune.ai/), a powerful experiment tracking platform. By enabling Neptune logging when starting an experiment, you can easily track and visualize all aspects of your experiment in real time. This includes model performance, hyperparameter tuning, and other relevant metrics.
 
 
 \newpage
@@ -2110,7 +1620,7 @@ description: If you are ready to share your trained model with a broader communi
 
 If you are ready to share your trained model with a broader community, H2O LLM Studio allows you to export the fine-tuned model to [Hugging Face](https://huggingface.co/) with a single click.
 
-**Note:**
+- **Note:**
 Before publishing your model to the Hugging Face Hub, you need to have an API key with write access. To obtain an API token with write access, follow the [instructions provided by Hugging Face](https://huggingface.co/docs/hub/security-tokens), which involve creating an account, logging in, and generating an access token with the appropriate permission.
 
 
@@ -2124,7 +1634,7 @@ To publish a trained model to Hugging Face Hub:
 
 4. Enter the **Account name** on Hugging Face to push the model to a particular account. Leaving it empty will push it to the default user account.
 
-5. Enter the **Hugging Face API** Key with write access.
+5. Enter the **Huggingface API** Key with write access.
 
 6. Click **Export**.
 
@@ -2167,13 +1677,44 @@ You can enter any question for the model and change the parameters to get differ
 
 \newpage
 
+# Evaluate model using an AI judge
+
+H2O LLM Studio provides the option to use an AI Judge like ChatGPT or a local LLM deployment to evaluate a fine-tuned model. 
+
+Follow the instructions below to specify a local LLM to evaluate the responses of the fine-tuned model.
+
+1. Have an endpoint running of the local LLM deployment, which supports the OpenAI API format; specifically the [Chat Completions API](https://platform.openai.com/docs/guides/text-generation/chat-completions-api).
+
+2. Start the H2O LLM Studio server with the following environment variable that points to the endpoint. 
+    ```
+    OPENAI_API_BASE="http://111.111.111.111:8000/v1"
+    ```
+
+3. Once H2O LLM Studio is up and running, click **Settings** on the left navigation panel to validate that the endpoint is being used correctly. The **Use OpenAI API on Azure** setting must be set to Off, and the environment variable that was set above should be the **OpenAI API Endpoint** value as shown below. 
+    ![](set-endpoint.png)
+
+    - **Note:** that changing the value of this field here on the GUI has no effect. This is only for testing the correct setting of the environment variable.
+    
+
+4. Run an experiment using `GPT` as the **Metric** and the relevant model name available at your endpoint as the **Metric Gpt Model**.
+    
+    ![](set-metric-model.png)
+
+5. Validate that it is working as intended by checking the logs. Calls to the LLM judge should now be directed to your own LLM endpoint. 
+    
+    ![](local-llm-judge-logs.png)
+
+\newpage
+
 ---
 description: Once the model has been fine-tuned using H2O LLM Studio, you can then use h2oGPT to query, summarize, and chat with your model.
 ---
 
+
+
 # Import a model to h2oGPT
 
-Once the model has been fine-tuned using H2O LLM Studio, you can then use [h2oGPT](#README) to query, summarize, and chat with your model. 
+Once the model has been fine-tuned using H2O LLM Studio, you can then use [h2oGPT](https://github.com/h2oai/h2ogpt/blob/main/README.md) to query, summarize, and chat with your model. 
 
 The most common method to get the model from H2O LLM Studio over to h2oGPT, is to import it into h2oGPT via HuggingFace. However, if your data is sensitive, you can also choose to download the model locally to your machine, and then import it directly into h2oGPT. 
 
@@ -2186,7 +1727,7 @@ You can use any of the following methods:
 
 ## Steps
 
-1. [Publish the model to HuggingFace](#export-trained-model) or [download the model locally](#download-a-model). 
+1. [Publish the model to HuggingFace](#publish-model-to-huggingface) or [download the model locally](#download-a-model). 
 
 2. If you opt to download the model, make sure you extract the downloaded .zip file. 
 
@@ -2195,7 +1736,7 @@ You can use any of the following methods:
     python generate.py --base_model=[link_or_path_to_folder]
     ```
 
-    **Examples:**
+## Examples:
     
 **From HuggingFace**
 
@@ -2221,45 +1762,16 @@ python generate.py --base_model=TheBloke/zephyr-7B-beta-AWQ
 
     
 
-**Note:**
-For more information, see the [h2oGPT documentation](#adding-models). 
+- **Note:**
+For more information, see the [h2oGPT documentation](https://github.com/h2oai/h2ogpt/blob/main/docs/FAQ.md#adding-models). 
 
-
-\newpage
-
-# Evaluate model using an AI judge
-
-H2O LLM Studio provides the option to use an AI Judge like ChatGPT or a local LLM deployment to evaluate a fine-tuned model. 
-
-Follow the instructions below to specify a local LLM to evaluate the responses of the fine-tuned model.
-
-1. Have an endpoint running of the local LLM deployment, which supports the OpenAI API format; specifically the [Chat Completions API](https://platform.openai.com/docs/guides/text-generation/chat-completions-api).
-
-2. Start the H2O LLM Studio server with the following environment variable that points to the endpoint. 
-    ```
-    OPENAI_API_BASE="http://111.111.111.111:8000/v1"
-    ```
-
-3. Once H2O LLM Studio is up and running, click **Settings** on the left navigation panel to validate that the endpoint is being used correctly. The **Use OpenAI API on Azure** setting must be set to Off, and the environment variable that was set above should be the **OpenAI API Endpoint** value as shown below. 
-
-    ![](set-endpoint.png)
-
-**Note:** that changing the value of this field here on the GUI has no effect. This is only for testing the correct setting of the environment variable.
-    
-
-4. Run an experiment using `GPT` as the **Metric** and the relevant model name available at your endpoint as the **Metric Gpt Model**.
-
-    ![](set-metric-model.png)
-
-5. Validate that it is working as intended by checking the logs. Calls to the LLM judge should now be directed to your own LLM endpoint. 
-
-    ![](local-llm-judge-logs.png)
 
 \newpage
 
 ---
 description: Learn about frequently asked questions. 
 ---
+
 
 # FAQs
 
@@ -2270,20 +1782,20 @@ The sections below provide answers to frequently asked questions. If you have ad
 ### What are the general recommendations for using H2O LLM Studio?
 
 The recommendation is to always start with the default settings. From there, the parameters that tend to have the largest impact are: 
-
 - the LLM backbone
 - the number of epochs
 - the learning rate
 - the LoRA settings 
 
-**Note:**
-For more information on experiment settings, see [Experiment Settings](guide/experiments/experiment-settings). 
+- **Note:**
+For more information on experiment settings, see [Experiment Settings](#experiment-settings). 
 
 
-The parameters that have the largest impact on the amount of GPU memory being used are the [backbone dtype](guide/experiments/experiment-settings#backbone-dtype) and the [max length](guide/experiments/experiment-settings#max-length) (the length of the input sequence being used during model training). 
+The parameters that have the largest impact on the amount of GPU memory being used are the [backbone dtype](#backbone-dtype) and the [max length](#max-length) (the length of the input sequence being used during model training). 
 
-**Note:**
-For more information, see [this FAQ about GPU out-of-memory issues](#i-encounter-gpu-out-of-memory-issues-what-can-i-change-to-be-able-to-train-large-models). 
+- **Note:**
+For more information, see [this FAQ about GPU out-of-memory issues](#can-the-adapter-be-downloaded-after-fine-tuning-so-that-the-adapter-can-be-combined-with-the-backbone-llm-for-deployment). 
+
 
 
 While these parameters will change the behavior of the fine-tuned model, the change that will be most impactful is the actual data used for fine tuning. Having clean data and enough samples (i.e., atleast 1000 records) is imperative.
@@ -2304,13 +1816,13 @@ In order to apply human feedback to H2O LLM Studio, there is a problem type call
 
 ### How does H2O LLM Studio evaluate the fine-tuned model? 
 
-The valuation options are [BLEU](concepts#bleu), [Perplexity](concepts#perplexity), and an AI Judge. For more information about the traditional NLP similarity metrics, see [BLEU](concepts#bleu) and [Perplexity](concepts#perplexity) explained on the concepts page. You can also opt to use an AI judge by having an LLM model (ChatGPT or a local LLM) judge the performance of the response. This [sample prompt](https://github.com/h2oai/h2o-llmstudio/blob/main/prompts/general.txt) is an example of a prompt that is used to have the LLM evaluate the response.
+The valuation options are [BLEU](#bleu), [Perplexity](#perplexity), and an AI Judge. For more information about the traditional NLP similarity metrics, see [BLEU](#bleu) and [Perplexity](#perplexity) explained on the concepts page. You can also opt to use an AI judge by having an LLM model (ChatGPT or a local LLM) judge the performance of the response. This [sample prompt](https://github.com/h2oai/h2o-llmstudio/blob/main/prompts/general.txt) is an example of a prompt that is used to have the LLM evaluate the response.
 
 ----
 
 ### Can I use a different AI Judge than ChatGPT? 
 
-Yes. For instructions on how to use a local LLM to evaluate the fine-tuned model, see [Evaluate model using an AI judge](guide/experiments/evaluate-model-using-llm). 
+Yes. For instructions on how to use a local LLM to evaluate the fine-tuned model, see [Evaluate model using an AI judge](#evaluate-model-using-an-ai-judge). 
 
 ---
 
@@ -2345,7 +1857,7 @@ H2O LLM Studio provides the option to download only the LoRA adapter when a mode
 
 ###  I encounter GPU out-of-memory issues. What can I change to be able to train large models?
 
-There are various parameters that can be tuned while keeping a specific LLM backbone fixed. It is advised to choose 4bit/8bit precision as a backbone dtype to be able to train models >=7B on a consumer type GPU. [LORA](concepts#lora-low-rank-adaptation) should be enabled. Besides that there are the usual parameters such as batch size and maximum sequence length that can be decreased to save GPU memory (please ensure that your prompt+answer text is not truncated too much by checking the train data insights).
+There are various parameters that can be tuned while keeping a specific LLM backbone fixed. It is advised to choose 4bit/8bit precision as a backbone dtype to be able to train models >=7B on a consumer type GPU. [LORA](#lora-low-rank-adaptation) should be enabled. Besides that there are the usual parameters such as batch size and maximum sequence length that can be decreased to save GPU memory (please ensure that your prompt+answer text is not truncated too much by checking the train data insights).
 
 ---
 
@@ -2365,7 +1877,6 @@ We suggest using a batch size that just fills the RAM for maximum efficiency. Wh
 ### Where does H2O LLM Studio store its data?
 
 By default, H2O LLM Studio stores its data in two folders located in the root directory in the app. The folders are named `data` and `output`. Here is the breakdown of the data storage structure:
-
 - `data/dbs`: This folder contains the user database used within the app.
 - `data/user`: This folder is where uploaded datasets from the user are stored.
 - `output/user`: All experiments conducted in H2O LLM Studio are stored in this folder. For each experiment, a separate folder is created within the `output/user` directory, which contains all the relevant data associated with that particular experiment.
@@ -2427,17 +1938,86 @@ When it comes to hardware requirements, it is important to note that the primary
 
 ----
 
-### I am seeing an OS error during the H2O LLM Studio training session. What should I do? 
-
-If you recieve the following error, it is most likely because of network issues either with your own connection or on the Hugging Face Hub side. 
-
-```title="Error"
-OSError: Consistency check failed: file should be of size 4999819336 but has size 
-14099570832 ((...)ve/main/ model-00002-of-00003.safetensors). 
-```
-
-In most cases, rerunning the experiment will solve it as the download of the model weights will be re-initiated.
+\newpage
 
 ---
+description: H2O LLM Studio uses several key terms across its documentation. 
+---
+# Key terms 
+
+H2O LLM Studio uses several key terms across its documentation, and each, in turn, is explained in the sections below.
+
+## Prompt Engineering
+
+Prompt engineering involves crafting precise and effective input queries to guide language models in generating desired outputs or responses.
+
+## Agents
+
+Software entities or components that interact with data or perform tasks within a system.
+
+## ELO
+
+An algorithm or method used to assess and rank the performance or accuracy of language models based on their proficiency in understanding and processing textual data.
+
+## Vector Store
+
+A Vector Store stores numerical representations of text for fast access in language models.
+
+## Pre-training 
+
+The initial phase of training a machine learning model on a large dataset to learn general features before fine-tuning on a specific task.
+
+## Attention
+
+A mechanism that enables models to focus on specific parts of input data relevant to the task at hand, enhancing their understanding and performance.
+
+## Embedding
+
+Embedding refers to a mathematical representation of words or tokens in a numerical vector space, enabling machine learning models to understand and process language based on their context and relationships.
+
+## Language Model
+
+A language model is an AI system that understands and generates human language, predicting and generating text based on patterns and context within a given sequence of words.
+
+## Transformer
+
+A Transformer refers to a neural network architecture specifically designed for processing sequential data like text, using attention mechanisms to learn contextual relationships between words or tokens.
+
+## Encoders and Decoders
+
+Encoders and decoders are vital parts of sequence-to-sequence models used in natural language processing. Encoders process input data into a fixed-size representation, while decoders generate an output sequence based on that representation.
+
+##  Text generation
+
+Text generation is the process of creating written content, such as sentences or paragraphs, using machine learning or AI algorithms based on patterns learned from existing text data.
+
+## In-context learning
+
+In-context learning refers to the process where a machine learning model continuously improves and adapts by considering the context of new information within its existing knowledge, enhancing its accuracy and understanding over time.
+
+## Few-shot learning
+
+Few-shot learning refers to a machine learning technique where a model can learn from a very small amount of labeled data to generalize and make predictions accurately on new, unseen data.
+
+## Summarization
+
+Summarization is the process of condensing a larger piece of text into a shorter, coherent version while retaining its essential information.
+
+## Fine-tuning
+
+Fine-tuning refers to adjusting and optimizing a pre-trained machine learning model using specific data to enhance its performance for a particular task.
+
+## GPT
+
+GPT stands for "Generative Pre-trained Transformer," a type of language model that uses transformers to understand and generate human-like text based on vast amounts of training data.
+
+# GPU deployment
+
+GPU deployment is the utilization of graphics processing units (GPUs) to execute and accelerate the computations involved in deploying machine learning models, improving speed and efficiency in model inference or training.
+
+# Tokenization
+
+Tokenization is the process of breaking text into smaller units, typically words or phrases, to analyze or process them individually within a natural language processing system.
 
 \newpage
+
