@@ -18,8 +18,7 @@
   - [Recommended Install](#recommended-install)
   - [Virtual Environments](#virtual-environments)
 - [Run H2O LLM Studio GUI](#run-h2o-llm-studio-gui)
-- [Run H2O LLM Studio GUI using Docker from a nightly build](#run-h2o-llm-studio-gui-using-docker-from-a-nightly-build)
-- [Run H2O LLM Studio GUI by building your own Docker image](#run-h2o-llm-studio-gui-by-building-your-own-docker-image)
+- [Run H2O LLM Studio GUI using Docker](#run-h2o-llm-studio-gui-using-docker)
 - [Run H2O LLM Studio with command line interface (CLI)](#run-h2o-llm-studio-with-command-line-interface-cli)
 - [Troubleshooting](#troubleshooting)
 - [Data format and example data](#data-format-and-example-data)
@@ -166,17 +165,17 @@ wave run llm_studio.app
 
 If you are using the [nightly conda environment](#nightly-conda-virtual-environment), you can run ```make llmstudio-conda```.
 
-## Run H2O LLM Studio GUI using Docker from a nightly build
+## Run H2O LLM Studio GUI using Docker
 
 Install Docker first by following instructions from [NVIDIA Containers](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker). Make sure to have `nvidia-container-toolkit` installed on your machine as outlined in the instructions.
 
-H2O LLM Studio images are stored in the h2oai GCR vorvan container repository.
+H2O LLM Studio images are stored in the h2oai dockerhub container repository.
 
 ```bash
 mkdir -p `pwd`/llmstudio_mnt
 
 # make sure to pull latest image if you still have a prior version cached
-docker pull gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+docker pull h2oairelease/h2oai-llmstudio-app:latest
 
 # run the container
 docker run \
@@ -189,14 +188,14 @@ docker run \
     -p 10101:10101 \
     -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
     -v ~/.cache:/home/llmstudio/.cache \
-    gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+    h2oairelease/h2oai-llmstudio-app:latest
 ```
 
 Navigate to <http://localhost:10101/> (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
 
 (Note other helpful docker commands are `docker ps` and `docker kill`.)
 
-## Run H2O LLM Studio GUI by building your own Docker image
+If you prefer to build your own Docker image from source, follow the instructions below.
 
 ```bash
 docker build -t h2o-llmstudio .
@@ -215,8 +214,6 @@ docker run \
     -v ~/.cache:/home/llmstudio/.cache \
     h2o-llmstudio
 ```
-
-Alternatively, you can run H2O LLM Studio GUI by using our self-hosted Docker image available [here](https://console.cloud.google.com/gcr/images/vorvan/global/h2oai/h2o-llmstudio).
 
 ## Run H2O LLM Studio with command line interface (CLI)
 

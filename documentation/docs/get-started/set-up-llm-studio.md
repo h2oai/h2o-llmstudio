@@ -233,7 +233,7 @@ pipenv install package_name
 There are several ways to run H2O LLM Studio depending on your requirements.
 
 1. [Run H2O LLM Studio GUI](#run-h2o-llm-studio-gui)
-2. [Run using Docker from a nightly build](#run-using-docker-from-a-nightly-build)
+2. [Run using Docker](#run-using-docker)
 3. [Run by building your own Docker image](#run-by-building-your-own-docker-image)
 4. [Run with the CLI (command-line interface)](#run-with-command-line-interface-cli)
 
@@ -258,9 +258,9 @@ H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
 wave run llm_studio.app
 ```
 
-### Run using Docker from a nightly build
+### Run using Docker
 
-First, install Docker by following the instructions from the [NVIDIA Container Installation Guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker). H2O LLM Studio images are stored in the `h2oai GCR vorvan` container repository.
+First, install Docker by following the instructions from the [NVIDIA Container Installation Guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker). H2O LLM Studio images are stored in the `h2oai dockerhub` container repository.
 
 ```sh
 mkdir -p `pwd`/llmstudio_mnt
@@ -273,7 +273,7 @@ docker run \
     -p 10101:10101 \
     -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
     -v ~/.cache:/home/llmstudio/.cache \
-    gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+    h2oairelease/h2oai-llmstudio-app:latest
 ```
 
 Navigate to [http://localhost:10101/](http://localhost:10101/) (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models.
