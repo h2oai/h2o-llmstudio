@@ -22,6 +22,6 @@ module.exports = {
     "@material/card": "^14.0.0",
     "@mui/icons-material": "^5.16.14",
     "@mui/material": "^5.15.17",
-    "react-player": "^2.11.0",
+    "react-player": "^2.16.0",
   },
 };

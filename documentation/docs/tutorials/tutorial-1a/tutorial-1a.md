@@ -2,7 +2,7 @@
 description: This tutorial will guide you through the process of setting up and conducting an experiment for causal classification modeling using H2O LLM Studio. It covers how to import datasets, configure key experiment settings, and create a new experiment.
 ---
 
-<!-- import Icon from "@material-ui/core/Icon"; -->
+import Icon from "@mui/material/Icon"
 
 # Create an experiment for causal classification modeling
 
