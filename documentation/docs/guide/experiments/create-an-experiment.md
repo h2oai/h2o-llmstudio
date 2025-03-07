@@ -1,7 +1,8 @@
 ---
 description: This page highlights the steps needed to create an experiment in H2O LLM Studio.
 ---
-import Icon from "@material-ui/core/Icon";
+
+import Icon from "@mui/material/Icon"
 
 # Create an experiment
 

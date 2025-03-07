@@ -1,6 +1,7 @@
 ---
 description: All the settings needed for creating an experiment are explored in this page.
 ---
+
 import GeneralSettingsDataset from '../../tooltips/experiments/_dataset.mdx';
 import GeneralSettingsProblemType from '../../tooltips/experiments/_problem-type.mdx';
 import GSImportConfigFromYaml from '../../tooltips/experiments/_import-config-from-yaml.mdx';
@@ -9,6 +10,7 @@ import GSLLMBackbone from '../../tooltips/experiments/_llm-backbone.mdx';
 import DSTrainDataframe from '../../tooltips/experiments/_train-dataframe.mdx';
 import DSvalidationStrategy from '../../tooltips/experiments/_validation-strategy.mdx';
 import DSvalidationSize from '../../tooltips/experiments/_validation-size.mdx';
+import DSidColumn from '../../tooltips/experiments/_id-column.mdx'; 
 import DSdataSample from '../../tooltips/experiments/_data-sample.mdx';
 import DSpromptColumn from '../../tooltips/experiments/_prompt-column.mdx';
 import DSPromptColumnSeparator from '../../tooltips/experiments/_prompt-column-separator.mdx';
