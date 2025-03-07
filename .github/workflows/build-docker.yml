@@ -1,0 +1,27 @@
+name: Build the Docker Image
+
+on:
+  push:
+    branches: [ main, docker_test ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Clean Docker images
+        run: |-
+          echo "Available storage before cleaning:"
+          df -h
+          docker system prune --all --force
+          echo "Available storage:"
+          df -h
+          echo "Removing dotnet"
+          sudo rm -rf /usr/share/dotnet
+          echo "Available storage:"
+          df -h
+      - name: Docker Build Image
+        run: |-
+          docker build -t h2o-llmstudio .
