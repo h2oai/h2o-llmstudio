@@ -4,7 +4,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-from sqlitedict import SqliteDict
+from diskcache import Cache
 
 from llm_studio.src.utils.plot_utils import PLOT_ENCODINGS
 
@@ -103,46 +103,44 @@ class WandbLogger:
 
 class LocalLogger:
     def __init__(self, cfg: Any):
-        logging.getLogger("sqlitedict").setLevel(logging.ERROR)
+        logging.getLogger("diskcache").setLevel(logging.ERROR)
 
-        self.logs = os.path.join(cfg.output_directory, "charts.db")
+        self.logs = os.path.join(cfg.output_directory, "charts_cache")
 
         params = get_cfg(cfg)
 
-        with SqliteDict(self.logs) as logs:
-            logs["cfg"] = params
-            logs.commit()
+        with Cache(self.logs) as cache:
+            cache["cfg"] = params
 
     def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
-        if subset in PLOT_ENCODINGS:
-            with SqliteDict(self.logs) as logs:
-                if subset not in logs:
+       with Cache(self.logs) as cache:
+            if subset in PLOT_ENCODINGS:
+                if subset not in cache:
+
                     subset_dict = dict()
                 else:
-                    subset_dict = logs[subset]
+                    subset_dict = cache[subset]
                 subset_dict[name] = value
-                logs[subset] = subset_dict
-                logs.commit()
-            return
+                cache[subset] = subset_dict
+                return
 
-        # https://github.com/h2oai/wave/issues/447
-        if np.isnan(value):
-            value = None
-        else:
-            value = float(value)
-        with SqliteDict(self.logs) as logs:
-            if subset not in logs:
+            # https://github.com/h2oai/wave/issues/447
+            if np.isnan(value):
+                value = None
+            else:
+                value = float(value)
+
+            if subset not in cache:
                 subset_dict = dict()
             else:
-                subset_dict = logs[subset]
+                subset_dict = cache[subset]
             if name not in subset_dict:
                 subset_dict[name] = {"steps": [], "values": []}
 
             subset_dict[name]["steps"].append(step)
             subset_dict[name]["values"].append(value)
 
-            logs[subset] = subset_dict
-            logs.commit()
+            cache[subset] = subset_dict
 
 
 class DummyLogger:

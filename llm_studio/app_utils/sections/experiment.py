@@ -20,7 +20,7 @@ import torch
 import transformers
 import yaml
 from h2o_wave import Q, data, ui
-from sqlitedict import SqliteDict
+from diskcache import Cache
 
 from llm_studio.app_utils.config import default_cfg
 from llm_studio.app_utils.hugging_face_utils import (
@@ -925,7 +925,8 @@ async def experiment_rename_action(q, experiment, new_name):
         shutil.move(os.path.abspath(old_exp_path), os.path.abspath(exp_path))
 
         # update the experiment name in the DB
-        with SqliteDict(os.path.join(new_path, "charts.db")) as charts:
+        with Cache(os.path.join(new_path, "charts_cache")) as cache:
+            charts = {key: cache.get(key) for key in cache}
             for k1 in PLOT_ENCODINGS:
                 if k1 == "df":
                     # this is required to properly overwrite it
@@ -1004,8 +1005,8 @@ async def experiment_stop(q: Q, experiment_ids: List[int]) -> None:
 
 def load_charts(experiment_path):
     try:
-        with SqliteDict(os.path.join(experiment_path, "charts.db")) as charts:
-            charts = dict(charts)
+        with Cache(os.path.join(experiment_path, "charts_cache")) as cache:
+            charts = {key: cache.get(key) for key in cache}
     except Exception:
         charts = {}
         logger.warning("Too early, wait for the charts to appear")

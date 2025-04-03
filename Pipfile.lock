@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f5d58727adbcedf3fb447493db26b82ee0f31072f835b389650004e73ce4377a"
+            "sha256": "17a62acdb28c0155833e7c582ba04df0cabff3561ffdae059e01748a378adb77"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -743,6 +743,15 @@
             "index": "pypi",
             "markers": "python_version >= '3.8'",
             "version": "==0.3.8"
+        },
+        "diskcache": {
+            "hashes": [
+                "sha256:2c3a3fa2743d8535d832ec61c2054a1641f41775aa7c556758a109941e33e4fc",
+                "sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3'",
+            "version": "==5.6.3"
         },
         "distro": {
             "hashes": [
@@ -3415,13 +3424,6 @@
             "index": "pypi",
             "markers": "python_version >= '3.7'",
             "version": "==2.0.40"
-        },
-        "sqlitedict": {
-            "hashes": [
-                "sha256:03d9cfb96d602996f1d4c2db2856f1224b96a9c431bdd16e78032a72940f9e8c"
-            ],
-            "index": "pypi",
-            "version": "==2.1.0"
         },
         "starlette": {
             "hashes": [
