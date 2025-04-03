@@ -24,18 +24,18 @@ endif
 
 .PHONY: pipenv
 pipenv:
-	$(PIP) install pip==24.2
-	$(PIP) install pipenv==2024.0.1
+	$(PIP) install pip==25.0.1
+	$(PIP) install pipenv==2024.4.1
 
 .PHONY: setup
 setup: pipenv
 	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
-	-$(PIPENV_PIP) install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir
+	-$(PIPENV_PIP) install flash-attn==2.7.4.post1 --no-build-isolation --upgrade --no-cache-dir
 
 .PHONY: setup-dev
 setup-dev: pipenv
 	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
-	-$(PIPENV_PIP) install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir
+	-$(PIPENV_PIP) install flash-attn==2.7.4.post1 --no-build-isolation --upgrade --no-cache-dir
 	$(PIPENV) run playwright install
 
 .PHONY: setup-no-flash
@@ -53,7 +53,7 @@ setup-conda:
 		conda install -c nvidia/label/cuda-12.4.0 cuda-toolkit -y; \
 		conda install pytorch pytorch-cuda=12.4 -c pytorch-nightly -c nvidia -y; \
 		grep -v "nvidia" requirements.txt | grep -v "torch" | python -m pip install -r /dev/stdin; \
-		python -m pip install flash-attn==2.6.1 --no-build-isolation --upgrade --no-cache-dir; \
+		python -m pip install flash-attn==2.7.4.post1 --no-build-isolation --upgrade --no-cache-dir; \
 	'
 
 .PHONY: setup-ui
