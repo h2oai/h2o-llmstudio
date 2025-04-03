@@ -54,16 +54,11 @@ class NeptuneLogger:
         import neptune as neptune
         from neptune.utils import stringify_unsupported
 
-        if cfg.logging._neptune_debug:
-            mode = "debug"
-        else:
-            mode = "async"
-
         self.logger = neptune.init_run(
             project=cfg.logging.neptune_project,
             api_token=os.getenv("NEPTUNE_API_TOKEN", ""),
             name=cfg.experiment_name,
-            mode=mode,
+            mode="debug" if cfg.logging._neptune_debug else "async",
             capture_stdout=False,
             capture_stderr=False,
             source_files=[],
