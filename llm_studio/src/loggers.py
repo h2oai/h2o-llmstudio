@@ -113,7 +113,7 @@ class LocalLogger:
             cache["cfg"] = params
 
     def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
-       with Cache(self.logs) as cache:
+        with Cache(self.logs) as cache:
             if subset in PLOT_ENCODINGS:
                 if subset not in cache:
 
