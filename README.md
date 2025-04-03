@@ -93,13 +93,13 @@ curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 If deploying on a 'bare metal' machine running Ubuntu, one may need to install the required Nvidia drivers and CUDA. The following commands show how to retrieve the latest drivers for a machine running Ubuntu 20.04 as an example. One can update the following based on their OS.
 
 ```bash
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
-sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
-wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda-repo-ubuntu2004-12-1-local_12.1.0-530.30.02-1_amd64.deb
-sudo dpkg -i cuda-repo-ubuntu2004-12-1-local_12.1.0-530.30.02-1_amd64.deb
-sudo cp /var/cuda-repo-ubuntu2004-12-1-local/cuda-*-keyring.gpg /usr/share/keyrings/
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
+sudo mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda-repo-ubuntu2204-12-4-local_12.4.0-550.54.14-1_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu2204-12-4-local_12.4.0-550.54.14-1_amd64.deb
+sudo cp /var/cuda-repo-ubuntu2204-12-4-local/cuda-*-keyring.gpg /usr/share/keyrings/
 sudo apt-get update
-sudo apt-get -y install cuda
+sudo apt-get -y install cuda-toolkit-12-4
 ```
 
 alternatively, one can install cudatoolkits in a conda environment:
@@ -107,7 +107,7 @@ alternatively, one can install cudatoolkits in a conda environment:
 ```bash
 conda create -n llmstudio python=3.10
 conda activate llmstudio
-conda install -c "nvidia/label/cuda-12.1.0" cuda-toolkit
+conda install -c "nvidia/label/cuda-12.4.0" cuda-toolkit
 ```
 
 ### Virtual environments
@@ -140,7 +140,7 @@ If you wish to use another virtual environment, you can also install the depende
 
 ```bash
 pip install -r requirements.txt
-pip install flash-attn==2.6.1 --no-build-isolation  # optional for Flash Attention 2
+pip install flash-attn==2.7.4.post1 --no-build-isolation  # optional for Flash Attention 2
 ```
 
 ## Run H2O LLM Studio GUI

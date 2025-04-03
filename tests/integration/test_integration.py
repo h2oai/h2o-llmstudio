@@ -190,7 +190,7 @@ def run_oasst(tmp_path, config_name, metric):
     assert os.path.exists(cfg["output_directory"])
     status = get_experiment_status(path=cfg["output_directory"])
     assert status == "finished"
-    assert os.path.exists(os.path.join(cfg["output_directory"], "charts.db"))
+    assert os.path.exists(os.path.join(cfg["output_directory"], "charts_cache"))
     assert os.path.exists(os.path.join(cfg["output_directory"], "checkpoint.pth"))
     assert os.path.exists(os.path.join(cfg["output_directory"], "logs.log"))
     assert os.path.exists(

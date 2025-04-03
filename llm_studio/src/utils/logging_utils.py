@@ -44,8 +44,8 @@ def initialize_logging(cfg: Optional[Any] = None):
         format = "%(asctime)s - %(levelname)s: %(message)s"
     formatter = logging.Formatter(format)
 
-    # Suppress sqlitedict logs (charts.db)
-    logging.getLogger("sqlitedict").setLevel(logging.ERROR)
+    # Suppress diskcache logs (charts_cache)
+    logging.getLogger("diskcache").setLevel(logging.ERROR)
 
     actual_logger = logging.root
     actual_logger.setLevel(logging.INFO)

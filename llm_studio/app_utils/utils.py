@@ -31,9 +31,9 @@ from azure.storage.filedatalake import DataLakeServiceClient
 from boto3.session import Session
 from botocore.handlers import disable_signing
 from datasets import load_dataset
+from diskcache import Cache
 from h2o_wave import Choice, Q, ui
 from pandas.core.frame import DataFrame
-from sqlitedict import SqliteDict
 
 from llm_studio.app_utils.db import Experiment
 from llm_studio.python_configs.base import DefaultConfigProblemBase
@@ -1643,9 +1643,10 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
                 metric = ""
                 loss_function = ""
 
-        charts_db_path = os.path.join(row.path, "charts.db")
+        charts_db_path = os.path.join(row.path, "charts_cache")
         if os.path.exists(charts_db_path):
-            with SqliteDict(charts_db_path) as logs:
+            with Cache(charts_db_path) as cache:
+                logs = {key: cache.get(key) for key in cache}
                 if "internal" in logs.keys():
                     if "current_step" in logs["internal"].keys():
                         curr_step = int(logs["internal"]["current_step"]["values"][-1])
@@ -1702,7 +1703,7 @@ def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
                     else:
                         eta = "N/A"
                 else:
-                    # Default values for when charts.db is not available
+                    # Default values for when charts_cache is not available
                     # (experiment deleted manually)
                     eta = "N/A"
                     total_steps = 1
