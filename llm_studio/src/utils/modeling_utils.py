@@ -46,15 +46,15 @@ from llm_studio.src.utils.utils import save_pickle
 logger = logging.getLogger(__name__)
 
 
-def unwrap_model(model: torch.nn.Module) -> torch.nn.Module:
+def unwrap_model(model):
     """
     Unwraps a model from its parallel wrapper (DistributedDataParallel or DataParallel).
 
     Args:
-        model (torch.nn.Module): The model to unwrap.
+        model: The model to unwrap.
 
     Returns:
-        torch.nn.Module: The unwrapped model.
+        The unwrapped model.
     """
     options = (torch.nn.parallel.DistributedDataParallel, torch.nn.DataParallel)
 
@@ -107,7 +107,9 @@ def check_disk_space(model: torch.nn.Module, path: str) -> None:
 
 # TODO: currently not saving optimizer
 def save_checkpoint(
-    model: torch.nn.Module, path: str, cfg: DefaultConfigProblemBase
+    model,
+    path: str,
+    cfg: DefaultConfigProblemBase,
 ) -> None:
     """
     Saves a model checkpoint.
@@ -558,7 +560,7 @@ def contains_nan(output: Dict):
 
 def run_inference(
     cfg: DefaultConfigProblemBase,
-    model: torch.nn.Module,
+    model,
     dataloader,
     mode: str,
 ) -> Dict[str, list]:
@@ -736,7 +738,9 @@ def update_backbone_config(config: Any, cfg: DefaultConfigProblemBase):
     return config
 
 
-def set_generation_config(backbone: torch.nn.Module, cfg_prediction: Any):
+def set_generation_config(
+    backbone: "transformers.PreTrainedModel", cfg_prediction: Any
+):
     backbone.generation_config.min_new_tokens = cfg_prediction.min_length_inference
     backbone.generation_config.max_new_tokens = cfg_prediction.max_length_inference
     backbone.generation_config.max_time = (
