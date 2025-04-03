@@ -937,7 +937,6 @@ async def experiment_rename_action(q, experiment, new_name):
                         )
                         df[k2] = v2.replace(old_name, new_name)
                     charts[k1] = df
-                    charts.commit()
 
         for config_file in ["cfg.yaml"]:
             config_path = os.path.join(exp_path, config_file)
