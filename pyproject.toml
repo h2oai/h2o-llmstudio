@@ -1,6 +1,6 @@
 [project]
 name = "h2o-llmstudio"
-version = "1.14.1"
+version = "1.15.0-dev"
 readme = "README.md"
 license = {file = "LICENSE"}
 
