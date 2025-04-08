@@ -173,6 +173,7 @@ H2O LLM Studio images are stored in the h2oai dockerhub container repository.
 
 ```bash
 mkdir -p `pwd`/llmstudio_mnt
+chmod 777 `pwd`/llmstudio_mnt
 
 # make sure to pull latest image if you still have a prior version cached
 docker pull h2oairelease/h2oai-llmstudio-app:latest
