@@ -5,6 +5,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 # git is needed for flash-attention
 # curl is needed to download get-pip.py
 # software-properties-common is needed for add-apt-repository
+# python3.10-dev is needed for triton as it includes the Python.h header file
 # We get python 3.10 from the deadsnakes PPA to have the latest version
 # We install pip from the get-pip.py script to have the latest version
 RUN apt-get update \
@@ -17,6 +18,7 @@ RUN apt-get update \
     && apt-get update \
     && apt install -y \
     python3.10 \
+    python3.10-dev \
     python3.10-distutils \
     && rm -rf /var/lib/apt/lists/*
 
