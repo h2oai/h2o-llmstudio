@@ -45,9 +45,9 @@
 
 For questions, discussing, or just hanging out, come and join our [Discord](https://discord.gg/WKhYMWcVbq)!
 
-Use cloud-based runpod.io instance to run the H2O LLM Studio GUI.
+Use cloud-based runpod.io instance to run the latest version of H2O LLM Studio with GUI.
 
-[![open_in_runpod](https://github.com/user-attachments/assets/0dffd945-0be0-4ef0-85cd-4e6f260d4e6c)](https://www.runpod.io/console/deploy?template=3oh3easrlu)
+[![open_in_runpod](https://github.com/user-attachments/assets/0dffd945-0be0-4ef0-85cd-4e6f260d4e6c)](https://www.runpod.io/console/deploy?template=vf9ppiy56z)
 
 Using CLI for fine-tuning LLMs:
 
