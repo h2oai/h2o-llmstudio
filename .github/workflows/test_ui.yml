@@ -10,6 +10,12 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.7.20"
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:

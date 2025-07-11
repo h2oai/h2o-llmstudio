@@ -15,11 +15,11 @@ The framework is designed to be flexible, capable of running on local and remote
 To set up and run UI tests locally, follow these steps:
 
 ```bash
-export LOCAL_LOGIN=True
-export PYTEST_BASE_URL=localhost:10101
 make setup-dev
 make llmstudio
-make setup-ui
+# and in a separate terminal
+export LOCAL_LOGIN=True
+export PYTEST_BASE_URL=localhost:10101
 make test-ui-headed
 ```
 
