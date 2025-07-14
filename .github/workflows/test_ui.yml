@@ -5,6 +5,10 @@ on:
     branches: [ main ]
   pull_request:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   start-runner:
     name: Start self-hosted EC2 runner
