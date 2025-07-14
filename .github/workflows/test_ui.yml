@@ -31,10 +31,10 @@ jobs:
         with:
           mode: start
           github-token: ${{ secrets.GH_RUNNER_PAT }}
-          ec2-image-id: ami-088845a487c6b6be9
-          ec2-instance-type: g5.2xlarge
-          subnet-id: subnet-0fbe097cc0d42f1b2
-          security-group-id: sg-05ac6aced4de59aa0
+          ec2-image-id: ${{ secrets.GH_RUNNER_EC2_IMAGE_ID }}
+          ec2-instance-type: ${{ secrets.GH_RUNNER_EC2_INSTANCE_TYPE }}
+          subnet-id: ${{ secrets.GH_RUNNER_SUBNET_ID }}
+          security-group-id: ${{ secrets.GH_RUNNER_SECURITY_GROUP_ID }}
           aws-resource-tags: >
             [
               {"Key": "h2o/gitHub-repository", "Value": "${{ github.repository }}"},
