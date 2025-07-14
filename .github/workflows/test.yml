@@ -6,6 +6,40 @@ on:
   pull_request:
 
 jobs:
+  start-runner:
+    name: Start self-hosted EC2 runner
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-session-name: h2o-llmstudio-ec2
+          role-to-assume: arn:aws:iam::870498644798:role/GitHub-OIDC-Role
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: machulav/ec2-github-runner@v2.3.8
+        with:
+          mode: start
+          github-token: ${{ secrets.GH_RUNNER_PAT }}
+          ec2-image-id: ami-088845a487c6b6be9
+          ec2-instance-type: g5.2xlarge
+          subnet-id: subnet-0fbe097cc0d42f1b2
+          security-group-id: sg-05ac6aced4de59aa0
+          aws-resource-tags: >
+            [
+              {"Key": "h2o/gitHub-repository", "Value": "${{ github.repository }}"},
+              {"Key": "h2o/owner", "Value": "pascal.pfeiffer@h2o.ai"},
+              {"Key": "h2o/environment", "Value": "dev"},
+              {"Key": "h2o/scheduling", "Value": "self-managed"},
+              {"Key": "h2o/github-workflow", "Value": "${{ github.workflow }}"}
+            ]
+
   test:
     runs-on: self-hosted
     steps:
@@ -23,3 +57,23 @@ jobs:
         if: ${{ always() }}
         run: |
           rm -rf ${{ github.workspace }}/*
+
+  stop-runner:
+    name: Stop self-hosted EC2 runner
+    needs: [start-runner, test]
+    if: ${{ always() }} # Ensures runner is stopped even if tests fail or are cancelled
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials for EC2 Runner Management
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-session-name: h2o-llmstudio-ec2
+          role-to-assume: arn:aws:iam::870498644798:role/GitHub-OIDC-Role
+      - name: Stop EC2 runner
+        uses: machulav/ec2-github-runner@v2.3.8
+        with:
+          mode: stop
+          github-token: ${{ secrets.GH_RUNNER_PAT }}
+          label: ${{ needs.start-runner.outputs.label }}
+          ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
