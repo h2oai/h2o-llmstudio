@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest-8-cores
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python
