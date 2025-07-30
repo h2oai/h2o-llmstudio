@@ -515,7 +515,7 @@ soupsieve==2.7
     # via beautifulsoup4
 sqlalchemy==2.0.41
     # via h2o-llmstudio
-starlette==0.47.1
+starlette==0.47.2
     # via h2o-wave
 swagger-spec-validator==3.0.4
     # via
