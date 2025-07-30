@@ -12,7 +12,7 @@ aiofiles==24.1.0
     # via aioboto3
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.14
+aiohttp==3.12.15
     # via
     #   aiobotocore
     #   fsspec
@@ -41,9 +41,9 @@ azure-core==1.35.0
     # via
     #   azure-storage-blob
     #   azure-storage-file-datalake
-azure-storage-blob==12.25.1
+azure-storage-blob==12.26.0
     # via azure-storage-file-datalake
-azure-storage-file-datalake==12.20.0
+azure-storage-file-datalake==12.21.0
     # via h2o-llmstudio
 backports-tarfile==1.2.0
     # via jaraco-context
@@ -72,7 +72,7 @@ bravado==11.1.0
     # via neptune
 bravado-core==6.1.1
     # via bravado
-certifi==2025.7.9
+certifi==2025.7.14
     # via
     #   httpcore
     #   httpx
@@ -100,7 +100,7 @@ contourpy==1.3.2
     # via bokeh
 coolname==2.2.0
     # via h2o-llmstudio
-cramjam==2.10.0
+cramjam==2.11.0
     # via fastparquet
 cryptography==45.0.5
     # via
@@ -151,7 +151,7 @@ future==1.0.0
     # via neptune
 gitdb==4.0.12
     # via gitpython
-gitpython==3.1.44
+gitpython==3.1.45
     # via
     #   neptune
     #   wandb
@@ -171,7 +171,7 @@ h2o-cloud-discovery==3.1.0
     #   h2o-drive
 h2o-drive==3.0.0
     # via h2o-llmstudio
-h2o-wave==1.7.1
+h2o-wave==1.7.2
     # via h2o-llmstudio
 hf-transfer==0.1.9
     # via h2o-llmstudio
@@ -242,7 +242,7 @@ jsonpointer==3.0.0
     # via jsonschema
 jsonref==1.1.0
     # via bravado-core
-jsonschema==4.24.0
+jsonschema==4.25.0
     # via
     #   bravado-core
     #   swagger-spec-validator
@@ -252,6 +252,8 @@ kaggle==1.7.4.5
     # via h2o-llmstudio
 keyring==25.6.0
     # via h2o-llmstudio
+lark==1.2.2
+    # via rfc3987-syntax
 lxml==6.0.0
     # via sacrebleu
 markupsafe==3.0.2
@@ -276,7 +278,7 @@ multidict==6.6.3
     #   yarl
 multiprocess==0.70.16
     # via datasets
-narwhals==1.46.0
+narwhals==2.0.1
     # via bokeh
 neptune==1.14.0
     # via h2o-llmstudio
@@ -341,7 +343,7 @@ oauthlib==3.3.1
     # via
     #   neptune
     #   requests-oauthlib
-openai==1.95.0
+openai==1.97.1
     # via h2o-llmstudio
 packaging==25.0
     # via
@@ -389,7 +391,7 @@ psutil==7.0.0
     #   peft
 py-cpuinfo==9.0.0
     # via deepspeed
-pyarrow==20.0.0
+pyarrow==21.0.0
     # via
     #   datasets
     #   h2o-llmstudio
@@ -441,7 +443,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-regex==2024.11.6
+regex==2025.7.31
     # via
     #   sacrebleu
     #   tiktoken
@@ -465,13 +467,15 @@ rfc3339-validator==0.1.4
     # via jsonschema
 rfc3986-validator==0.1.1
     # via jsonschema
+rfc3987-syntax==1.1.0
+    # via jsonschema
 rpds-py==0.26.0
     # via
     #   jsonschema
     #   referencing
 runs==1.2.2
     # via editor
-s3transfer==0.13.0
+s3transfer==0.13.1
     # via boto3
 sacrebleu==2.5.1
     # via h2o-llmstudio
@@ -480,7 +484,7 @@ safetensors==0.5.3
     #   accelerate
     #   peft
     #   transformers
-scikit-learn==1.7.0
+scikit-learn==1.7.1
     # via h2o-llmstudio
 scipy==1.15.3
     # via scikit-learn
@@ -488,7 +492,7 @@ secretstorage==3.3.3
     # via keyring
 sentencepiece==0.2.0
     # via h2o-llmstudio
-sentry-sdk==2.32.0
+sentry-sdk==2.34.0
     # via wandb
 setuptools==80.9.0
     # via kaggle
@@ -513,9 +517,9 @@ sniffio==1.3.1
     #   openai
 soupsieve==2.7
     # via beautifulsoup4
-sqlalchemy==2.0.41
+sqlalchemy==2.0.42
     # via h2o-llmstudio
-starlette==0.47.1
+starlette==0.47.2
     # via h2o-wave
 swagger-spec-validator==3.0.4
     # via
@@ -533,7 +537,7 @@ threadpoolctl==3.6.0
     # via scikit-learn
 tiktoken==0.9.0
     # via h2o-llmstudio
-tokenizers==0.21.2
+tokenizers==0.21.4
     # via transformers
 toml==0.10.2
     # via h2o-llmstudio
