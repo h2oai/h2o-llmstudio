@@ -1,7 +1,6 @@
 SHELL := /bin/bash
 
-UV ?= $(HOME)/.local/bin/uv
-UVX ?= $(HOME)/.local/bin/uvx
+UV ?= uv
 RUN ?= $(UV) run
 PWD = $(shell pwd)
 DOCKER_IMAGE ?= gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
