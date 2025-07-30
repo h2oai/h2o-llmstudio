@@ -41,7 +41,7 @@ You can conduct UI testing for LLM-Studio on a remote machine using the followin
 
     ```bash
     export PYTEST_BASE_URL=<insert app url>
-    make setup-ui
+    make setup-dev
     make test-ui-headed
     ```
 

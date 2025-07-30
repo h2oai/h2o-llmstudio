@@ -109,7 +109,7 @@ test-unit: reports
     tests/* 2>&1 | tee reports/tests.log'
 
 .PHONY: test-ui
-test-ui: reports setup-ui
+test-ui: reports setup-dev
 	@bash -c 'set -o pipefail; \
 	$(PW_DEBUG) $(UV) run pytest \
 	-v \
@@ -121,7 +121,7 @@ test-ui: reports setup-ui
 	tests/ui/test.py 2>&1 | tee reports/tests_ui.log'
 
 .PHONY: test-ui-headed
-test-ui-headed: setup-ui
+test-ui-headed: setup-dev
 	$(PW_DEBUG) $(UV) run pytest \
 	-vvs \
 	-s \
@@ -132,7 +132,7 @@ test-ui-headed: setup-ui
 	tests/ui/test.py 2>&1 | tee reports/tests.log
 
 .PHONY: test-ui-github-actions  # Run UI tests in GitHub Actions. Starts the Wave server and runs the tests locally.
-test-ui-github-actions: reports setup-ui
+test-ui-github-actions: reports setup-dev
 	@echo "Starting the server..."
 	make llmstudio &
 	@echo "Server started in background."
