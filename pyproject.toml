@@ -98,6 +98,7 @@ exclude = [
     "dist/",
     "output/",
     "data/",
+    "tests/",
 ]
 
 [tool.ruff.format]
@@ -111,13 +112,13 @@ select = [
     "E",  # pycodestyle
     "W",  # pycodestyle
     "F",  # Pyflakes
-    "UP", # pyupgrade
-    "B",  # flake8-bugbear
-    "C4", # comprehensions
+    # "UP", # pyupgrade
+    # "B",  # flake8-bugbear
+    # "C4", # comprehensions
     # "SIM",  # flake8-simplify
     "I",   # isort
-    "ERA", # eradicate
-    "T20", # print
+    # "ERA", # eradicate
+    # "T20", # print
     # "PL",  # pylint
 ]
 

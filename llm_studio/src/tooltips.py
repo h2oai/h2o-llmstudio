@@ -1,7 +1,6 @@
 import glob
 import re
 from dataclasses import dataclass
-from typing import Dict
 
 tooltip_files = glob.glob("documentation/docs/tooltips/**/*.mdx", recursive=True)
 
@@ -117,7 +116,7 @@ class Tooltips:
             ValueError: If a tooltip file name does not start with an underscore.
             ValueError: If a duplicate tooltip name is encountered.
         """
-        self.tooltips: Dict[str, Tooltip] = {}
+        self.tooltips: dict[str, Tooltip] = {}
         for filename in tooltip_files:
             name = filename.split("/")[-1].split(".")[0]
             name = name.replace("-", "_")

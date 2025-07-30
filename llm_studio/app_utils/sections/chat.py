@@ -6,9 +6,8 @@ import numpy as np
 import torch
 from accelerate import dispatch_model, infer_auto_device_map
 from accelerate.utils import get_balanced_memory
-from h2o_wave import Q
+from h2o_wave import Q, ui
 from h2o_wave import data as chat_data
-from h2o_wave import ui
 
 from llm_studio.app_utils.utils import get_experiments, get_ui_elements_for_cfg, set_env
 from llm_studio.python_configs.base import DefaultConfigProblemBase

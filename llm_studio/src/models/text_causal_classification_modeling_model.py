@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from torch import nn
 from transformers import AutoModelForCausalLM
@@ -45,14 +45,14 @@ class Model(nn.Module):
 
     def forward(
         self,
-        batch: Dict,
+        batch: dict,
         padding: bool = True,
-    ) -> Dict:
+    ) -> dict:
         # disable cache if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:
             self.backbone.config.use_cache = False
 
-        outputs: Dict = {}
+        outputs: dict = {}
         mask_key = "prompt_attention_mask"
         pad_keys = [
             "prompt_input_ids",

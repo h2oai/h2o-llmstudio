@@ -1,7 +1,8 @@
 import logging
 import math
 import os
-from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Union, no_type_check
+from collections import defaultdict
+from typing import Any, no_type_check
 
 import networkx as nx
 import numpy as np
@@ -25,10 +26,10 @@ def read_dataframe(
     path: str,
     n_rows: int = -1,
     meta_only: bool = False,
-    non_missing_columns: Optional[List[str]] = None,
+    non_missing_columns: list[str] | None = None,
     verbose: bool = False,
     handling: str = "warn",
-    fill_columns: Optional[List[str]] = None,
+    fill_columns: list[str] | None = None,
     fill_value: Any = "",
     mode: str = "",
 ) -> pd.DataFrame:
@@ -122,7 +123,7 @@ def read_dataframe(
     return df
 
 
-def get_fill_columns(cfg: DefaultConfigProblemBase) -> List[str]:
+def get_fill_columns(cfg: DefaultConfigProblemBase) -> list[str]:
     if hasattr(cfg.dataset, "prompt_column"):
         if isinstance(cfg.dataset.prompt_column, (list, tuple)):
             return list(cfg.dataset.prompt_column)
@@ -249,7 +250,7 @@ def load_mt_bench_data(cfg: DefaultConfigProblemBase) -> pd.DataFrame:
     return df
 
 
-def get_data(cfg: DefaultConfigProblemBase) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def get_data(cfg: DefaultConfigProblemBase) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Prepares train and validation DataFrames.
 
     Args:
@@ -295,7 +296,7 @@ def merge_on_common_items(lst):
     return [list(c) for c in nx.connected_components(G)]
 
 
-def load_train_valid_data(cfg) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def load_train_valid_data(cfg) -> tuple[pd.DataFrame, pd.DataFrame]:
     if cfg.dataset.validation_strategy == "custom":
         if cfg.dataset.validation_dataframe == "None":
             raise LLMDataException(
@@ -501,8 +502,8 @@ def get_val_dataloader(val_ds: Any, cfg: DefaultConfigProblemBase):
 
 @no_type_check
 def cat_batches(
-    data: DefaultDict[str, Union[torch.Tensor, np.ndarray]]
-) -> DefaultDict[str, Union[torch.Tensor, np.ndarray]]:
+    data: defaultdict[str, torch.Tensor | np.ndarray],
+) -> defaultdict[str, torch.Tensor | np.ndarray]:
     """Concatenates output data from several batches
 
     Args:
@@ -542,8 +543,8 @@ class OrderedDistributedSampler(Sampler):
     def __init__(
         self,
         dataset: Any,
-        num_replicas: Optional[int] = None,
-        rank: Optional[int] = None,
+        num_replicas: int | None = None,
+        rank: int | None = None,
     ):
         """
         Args:
@@ -637,12 +638,12 @@ def sanity_check(cfg):
 
 def batch_padding(
     cfg: DefaultConfigProblemBase,
-    batch: Dict,
+    batch: dict,
     training: bool = True,
     mask_key: str = "attention_mask",
-    pad_keys: List[str] = ["input_ids", "attention_mask", "special_tokens_mask"],
+    pad_keys: list[str] = ["input_ids", "attention_mask", "special_tokens_mask"],
     padding_side: str = "left",
-) -> Dict:
+) -> dict:
     """Pads a batch according to set quantile, or cuts it at maximum length"""
     if cfg.environment.compile_model:
         # logger.warning("Batch padding not functional with torch compile.")
@@ -670,9 +671,7 @@ def batch_padding(
             ).float()
             quantile = cfg.tokenizer.padding_quantile
         if cfg.environment._distributed:
-            lengths = sync_across_processes(
-                lengths, cfg.environment._world_size
-            )  # type: ignore
+            lengths = sync_across_processes(lengths, cfg.environment._world_size)  # type: ignore
         idx = int(torch.floor(torch.quantile(lengths, quantile)))
     else:
         if padding_side == "left":

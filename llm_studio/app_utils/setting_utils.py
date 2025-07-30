@@ -5,7 +5,7 @@ import os
 import pickle
 import signal
 import traceback
-from typing import Any, List
+from typing import Any
 
 import keyring
 import yaml
@@ -115,7 +115,7 @@ class EnvFileSaver(NoSaver):
     def save(self, name: str, password: str):
         data = {}
         if os.path.exists(self.filename):
-            with open(self.filename, "r") as f:
+            with open(self.filename) as f:
                 data = yaml.safe_load(f)
         data[name] = password
         with open(self.filename, "w") as f:
@@ -125,13 +125,13 @@ class EnvFileSaver(NoSaver):
         if not os.path.exists(self.filename):
             return ""
 
-        with open(self.filename, "r") as f:
+        with open(self.filename) as f:
             data = yaml.safe_load(f)
             return data.get(name, "")
 
     def delete(self, name: str):
         if os.path.exists(self.filename):
-            with open(self.filename, "r") as f:
+            with open(self.filename) as f:
                 data = yaml.safe_load(f)
                 if data and name in data:
                     del data[name]
@@ -200,7 +200,7 @@ class Secrets:
         logger.warning(f"Error loading keyring: {e}. Disabling keyring save option.")
 
     @classmethod
-    def names(cls) -> List[str]:
+    def names(cls) -> list[str]:
         return sorted(cls._secrets.keys())
 
     @classmethod
@@ -217,7 +217,7 @@ def _save_user_settings(q: Q):
 def _load_user_settings(q: Q):
     if os.path.isfile(_get_usersettings_path(q)):
         logger.info("Reading user settings")
-        with open(_get_usersettings_path(q), "r") as f:
+        with open(_get_usersettings_path(q)) as f:
             user_settings = yaml.load(f, Loader=yaml.FullLoader)
         for key in USER_SETTING_KEYS:
             q.client[key] = user_settings.get(key, default_cfg.user_settings[key])

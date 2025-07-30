@@ -12,7 +12,6 @@ from llm_studio.src.tooltips import (
 
 
 class TestTooltipFunctions(unittest.TestCase):
-
     def test_read_tooltip_file_mock_file(self):
         mock_content = "This is a test file content\n\nwith multiple lines."
         with patch("builtins.open", mock_open(read_data=mock_content)):
@@ -55,7 +54,6 @@ class TestTooltipFunctions(unittest.TestCase):
 
 
 class TestTooltip(unittest.TestCase):
-
     def test_tooltip_creation(self):
         tooltip = Tooltip("test", "This is a test tooltip")
         self.assertEqual(tooltip.name, "test")
@@ -67,7 +65,6 @@ class TestTooltip(unittest.TestCase):
 
 
 class TestTooltips(unittest.TestCase):
-
     @patch("llm_studio.src.tooltips.read_tooltip_file")
     def setUp(self, mock_read):
         mock_files = [

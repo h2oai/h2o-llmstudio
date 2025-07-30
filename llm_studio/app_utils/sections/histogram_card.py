@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 from h2o_wave import data, ui
 
@@ -43,7 +41,7 @@ def histogram_card(
     return card
 
 
-def compute_quantile_df(x: List[int], a: float, b: float):
+def compute_quantile_df(x: list[int], a: float, b: float):
     """
     Compute the quantiles based on the input list x.
 

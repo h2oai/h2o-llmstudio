@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -28,12 +28,11 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
             )
         elif cfg.dataset.num_classes == 1 and max_value > 1:
             raise LLMDataException(
-                "For binary classification, max label should be 1 but is "
-                f"{max_value}."
+                f"For binary classification, max label should be 1 but is {max_value}."
             )
         if min_value < 0:
             raise LLMDataException(
-                "Labels should be non-negative but min label is " f"{min_value}."
+                f"Labels should be non-negative but min label is {min_value}."
             )
         if min_value != 0 or max_value != np.unique(self.answers_int).size - 1:
             logger.warning(
@@ -46,12 +45,12 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
                 "Parent ID column is not supported for classification datasets."
             )
 
-    def __getitem__(self, idx: int) -> Dict:
+    def __getitem__(self, idx: int) -> dict:
         sample = super().__getitem__(idx)
         sample["class_label"] = self.answers_int[idx]
         return sample
 
-    def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
+    def postprocess_output(self, cfg, df: pd.DataFrame, output: dict) -> dict:
         output["logits"] = output["logits"].float()
 
         if cfg.training.loss_function == "CrossEntropyLoss":
@@ -74,7 +73,7 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
             preds.append(
                 np.round(output["probabilities"][:, col].cpu().numpy(), 3).astype(str)
             )
-        preds = [",".join(pred) for pred in zip(*preds)]
+        preds = [",".join(pred) for pred in zip(*preds, strict=False)]
         output["predicted_text"] = preds
         return super().postprocess_output(cfg, df, output)
 
@@ -83,15 +82,12 @@ class CustomDataset(TextCausalLanguageModelingCustomDataset):
 
     @classmethod
     def sanity_check(cls, df: pd.DataFrame, cfg: Any, mode: str = "train"):
-
         for answer_col in cfg.dataset.answer_column:
             assert answer_col in df.columns, (
-                f"Answer column {answer_col} not found in the " f"{mode} DataFrame."
+                f"Answer column {answer_col} not found in the {mode} DataFrame."
             )
             assert df.shape[0] == df[answer_col].dropna().shape[0], (
-                f"The {mode} DataFrame"
-                f" column {answer_col}"
-                " contains missing values."
+                f"The {mode} DataFrame column {answer_col} contains missing values."
             )
 
         check_for_non_int_answers(cfg, df)

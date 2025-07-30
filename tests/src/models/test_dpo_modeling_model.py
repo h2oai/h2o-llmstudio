@@ -137,10 +137,8 @@ def test_generation_is_the_same_as_for_causal_language_modeling(df):
     with torch.no_grad():
         generated_text = dataset.tokenizer.decode(model.generate(batch, cfg)[0])
 
-    assert (
-        generated_text == generated_text_causal_lm
-    ), "Generated text is not the same as from causal LM model:" "{}\n{}".format(
-        generated_text, generated_text_causal_lm
+    assert generated_text == generated_text_causal_lm, (
+        f"Generated text is not the same as from causal LM model:{generated_text}\n{generated_text_causal_lm}"
     )
 
 

@@ -5,7 +5,8 @@ https://github.com/huggingface/trl
 """
 
 import logging
-from typing import Any, KeysView
+from collections.abc import KeysView
+from typing import Any
 
 import torch
 import torch.nn.functional as F
@@ -152,7 +153,6 @@ class CPOLoss(nn.Module):
         policy_chosen_logps: torch.FloatTensor,
         policy_rejected_logps: torch.FloatTensor,
     ):
-
         logits = policy_chosen_logps - policy_rejected_logps
 
         losses = self.get_losses(logits)

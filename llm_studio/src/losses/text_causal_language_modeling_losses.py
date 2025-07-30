@@ -1,5 +1,6 @@
 import logging
-from typing import Any, KeysView
+from collections.abc import KeysView
+from typing import Any
 
 from torch import nn
 

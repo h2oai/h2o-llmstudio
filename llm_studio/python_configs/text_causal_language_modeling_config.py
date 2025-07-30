@@ -2,7 +2,7 @@ import logging
 import multiprocessing
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import torch
 
@@ -41,10 +41,10 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     validation_size: float = 0.01
 
     data_sample: float = 1.0
-    data_sample_choice: Tuple[str, ...] = ("Train", "Validation")
+    data_sample_choice: tuple[str, ...] = ("Train", "Validation")
 
     system_column: str = "system"
-    prompt_column: Tuple[str, ...] = ("instruction", "input")
+    prompt_column: tuple[str, ...] = ("instruction", "input")
     prompt_column_separator: str = "\\n\\n"
     answer_column: str = "output"
     parent_id_column: str = "parent_id"
@@ -61,7 +61,7 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     mask_prompt_labels: bool = True
     only_last_answer: bool = False
 
-    _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq", "parquet")
+    _allowed_file_extensions: tuple[str, ...] = ("csv", "pq", "parquet")
 
     def __post_init__(self):
         self.prompt_column = (
@@ -161,9 +161,9 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     optimizer: str = "AdamW"
 
     learning_rate: float = 0.0001
-    differential_learning_rate_layers: Tuple[str, ...] = ()
+    differential_learning_rate_layers: tuple[str, ...] = ()
     differential_learning_rate: float = 0.00001
-    freeze_layers: Tuple[str, ...] = ()
+    freeze_layers: tuple[str, ...] = ()
 
     attention_implementation: str = "auto"
     batch_size: int = 2
@@ -184,7 +184,7 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
     lora_dropout: float = 0.05
     use_rslora: bool = False
     lora_target_modules: str = ""
-    lora_unfreeze_layers: Tuple[str, ...] = ()
+    lora_unfreeze_layers: tuple[str, ...] = ()
 
     save_checkpoint: str = "last"
     evaluation_epochs: float = 1.0
@@ -337,7 +337,7 @@ class ConfigNLPCausalLMTokenizer(DefaultConfig):
     _tokenizer_mask_token_id: int = 0
     _tokenizer_eos_token: str = "<EOS>"
     _vocab_length: int = 0
-    _stop_words_ids: List[int] = field(default_factory=list)
+    _stop_words_ids: list[int] = field(default_factory=list)
 
     def __post_init__(self):
         super().__post_init__()
@@ -470,7 +470,7 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
 
 @dataclass
 class ConfigNLPCausalLMEnvironment(DefaultConfig):
-    gpus: Tuple[str, ...] = tuple(str(x) for x in range(torch.cuda.device_count()))
+    gpus: tuple[str, ...] = tuple(str(x) for x in range(torch.cuda.device_count()))
 
     mixed_precision: bool = True
     mixed_precision_dtype: str = "bfloat16"
@@ -512,7 +512,7 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
         super().__post_init__()
         self._possible_values["gpus"] = possible_values.String(
             values=tuple(
-                [(str(x), f"GPU #{x+1}") for x in range(torch.cuda.device_count())]
+                [(str(x), f"GPU #{x + 1}") for x in range(torch.cuda.device_count())]
             ),
             allow_custom=False,
         )
@@ -663,9 +663,9 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             allow_custom=True,
         )
 
-    def check(self) -> Dict[str, List]:
+    def check(self) -> dict[str, list]:
         # Define returned dictionary of errors/warnings
-        errors: Dict[str, List] = {"title": [], "message": [], "type": []}
+        errors: dict[str, list] = {"title": [], "message": [], "type": []}
         logger.debug("Checking for common errors in the configuration.")
         try:
             sanity_check(self)

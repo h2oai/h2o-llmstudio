@@ -1,11 +1,12 @@
 import os
 from abc import abstractmethod
-from typing import Any, Callable, List, Optional, Sequence, Set, Tuple
+from collections.abc import Callable, Sequence
+from typing import Any
 
 from pydantic.dataclasses import dataclass
 
 
-def _scan_dirs(dirname: str) -> List[str]:
+def _scan_dirs(dirname: str) -> list[str]:
     """
     Recursively scans a directory for subfolders.
 
@@ -24,8 +25,8 @@ def _scan_dirs(dirname: str) -> List[str]:
 
 
 def _scan_files(
-    dirname: str, extensions: Tuple[str, ...] = (".csv", ".pq", ".parquet", ".json")
-) -> List[str]:
+    dirname: str, extensions: tuple[str, ...] = (".csv", ".pq", ".parquet", ".json")
+) -> list[str]:
     """
     Scans a directory for files with given extension
 
@@ -49,8 +50,8 @@ def _scan_files(
 
 
 def strip_common_prefix(
-    paths: Sequence[str], ignore_set: Set[str] = set()
-) -> Tuple[str, ...]:
+    paths: Sequence[str], ignore_set: set[str] = set()
+) -> tuple[str, ...]:
     """
     Strips the common prefix from all given paths.
 
@@ -103,7 +104,7 @@ class Number:
 
     min: float | int
     step: float | int
-    max: Optional[float | int] = None
+    max: float | int | None = None
 
     def __post_init__(self):
         if self.max is not None and self.min > self.max:
@@ -127,9 +128,9 @@ class String:
         placeholder (Optional[str]): Placeholder text for input fields.
     """
 
-    values: Tuple[str, ...] | Tuple[Tuple[str, str], ...]
+    values: tuple[str, ...] | tuple[tuple[str, str], ...]
     allow_custom: bool = False
-    placeholder: Optional[str] = None
+    placeholder: str | None = None
 
 
 class DatasetValue:
@@ -138,7 +139,7 @@ class DatasetValue:
     @abstractmethod
     def get_value(
         self, dataset: Any, value: Any, type_annotation: type
-    ) -> Tuple[String, Any]:
+    ) -> tuple[String, Any]:
         """
         Abstract method to get the value for a dataset.
 
@@ -154,10 +155,10 @@ class DatasetValue:
 
     @staticmethod
     def _compute_current_values(
-        current_values: List[str],
-        possible_values: List[str],
-        prefer_with: Optional[Callable[[str], bool]] = None,
-    ) -> List[str]:
+        current_values: list[str],
+        possible_values: list[str],
+        prefer_with: Callable[[str], bool] | None = None,
+    ) -> list[str]:
         """
         Compute current values based on possible values and preferences.
 
@@ -220,14 +221,14 @@ class Files(DatasetValue):
     """
 
     add_none: bool = False
-    prefer_with: Optional[Callable[[str], bool]] = None
+    prefer_with: Callable[[str], bool] | None = None
     # For the case where no match found, whether to prioritize
     # selecting any file or selecting no file
     prefer_none: bool = True
 
     def get_value(
         self, dataset: Any, value: Any, type_annotation: type
-    ) -> Tuple[String, Any]:
+    ) -> tuple[String, Any]:
         """
         Get the value for file selection.
 
@@ -263,10 +264,11 @@ class Files(DatasetValue):
                     zip(
                         available_files,
                         strip_common_prefix(available_files, ignore_set={"None"}),
+                        strict=False,
                     )
                 )
             ),
-            value if type_annotation == Tuple[str, ...] else value[0],
+            value if type_annotation == tuple[str, ...] else value[0],
         )
 
 
@@ -284,11 +286,11 @@ class Columns(DatasetValue):
     """
 
     add_none: bool = False
-    prefer_with: Optional[Callable[[str], bool]] = None
+    prefer_with: Callable[[str], bool] | None = None
 
     def get_value(
         self, dataset: Any, value: Any, type_annotation: type
-    ) -> Tuple[String, Any]:
+    ) -> tuple[String, Any]:
         if dataset is None:
             return String(tuple()), value
 
@@ -309,5 +311,5 @@ class Columns(DatasetValue):
 
         return (
             String(tuple(columns)),
-            value if type_annotation == Tuple[str, ...] else value[0],
+            value if type_annotation == tuple[str, ...] else value[0],
         )

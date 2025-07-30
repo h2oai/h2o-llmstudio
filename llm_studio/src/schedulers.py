@@ -1,5 +1,5 @@
 import math
-from typing import Any, List
+from typing import Any
 
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LambdaLR
@@ -23,7 +23,6 @@ def get_cosine_schedule_with_warmup(
     num_cycles: float = 0.5,
     last_epoch: int = -1,
 ):
-
     def lr_lambda(current_step):
         if current_step < num_warmup_steps:
             return float(current_step) / float(max(1, num_warmup_steps))
@@ -46,7 +45,6 @@ def get_linear_schedule_with_warmup(
     min_learning_rate_ratio: float = 0.0,
     last_epoch: int = -1,
 ):
-
     def lr_lambda(current_step: int):
         if current_step < num_warmup_steps:
             return float(current_step) / float(max(1, num_warmup_steps))
@@ -69,7 +67,7 @@ class Schedulers:
     }
 
     @classmethod
-    def names(cls) -> List[str]:
+    def names(cls) -> list[str]:
         return sorted(cls._schedulers.keys())
 
     @classmethod

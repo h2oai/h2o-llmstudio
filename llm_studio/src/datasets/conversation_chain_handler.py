@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List
 
 import numpy as np
 
@@ -105,7 +104,7 @@ class ConversationChainHandler:
 
         id2parent_id = {
             idx: parent_id
-            for idx, parent_id in zip(sample_ids, parent_ids)
+            for idx, parent_id in zip(sample_ids, parent_ids, strict=False)
             if parent_id not in [None, "None"]
             and (
                 not isinstance(parent_id, float)
@@ -141,7 +140,7 @@ class ConversationChainHandler:
                     answers.append(df[col].astype(str).tolist())
                 else:
                     answers.append(["" for _ in range(len(self.prompts))])
-            answers = [",".join(ans) for ans in zip(*answers)]
+            answers = [",".join(ans) for ans in zip(*answers, strict=False)]
         else:
             if answer_column in df.columns:
                 answers = df[answer_column].astype(str).tolist()
@@ -231,7 +230,7 @@ class ConversationChainHandler:
 
 def get_conversation_chains(
     df, cfg, limit_chained_samples=True
-) -> List[Dict[str, List[str]]]:
+) -> list[dict[str, list[str]]]:
     with PatchedAttribute(cfg.dataset, "limit_chained_samples", limit_chained_samples):
         conversation_chain_handler = ConversationChainHandler(df, cfg)
     conversations = [

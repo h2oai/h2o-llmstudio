@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -10,10 +10,10 @@ logger = logging.getLogger(__name__)
 
 def mse_score(
     cfg: Any,
-    results: Dict,
+    results: dict,
     val_df: pd.DataFrame,
     raw_results: bool = False,
-) -> Union[NDArray, Tuple[NDArray, List[str]]]:
+) -> NDArray | tuple[NDArray, list[str]]:
     target = np.array(
         [[float(t) for t in text.split(",")] for text in results["target_text"]]
     )
@@ -32,10 +32,10 @@ def mse_score(
 
 def mae_score(
     cfg: Any,
-    results: Dict,
+    results: dict,
     val_df: pd.DataFrame,
     raw_results: bool = False,
-) -> Union[NDArray, Tuple[NDArray, List[str]]]:
+) -> NDArray | tuple[NDArray, list[str]]:
     target = np.array(
         [[float(t) for t in text.split(",")] for text in results["target_text"]]
     )
@@ -69,7 +69,7 @@ class Metrics:
     }
 
     @classmethod
-    def names(cls) -> List[str]:
+    def names(cls) -> list[str]:
         return sorted(cls._metrics.keys())
 
     @classmethod

@@ -163,7 +163,6 @@ def run_oasst(tmp_path, config_name, metric):
         os.path.join(
             os.path.dirname(os.path.realpath(__file__)), f"{config_name}.yaml"
         ),
-        "r",
     ) as fp:
         cfg = yaml.load(fp, Loader=yaml.FullLoader)
     # set paths and save in tmp folder

@@ -3,7 +3,8 @@ import gc
 import logging
 import os
 import threading
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 import torch
@@ -89,7 +90,6 @@ async def update_chat_window(q):
 
 
 async def chat_copy(q: Q) -> None:
-
     chat_messages = [
         f"{'USER' if t[1] == USER else 'ASSISTANT'}: {t[0]}"
         for t in q.client["experiment/display/chat/messages"]
@@ -210,12 +210,12 @@ class WaveChatStreamer(TextStreamer):
         self,
         tokenizer: AutoTokenizer,
         q: Q,
-        text_cleaner: Optional[Callable] = None,
+        text_cleaner: Callable | None = None,
         **decode_kwargs,
     ):
         super().__init__(tokenizer, skip_prompt=True, **decode_kwargs)
-        self.text_cleaner: Optional[Callable] = text_cleaner
-        self.words_predicted_answer: List[str] = []
+        self.text_cleaner: Callable | None = text_cleaner
+        self.words_predicted_answer: list[str] = []
         self.q: Q = q
         self.loop = asyncio.get_event_loop()
         self.finished = False
@@ -247,7 +247,7 @@ class WaveChatStreamer(TextStreamer):
         self.finished = True
 
 
-def generate(model: Model, inputs: Dict, cfg: Any, streamer: TextStreamer = None):
+def generate(model: Model, inputs: dict, cfg: Any, streamer: TextStreamer = None):
     with torch.cuda.amp.autocast(
         dtype=get_torch_dtype(cfg.environment.mixed_precision_dtype)
     ):

@@ -57,9 +57,7 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
             )
         )
         if cfg.dataset.system_column != "None":
-            cfg_kwargs[
-                "sample_messages"
-            ] = """[
+            cfg_kwargs["sample_messages"] = """[
     {
         "role": "system",
         "content": "You are a friendly and polite chatbot.",
@@ -69,9 +67,7 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
     {"role": "user", "content": "Why is drinking water so healthy?"},
 ]"""
         else:
-            cfg_kwargs[
-                "sample_messages"
-            ] = """[
+            cfg_kwargs["sample_messages"] = """[
     {"role": "user", "content": "Hi, how are you?"},
     {"role": "assistant", "content": "I'm doing great, how about you?"},
     {"role": "user", "content": "Why is drinking water so healthy?"},
@@ -94,7 +90,6 @@ def get_model_card(cfg, model, repo_id) -> huggingface_hub.ModelCard:
 
 
 def get_chat_template(cfg):
-
     chat_template = """
 {% for message in messages %}
 chat_template_for_checking_system_role

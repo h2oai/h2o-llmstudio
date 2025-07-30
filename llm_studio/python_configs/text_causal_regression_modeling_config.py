@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import llm_studio.src.datasets.text_causal_regression_ds
 import llm_studio.src.plots.text_causal_classification_modeling_plots
@@ -11,15 +11,13 @@ from llm_studio.python_configs.text_causal_classification_modeling_config import
 )
 from llm_studio.python_configs.text_causal_classification_modeling_config import (
     ConfigNLPCausalClassificationDataset,
+    ConfigNLPCausalClassificationTraining,
 )
 from llm_studio.python_configs.text_causal_classification_modeling_config import (
     ConfigNLPCausalClassificationLogging as ConfigNLPCausalRegressionLogging,
 )
 from llm_studio.python_configs.text_causal_classification_modeling_config import (
     ConfigNLPCausalClassificationTokenizer as ConfigNLPCausalRegressionTokenizer,
-)
-from llm_studio.python_configs.text_causal_classification_modeling_config import (
-    ConfigNLPCausalClassificationTraining,
 )
 from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigNLPCausalLMArchitecture,
@@ -56,7 +54,7 @@ class ConfigNLPCausalRegressionTraining(ConfigNLPCausalClassificationTraining):
     loss_function: str = "MSELoss"
 
     learning_rate: float = 0.0001
-    differential_learning_rate_layers: Tuple[str, ...] = ("regression_head",)
+    differential_learning_rate_layers: tuple[str, ...] = ("regression_head",)
     differential_learning_rate: float = 0.00001
 
     def __post_init__(self):
@@ -151,8 +149,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             allow_custom=True,
         )
 
-    def check(self) -> Dict[str, List]:
-        errors: Dict[str, List] = {"title": [], "message": [], "type": []}
+    def check(self) -> dict[str, list]:
+        errors: dict[str, list] = {"title": [], "message": [], "type": []}
 
         if isinstance(self.dataset.answer_column, str):
             errors["title"].append("Invalid answer_column type")

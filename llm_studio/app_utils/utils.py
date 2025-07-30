@@ -19,7 +19,7 @@ import zipfile
 from collections import defaultdict
 from contextlib import closing
 from functools import partial
-from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Type, Union
+from typing import Any
 
 import GPUtil
 import h2o_drive
@@ -101,7 +101,7 @@ def find_free_port():
 
 
 def start_process(
-    cfg: DefaultConfigProblemBase, gpu_list: List, process_queue: List, env_vars: Dict
+    cfg: DefaultConfigProblemBase, gpu_list: list, process_queue: list, env_vars: dict
 ) -> subprocess.Popen:
     """Starts train.py for a given configuration setting
 
@@ -218,7 +218,7 @@ def s3_session(aws_access_key: str, aws_secret_key: str) -> Any:
     return s3
 
 
-def filter_valid_files(files) -> List[str]:
+def filter_valid_files(files) -> list[str]:
     valid_files = [
         file
         for file in files
@@ -230,7 +230,7 @@ def filter_valid_files(files) -> List[str]:
 
 def s3_file_options(
     bucket: str, aws_access_key: str, aws_secret_key: str
-) -> List[str] | Exception:
+) -> list[str] | Exception:
     """ "Returns all zip files in the target s3 bucket
 
     Args:
@@ -374,7 +374,7 @@ def extract_if_zip(file, actual_path):
 
 async def s3_download(
     q: Q, bucket, filename, aws_access_key, aws_secret_key
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Downloads a file from s3
 
     Args:
@@ -414,7 +414,7 @@ async def s3_download(
     return s3_path, "".join(filename.split("/")[-1].split(".")[:-1])
 
 
-def azure_file_options(conn_string: str, container: str) -> List[str]:
+def azure_file_options(conn_string: str, container: str) -> list[str]:
     """Returns all zip files in the target azure datalake container
 
     Args:
@@ -473,7 +473,7 @@ async def download_progress(q: Q, title, seen_so_far, total_len):
 
 async def azure_download(
     q: Q, conn_string: str, container: str, filename: str
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Downloads a file from azure
 
     Args:
@@ -534,7 +534,7 @@ async def azure_download(
     return azure_path, "".join(filename.split(".")[:-1])
 
 
-async def local_download(q: Q, filename: str) -> Tuple[str, str]:
+async def local_download(q: Q, filename: str) -> tuple[str, str]:
     """Downloads a file from local path
 
     Args:
@@ -562,7 +562,7 @@ async def local_download(q: Q, filename: str) -> Tuple[str, str]:
 
 async def kaggle_download(
     q: Q, command: str, kaggle_access_key: str, kaggle_secret_key: str
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """ "Downloads a file from kaggle
 
     Args:
@@ -612,7 +612,7 @@ async def kaggle_download(
 
 async def huggingface_download(
     q: Q, huggingface_dataset: str, huggingface_split: str
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Downloads a dataset from Hugging Face
 
     Args:
@@ -646,7 +646,7 @@ async def huggingface_download(
     return huggingface_path, filename
 
 
-async def h2o_drive_download(q: Q, filename) -> Tuple[str, str]:
+async def h2o_drive_download(q: Q, filename) -> tuple[str, str]:
     """Downloads a file from H2O Drive
 
     Args:
@@ -675,7 +675,7 @@ async def h2o_drive_download(q: Q, filename) -> Tuple[str, str]:
     return local_path, "".join(filename.split("/")[-1].split(".")[:-1])
 
 
-async def h2o_drive_file_options(q: Q) -> List[str] | Exception:
+async def h2o_drive_file_options(q: Q) -> list[str] | Exception:
     """ "Returns all zip files in the H2O Drive
 
     Args:
@@ -751,7 +751,7 @@ def add_model_type(problem_type: str, model_type: str) -> str:
     return problem_type
 
 
-def get_problem_categories() -> List[Tuple[str, str]]:
+def get_problem_categories() -> list[tuple[str, str]]:
     """Returns all available problem category choices
 
     Returns:
@@ -759,14 +759,14 @@ def get_problem_categories() -> List[Tuple[str, str]]:
         and the problem category name as label.
     """
 
-    problem_categories: List[Tuple[str, str]] = []
+    problem_categories: list[tuple[str, str]] = []
     for c in default_cfg.problem_categories:
         cc = (c, make_label(c))
         problem_categories.append(cc)
     return problem_categories
 
 
-def get_problem_types(category: Optional[str] = None) -> List[Tuple[str, str]]:
+def get_problem_types(category: str | None = None) -> list[tuple[str, str]]:
     """Returns all problem type choices
 
     Args:
@@ -776,7 +776,7 @@ def get_problem_types(category: Optional[str] = None) -> List[Tuple[str, str]]:
         List of tuples, each containing the raw problem type name
         and the problem type name as label.
     """
-    problem_types: List[Tuple[str, str]] = []
+    problem_types: list[tuple[str, str]] = []
     for c in default_cfg.problem_types:
         if category is not None and not c.startswith(category):
             continue
@@ -786,7 +786,7 @@ def get_problem_types(category: Optional[str] = None) -> List[Tuple[str, str]]:
     return problem_types
 
 
-def get_model_types(problem_type: str) -> List[Tuple[str, str]]:
+def get_model_types(problem_type: str) -> list[tuple[str, str]]:
     """Returns all model types for a given problem type
 
     Args:
@@ -811,9 +811,9 @@ def get_dataset(
     k: str,
     v: Any,
     q: Q,
-    limit: Optional[List[str]] = None,
+    limit: list[str] | None = None,
     pre: str = "experiment/start",
-) -> Tuple[List[str], Any]:
+) -> tuple[list[str], Any]:
     """
     Get the dataset and the preliminary default value for a setting.
     The default value may still be overridden by the `possible_values.DatasetValue`
@@ -866,7 +866,7 @@ def _get_ui_element(
     k: str,
     v: Any,
     poss_values: Any,
-    type_annotation: Type,
+    type_annotation: type,
     tooltip: str,
     trigger: bool,
     q: Q,
@@ -952,7 +952,7 @@ def _get_ui_element(
                     trigger=trigger,
                 )
             ]
-    elif type_annotation == bool:
+    elif type_annotation is bool:
         val = q.client[pre + k] if q.client[pre + k] is not None else v
 
         t = [
@@ -964,7 +964,7 @@ def _get_ui_element(
                 trigger=trigger,
             )
         ]
-    elif type_annotation in (str, Tuple[str, ...]):
+    elif type_annotation in (str, tuple[str, ...]):
         if poss_values is None:
             val = q.client[pre + k] if q.client[pre + k] is not None else v
 
@@ -992,7 +992,7 @@ def _get_ui_element(
                 allow_custom = False
                 placeholder = None
 
-            is_tuple = type_annotation == Tuple[str, ...]
+            is_tuple = type_annotation == tuple[str, ...]
 
             v = q.client[pre + k] if q.client[pre + k] is not None else v
             if isinstance(v, str):
@@ -1056,7 +1056,7 @@ def _get_ui_element(
     return t
 
 
-def get_dataset_elements(cfg: DefaultConfigProblemBase, q: Q) -> List:
+def get_dataset_elements(cfg: DefaultConfigProblemBase, q: Q) -> list:
     """For a given configuration setting return the according dataset ui components.
 
     Args:
@@ -1217,7 +1217,7 @@ def is_visible(k: str, cfg: DefaultConfigProblemBase, q: Q) -> bool:
     return True
 
 
-def get_grid_value(v: Any, type_annotation: Any) -> List[str]:
+def get_grid_value(v: Any, type_annotation: Any) -> list[str]:
     """Handles .0 for floats in the grid search
 
     Args:
@@ -1229,7 +1229,7 @@ def get_grid_value(v: Any, type_annotation: Any) -> List[str]:
 
     v: str = str(v)
 
-    if type_annotation == float and v.endswith(".0"):
+    if type_annotation is float and v.endswith(".0"):
         v = v[:-2]
 
     return [v]
@@ -1238,9 +1238,9 @@ def get_grid_value(v: Any, type_annotation: Any) -> List[str]:
 def get_ui_elements_for_cfg(
     cfg: DefaultConfigProblemBase,
     q: Q,
-    limit: Optional[List[str]] = None,
+    limit: list[str] | None = None,
     pre: str = "experiment/start",
-) -> List:
+) -> list:
     """For a given configuration setting return the according ui components.
 
     Args:
@@ -1315,7 +1315,6 @@ def get_ui_elements_for_cfg(
             and q.client[f"{pre}/grid_search"]
             and cfg._get_grid_search_values(k)
         ):
-
             grid_name = f"{pre}/cfg/{k}_grid_search"
             add_choice = []
 
@@ -1437,7 +1436,7 @@ def get_ui_elements_for_cfg(
 
 
 def parse_ui_elements(
-    cfg: DefaultConfigProblemBase, q: Q, limit: List | str = "", pre: str = ""
+    cfg: DefaultConfigProblemBase, q: Q, limit: list | str = "", pre: str = ""
 ) -> Any:
     """Sets configuration settings with arguments from app
 
@@ -1474,7 +1473,7 @@ def parse_ui_elements(
         elif type_annotations[k] in KNOWN_TYPE_ANNOTATIONS:
             value = q.client[f"{pre}{k}"]
 
-            if type_annotations[k] == Tuple[str, ...]:
+            if type_annotations[k] == tuple[str, ...]:
                 if isinstance(value, str):
                     value = [value]
                 elif value is None:
@@ -1493,7 +1492,7 @@ def parse_ui_elements(
     return cfg
 
 
-def get_experiment_status(path: str) -> Tuple[str, str]:
+def get_experiment_status(path: str) -> tuple[str, str]:
     """Get status information from experiment.
 
     Args:
@@ -1537,7 +1536,7 @@ def get_experiment_status(path: str) -> Tuple[str, str]:
         return "none", "none"
 
 
-def get_experiments_status(df: DataFrame) -> Tuple[List[str], List[str]]:
+def get_experiments_status(df: DataFrame) -> tuple[list[str], list[str]]:
     """For each experiment in given dataframe, return the status of the process
 
     Args:
@@ -1603,7 +1602,7 @@ def get_experiments_status(df: DataFrame) -> Tuple[List[str], List[str]]:
     return status_all, info_all
 
 
-def get_experiments_info(df: DataFrame, q: Q) -> DefaultDict:
+def get_experiments_info(df: DataFrame, q: Q) -> defaultdict:
     """For each experiment in given dataframe, return certain configuration settings
 
     Args:
@@ -1769,7 +1768,7 @@ def make_config_label(config_file: str) -> str:
     return config_file
 
 
-def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
+def get_datasets_info(df: DataFrame, q: Q) -> tuple[DataFrame, defaultdict]:
     """For each dataset in given dataframe, return certain configuration settings
 
     Args:
@@ -1818,7 +1817,7 @@ def get_datasets_info(df: DataFrame, q: Q) -> Tuple[DataFrame, DefaultDict]:
 
 def get_experiments(
     q: Q,
-    status: Union[Optional[str], Optional[List[str]]] = None,
+    status: str | None | list[str] | None = None,
 ) -> pd.DataFrame:
     """Return all experiments given certain restrictions
 
@@ -1901,7 +1900,7 @@ def get_datasets(
     return df
 
 
-def filter_grid_search_combination(grid: Dict[str, Any], cfg: Any) -> Dict[str, Any]:
+def filter_grid_search_combination(grid: dict[str, Any], cfg: Any) -> dict[str, Any]:
     """Filters grid search combination in order not to start multiple same experiments.
 
     Args:
@@ -1932,7 +1931,7 @@ def filter_grid_search_combination(grid: Dict[str, Any], cfg: Any) -> Dict[str, 
     return grid
 
 
-def get_grid_search(cfg: Any, q: Q, pre: str) -> Dict[str, List]:
+def get_grid_search(cfg: Any, q: Q, pre: str) -> dict[str, list]:
     """Creates a dictionary with grid search values.
 
     Args:
@@ -1953,7 +1952,7 @@ def get_grid_search(cfg: Any, q: Q, pre: str) -> Dict[str, List]:
             and q.client["experiment/start/grid_search"]
             and cfg._get_grid_search_values(k)
         ):
-            if type_annotations[k] == bool:
+            if type_annotations[k] is bool:
                 grid_search[k] = [True if x == "True" else False for x in v]
             else:
                 try:
@@ -1970,7 +1969,7 @@ def get_grid_search(cfg: Any, q: Q, pre: str) -> Dict[str, List]:
     return grid_search
 
 
-def set_grid_to_cfg(cfg: Any, grid: Dict[str, List]) -> Any:
+def set_grid_to_cfg(cfg: Any, grid: dict[str, list]) -> Any:
     """Sets individual run config for the Grid Search.
 
     Args:
@@ -1999,7 +1998,7 @@ def set_grid_to_cfg(cfg: Any, grid: Dict[str, List]) -> Any:
 
 
 def start_experiment(
-    cfg: DefaultConfigProblemBase, q: Q, pre: str, gpu_list: Optional[List] = None
+    cfg: DefaultConfigProblemBase, q: Q, pre: str, gpu_list: list | None = None
 ) -> None:
     """Starts an experiment
 
@@ -2079,7 +2078,7 @@ def get_frame_stats(frame):
     is_str_cols = [
         x
         for x in non_numeric_cols
-        if frame[x].dropna().size and (frame[x].dropna().apply(type) == str).all()
+        if frame[x].dropna().size and (frame[x].dropna().apply(type) is str).all()
     ]
     cols_to_drop = [x for x in non_numeric_cols if x not in is_str_cols]
 
@@ -2151,7 +2150,7 @@ def get_download_link(q: Q, artifact_path):
     return url_path
 
 
-def check_valid_upload_content(upload_path: str) -> Tuple[bool, str]:
+def check_valid_upload_content(upload_path: str) -> tuple[bool, str]:
     if upload_path.endswith("zip"):
         valid = zipfile.is_zipfile(upload_path)
         error = "" if valid else "File is not a zip file"
@@ -2176,7 +2175,7 @@ def flatten_dict(d: collections.abc.MutableMapping) -> dict:
         A flattened dict
     """
 
-    items: List[Tuple[Any, Any]] = []
+    items: list[tuple[Any, Any]] = []
     for k, v in d.items():
         if isinstance(v, collections.abc.MutableMapping):
             items.extend(flatten_dict(v).items())
@@ -2263,7 +2262,7 @@ def remove_temp_files(q: Q):
 
 def get_gpu_usage() -> float:
     usage: float = 0.0
-    all_gpus: List[GPUtil.GPU] = GPUtil.getGPUs()
+    all_gpus: list[GPUtil.GPU] = GPUtil.getGPUs()
     for gpu in all_gpus:
         usage += float(gpu.load)
 
@@ -2271,7 +2270,7 @@ def get_gpu_usage() -> float:
     return usage * 100.0
 
 
-def get_single_gpu_usage(sig_figs: int = 1, highlight: Optional[str] = None):
+def get_single_gpu_usage(sig_figs: int = 1, highlight: str | None = None):
     all_gpus = GPUtil.getGPUs()
     items = []
     for i, gpu in enumerate(all_gpus):
@@ -2330,7 +2329,7 @@ def make_label(title: str, appendix: str = "") -> str:
     return label
 
 
-def get_cfg_list_items(cfg: DefaultConfigProblemBase) -> List:
+def get_cfg_list_items(cfg: DefaultConfigProblemBase) -> list:
     items = parse_cfg_dataclass(cfg)
     x = []
     for item in items:
@@ -2381,7 +2380,7 @@ def hf_repo_friendly_name(name: str) -> str:
 
 
 def save_hf_yaml(
-    path: str, account_name: str, model_name: str, repo_id: Optional[str] = None
+    path: str, account_name: str, model_name: str, repo_id: str | None = None
 ):
     with open(path, "w") as fp:
         yaml.dump(

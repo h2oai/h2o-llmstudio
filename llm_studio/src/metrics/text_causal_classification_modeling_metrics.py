@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -10,10 +10,10 @@ from llm_studio.python_configs.base import DefaultConfigProblemBase
 
 def accuracy_score(
     cfg: DefaultConfigProblemBase,
-    results: Dict,
+    results: dict,
     val_df: pd.DataFrame,
     raw_results: bool = False,
-) -> Union[NDArray, Tuple[NDArray, List[str]]]:
+) -> NDArray | tuple[NDArray, list[str]]:
     """Calculate accuracy score.
 
     Only considers the predicted value (results["predictions"]) and target value
@@ -51,10 +51,10 @@ def accuracy_score(
 
 def auc_score(
     cfg: DefaultConfigProblemBase,
-    results: Dict,
+    results: dict,
     val_df: pd.DataFrame,
     raw_results: bool = False,
-) -> Union[NDArray, Tuple[NDArray, List[str]]]:
+) -> NDArray | tuple[NDArray, list[str]]:
     """Calculate Area Under the ROC Curve (AUC) score.
 
     This function computes the AUC score using the predicted logits and target values.
@@ -94,10 +94,10 @@ def auc_score(
 
 def logloss_score(
     cfg: DefaultConfigProblemBase,
-    results: Dict,
+    results: dict,
     val_df: pd.DataFrame,
     raw_results: bool = False,
-) -> Union[NDArray, Tuple[NDArray, List[str]]]:
+) -> NDArray | tuple[NDArray, list[str]]:
     """Calculate the Log Loss (Cross-Entropy Loss) score.
 
     This function computes the log loss using the predicted probabilities and target.
@@ -160,7 +160,7 @@ class Metrics:
     }
 
     @classmethod
-    def names(cls) -> List[str]:
+    def names(cls) -> list[str]:
         return sorted(cls._metrics.keys())
 
     @classmethod

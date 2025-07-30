@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, List
+from typing import Any
 
 import bitsandbytes as bnb
 from torch import optim
@@ -18,7 +18,7 @@ class Optimizers:
     }
 
     @classmethod
-    def names(cls) -> List[str]:
+    def names(cls) -> list[str]:
         return sorted(cls._optimizers.keys())
 
     @classmethod

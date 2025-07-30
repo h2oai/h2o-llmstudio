@@ -8,8 +8,8 @@ import shutil
 import time
 import traceback
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, List, Optional, Set, Union
 
 import accelerate
 import einops
@@ -388,9 +388,9 @@ async def experiment_start(q: Q) -> None:
                 "checkpoint.pth",
             )
             if os.path.exists(prev_weights):
-                q.client["experiment/start/cfg"].architecture.pretrained_weights = (
-                    prev_weights
-                )
+                q.client[
+                    "experiment/start/cfg"
+                ].architecture.pretrained_weights = prev_weights
                 q.client["experiment/start/cfg"].architecture._visibility[
                     "pretrained_weights"
                 ] = -1
@@ -522,7 +522,7 @@ async def experiment_start(q: Q) -> None:
 
 def experiment_input_type_error(
     q: Q, pre: str = "experiment/start"
-) -> Union[bool, GridCheckError]:
+) -> bool | GridCheckError:
     """Error check for custom entered values in combo boxes (grid search)
 
     Returns:
@@ -604,7 +604,9 @@ async def experiment_run(q: Q):
         combinations = itertools.product(
             *(grid_search[name] for name in all_grid_hyperparams)
         )
-        combinations = [dict(zip(all_grid_hyperparams, x)) for x in list(combinations)]
+        combinations = [
+            dict(zip(all_grid_hyperparams, x, strict=False)) for x in list(combinations)
+        ]
 
         random.shuffle(combinations)
 
@@ -737,7 +739,7 @@ def get_experiment_table(q, df_viz, height="calc(100vh - 245px)", actions=None):
 async def experiment_list(
     q: Q,
     reset: bool = True,
-    allowed_statuses: Optional[List[str]] = None,
+    allowed_statuses: list[str] | None = None,
     actions: bool = True,
 ) -> None:
     """List all experiments."""
@@ -964,7 +966,7 @@ async def experiment_rename_action(q, experiment, new_name):
         q.client.app_db.rename_experiment(experiment.id, new_name, new_path)
 
 
-async def experiment_delete(q: Q, experiment_ids: List[int]) -> None:
+async def experiment_delete(q: Q, experiment_ids: list[int]) -> None:
     """Delete selected experiments.
 
     Args:
@@ -981,7 +983,7 @@ async def experiment_delete(q: Q, experiment_ids: List[int]) -> None:
             logger.warning(f"Experiment path {experiment.path} not found for deletion.")
 
 
-async def experiment_stop(q: Q, experiment_ids: List[int]) -> None:
+async def experiment_stop(q: Q, experiment_ids: list[int]) -> None:
     """Stop selected experiments.
 
     Args:
@@ -1448,7 +1450,7 @@ async def logs_tab(q):
     in_pre = 0
     # Read log file only if it already exists
     if os.path.exists(logs_path):
-        with open(logs_path, "r") as f:
+        with open(logs_path) as f:
             for line in f.readlines():
                 if in_pre == 0:
                     text += "<div>"
@@ -1510,7 +1512,7 @@ async def charts_tab(q, charts_list, legend_labels):
         if all([k1 not in charts for charts in charts_list]):
             continue
 
-        all_second_keys: Set = set()
+        all_second_keys: set = set()
         for charts in charts_list:
             if k1 in charts:
                 all_second_keys = all_second_keys.union(set(charts[k1].keys()))
@@ -1556,7 +1558,7 @@ async def charts_tab(q, charts_list, legend_labels):
             rows = []
 
             max_samples = q.client["chart_plot_max_points"]
-            for charts, label in zip(charts_list, legend_labels):
+            for charts, label in zip(charts_list, legend_labels, strict=False):
                 if k1 not in charts or k2 not in charts[k1]:
                     continue
 
@@ -1656,8 +1658,8 @@ async def experiment_download_artifact(
     q: Q,
     get_artifact_path_fn: Callable[[str, str], str],
     save_artifact_fn: Callable[[str, str], str],
-    additional_log: Optional[str] = "",
-    min_disk_space: Optional[float] = 0.0,
+    additional_log: str | None = "",
+    min_disk_space: float | None = 0.0,
 ):
     """Download specific artifact, if it does not exist, create it on demand
 
@@ -1733,7 +1735,7 @@ async def config_import_uploaded_file(q: Q):
 
     await q.site.unload(q.args["experiment/upload_yaml"][0])
 
-    with open(local_path, "r") as f:
+    with open(local_path) as f:
         yaml_data = yaml.safe_load(f)
 
     yaml_data = flatten_dict(yaml_data)
@@ -2054,16 +2056,14 @@ async def experiment_push_to_huggingface_dialog(q: Q, error: str = ""):
 
 
 def get_experiment_summary_code_card(cfg) -> str:
-    repo_id: Optional[str] = None
+    repo_id: str | None = None
     hf_yaml_path = f"{cfg.output_directory}/hf.yaml"
 
-    with open(
-        os.path.join("model_cards", cfg.environment._summary_card_template), "r"
-    ) as f:
+    with open(os.path.join("model_cards", cfg.environment._summary_card_template)) as f:
         text = f.read()
 
     if os.path.exists(hf_yaml_path):
-        with open(hf_yaml_path, "r") as fp:
+        with open(hf_yaml_path) as fp:
             repo_id = yaml.load(fp, Loader=yaml.FullLoader)["repo_id"]
 
     if repo_id is None:

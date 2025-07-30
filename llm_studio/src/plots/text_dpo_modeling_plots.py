@@ -1,6 +1,6 @@
 import hashlib
 import os
-from typing import Any, Dict, List
+from typing import Any
 
 import pandas as pd
 
@@ -73,12 +73,12 @@ class Plots:
             15,
         )
 
-        conversations_to_display: List = []
+        conversations_to_display: list = []
         for conversation_length in range(1, max_conversation_length + 1):
             conversations_to_display += [
                 (conversation_chosen, conversations_rejected)
                 for conversation_chosen, conversations_rejected in zip(
-                    conversations_chosen, conversations_rejected
+                    conversations_chosen, conversations_rejected, strict=False
                 )
                 if len(conversation_chosen["prompts"]) == conversation_length
             ][:5]
@@ -100,7 +100,8 @@ class Plots:
             for prompt, answer_chosen, answer_rejected in zip(
                 conversation_chosen["prompts"],
                 conversation_chosen["answers"],
-                conversations_rejected["answers"],  # type: ignore
+                conversations_rejected["answers"],
+                strict=False,  # type: ignore
             ):
                 df_transposed.loc[i] = [
                     sample_number,
@@ -137,6 +138,6 @@ class Plots:
 
     @classmethod
     def plot_validation_predictions(
-        cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
+        cls, val_outputs: dict, cfg: Any, val_df: pd.DataFrame, mode: str
     ) -> PlotData:
         return plot_validation_predictions(val_outputs, cfg, val_df, mode)
