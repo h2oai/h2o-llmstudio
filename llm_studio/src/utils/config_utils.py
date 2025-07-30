@@ -1,7 +1,7 @@
 import dataclasses
 import importlib
 from types import ModuleType
-from typing import Any, Dict, List, Type
+from typing import Any
 
 import yaml
 
@@ -46,8 +46,8 @@ def _load_cls(module_path: str, cls_name: str) -> DefaultConfigProblemBase:
     _recursive_reload(module)
     module = importlib.reload(module)
 
-    assert hasattr(module, cls_name), "{} file should contain {} class".format(
-        module_path, cls_name
+    assert hasattr(module, cls_name), (
+        f"{module_path} file should contain {cls_name} class"
     )
 
     cls: DefaultConfigProblemBase = getattr(module, cls_name)()
@@ -71,7 +71,7 @@ def load_config_py(
     return _load_cls(config_path, config_name)
 
 
-def _get_type_annotation_error(v: Any, type_annotation: Type) -> ValueError:
+def _get_type_annotation_error(v: Any, type_annotation: type) -> ValueError:
     return ValueError(
         f"Cannot show {v}: not a dataclass"
         f" and {type_annotation} is not a known type annotation."
@@ -125,7 +125,7 @@ def convert_cfg_base_to_nested_dictionary(cfg: DefaultConfigProblemBase) -> dict
 
 
 def convert_nested_dictionary_to_cfg_base(
-    cfg_dict: Dict[str, Any]
+    cfg_dict: dict[str, Any],
 ) -> DefaultConfigProblemBase:
     """
     Inverse operation of convert_cfg_base_to_nested_dictionary
@@ -139,7 +139,7 @@ def convert_nested_dictionary_to_cfg_base(
     return module.ConfigProblemBase.from_dict(cfg_dict)
 
 
-def parse_cfg_dataclass(cfg) -> List[Dict]:
+def parse_cfg_dataclass(cfg) -> list[dict]:
     """Returns all single config settings for a given configuration
 
     Args:
@@ -162,7 +162,7 @@ def parse_cfg_dataclass(cfg) -> List[Dict]:
         type_annotation = type_annotations[k]
 
         if type_annotation in KNOWN_TYPE_ANNOTATIONS:
-            if type_annotation == float:
+            if type_annotation is float:
                 v = float(v)
             t = [{k: v}]
         elif dataclasses.is_dataclass(v):
@@ -201,7 +201,7 @@ def load_config_yaml(path: str) -> DefaultConfigProblemBase:
     Returns:
         config object
     """
-    with open(path, "r") as fp:
+    with open(path) as fp:
         cfg_dict = yaml.load(fp, Loader=yaml.FullLoader)
     return convert_nested_dictionary_to_cfg_base(cfg_dict)
 

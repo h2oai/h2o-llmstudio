@@ -1,6 +1,6 @@
 import hashlib
 import os
-from typing import Any, Dict
+from typing import Any
 
 import pandas as pd
 
@@ -76,7 +76,9 @@ class Plots:
                     conversation["systems"][0],
                 ]
                 i += 1
-            for prompt, answer in zip(conversation["prompts"], conversation["answers"]):
+            for prompt, answer in zip(
+                conversation["prompts"], conversation["answers"], strict=False
+            ):
                 df_transposed.loc[i] = [
                     sample_number,
                     "Prompt",
@@ -100,13 +102,13 @@ class Plots:
 
     @classmethod
     def plot_validation_predictions(
-        cls, val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
+        cls, val_outputs: dict, cfg: Any, val_df: pd.DataFrame, mode: str
     ) -> PlotData:
         return plot_validation_predictions(val_outputs, cfg, val_df, mode)
 
 
 def plot_validation_predictions(
-    val_outputs: Dict, cfg: Any, val_df: pd.DataFrame, mode: str
+    val_outputs: dict, cfg: Any, val_df: pd.DataFrame, mode: str
 ) -> PlotData:
     conversations = get_conversation_chains(
         val_df, cfg, limit_chained_samples=cfg.dataset.limit_chained_samples
@@ -126,7 +128,7 @@ def plot_validation_predictions(
         answers = conversation["answers"]
         # exclude last answer
         answers[-1] = ""
-        for prompt, answer in zip(prompts, answers):
+        for prompt, answer in zip(prompts, answers, strict=False):
             input_text += (
                 f" **{prompt_column_name}:** "
                 f"{prompt}\n\n"
@@ -222,7 +224,7 @@ def create_batch_prediction_df(
         list_to_markdown_representation(
             tokens, masks, pad_token=tokenizer.pad_token, num_chars=100
         )
-        for tokens, masks in zip(tokens_list, masks_list)
+        for tokens, masks in zip(tokens_list, masks_list, strict=False)
     ]
     # limit to 2000 rows, still renders fast in wave
     df = df.iloc[:2000]

@@ -41,21 +41,10 @@ H2O LLM Studio requires the following minimum requirements:
     default
   >
     <p>
-      The recommended way to install H2O LLM Studio is using pipenv with Python
+      The recommended way to install H2O LLM Studio is using `uv` with Python
       3.10. To install Python 3.10 on Ubuntu 16.04+, execute the following
       commands.
     </p>
-    <p>
-      <b>System installs (Python 3.10)</b>
-    </p>
-    <pre>
-      <code>
-        sudo add-apt-repository ppa:deadsnakes/ppa <br></br>
-        sudo apt install python3.10 <br></br>
-        sudo apt-get install python3.10-distutils <br></br>
-        curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
-      </code>
-    </pre>
     <p>
       <b>Install NVIDIA drivers (if required)</b>
       <br></br>
@@ -82,10 +71,10 @@ H2O LLM Studio requires the following minimum requirements:
       </code>
     </pre>
     <p>
-      <b>Create virtual environment (pipenv) </b>
+      <b>Create virtual environment (uv) </b>
       <br></br>
-      The following command creates a virtual environment using pipenv and will install
-      the dependencies using pipenv.
+      The following command creates a virtual environment using `uv` and will install
+      the dependencies.
       <pre>
         <code>make setup</code>
       </pre>
@@ -214,18 +203,10 @@ H2O LLM Studio requires the following minimum requirements:
 
 ## Install custom package
 
-If required, you can install additional Python packages into your environment. This can be done using pip after activating your virtual environment via `make shell`. For example, to install flash-attention, you would use the following commands:
+If required, you can install additional Python packages into your environment. You can directly install the custom package by running the following command.
 
 ```bash
-make shell
-pip install flash-attn --no-build-isolation
-pip install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
-```
-
-Alternatively, you can also directly install the custom package by running the following command.
-
-```bash
-pipenv install package_name
+uv add package_name
 ```
 
 ## Run H2O LLM Studio
@@ -249,7 +230,7 @@ This will start the H2O Wave server and the H2O LLM Studio app. Navigate to [htt
 
 ![home-screen](llm-studio-home-screen.png)
 
-If you are running H2O LLM Studio with a custom environment other than Pipenv, start the app as follows:
+If you are running H2O LLM Studio with a custom environment other than `uv`, start the app as follows:
 
 ```sh
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
@@ -301,12 +282,10 @@ docker run \
 
 ### Run with command line interface (CLI)
 
-You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration .yaml file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`.
-
-To specify the path to the configuration file that contains the experiment parameters, run:
+You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration .yaml file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI and to specify the path to the configuration file that contains the experiment parameters, run:
 
 ```sh
-python llm_studio/train.py -Y {path_to_config_yaml_file}
+uv run python llm_studio/train.py -Y {path_to_config_yaml_file}
 ```
 
 To run on multiple GPUs in DDP mode, run:
@@ -322,7 +301,7 @@ By default, the framework will run on the first `k` GPUs. If you want to specify
 To start an interactive chat with your trained model, run:
 
 ```sh
-python llm_studio/prompt.py -e {experiment_name}
+uv run python llm_studio/prompt.py -e {experiment_name}
 ```
 
 `experiment_name` is the output folder of the experiment you want to chat with. The interactive chat will also work with models that were fine-tuned using the GUI.

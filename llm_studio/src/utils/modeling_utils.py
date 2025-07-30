@@ -4,7 +4,7 @@ import os
 import re
 import shutil
 from collections import OrderedDict
-from typing import Any, Dict, Optional
+from typing import Any
 
 import coolname
 import deepspeed
@@ -184,7 +184,7 @@ def save_checkpoint(
 
 def _load_model_weights(
     model: torch.nn.Module,
-    model_weights: Dict,
+    model_weights: dict,
     strict: bool,
     cfg: DefaultConfigProblemBase,
 ):
@@ -244,7 +244,7 @@ def load_checkpoint(
     cfg: DefaultConfigProblemBase,
     model: torch.nn.Module,
     strict: bool = True,
-    weights_path: Optional[str] = None,
+    weights_path: str | None = None,
 ):
     """Load checkpoint
 
@@ -275,7 +275,10 @@ def load_checkpoint(
             )
         else:
             model.backbone = _load_model_weights(
-                model.backbone, model_weights, strict, cfg  # type: ignore
+                model.backbone,
+                model_weights,
+                strict,
+                cfg,  # type: ignore
             )
     else:
         model = _load_model_weights(model, model_weights, strict, cfg)
@@ -544,7 +547,7 @@ def get_number_of_validation_epochs(training_epochs: int, evaluation_epochs: flo
     return training_epochs // evaluation_epochs
 
 
-def contains_nan(output: Dict):
+def contains_nan(output: dict):
     return (
         sum(
             [
@@ -563,7 +566,7 @@ def run_inference(
     model,
     dataloader,
     mode: str,
-) -> Dict[str, list]:
+) -> dict[str, list]:
     """Runs inference
 
     Args:
@@ -768,7 +771,7 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
     This is needed for Gradient Checkpointing in DDP mode.
     """
 
-    kwargs: Dict[str, Any] = {}
+    kwargs: dict[str, Any] = {}
     if (
         hasattr(cfg.training, "attention_implementation")
         and cfg.training.attention_implementation != "auto"

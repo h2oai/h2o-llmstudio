@@ -1,7 +1,7 @@
 import codecs
 import collections.abc
 import logging
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -33,7 +33,7 @@ class CustomDataset(Dataset):
     def __len__(self) -> int:
         return len(self.conversation_chain_handler)
 
-    def __getitem__(self, idx: int) -> Dict:
+    def __getitem__(self, idx: int) -> dict:
         """Reads a single text observation."""
         input_text_dict = self.conversation_chain_handler[idx]
         input_text_dict["systems"] = [
@@ -55,7 +55,7 @@ class CustomDataset(Dataset):
             [
                 torch.cat([prompt_encoding, answer_encoding])
                 for prompt_encoding, answer_encoding in zip(
-                    prompt_encodings, answer_encodings
+                    prompt_encodings, answer_encodings, strict=False
                 )
             ]
         )
@@ -88,7 +88,7 @@ class CustomDataset(Dataset):
             [
                 torch.cat([prompt_encoding, answer_encoding])
                 for prompt_encoding, answer_encoding in zip(
-                    prompt_encodings, answer_encodings
+                    prompt_encodings, answer_encodings, strict=False
                 )
             ]
         )
@@ -137,8 +137,8 @@ class CustomDataset(Dataset):
 
     @staticmethod
     def batch_to_device(
-        batch: Union[Dict, List, torch.Tensor], device: str
-    ) -> Union[Dict, List, torch.Tensor, str]:
+        batch: dict | list | torch.Tensor, device: str
+    ) -> dict | list | torch.Tensor | str:
         """Function to send the batch to the device specified
 
         Args:
@@ -234,7 +234,7 @@ class CustomDataset(Dataset):
 
         return None
 
-    def postprocess_batch_predictions(self, output: Dict) -> Dict:
+    def postprocess_batch_predictions(self, output: dict) -> dict:
         if "predicted_answer_ids" in output.keys():
             predicted_text = [
                 self.tokenizer.decode(ids, skip_special_tokens=True).strip()
@@ -247,7 +247,7 @@ class CustomDataset(Dataset):
 
     @staticmethod
     def clean_output(
-        output: Dict,
+        output: dict,
         cfg: Any,
     ):
         output["predicted_text"] = output["predicted_text"].tolist()
@@ -260,7 +260,7 @@ class CustomDataset(Dataset):
 
         return output
 
-    def postprocess_output(self, cfg, df: pd.DataFrame, output: Dict) -> Dict:
+    def postprocess_output(self, cfg, df: pd.DataFrame, output: dict) -> dict:
         if not cfg.prediction.metric == "Perplexity":
             output = self.clean_output(output, cfg)
 
@@ -287,8 +287,8 @@ class CustomDataset(Dataset):
         return output
 
     def format_output(
-        self, cfg, df: pd.DataFrame, output: Dict
-    ) -> Tuple[Dict, pd.DataFrame]:
+        self, cfg, df: pd.DataFrame, output: dict
+    ) -> tuple[dict, pd.DataFrame]:
         output = {
             key: value
             for key, value in output.items()
@@ -320,8 +320,7 @@ class CustomDataset(Dataset):
             if isinstance(col_name, list):
                 col_name = ", ".join(col_name)
             df[f"pred_{col_name}"] = (
-                "NO ANSWER GENERATED. "
-                "ONLY LAST ANSWER OF A CONVERSATION IS PREDICTED."
+                "NO ANSWER GENERATED. ONLY LAST ANSWER OF A CONVERSATION IS PREDICTED."
             )
             df.loc[end_conversation_ids, f"pred_{col_name}"] = output["predicted_text"]
         return output, df
@@ -332,9 +331,9 @@ class CustomDataset(Dataset):
         Quick check whether Dataframe and configurations are correctly set.
         """
         if cfg.dataset.parent_id_column != "None":
-            assert (
-                cfg.dataset.id_column != cfg.dataset.parent_id_column
-            ), "'Id Column' should be different from 'Parent column'"
+            assert cfg.dataset.id_column != cfg.dataset.parent_id_column, (
+                "'Id Column' should be different from 'Parent column'"
+            )
 
         if (
             cfg.dataset.parent_id_column is not None
@@ -367,9 +366,9 @@ class CustomDataset(Dataset):
             " contains missing values."
         )
         if cfg.dataset.parent_id_column != "None":
-            assert (
-                cfg.dataset.id_column in df.columns
-            ), "When using Parent Column, set 'Id Column' in the previous screen. "
+            assert cfg.dataset.id_column in df.columns, (
+                "When using Parent Column, set 'Id Column' in the previous screen. "
+            )
 
         if (
             cfg.dataset.parent_id_column != "None"
@@ -437,7 +436,7 @@ class CustomDataset(Dataset):
             [
                 torch.cat([prompt_encoding, answer_encoding])
                 for prompt_encoding, answer_encoding in zip(
-                    prompt_encodings, answer_encodings
+                    prompt_encodings, answer_encodings, strict=False
                 )
             ]
         ).clone()
@@ -445,7 +444,7 @@ class CustomDataset(Dataset):
         if self.cfg.dataset.mask_prompt_labels:
             masks = []
             for idx, (prompt_encoding, answer_encoding) in enumerate(
-                zip(prompt_encodings, answer_encodings)
+                zip(prompt_encodings, answer_encodings, strict=False)
             ):
                 if (
                     not self.cfg.dataset.only_last_answer
@@ -470,7 +469,7 @@ class CustomDataset(Dataset):
         sample["labels"][-len(labels) :] = labels
         return sample
 
-    def get_encodings(self, input_text_dict: Dict[str, List[str]]):
+    def get_encodings(self, input_text_dict: dict[str, list[str]]):
         """
         Get encodings for a single conversation history.
         Args:
@@ -485,6 +484,7 @@ class CustomDataset(Dataset):
                     input_text_dict["systems"],
                     input_text_dict["prompts"],
                     input_text_dict["answers"],
+                    strict=False,
                 )
             )
         ]
@@ -528,7 +528,7 @@ class CustomDataset(Dataset):
         encodings = parent_encodings + [encodings[-1]]
         return encodings
 
-    def _get_sample_encoding(self, system: str, prompt: str, answer: str) -> List:
+    def _get_sample_encoding(self, system: str, prompt: str, answer: str) -> list:
         if len(system) > 0:
             system_encoding = self.encode(
                 self.tokenizer, system, self.cfg.tokenizer.max_length, "right"
@@ -579,7 +579,7 @@ class CustomDataset(Dataset):
         return sample
 
     @staticmethod
-    def encode(tokenizer, text: str, max_length: int, truncation_side: str) -> Dict:
+    def encode(tokenizer, text: str, max_length: int, truncation_side: str) -> dict:
         encodings = tokenizer(text, return_tensors="pt", add_special_tokens=False)
         encodings["input_ids"] = encodings["input_ids"][0]
         encodings["attention_mask"] = encodings["attention_mask"][0]

@@ -1,6 +1,5 @@
 import hashlib
 import logging
-from typing import List
 
 from h2o_wave import Q, ui
 
@@ -188,7 +187,7 @@ async def interface(q: Q) -> None:
     q.client["init_interface"] = True
 
 
-async def clean_dashboard(q: Q, mode: str = "full", exclude: List[str] = []):
+async def clean_dashboard(q: Q, mode: str = "full", exclude: list[str] = []):
     """Drop cards from Q page."""
 
     logger.info(q.client.delete_cards)
@@ -201,7 +200,7 @@ async def clean_dashboard(q: Q, mode: str = "full", exclude: List[str] = []):
     q.client["notification_bar"] = None
 
 
-async def delete_dialog(q: Q, names: List[str], action, entity):
+async def delete_dialog(q: Q, names: list[str], action, entity):
     title = "Do you really want to delete "
     n_datasets = len(names)
 

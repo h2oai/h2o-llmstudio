@@ -1,7 +1,6 @@
 import html
 import re
 from dataclasses import dataclass
-from typing import List
 
 PLOT_ENCODINGS = ["image", "html", "df"]
 
@@ -33,7 +32,7 @@ def get_line_separator_html():
     )
 
 
-def decode_bytes(chunks: List[bytes]):
+def decode_bytes(chunks: list[bytes]):
     """Decodes bytes to string
 
     Args:
@@ -92,7 +91,7 @@ def format_for_markdown_visualization(text: str) -> str:
 
 
 def list_to_markdown_representation(
-    tokens: List[str], masks: List[bool], pad_token: int, num_chars: int = 65
+    tokens: list[str], masks: list[bool], pad_token: int, num_chars: int = 65
 ):
     """
     Creates a markdown representation string from a list of tokens,
@@ -101,9 +100,9 @@ def list_to_markdown_representation(
 
     """
     x = []
-    sublist: List[str] = []
-    raw_sublist: List[str] = []
-    for token, mask in zip(tokens, masks):
+    sublist: list[str] = []
+    raw_sublist: list[str] = []
+    for token, mask in zip(tokens, masks, strict=False):
         if len(token) + len(", ".join(raw_sublist)) > num_chars:
             x.append(", ".join(sublist))
             sublist = []
@@ -115,7 +114,7 @@ def list_to_markdown_representation(
             token_formatted = f"""***{token_formatted}***"""
         elif token == pad_token:
             token_formatted = f"""<span style="color: rgba(70, 70, 70, 0.5);">{
-            token_formatted
+                token_formatted
             }</span>"""
         sublist.append(token_formatted)
 

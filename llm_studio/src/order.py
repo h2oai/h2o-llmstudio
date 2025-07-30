@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional
+from collections.abc import Iterable
 
 
 class Order:
@@ -14,7 +14,7 @@ class Order:
     should be shown in Wave.
     """
 
-    def __init__(self, keys: Optional[List[str]] = None):
+    def __init__(self, keys: list[str] | None = None):
         if keys is not None:
             self._list = list(keys)
         else:
@@ -56,7 +56,7 @@ class Order:
         self._list.extend(keys)
 
     def insert(
-        self, *keys: str, before: Optional[str] = None, after: Optional[str] = None
+        self, *keys: str, before: str | None = None, after: str | None = None
     ) -> None:
         """
         Insert one or more keys. Either `before` or `after`, but not both, must be set

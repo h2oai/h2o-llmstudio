@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import torch
 from torch import nn
@@ -105,14 +105,14 @@ class Model(nn.Module):
         if self.cfg.prediction.metric == "Perplexity":
             self.perplexity = Perplexity(self.cfg, reduce=False)
 
-    def generate(self, batch: Dict, cfg: Any, streamer=None):
+    def generate(self, batch: dict, cfg: Any, streamer=None):
         return generate(self.backbone, batch, cfg, streamer)
 
     def forward(
         self,
-        batch: Dict,
+        batch: dict,
         padding: bool = True,
-    ) -> Dict:
+    ) -> dict:
         """
         Forward pass of DPO model.
         Runtime is 4 times slower than causal language modeling model
@@ -126,7 +126,7 @@ class Model(nn.Module):
         if self.cfg.architecture.gradient_checkpointing:
             self.backbone.config.use_cache = False
 
-        outputs: Dict = {}
+        outputs: dict = {}
 
         logits_dict = {}
         labels_dict = {}

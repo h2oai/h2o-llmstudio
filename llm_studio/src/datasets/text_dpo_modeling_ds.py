@@ -1,10 +1,10 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import pandas as pd
 import torch
 
-import llm_studio.src.datasets.text_causal_language_modeling_ds as text_causal_language_modeling_ds  # noqa: [F401]
+import llm_studio.src.datasets.text_causal_language_modeling_ds as text_causal_language_modeling_ds  # noqa: E501
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
 from llm_studio.src.utils.utils import PatchedAttribute
 
@@ -21,9 +21,9 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
     """
 
     def __init__(self, df: pd.DataFrame, cfg: Any, mode: str = "train"):
-        assert (
-            cfg.dataset.limit_chained_samples
-        ), "Need to enable limit_chained_samples for dpo training"
+        assert cfg.dataset.limit_chained_samples, (
+            "Need to enable limit_chained_samples for dpo training"
+        )
         super().__init__(df=df, cfg=cfg, mode=mode)
 
         with PatchedAttribute(
@@ -41,7 +41,7 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
                     self.df, cfg
                 )
 
-    def __getitem__(self, idx: int) -> Dict:
+    def __getitem__(self, idx: int) -> dict:
         """Reads a single text observation."""
         chosen_sample = super().__getitem__(idx)
         keys = ["input_ids", "attention_mask", "token_type_ids", "labels"]
@@ -86,7 +86,7 @@ class CustomDataset(text_causal_language_modeling_ds.CustomDataset):
                     ]
                 )
                 for prompt_encoding, answer_encoding in zip(
-                    prompt_encodings, answer_encodings
+                    prompt_encodings, answer_encodings, strict=False
                 )
             ]
         ).clone()

@@ -142,7 +142,7 @@ if __name__ == "__main__":
             write_flag(flag_path.format(local_rank), "info", "Metric error")
         elif isinstance(exception, LLMAugmentationsException):
             logging.error(
-                "Custom augmentations error occurred during " "H2O LLM Studio run:",
+                "Custom augmentations error occurred during H2O LLM Studio run:",
                 exc_info=True,
             )
             write_flag(flag_path.format(local_rank), "info", "Augmentations error")

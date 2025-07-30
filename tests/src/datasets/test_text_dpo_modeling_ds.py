@@ -97,6 +97,7 @@ def test_dataset_conversation_chain_is_correct(df_with_conversation_chain_ids):
                 dataset.conversation_chain_handler,
                 dataset.conversation_chain_handler_rejected,
             ],
+            strict=False,
         ):
             input_text_dict = conversation_chain_handler[idx]
             expected = {
@@ -281,6 +282,6 @@ def test_dataset_prompt_ids_are_the_same_as_for_causal_language_modeling(
     generated_text = dataset[0]
 
     for key in ["prompt_input_ids", "prompt_attention_mask"]:
-        assert torch.all(
-            generated_text_causal_lm[key] == generated_text[key]
-        ), f"{key} is not the same"
+        assert torch.all(generated_text_causal_lm[key] == generated_text[key]), (
+            f"{key} is not the same"
+        )

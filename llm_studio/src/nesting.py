@@ -1,5 +1,4 @@
 from collections import defaultdict
-from typing import DefaultDict, List, Set, Union
 
 from pydantic.dataclasses import dataclass
 
@@ -18,10 +17,10 @@ class Dependency:
     """
 
     key: str
-    value: Union[str, bool, int, None]
+    value: str | bool | int | None
     is_set: bool
 
-    def check(self, dependency_values: List[str]) -> bool:
+    def check(self, dependency_values: list[str]) -> bool:
         """
         Check if dependency is satisfied
 
@@ -61,10 +60,10 @@ class Nesting:
     """
 
     def __init__(self) -> None:
-        self.dependencies: DefaultDict[str, List[Dependency]] = defaultdict(list)
-        self.triggers: Set[str] = set()
+        self.dependencies: defaultdict[str, list[Dependency]] = defaultdict(list)
+        self.triggers: set[str] = set()
 
-    def add(self, keys: List[str], dependencies: List[Dependency]) -> None:
+    def add(self, keys: list[str], dependencies: list[Dependency]) -> None:
         """
         Append dependencies of type `Dependency` for given keys.
 

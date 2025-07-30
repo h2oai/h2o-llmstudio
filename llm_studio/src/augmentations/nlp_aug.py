@@ -1,6 +1,6 @@
 import logging
 from abc import abstractmethod
-from typing import Any, Dict
+from typing import Any
 
 import torch
 from torch import nn
@@ -21,7 +21,7 @@ class BaseNLPAug(nn.Module):
         self.cfg = cfg
 
     @abstractmethod
-    def forward(self, batch: Dict) -> Dict:
+    def forward(self, batch: dict) -> dict:
         """Augmenting the batch.
         This is an inplace operation.
 

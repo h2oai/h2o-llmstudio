@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import llm_studio.src.datasets.text_causal_classification_ds
 import llm_studio.src.plots.text_causal_classification_modeling_plots
@@ -28,8 +28,8 @@ class ConfigNLPCausalClassificationDataset(ConfigNLPCausalLMDataset):
         llm_studio.src.datasets.text_causal_classification_ds.CustomDataset
     )
     system_column: str = "None"
-    prompt_column: Tuple[str, ...] = ("instruction", "input")
-    answer_column: Tuple[str, ...] = ("label", "output")  # type: ignore
+    prompt_column: tuple[str, ...] = ("instruction", "input")
+    answer_column: tuple[str, ...] = ("label", "output")  # type: ignore
     num_classes: int = 1
     parent_id_column: str = "None"
 
@@ -43,7 +43,7 @@ class ConfigNLPCausalClassificationDataset(ConfigNLPCausalLMDataset):
     add_eos_token_to_prompt: bool = False
     add_eos_token_to_answer: bool = False
 
-    _allowed_file_extensions: Tuple[str, ...] = ("csv", "pq", "parquet")
+    _allowed_file_extensions: tuple[str, ...] = ("csv", "pq", "parquet")
 
     def __post_init__(self):
         self.prompt_column = (
@@ -76,7 +76,7 @@ class ConfigNLPCausalClassificationTraining(ConfigNLPCausalLMTraining):
     loss_function: str = "BinaryCrossEntropyLoss"
 
     learning_rate: float = 0.0001
-    differential_learning_rate_layers: Tuple[str, ...] = ("classification_head",)
+    differential_learning_rate_layers: tuple[str, ...] = ("classification_head",)
     differential_learning_rate: float = 0.00001
 
     def __post_init__(self):
@@ -197,8 +197,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             allow_custom=True,
         )
 
-    def check(self) -> Dict[str, List]:
-        errors: Dict[str, List] = {"title": [], "message": [], "type": []}
+    def check(self) -> dict[str, list]:
+        errors: dict[str, list] = {"title": [], "message": [], "type": []}
 
         if isinstance(self.dataset.answer_column, str):
             errors["title"].append("Invalid answer_column type")
@@ -226,8 +226,9 @@ class ConfigProblemBase(DefaultConfigProblemBase):
                 error_msg = (
                     "Multilabel classification requires "
                     "num_classes == num_answer_columns, "
-                    "but num_classes is set to {} and num_answer_columns is set to {}."
-                ).format(self.dataset.num_classes, len(self.dataset.answer_column))
+                    f"but num_classes is set to {self.dataset.num_classes} and "
+                    f"num_answer_columns is set to {len(self.dataset.answer_column)}."
+                )
                 errors["message"] += [error_msg]
                 errors["type"].append("error")
         else:
@@ -246,7 +247,7 @@ class ConfigProblemBase(DefaultConfigProblemBase):
                     ]
                     errors["message"] += [
                         "BinaryCrossEntropyLoss requires num_classes == 1, "
-                        "but num_classes is set to {}.".format(self.dataset.num_classes)
+                        f"but num_classes is set to {self.dataset.num_classes}."
                     ]
                     errors["type"].append("error")
 

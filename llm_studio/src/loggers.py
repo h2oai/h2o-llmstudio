@@ -1,7 +1,7 @@
 import dataclasses
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 from diskcache import Cache
@@ -11,7 +11,7 @@ from llm_studio.src.utils.plot_utils import PLOT_ENCODINGS
 logger = logging.getLogger(__name__)
 
 
-def get_cfg(cfg: Any) -> Dict:
+def get_cfg(cfg: Any) -> dict:
     """Returns simplified config elements
 
     Args:
@@ -21,7 +21,7 @@ def get_cfg(cfg: Any) -> Dict:
         Dict of config elements
     """
 
-    items: Dict = {}
+    items: dict = {}
     type_annotations = cfg.get_annotations()
 
     cfg_dict = cfg.__dict__
@@ -41,7 +41,7 @@ def get_cfg(cfg: Any) -> Dict:
             items = {**items, **t}
         else:
             type_annotation = type_annotations[k]
-            if type_annotation == float:
+            if type_annotation is float:
                 items[k] = float(v)
             else:
                 items[k] = v
@@ -66,14 +66,13 @@ class NeptuneLogger:
 
         self.logger["cfg"] = stringify_unsupported(get_cfg(cfg))
 
-    def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
+    def log(self, subset: str, name: str, value: Any, step: int | None = None):
         name = f"{subset}/{name}"
         self.logger[name].append(value, step=step)
 
 
 class WandbLogger:
     def __init__(self, cfg: Any) -> None:
-
         os.environ["WANDB_DISABLE_CODE"] = "true"
         os.environ["WANDB_DISABLE_GIT"] = "true"
         os.environ["WANDB_ERROR_REPORTING"] = "false"
@@ -91,7 +90,7 @@ class WandbLogger:
             save_code=False,
         )
 
-    def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
+    def log(self, subset: str, name: str, value: Any, step: int | None = None):
         name = f"{subset}/{name}"
         self.logger.log({name: value}, step=step)
 
@@ -107,11 +106,10 @@ class LocalLogger:
         with Cache(self.logs) as cache:
             cache["cfg"] = params
 
-    def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
+    def log(self, subset: str, name: str, value: Any, step: int | None = None):
         with Cache(self.logs) as cache:
             if subset in PLOT_ENCODINGS:
                 if subset not in cache:
-
                     subset_dict = dict()
                 else:
                     subset_dict = cache[subset]
@@ -139,10 +137,10 @@ class LocalLogger:
 
 
 class DummyLogger:
-    def __init__(self, cfg: Optional[Any] = None):
+    def __init__(self, cfg: Any | None = None):
         return
 
-    def log(self, subset: str, name: str, value: Any, step: Optional[int] = None):
+    def log(self, subset: str, name: str, value: Any, step: int | None = None):
         return
 
 
@@ -184,7 +182,7 @@ class ExternalLoggers:
     _loggers = {"None": DummyLogger, "Neptune": NeptuneLogger, "W&B": WandbLogger}
 
     @classmethod
-    def names(cls) -> List[str]:
+    def names(cls) -> list[str]:
         return list(cls._loggers.keys())
 
     @classmethod

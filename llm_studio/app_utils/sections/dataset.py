@@ -7,7 +7,6 @@ import shutil
 import textwrap
 import time
 import traceback
-from typing import List, Optional
 
 import pandas as pd
 from h2o_wave import Q, ui
@@ -80,10 +79,10 @@ def file_extension_is_compatible(q):
 async def dataset_import(
     q: Q,
     step: int,
-    edit: Optional[bool] = False,
-    error: Optional[str] = "",
-    warning: Optional[str] = "",
-    info: Optional[str] = "",
+    edit: bool | None = False,
+    error: str | None = "",
+    warning: str | None = "",
+    info: str | None = "",
     allow_merge: bool = True,
 ) -> None:
     """Display dataset import cards.
@@ -147,7 +146,7 @@ async def dataset_import(
                     "default_aws_secret_key"
                 ]
 
-            files: List[str] | Exception = s3_file_options(
+            files: list[str] | Exception = s3_file_options(
                 q.client["dataset/import/s3_bucket"],
                 q.client["dataset/import/s3_access_key"],
                 q.client["dataset/import/s3_secret_key"],
@@ -312,7 +311,6 @@ async def dataset_import(
             ]
 
         elif q.client["dataset/import/source"] == "H2O-Drive":
-
             files = await h2o_drive_file_options(q)
 
             # Handle errors in h2o_drive connection and display them nicely below
@@ -378,7 +376,6 @@ async def dataset_import(
                 ),
             ]
         elif q.client["dataset/import/source"] == "Huggingface":
-
             if q.client["dataset/import/huggingface_split"] is None:
                 q.client["dataset/import/huggingface_split"] = "train"
             if q.client["dataset/import/huggingface_api_token"] is None:
@@ -1149,7 +1146,7 @@ async def dataset_list_delete(q: Q):
     ]
 
 
-async def dataset_delete(q: Q, dataset_ids: List[int]):
+async def dataset_delete(q: Q, dataset_ids: list[int]):
     """Delete selected datasets.
 
     Args:
@@ -1213,7 +1210,7 @@ async def dataset_display(q: Q) -> None:
 
     await clean_dashboard(q, mode=q.client["dataset/display/tab"])
 
-    items: List[Tab] = [
+    items: list[Tab] = [
         ui.tab(name="dataset/display/data", label="Sample Train Data"),
         ui.tab(
             name="dataset/display/visualization", label="Sample Train Visualization"
@@ -1328,7 +1325,7 @@ async def show_visualization_tab(q: Q, cfg):
 async def show_summary_tab(q: Q, dataset_id):
     dataset_df = get_datasets(q)
     dataset_df = dataset_df[dataset_df.id == dataset_id]
-    stat_list_items: List[StatListItem] = []
+    stat_list_items: list[StatListItem] = []
     for col in dataset_df.columns:
         if col in ["id", "config_file", "path", "process_id", "status"]:
             continue
@@ -1388,7 +1385,7 @@ async def show_statistics_tab(q: Q, dataset_filename, config_filename):
         ]
     else:
         if df_stats.shape[1] > 5:  # mixed text and numeric
-            widths = {col: "77" for col in df_stats}
+            widths = dict.fromkeys(df_stats, "77")
         else:  # only text features
             widths = None
         component_items = [
@@ -1408,7 +1405,7 @@ async def show_statistics_tab(q: Q, dataset_filename, config_filename):
     q.client.delete_cards.add("dataset/display/statistics")
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str) -> dict:
     """
     Compute various statistics for a dataset.
@@ -1438,7 +1435,7 @@ def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str) 
         input_text = conversation["systems"][0]
         prompts = conversation["prompts"]
         answers = conversation["answers"]
-        for prompt, answer in zip(prompts, answers):
+        for prompt, answer in zip(prompts, answers, strict=False):
             input_text += prompt + answer
         input_texts += [input_text]
     stats_dict["complete_conversations"] = [
@@ -1454,8 +1451,7 @@ def compute_dataset_statistics(dataset_path: str, cfg_path: str, cfg_hash: str) 
 async def dataset_import_uploaded_file(q: Q) -> None:
     local_path = await q.site.download(
         q.args["dataset/import/local_upload"][0],
-        f"{get_data_dir(q)}/"
-        f'{q.args["dataset/import/local_upload"][0].split("/")[-1]}',
+        f"{get_data_dir(q)}/{q.args['dataset/import/local_upload'][0].split('/')[-1]}",
     )
     await q.site.unload(q.args["dataset/import/local_upload"][0])
     valid, error = check_valid_upload_content(local_path)

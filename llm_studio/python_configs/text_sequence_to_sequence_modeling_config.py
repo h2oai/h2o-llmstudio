@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 from llm_studio.app_utils.config import default_cfg
 from llm_studio.python_configs.base import DefaultConfigProblemBase
@@ -108,8 +108,8 @@ class ConfigProblemBase(DefaultConfigProblemBase):
             allow_custom=True,
         )
 
-    def check(self) -> Dict[str, List]:
-        errors: Dict[str, List] = {"title": [], "message": [], "type": []}
+    def check(self) -> dict[str, list]:
+        errors: dict[str, list] = {"title": [], "message": [], "type": []}
         if self.prediction.temperature > 0 and not self.prediction.do_sample:
             errors["title"] += ["Do sample needs to be enabled for temperature > 0"]
             errors["message"] += [

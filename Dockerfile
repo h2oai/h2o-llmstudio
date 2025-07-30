@@ -36,11 +36,10 @@ ENV PATH=/home/llmstudio/.local/bin:$PATH
 RUN \
     curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 && \
     chmod -R a+w /home/llmstudio
-COPY Makefile Pipfile Pipfile.lock /workspace/
+COPY Makefile pyproject.toml uv.lock /workspace/
 
 # Python virtualenv is installed in /workspace/.venv/
 # give read and write permissions to the /workspace/.venv/ directory for all users to allow wave to write files
-ENV PIPENV_VENV_IN_PROJECT=1
 RUN make setup && chmod -R 777 /workspace/.venv
 
 # Add the venv to the PATH

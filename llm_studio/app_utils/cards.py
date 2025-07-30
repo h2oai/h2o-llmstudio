@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from h2o_wave import ui
 
 
@@ -28,7 +26,7 @@ def navigation_zone() -> ui.Zone:
     return zone
 
 
-def card_zones(mode: Optional[str] = "full") -> List[ui.Zone]:
+def card_zones(mode: str | None = "full") -> list[ui.Zone]:
     """Specifies for certain modes the layout zones
 
     Args:

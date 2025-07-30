@@ -1,6 +1,5 @@
 import logging
 import os
-from typing import Dict, List
 
 import torch
 
@@ -32,7 +31,7 @@ def check_config_for_errors(cfg: DefaultConfigProblemBase) -> dict:
 
 
 def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
-    errors: Dict[str, List] = {"title": [], "message": [], "type": []}
+    errors: dict[str, list] = {"title": [], "message": [], "type": []}
     if not len(cfg.environment.gpus) > 0:
         errors["title"] += ["No GPU selected"]
         errors["message"] += [

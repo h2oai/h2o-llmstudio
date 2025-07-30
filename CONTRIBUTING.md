@@ -64,4 +64,4 @@ pip install flash-attn --no-build-isolation
 pip install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
 ```
 
-For a PR, update the Pipfile and the Pipfile.lock via ```pipenv install package_name```.
+For a PR, update the pyproject.toml and the uv.lock via ```uv add package_name```.

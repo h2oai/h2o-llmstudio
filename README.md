@@ -77,16 +77,7 @@ For a performance comparison of different GPUs, see the [H2O LLM Studio performa
 
 ### Recommended Install
 
-The recommended way to install H2O LLM Studio is using pipenv with Python 3.10. To install Python 3.10 on Ubuntu 16.04+, execute the following commands:
-
-#### System installs (Python 3.10)
-
-```bash
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt install python3.10
-sudo apt-get install python3.10-distutils
-curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
-```
+The recommended way to install H2O LLM Studio is using `uv` with Python 3.10. To install Python 3.10 on Ubuntu 20.04+, execute the following commands:
 
 #### Installing NVIDIA Drivers (if required)
 
@@ -102,37 +93,17 @@ sudo apt-get update
 sudo apt-get -y install cuda-toolkit-12-4
 ```
 
-alternatively, one can install cudatoolkits in a conda environment:
-
-```bash
-conda create -n llmstudio python=3.10
-conda activate llmstudio
-conda install -c "nvidia/label/cuda-12.4.0" cuda-toolkit
-```
-
 ### Virtual environments
 
 We offer various ways of setting up the necessary python environment.
 
-#### Pipenv virtual environment
+#### UV virtual environment
 
-The following command will create a virtual environment using pipenv and will install the dependencies using pipenv:
+The following command will create a virtual environment using `uv` and will install the dependencies:
 
 ```bash
 make setup
 ```
-
-If you are having troubles installing the flash_attn package, consider running
-
-```bash
-make setup-no-flash
-```
-
-instead. This will install the dependencies without the flash_attn package. Note that this will disable the use of Flash Attention 2 and model training will be slower and consume more memory.
-
-#### Nightly Conda virtual environment
-
-You can also setup a conda virtual environment that can also deviate from the recommended setup. The ```Makefile``` contains a command ```setup-conda-nightly``` that installs a fresh conda environment with CUDA 12.4 and current nightly PyTorch.
 
 #### Using requirements.txt
 
@@ -154,7 +125,7 @@ make llmstudio
 This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
 Navigate to <http://localhost:10101/> (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
 
-If you are running H2O LLM Studio with a custom environment other than Pipenv, you need to start the app as follows:
+If you are running H2O LLM Studio with a custom environment other than `uv`, you need to start the app as follows:
 
 ```bash
 H2O_WAVE_MAX_REQUEST_SIZE=25MB \
@@ -162,8 +133,6 @@ H2O_WAVE_NO_LOG=true \
 H2O_WAVE_PRIVATE_DIR="/download/@output/download" \
 wave run llm_studio.app
 ```
-
-If you are using the [nightly conda environment](#nightly-conda-virtual-environment), you can run ```make llmstudio-conda```.
 
 ## Run H2O LLM Studio GUI using Docker
 
@@ -218,10 +187,10 @@ docker run \
 
 ## Run H2O LLM Studio with command line interface (CLI)
 
-You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration .yaml file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI, activate the pipenv environment by running `make shell`, and then use the following command:
+You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration .yaml file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI use the following command:
 
 ```bash
-python llm_studio/train.py -Y {path_to_config_yaml_file}
+uv run python llm_studio/train.py -Y {path_to_config_yaml_file}
 ```
 
 To run on multiple GPUs in DDP mode, run the following command:
@@ -235,7 +204,7 @@ By default, the framework will run on the first `k` GPUs. If you want to specify
 To start an interactive chat with your trained model, use the following command:
 
 ```bash
-python llm_studio/prompt.py -e {experiment_name}
+uv run python llm_studio/prompt.py -e {experiment_name}
 ```
 
 where `experiment_name` is the output folder of the experiment you want to chat with (see configuration).
@@ -244,9 +213,7 @@ The interactive chat will also work with model that were finetuned using the UI.
 To publish the model to Hugging Face, use the following command:
 
 ```bash
-make shell 
-
-python llm_studio/publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_key} -u {user_id} -m {model_name} -s {safe_serialization}
+uv run python llm_studio/publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_key} -u {user_id} -m {model_name} -s {safe_serialization}
 ```
 
 `path_to_experiment` is the output folder of the experiment.

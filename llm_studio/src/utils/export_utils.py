@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import zipfile
-from typing import Optional
 
 import pandas as pd
 
@@ -56,7 +55,7 @@ def get_adapter_model_path(experiment_name: str, experiment_path: str):
     return get_artifact_path_path(experiment_name, experiment_path, "adapter_model")
 
 
-def check_available_space(output_folder: str, min_disk_space: Optional[float]):
+def check_available_space(output_folder: str, min_disk_space: float | None):
     if not min_disk_space:
         return True
 

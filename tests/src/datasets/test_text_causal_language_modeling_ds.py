@@ -220,7 +220,8 @@ def test_getitem():
 
     assert (
         dataset.tokenizer.decode(result["input_ids"], skip_special_tokens=False)
-        == "<|endoftext|>" * 475 + "System:system 1"
+        == "<|endoftext|>" * 475
+        + "System:system 1"
         "<|endoftext|>"
         "Prompt:prompt 1"
         "<|endoftext|>"
@@ -285,17 +286,17 @@ def test_getitem_no_chaining():
 
         assert (
             dataset.tokenizer.decode(result["input_ids"], skip_special_tokens=True)
-            == f"System:system {i+1}"
-            f"Prompt:prompt {i+1}"
-            f"Answer:answer {i+1}"
+            == f"System:system {i + 1}"
+            f"Prompt:prompt {i + 1}"
+            f"Answer:answer {i + 1}"
         )
 
         assert (
             dataset.tokenizer.decode(
                 result["prompt_input_ids"], skip_special_tokens=True
             )
-            == f"System:system {i+1}"
-            f"Prompt:prompt {i+1}"
+            == f"System:system {i + 1}"
+            f"Prompt:prompt {i + 1}"
             "Answer:"
         )
 

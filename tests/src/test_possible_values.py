@@ -142,7 +142,6 @@ def test_string_impossible_values():
 
 
 class TestDatasetValue:
-
     def test_get_value(self):
         """
         Test that NotImplementedError is raised when get_value is called directly

@@ -3,7 +3,7 @@ import os
 import pickle
 import random
 import zipfile
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import psutil
@@ -72,7 +72,7 @@ def kill_child_processes(current_pid: int, exclude=None) -> bool:
         return False
 
 
-def kill_child_processes_and_current(current_pid: Optional[int] = None) -> bool:
+def kill_child_processes_and_current(current_pid: int | None = None) -> bool:
     """
     Kill all child processes of the current process, then terminates itself.
     Optionally, specify the current process id.

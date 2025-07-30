@@ -1,7 +1,8 @@
 import dataclasses
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass, fields
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Any
 
 from llm_studio.src import possible_values
 from llm_studio.src.nesting import Dependency, Nesting
@@ -11,7 +12,7 @@ from llm_studio.src.tooltips import tooltips
 logger = logging.getLogger(__name__)
 
 
-def _get_bases_below_parent(cls: type, parent: type, bases=None) -> Set[type]:
+def _get_bases_below_parent(cls: type, parent: type, bases=None) -> set[type]:
     if bases is None:
         bases = set()
 
@@ -35,10 +36,10 @@ class DefaultConfig:
     """
 
     def __post_init__(self) -> None:
-        self._possible_values: Dict[str, Any] = {k: None for k in self.__dict__}
-        self._visibility: Dict[str, int] = {k: 0 for k in self.__dict__}
-        self._grid_search_values: Dict[str, Any] = {k: None for k in self.__dict__}
-        self._grid_search_iscustom: Dict[str, Any] = {k: None for k in self.__dict__}
+        self._possible_values: dict[str, Any] = dict.fromkeys(self.__dict__)
+        self._visibility: dict[str, int] = dict.fromkeys(self.__dict__, 0)
+        self._grid_search_values: dict[str, Any] = dict.fromkeys(self.__dict__)
+        self._grid_search_iscustom: dict[str, Any] = dict.fromkeys(self.__dict__)
 
         # go up the class hierarchy until we are one below the `DefaultConfig`
         bases = _get_bases_below_parent(self.__class__, DefaultConfig)
@@ -56,7 +57,7 @@ class DefaultConfig:
 
     def _get_possible_values(
         self, field: str, value: Any, type_annotation: type, dataset_fn=None
-    ) -> Optional[Tuple[Optional[possible_values.Value], Any]]:
+    ) -> tuple[possible_values.Value | None, Any] | None:
         """
         Returns a set of possible values for the field provided, and the current value.
 
@@ -98,13 +99,13 @@ class DefaultConfig:
 
         return poss_values, value
 
-    def _get_tooltips(self, field: str, predict: bool = False) -> Optional[str]:
+    def _get_tooltips(self, field: str, predict: bool = False) -> str | None:
         """
         Returns a tooltip for the field provided
         """
         return tooltips.get(f"experiments_{field}", None)
 
-    def _get_visibility(self, field: str) -> Optional[int]:
+    def _get_visibility(self, field: str) -> int | None:
         """Returns a visibility level for the field provided.
          0 -- visible in the Wave app
         -1 -- not visible in the Wave App
@@ -113,12 +114,12 @@ class DefaultConfig:
 
         return self._visibility.get(field, None)
 
-    def _get_grid_search_values(self, field: str) -> Optional[Tuple]:
+    def _get_grid_search_values(self, field: str) -> tuple | None:
         """Returns a Tuple of possible values for Grid Search."""
 
         return self._grid_search_values.get(field, None)
 
-    def _get_grid_search_iscustom(self, field: str) -> Optional[Tuple]:
+    def _get_grid_search_iscustom(self, field: str) -> tuple | None:
         """Returns "True" if this param is customizable in grid search mode.
 
         Returns False if not customizable.
@@ -126,12 +127,12 @@ class DefaultConfig:
 
         return self._grid_search_iscustom.get(field, None)
 
-    def _get_nesting_triggers(self) -> Set[str]:
+    def _get_nesting_triggers(self) -> set[str]:
         """Returns a Set of keys other elements are depending on"""
 
         return self._nesting.triggers
 
-    def _get_nesting_dependencies(self, key: str) -> List[Dependency] | None:
+    def _get_nesting_dependencies(self, key: str) -> list[Dependency] | None:
         """Returns a all dependencies for a given key"""
 
         if key in self._nesting.dependencies:
@@ -140,7 +141,7 @@ class DefaultConfig:
             dependencies = None
         return dependencies
 
-    def _get_order(self, warn_if_unset=True) -> List[str]:
+    def _get_order(self, warn_if_unset=True) -> list[str]:
         """
         Returns the order in which to show the keys in the config.
 
@@ -170,10 +171,10 @@ class DefaultConfig:
         return ordered_keys + unordered_keys
 
     @classmethod
-    def get_annotations(cls) -> Dict[str, Any]:
+    def get_annotations(cls) -> dict[str, Any]:
         """Returns type annotations through all the Parent config classes"""
 
-        d: Dict[str, Any] = {}
+        d: dict[str, Any] = {}
         for c in cls.mro()[::-1]:
             try:
                 d.update(**c.__annotations__)
@@ -238,7 +239,7 @@ class DefaultConfigProblemBase(DefaultConfig):
 
         return cls(**init_args)
 
-    def check(self) -> Dict[str, List]:
+    def check(self) -> dict[str, list]:
         """
         Checks for errors (incompatible settings) for the specific problem type.
         Returns:
@@ -247,5 +248,5 @@ class DefaultConfigProblemBase(DefaultConfig):
         - "message": A list of error messages.
         - "type": A list of error types, can be "error", "warning", "deprecated"
         """
-        errors: Dict[str, List] = {"title": [], "message": [], "type": []}
+        errors: dict[str, list] = {"title": [], "message": [], "type": []}
         return errors

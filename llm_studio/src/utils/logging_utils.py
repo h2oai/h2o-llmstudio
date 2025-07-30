@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import re
-from typing import Any, Optional
+from typing import Any
 
 from llm_studio.src.utils.plot_utils import PlotData
 
@@ -23,7 +23,7 @@ class IgnorePatchRequestsFilter(logging.Filter):
         return True  # Include the log entry
 
 
-def initialize_logging(cfg: Optional[Any] = None):
+def initialize_logging(cfg: Any | None = None):
     """
     Initialize logging for the application and for each experiment.
 

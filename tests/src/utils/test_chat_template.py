@@ -9,7 +9,6 @@ from llm_studio.src.utils.config_utils import load_config_yaml
 
 
 def test_chat_template_no_system_prompt():
-
     test_directory = os.path.abspath(os.path.dirname(__file__))
     cfg_path = os.path.join(test_directory, "../test_data/cfg.yaml")
     cfg = load_config_yaml(cfg_path)
@@ -90,7 +89,6 @@ def test_chat_template_no_system_prompt():
 
 
 def test_chat_template_with_system_prompt():
-
     test_directory = os.path.abspath(os.path.dirname(__file__))
     cfg_path = os.path.join(test_directory, "../test_data/cfg.yaml")
     cfg = load_config_yaml(cfg_path)
@@ -172,7 +170,6 @@ def test_chat_template_with_system_prompt():
 
 
 def test_chat_template_no_eos_token():
-
     test_directory = os.path.abspath(os.path.dirname(__file__))
     cfg_path = os.path.join(test_directory, "../test_data/cfg.yaml")
     cfg = load_config_yaml(cfg_path)
@@ -204,7 +201,6 @@ def test_chat_template_no_eos_token():
 
 
 def test_chat_template_no_special_token():
-
     test_directory = os.path.abspath(os.path.dirname(__file__))
     cfg_path = os.path.join(test_directory, "../test_data/cfg.yaml")
     cfg = load_config_yaml(cfg_path)

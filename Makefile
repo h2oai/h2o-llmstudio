@@ -1,11 +1,7 @@
 SHELL := /bin/bash
 
-PYTHON_VERSION ?= 3.10
-PYTHON ?= python$(PYTHON_VERSION)
-PIP ?= $(PYTHON) -m pip
-PIPENV ?= $(PYTHON) -m pipenv
-PIPENV_PYTHON = $(PIPENV) run python
-PIPENV_PIP = $(PIPENV_PYTHON) -m pip
+UV ?= uv
+RUN ?= $(UV) run
 PWD = $(shell pwd)
 DOCKER_IMAGE ?= gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
 APP_VERSION=$(shell sed -n 's/^version = //p' pyproject.toml | tr -d '"')
@@ -22,51 +18,28 @@ else
     PW_DEBUG =
 endif
 
-.PHONY: pipenv
-pipenv:
-	$(PIP) install pip==25.0.1
-	$(PIP) install pipenv==2024.4.1
+.PHONY: uv
+uv:
+	curl -LsSf https://astral.sh/uv/install.sh | sh
 
 .PHONY: setup
-setup: pipenv
-	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
-	-$(PIPENV_PIP) install flash-attn==2.7.4.post1 --no-build-isolation --upgrade --no-cache-dir
+setup: uv  # Install dependencies
+	$(UV) sync --frozen --no-dev
+	-$(UV) sync --frozen --no-dev --extra flash
 
 .PHONY: setup-dev
-setup-dev: pipenv
-	$(PIPENV) install --verbose --dev --python $(PYTHON_VERSION)
-	-$(PIPENV_PIP) install flash-attn==2.7.4.post1 --no-build-isolation --upgrade --no-cache-dir
-	$(PIPENV) run playwright install
+setup-dev: uv  # Install dependencies including dev dependencies
+	$(UV) sync --frozen --group dev
+	-$(UV) sync --frozen --group dev --extra flash 
+	$(UV) run playwright install
 
-.PHONY: setup-no-flash
-setup-no-flash: pipenv
-	$(PIPENV) install --verbose --python $(PYTHON_VERSION)
-
-.PHONY: setup-conda-nightly
-setup-conda:
-	@bash -c '\
-		set -e; \
-		source $$(conda info --base)/etc/profile.d/conda.sh; \
-		conda deactivate; \
-		conda create -n llmstudio python=3.10 -y; \
-		conda activate llmstudio; \
-		conda install -c nvidia/label/cuda-12.4.0 cuda-toolkit -y; \
-		conda install pytorch pytorch-cuda=12.4 -c pytorch-nightly -c nvidia -y; \
-		grep -v "nvidia" requirements.txt | grep -v "torch" | python -m pip install -r /dev/stdin; \
-		python -m pip install flash-attn==2.7.4.post1 --no-build-isolation --upgrade --no-cache-dir; \
-	'
-
-.PHONY: setup-ui
-setup-ui: pipenv
-	$(PIPENV) install --verbose --categories=dev-packages --python $(PYTHON_VERSION)
-	$(PIPENV) run playwright install
-
-.PHONY: export-requirements
-export-requirements: pipenv
-	$(PIPENV) requirements > requirements.txt
+.PHONY: requirements
+requirements: uv  # uv pip compile requirements.txt
+	$(UV) export --no-hashes --no-dev --no-header --frozen --format requirements-txt > requirements.txt
+	grep -v "sys_platform == 'win32'" requirements.txt | awk -F ';' '{print $$1}' > tmp_requirements.txt && mv tmp_requirements.txt requirements.txt
 
 clean-env:
-	$(PIPENV) --rm
+	rm -rf .venv
 
 clean-data:
 	rm -rf data
@@ -78,35 +51,28 @@ reports:
 	mkdir -p reports
 
 .PHONY: style
-style: reports pipenv
-	@echo -n > reports/flake8_errors.log
+style: reports uv
 	@echo -n > reports/mypy_errors.log
 	@echo -n > reports/mypy.log
 	@echo
 
-	-$(PIPENV) run flake8 | tee -a reports/flake8_errors.log
-	@if [ -s reports/flake8_errors.log ]; then exit 1; fi
-
-	-$(PIPENV) run mypy . --check-untyped-defs | tee -a reports/mypy.log
+	-$(UV) run mypy . --check-untyped-defs | tee -a reports/mypy.log
 	@if ! grep -Eq "Success: no issues found in [0-9]+ source files" reports/mypy.log ; then exit 1; fi
 
 .PHONY: format
-format: pipenv
-	$(PIPENV) run isort .
-	$(PIPENV) run black .
+format:  # Format and check code with ruff
+	uv tool run ruff format
+	uv tool run ruff check --fix
 
-.PHONY: isort
-isort: pipenv
-	$(PIPENV) run isort .
-
-.PHONY: black
-black: pipenv
-	$(PIPENV) run black .
+.PHONY: format-check
+format-check:  # Check format and check code with ruff (fails if changes are needed)
+	$(UV) tool run ruff format --check
+	$(UV) tool run ruff check
 
 .PHONY: test
 test: reports
 	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); \
-	$(PIPENV) run pytest -v --junitxml=reports/junit.xml \
+	$(UV) run pytest -v --junitxml=reports/junit.xml \
 	--import-mode importlib \
 	--html=./reports/pytest.html \
 	--cov=llm_studio \
@@ -119,7 +85,7 @@ test: reports
 .PHONY: test-debug
 test-debug: reports
 	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); \
-	$(PIPENV) run pytest -v --junitxml=reports/junit.xml \
+	$(UV) run pytest -v --junitxml=reports/junit.xml \
 	--import-mode importlib \
 	--html=./reports/pytest.html \
 	-k $(test) \
@@ -131,7 +97,7 @@ test-debug: reports
 .PHONY: test-unit
 test-unit: reports
 	@bash -c 'set -o pipefail; export PYTHONPATH=$(PWD); \
-	$(PIPENV) run pytest -v --junitxml=reports/junit.xml \
+	$(UV) run pytest -v --junitxml=reports/junit.xml \
 	--import-mode importlib \
 	--html=./reports/pytest.html \
 	-k src \
@@ -142,9 +108,9 @@ test-unit: reports
     tests/* 2>&1 | tee reports/tests.log'
 
 .PHONY: test-ui
-test-ui: reports setup-ui
+test-ui: reports setup-dev
 	@bash -c 'set -o pipefail; \
-	$(PW_DEBUG) $(PIPENV) run pytest \
+	$(PW_DEBUG) $(UV) run pytest \
 	-v \
 	--junitxml=reports/junit_ui.xml \
 	--html=./reports/pytest_ui.html \
@@ -154,8 +120,8 @@ test-ui: reports setup-ui
 	tests/ui/test.py 2>&1 | tee reports/tests_ui.log'
 
 .PHONY: test-ui-headed
-test-ui-headed: setup-ui
-	$(PW_DEBUG) $(PIPENV) run pytest \
+test-ui-headed: setup-dev
+	$(PW_DEBUG) $(UV) run pytest \
 	-vvs \
 	-s \
 	--headed \
@@ -165,7 +131,7 @@ test-ui-headed: setup-ui
 	tests/ui/test.py 2>&1 | tee reports/tests.log
 
 .PHONY: test-ui-github-actions  # Run UI tests in GitHub Actions. Starts the Wave server and runs the tests locally.
-test-ui-github-actions: reports setup-ui
+test-ui-github-actions: reports setup-dev
 	@echo "Starting the server..."
 	make llmstudio &
 	@echo "Server started in background."
@@ -187,7 +153,7 @@ wave:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
-	$(PIPENV) run wave run llm_studio.app
+	$(UV) run wave run llm_studio.app
 
 .PHONY: llmstudio
 llmstudio:
@@ -196,18 +162,7 @@ llmstudio:
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
 	H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
-	$(PIPENV) run wave run --no-reload llm_studio.app
-
-.PHONY: llmstudio-conda
-llmstudio-conda:
-	CONDA_ACTIVATE="source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate llmstudio" && \
-	bash -c "$$CONDA_ACTIVATE && \
-		nvidia-smi && \
-		HF_HUB_DISABLE_TELEMETRY=1 \
-		H2O_WAVE_MAX_REQUEST_SIZE=25MB \
-		H2O_WAVE_NO_LOG=true \
-		H2O_WAVE_PRIVATE_DIR="/download/@$(WORKDIR)/output/download" \
-		wave run --no-reload llm_studio.app"
+	$(UV) run wave run --no-reload llm_studio.app
 
 .PHONY: stop-llmstudio
 stop-llmstudio:
@@ -257,10 +212,6 @@ bundles:
 	cp -r static about.md bundles/
 	sed 's/{{VERSION}}/${APP_VERSION}/g' app.toml.template > bundles/app.toml
 	cd bundles && zip -r ai.h2o.llmstudio.${APP_VERSION}.wave *
-
-.PHONY: shell
-shell:
-	$(PIPENV) shell
 
 setup-doc:  # Install documentation dependencies
 	cd documentation && npm install 

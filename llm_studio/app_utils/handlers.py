@@ -1,6 +1,5 @@
 import gc
 import logging
-from typing import List
 
 import torch
 from h2o_wave import Q
@@ -426,7 +425,7 @@ async def handle(q: Q) -> None:
         )
 
 
-async def experiment_delete_all_artifacts(q: Q, experiment_ids: List[int]) -> None:
+async def experiment_delete_all_artifacts(q: Q, experiment_ids: list[int]) -> None:
     await experiment_stop(q, experiment_ids)
     await experiment_delete(q, experiment_ids)
     await list_current_experiments(q)

@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -24,7 +24,7 @@ LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", 60))
 
 
 def sacrebleu_score(
-    cfg: DefaultConfigProblemBase, results: Dict, val_df: pd.DataFrame
+    cfg: DefaultConfigProblemBase, results: dict, val_df: pd.DataFrame
 ) -> NDArray:
     """
     Calculate BLEU scores for predicted texts against target texts.
@@ -55,7 +55,7 @@ def sacrebleu_score(
 
     scores = []
     for predicted_text, target_text in zip(
-        results["predicted_text"], results["target_text"]
+        results["predicted_text"], results["target_text"], strict=False
     ):
         if target_text == "":
             score = 0.0
@@ -130,10 +130,10 @@ def rate_reply(filled_eval_template: str, model: str):
 
 def gpt_score(
     cfg: DefaultConfigProblemBase,
-    results: Dict,
+    results: dict,
     val_df: pd.DataFrame,
     raw_results: bool = False,
-) -> Union[NDArray, Tuple[NDArray, List[str]]]:
+) -> NDArray | tuple[NDArray, list[str]]:
     vdf = val_df.copy()
     vdf["_PROMPT"] = get_texts(val_df, cfg)
     vdf["_PREDICTED_TEXT"] = results["predicted_text"]
@@ -143,12 +143,12 @@ def gpt_score(
     template_name = cfg.prediction.metric_gpt_template
 
     if template_name == "mt-bench":
-        eval_template = open("prompts/mt-bench/general.txt", "r").read()
+        eval_template = open("prompts/mt-bench/general.txt").read()
     else:
-        eval_template = open(f"prompts/{template_name}.txt", "r").read()
+        eval_template = open(f"prompts/{template_name}.txt").read()
     vdf["filled_eval_template"] = eval_template
     if template_name == "mt-bench":
-        eval_template = open("prompts/mt-bench/reference.txt", "r").read()
+        eval_template = open("prompts/mt-bench/reference.txt").read()
         vdf.loc[
             vdf.category.isin(["math", "reasoning", "coding"]), "filled_eval_template"
         ] = eval_template
@@ -205,7 +205,7 @@ class Perplexity(nn.Module):
         return perplexity
 
 
-def perplexity(cfg: DefaultConfigProblemBase, results: Dict, val_df: pd.DataFrame):
+def perplexity(cfg: DefaultConfigProblemBase, results: dict, val_df: pd.DataFrame):
     return results["perplexity"].detach().float().cpu().numpy()
 
 
@@ -227,7 +227,7 @@ class Metrics:
     }
 
     @classmethod
-    def names(cls) -> List[str]:
+    def names(cls) -> list[str]:
         return sorted(cls._metrics.keys())
 
     @classmethod

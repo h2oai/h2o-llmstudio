@@ -15,8 +15,9 @@ import gc
 import logging
 import sys
 import time
+from collections.abc import Callable
 from distutils import util
-from typing import Any, Callable, Dict, Tuple
+from typing import Any
 
 import deepspeed
 import numpy as np
@@ -83,7 +84,7 @@ def run_eval(
     val_dataloader: DataLoader,
     val_df: pd.DataFrame,
     mode: str = "validation",
-) -> Tuple:
+) -> tuple:
     """Runs the evaluation loop.
 
     Args:
@@ -99,9 +100,7 @@ def run_eval(
     with torch.no_grad():
         is_training = model.training
         model.eval()
-        val_data: Dict[str, Any] = run_inference(
-            cfg, model, val_dataloader, mode
-        )  # type: ignore
+        val_data: dict[str, Any] = run_inference(cfg, model, val_dataloader, mode)  # type: ignore
         model.train(is_training)
 
     # Sync validation predictions across GPUs
@@ -737,7 +736,7 @@ if __name__ == "__main__":
                 arg_type = getattr(cfg, arg[0]).get_annotations()[arg[1]]
             except (AttributeError, KeyError):
                 continue
-            if arg_type == bool:
+            if arg_type is bool:
                 parser.add_argument(arg_orig, type=util.strtobool)
             else:
                 parser.add_argument(arg_orig, type=arg_type)

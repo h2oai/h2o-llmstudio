@@ -3,11 +3,124 @@ name = "h2o-llmstudio"
 version = "1.15.0-dev"
 readme = "README.md"
 license = {file = "LICENSE"}
+requires-python = "==3.10.*"
+dependencies = [
+    "torch==2.6.0",
+    "tqdm>=4.65.0,<5.0.0",
+    "transformers==4.50.3",
+    "numpy>=1.26.0, <2.0.0",
+    "pandas>=2.2.0, <3.0.0",
+    "scikit-learn>=1.5.1, <2.0.0",
+    "boto3>=1.20.24, <2.0.0",
+    "SQLAlchemy>=2.0.25, <3.0.0",
+    "dill>=0.3.8, <0.4.0",
+    "pyarrow>=14.0.1",
+    "kaggle>=1.7.4, <2.0.0",
+    "coolname>=2.2.0, <3.0.0",
+    "bokeh>=3.5.0, <4.0.0",
+    "beautifulsoup4>=4.11.1, <5.0.0",
+    "diskcache==5.6.3",
+    "sentencepiece>=0.2.0, <0.3.0",
+    "sacrebleu==2.5.1",
+    "toml>=0.10.2, <0.11.0",
+    "pyyaml>=6.0.0, <7.0.0",
+    "protobuf>=3.20.3",
+    "fastparquet>=2023.7.0",
+    "gputil>=1.4.0, <2.0.0",
+    "huggingface-hub==0.30.1",
+    "bitsandbytes==0.45.4",
+    "accelerate==1.6.0",
+    "openai>=1.12.0, <2.0.0",
+    "einops==0.8.1",
+    "datasets>=3.5.0, <4.0.0",
+    "neptune>=1.10.4, <2.0.0",
+    "wandb>=0.17.5, <1.0.0",
+    "Jinja2>=3.1.3, <4.0.0",
+    "h2o-drive>=3.0.0, <4.0.0",
+    "h2o-wave>=1.6.0, <2.0.0",
+    "tiktoken==0.9.0",
+    "hf-transfer==0.1.9",
+    "peft==0.15.1",
+    "azure-storage-file-datalake>=12.12.0",
+    "deepspeed==0.16.5",
+    "keyring>=25.2.1, <26.0.0",
+    "pydantic>=2.8.2, <3.0.0",
+]
 
-[tool.black]
+[dependency-groups]
+dev = [
+    "coverage==7.5.1",
+    "mypy==1.10.0",
+    "pytest==8.2.0",
+    "pytest-cov==5.0.0",
+    "pytest-dependency==0.6.0",
+    "pytest-html>=4.1.1, <5.0.0",
+    "types-pyyaml>=6.0",
+    "types-requests>=2.31",
+    "types-toml>=0.10",
+    "wheel==0.43.0",
+    "pytest-bdd==7.1.2",
+    "pytest-base-url==2.1.0",
+    "pytest-mock==3.14.0",
+    "hac_playwright",
+]
+
+[project.optional-dependencies]
+flash = ["flash-attn==2.7.4.post1"]
+
+[tool.uv]
+no-build-isolation-package = ["flash-attn"]
+
+[tool.uv.sources]
+hac_playwright = { url = "https://h2oai-qa-test-assets.s3.amazonaws.com/wheels/h2o_playwright/hac_playwright-1.48.0-py3-none-any.whl" }
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu124/"
+explicit = true
+
+[tool.ruff]
 line-length = 88
-target-version = ["py310"]
-exclude = "(.eggs|.git|.hg|.mypy_cache|.nox|.tox|.venv|.svn|_build|buck-out|build/|dist/|output/|data/)"
+indent-width = 4
+target-version = "py310"
+exclude = [
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".tox",
+    ".venv",
+    ".svn",
+    "_build",
+    "buck-out",
+    "build/",
+    "dist/",
+    "output/",
+    "data/",
+    "tests/",
+]
+
+[tool.ruff.format]
+quote-style = "double"            # Like Black, use double quotes for strings.
+indent-style = "space"            # Like Black, indent with spaces, rather than tabs.
+skip-magic-trailing-comma = false # Like Black, respect magic trailing commas.
+line-ending = "auto"              # Like Black, automatically detect the appropriate line ending.
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle
+    "W",  # pycodestyle
+    "F",  # Pyflakes
+    # "UP", # pyupgrade
+    # "B",  # flake8-bugbear
+    # "C4", # comprehensions
+    # "SIM",  # flake8-simplify
+    "I",   # isort
+    # "ERA", # eradicate
+    # "T20", # print
+    # "PL",  # pylint
+]
 
 [tool.isort]
 multi_line_output = 3

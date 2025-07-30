@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import torch.nn as nn
 from transformers import AutoModelForSeq2SeqLM
@@ -43,7 +43,7 @@ class Model(nn.Module):
         if self.cfg.prediction.metric == "Perplexity":
             self.perplexity = Perplexity(self.cfg, reduce=False)
 
-    def generate(self, batch: Dict, cfg: Any, streamer=None):
+    def generate(self, batch: dict, cfg: Any, streamer=None):
         return generate(
             backbone=self.backbone,
             batch=batch,
@@ -54,15 +54,15 @@ class Model(nn.Module):
 
     def forward(
         self,
-        batch: Dict,
+        batch: dict,
         padding: bool = True,
-    ) -> Dict:
+    ) -> dict:
         # disable cache if gradient checkpointing is enabled
         if self.cfg.architecture.gradient_checkpointing:
             self.backbone.config.use_cache = False
 
-        outputs: Dict = {}
-        kwargs: Dict = {}
+        outputs: dict = {}
+        kwargs: dict = {}
 
         if padding:
             mask_key = "prompt_attention_mask"
