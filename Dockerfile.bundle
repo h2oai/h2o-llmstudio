@@ -1,0 +1,6 @@
+FROM cgr.dev/chainguard/bash:latest
+
+ARG VERSION
+
+COPY bundles/ai.h2o.llmstudio.${VERSION}.wave /app/ai.h2o.llmstudio.${VERSION}.wave
+ENV WAVE_BUNDLE_FILE /app/ai.h2o.llmstudio.${VERSION}.wave

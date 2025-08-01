@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build_mc:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -40,3 +40,36 @@ jobs:
       - name: Push to AWS
         run: |-
           docker push ${{ secrets.LLM_STUDIO_AWS_ECR }}:${{ github.ref_name }}
+  build_internal:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ROLE }}
+          role-session-name: ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ROLE_SESSION_NAME }}
+          aws-region: ${{ secrets.LLM_STUDIO_INTERNAL_AWS_REGION }}
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Clean Docker images
+        run: |-
+          echo "Available storage before cleaning:"
+          df -h
+          docker system prune --all --force
+          echo "Available storage:"
+          df -h
+          echo "Removing dotnet"
+          sudo rm -rf /usr/share/dotnet
+          echo "Available storage:"
+          df -h
+      - name: Docker Build Image
+        run: |-
+          docker build -t ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ECR }}:${{ github.ref_name }} .
+      - name: Push to AWS
+        run: |-
+          docker push ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ECR }}:${{ github.ref_name }}
