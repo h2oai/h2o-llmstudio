@@ -19,7 +19,7 @@ To view an imported dataset:
     ![view-datasets](view-imported-dataset.png)
 
     :::info
-    For more information about the dataset details you see on the table above, see [dataset configurations](import-dataset.md#configure-a-dataset).
+    For more information about the dataset details you see on the table above, see [dataset configurations](import-dataset.md#configure-dataset).
     :::
 
 ## Dataset tabs
