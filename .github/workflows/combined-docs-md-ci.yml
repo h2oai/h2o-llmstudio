@@ -1,3 +1,4 @@
+
 name: Generate PDF Documentation
 
 on:
@@ -5,9 +6,6 @@ on:
     branches:
       - 'main'
       - 'pdf-documentation'
-    paths:
-      - 'documentation/**'
-      - '.github/workflows/combined-docs-md-ci.yml'
   workflow_dispatch:
     inputs:
       folder_path:
@@ -30,33 +28,22 @@ permissions:
 jobs:
   generate_docs:
     runs-on: ubuntu-latest
+    outputs:
+      pdf_url: ${{ steps.s3_upload.outputs.s3_url }} # Output the S3 bucket URL where the generated PDF is stored
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set repository name as an environment variable
-        run: |
-          echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'  # Specify the Node.js version you need
 
       - name: Install Python
         run: |
           sudo apt-get update
           sudo apt-get install -y python3 python3-pip
-
-      - name: Read version from pyproject.toml or default to 0.0.0
-        run: |
-          pip install toml
-          VERSION=$(python -c "import toml; print(toml.load('pyproject.toml')['project']['version'])")
-          if [ -z "$VERSION" ]; then
-            VERSION="0.0.0"
-          fi
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'  # Specify the Node.js version you need
 
       - name: Install LaTeX, Pandoc, and Required Packages
         run: |
@@ -67,6 +54,16 @@ jobs:
           sudo apt-get install texlive-fonts-recommended
           sudo apt-get install texlive-fonts-extra
           sudo apt-get install texlive-latex-extra
+
+      - name: Install Ghostscript
+        run: |
+          sudo apt-get install -y ghostscript
+      
+      - name: Verify Ghostscript Installation
+        run: |
+          gs --version
+          which gs
+          echo "Ghostscript installation verified"
 
       - name: Set environment variables
         env:
@@ -80,6 +77,28 @@ jobs:
           echo "COMBINED_DOC_PATH=${COMBINED_DOC_PATH}" >> $GITHUB_ENV
           echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_ENV
 
+      # Fallback: Set the repository name as the documentation name if no title is found
+      - name: Set repository name as documentation name fallback
+        run: | # Extracts the repository name (everything after the slash in org/repo)
+          echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV
+
+      # Extract documentation title and determine the version number dynamically
+      - name: Extract title and version
+        run: |
+          DOC_TITLE=$(node -p "require('./documentation/makersaurus.config.js').title || ''")
+          
+          if [[ "${{ env.FOLDER_PATH }}" == "./docs" ]]; then
+            VERSION=$(node -p "require('./documentation/makersaurus.config.js').versions?.current?.label || '0.0.0'")
+          else
+            VERSION=$(basename "${{ env.FOLDER_PATH }}" | sed 's/version-//')
+          fi
+          
+          SAFE_TITLE=$(echo "$DOC_TITLE" | tr ' ' '_' | tr -dc 'A-Za-z0-9._-')
+          
+          echo "DOC_TITLE=${DOC_TITLE}" >> $GITHUB_ENV
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "SAFE_TITLE=${SAFE_TITLE}" >> $GITHUB_ENV
+
       # Download the script from another repository (replace with correct repo and script path)
       - name: Download script and make it executable
         run: |
@@ -90,7 +109,8 @@ jobs:
           chmod +x ./documentation/generate_pdf_doc.py
           chmod +x ./documentation/parse_sidebar.js
 
-      - name: Navigate to documentation directory and run script
+      # Generate either a combined markdown file or a PDF depending on the branch
+      - name: Generate combined markdown or PDF
         run: |
           cd documentation
           if [[ "${{ env.BRANCH_NAME }}" =~ ^refs/heads/pdf-documentation ]]; then
@@ -98,28 +118,52 @@ jobs:
           else
             python3 generate_combined_md.py "${{ env.FOLDER_PATH }}" "${{ env.SIDEBAR_PATH }}"
           fi
-          
+
+      # Rename the generated output files to include the documentation title and version
+      - name: Rename output files
+        run: |
+          cd documentation
+          if [[ -f documentation.pdf ]]; then
+            mv documentation.pdf "${{ env.SAFE_TITLE }}_${{ env.VERSION }}.pdf"
+          fi
+          if [[ -f combined_docs.md ]]; then
+            mv combined_docs.md "${{ env.SAFE_TITLE }}_${{ env.VERSION }}.md"
+          fi
 
       - name: Upload generated documentation
         uses: actions/upload-artifact@v4
         with:
           name: documentation_artifacts
           path: |
-            documentation/combined_docs.md
-            documentation/documentation.pdf
-
+            documentation/${{ env.SAFE_TITLE }}_${{ env.VERSION }}.md
+            documentation/${{ env.SAFE_TITLE }}_${{ env.VERSION }}.pdf
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::730335347609:role/GitHub-OIDC-Role
-          role-session-name: h2oai-llm-studio-documentation
+          role-to-assume: arn:aws:iam::905418351423:role/GitHub-OIDC-Role
+          role-session-name: h2o-llm-studio
           aws-region: us-east-1
 
-
-      - name: Publish documentation
+      - name: Publish documentation to S3
+        id: s3_upload
         run: |
           if [[ "${{ env.BRANCH_NAME }}" =~ ^refs/heads/pdf-documentation ]]; then
-            mv documentation/documentation.pdf documentation/${{ env.REPO_NAME }}_${{ env.VERSION }}.pdf
-            aws s3 cp documentation/${{ env.REPO_NAME }}_${{ env.VERSION }}.pdf s3://pdf-documentation/llm-studio-documentation/
+            aws s3 cp "documentation/${{ env.SAFE_TITLE }}_${{ env.VERSION }}.pdf" s3://pdf-documentation/h2o-llm-studio/
+            
+            S3_BUCKET="pdf-documentation"
+            S3_KEY="h2o-llm-studio/${{ env.SAFE_TITLE }}_${{ env.VERSION }}.pdf"
+            S3_URL="https://${S3_BUCKET}.s3.amazonaws.com/${S3_KEY}"
+            
+            echo "s3_url=${S3_URL}" >> $GITHUB_OUTPUT
+            
+            echo "PDF uploaded successfully to: ${S3_URL}"
+          else
+            echo "Skipping S3 upload - not on pdf-documentation branch"
           fi
+
+      - name: Display PDF URL
+        if: steps.s3_upload.outputs.s3_url != ''
+        run: |
+          echo "PDF is available at: ${{ steps.s3_upload.outputs.s3_url }}"
+          echo "pdf_url=${{ steps.s3_upload.outputs.s3_url }}" >> $GITHUB_ENV
