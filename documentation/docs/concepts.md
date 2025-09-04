@@ -17,7 +17,7 @@ Generally speaking, LLMs can be characterized by the following parameters:
 
 ## Parameters and hyperparameters
 
-In the context of an LLM, parameters and hyperparameters are a crucial part of determinining the model's performance and overall behaviour. 
+In the context of an LLM, parameters and hyperparameters are a crucial part of determining the model's performance and overall behaviour. 
 
 - **Parameters:** The internal variables of the model that are learned during the training process. In the case of an LLM, parameters typically include the weights and biases associated with the neural network layers. The values of parameters directly influence the model's predictions and the quality of generated text.
 
@@ -28,7 +28,7 @@ In the context of an LLM, parameters and hyperparameters are a crucial part of d
 
 ## LLM Backbone
 
-LLM Backbone is a key hyperparamter that determines the model's architecture. This option is the most important setting when it comes to experiment creation, as it sets the pretrained model weights. For more information about LLM Backbone, see [Experiment settings](guide/experiments/experiment-settings.md#llm-backbone).
+LLM Backbone is a key hyperparameter that determines the model's architecture. This option is the most important setting when it comes to experiment creation, as it sets the pretrained model weights. For more information about LLM Backbone, see [Experiment settings](guide/experiments/experiment-settings.md#llm-backbone).
 
 
 ## Generative AI
@@ -46,7 +46,7 @@ Fine-tuning refers to the process of taking a pre-trained language model and fur
 
 ## LoRA (Low-Rank Adaptation)
 
-Low-Rank Adapation (LoRa) involves modifying the pre-trained model by adjusting its weights and biases to better fit the new task. This adaptation is done in a way that preserves the pre-trained weights from the original dataset while also adjusting for the new task's specific requirements. This method of training or fine-turning models consumes less memory. By using low rank adaptation, the pre-trained model can be quickly adapted to new tasks, without requiring a large amount of new training data.
+Low-Rank Adaptation (LoRa) involves modifying the pre-trained model by adjusting its weights and biases to better fit the new task. This adaptation is done in a way that preserves the pre-trained weights from the original dataset while also adjusting for the new task's specific requirements. This method of training or fine-tuning models consumes less memory. By using Low-Rank adaptation, the pre-trained model can be quickly adapted to new tasks, without requiring a large amount of new training data.
 
 ## Quantization
 
