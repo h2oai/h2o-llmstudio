@@ -28,7 +28,7 @@ The parameters that have the largest impact on the amount of GPU memory being us
 For more information, see [this FAQ about GPU out-of-memory issues](#i-encounter-gpu-out-of-memory-issues-what-can-i-change-to-be-able-to-train-large-models). 
 :::
 
-While these parameters will change the behavior of the fine-tuned model, the change that will be most impactful is the actual data used for fine tuning. Having clean data and enough samples (i.e., atleast 1000 records) is imperative.
+While these parameters will change the behavior of the fine-tuned model, the change that will be most impactful is the actual data used for fine tuning. Having clean data and enough samples (i.e., at least 1000 records) is imperative.
 
 ---
 
@@ -46,7 +46,7 @@ In order to apply human feedback to H2O LLM Studio, there is a problem type call
 
 ### How does H2O LLM Studio evaluate the fine-tuned model? 
 
-The valuation options are [BLEU](concepts#bleu), [Perplexity](concepts#perplexity), and an AI Judge. For more information about the traditional NLP similarity metrics, see [BLEU](concepts#bleu) and [Perplexity](concepts#perplexity) explained on the concepts page. You can also opt to use an AI judge by having an LLM model (ChatGPT or a local LLM) judge the performance of the response. This [sample prompt](https://github.com/h2oai/h2o-llmstudio/blob/main/prompts/general.txt) is an example of a prompt that is used to have the LLM evaluate the response.
+The evaluation options are [BLEU](concepts#bleu), [Perplexity](concepts#perplexity), and an AI Judge. For more information about the traditional NLP similarity metrics, see [BLEU](concepts#bleu) and [Perplexity](concepts#perplexity) explained on the concepts page. You can also opt to use an AI judge by having an LLM model (ChatGPT or a local LLM) judge the performance of the response. This [sample prompt](https://github.com/h2oai/h2o-llmstudio/blob/main/prompts/general.txt) is an example of a prompt that is used to have the LLM evaluate the response.
 
 ----
 
@@ -58,7 +58,7 @@ Yes. For instructions on how to use a local LLM to evaluate the fine-tuned model
 
 ### How much data is generally required to fine-tune a model?
 
-There is no clear answer. As a rule of thumb, 1000 to 50000 samples of conversational data should be enough. Quality and diversity is very important. Make sure to try training on a subsample of data using the "sample" parameter to see how big the impact of the dataset size is. Recent studies suggest that less data is needed for larger foundation models.
+There is no clear answer. As a rule of thumb, 1000 to 50000 samples of conversational data should be enough. Quality and diversity are very important. Make sure to try training on a subsample of data using the "sample" parameter to see how big the impact of the dataset size is. Recent studies suggest that less data is needed for larger foundation models.
 
 ---
 
@@ -74,7 +74,7 @@ To train a chatbot style model, you need to convert your data into a question an
 
 If you really want to continue pretraining on your own data without teaching a question-answering style, prepare a dataset with all your data in a single column Dataframe. Make sure that the length of the text in each row is not too long. In the experiment setup, remove all additional tokens (e.g. `<|prompt|>`, `<|answer|>`, for Text Prompt Start and Text Answer Start respectively) and disable **Add Eos Token To Prompt** and **Add Eos Token To Answer**. Deselect everything in the Prompt Column.
 
-There are also other enterprise solutions from H2O.ai that may help you convert your data into a Q&A format. For more information, see [H2O.ai's Generative AI page](https://h2o.ai/) and this blogpost about [H2O LLM DataStudio: Streamlining Data Curation and Data Preparation for LLMs related tasks](https://h2o.ai/blog/2023/streamlining-data-preparation-for-fine-tuning-of-large-language-models/).
+There are also other enterprise solutions from H2O.ai that may help you convert your data into a Q&A format. For more information, see [H2O.ai's Generative AI page](https://h2o.ai/) and this blog post about [H2O LLM DataStudio: Streamlining Data Curation and Data Preparation for LLMs related tasks](https://h2o.ai/blog/2023/streamlining-data-preparation-for-fine-tuning-of-large-language-models/).
 
 ---
 
@@ -93,7 +93,7 @@ There are various parameters that can be tuned while keeping a specific LLM back
 
 ### When does the model stop the fine-tuning process?
 
-The number of epochs are set by the user.
+The number of epochs is set by the user.
 
 ---
 
@@ -138,7 +138,7 @@ You can also export the LoRA weights. You may add them to the files to be export
 
 ### How to use H2O LLM Studio in Windows? 
 
-Use WSL 2 on Windows 
+Use WSL 2 on Windows. 
 
 ---
 
@@ -170,7 +170,7 @@ When it comes to hardware requirements, it is important to note that the primary
 
 ### I am seeing an OS error during the H2O LLM Studio training session. What should I do? 
 
-If you recieve the following error, it is most likely because of network issues either with your own connection or on the Hugging Face Hub side. 
+If you receive the following error, it is most likely because of network issues either with your own connection or on the Hugging Face Hub side. 
 
 ```title="Error"
 OSError: Consistency check failed: file should be of size 4999819336 but has size 

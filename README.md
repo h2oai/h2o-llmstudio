@@ -32,10 +32,10 @@
 ## With H2O LLM Studio, you can
 
 - easily and effectively fine-tune LLMs **without the need for any coding experience**.
-- use a **graphic user interface (GUI)** specially designed for large language models.
-- finetune any LLM using a large variety of hyperparameters.
-- use recent finetuning techniques such as [Low-Rank Adaptation (LoRA)](https://arxiv.org/abs/2106.09685) and 8-bit model training with a low memory footprint.
-- use Reinforcement Learning (RL) to finetune your model (experimental)
+- use a **graphical user interface (GUI)** specially designed for large language models.
+- fine-tune any LLM using a large variety of hyperparameters.
+- use recent fine-tuning techniques such as [Low-Rank Adaptation (LoRA)](https://arxiv.org/abs/2106.09685) and 8-bit model training with a low memory footprint.
+- use Reinforcement Learning (RL) to fine-tune your model (experimental).
 - use advanced evaluation metrics to judge generated answers by the model.
 - track and compare your model performance visually. In addition, [Neptune](https://neptune.ai/) and [W&B](https://wandb.ai/) integration can be used.
 - chat with your model and get instant feedback on your model performance.
@@ -61,7 +61,7 @@ Using CLI for fine-tuning LLMs:
 - [PR 592](https://github.com/h2oai/h2o-llmstudio/pull/599) Added `KTOPairLoss` for DPO modeling allowing to train models with simple preference data. Data currently needs to be manually prepared by randomly matching positive and negative examples as pairs.
 - [PR 592](https://github.com/h2oai/h2o-llmstudio/pull/592) Starting to deprecate RLHF in favor of DPO/IPO optimization. Training is disabled, but old experiments are still viewable. RLHF will be fully removed in a future release.
 - [PR 530](https://github.com/h2oai/h2o-llmstudio/pull/530) Introduced a new problem type for DPO/IPO optimization. This optimization technique can be used as an alternative to RLHF.
-- [PR 288](https://github.com/h2oai/h2o-llmstudio/pull/288) Introduced Deepspeed for sharded training allowing to train larger models on machines with multiple GPUs. Requires NVLink. This feature replaces FSDP and offers more flexibility. Deepspeed requires a system installation of cudatoolkit and we recommend using version 12.1. See [Recommended Install](#recommended-install).
+- [PR 288](https://github.com/h2oai/h2o-llmstudio/pull/288) Introduced DeepSpeed for sharded training allowing to train larger models on machines with multiple GPUs. Requires NVLink. This feature replaces FSDP and offers more flexibility. DeepSpeed requires a system installation of CUDA Toolkit and we recommend using version 12.1. See [Recommended Install](#recommended-install).
 - [PR 449](https://github.com/h2oai/h2o-llmstudio/pull/449) New problem type for Causal Classification Modeling allows to train binary and multiclass models using LLMs.
 - [PR 364](https://github.com/h2oai/h2o-llmstudio/pull/364) User secrets are now handled more securely and flexible. Support for handling secrets using the 'keyring' library was added. User settings are tried to be migrated automatically.
 
@@ -69,7 +69,7 @@ Please note that due to current rapid development we cannot guarantee full backw
 
 ## Setup
 
-H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent Nvidia GPU with Nvidia drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
+H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent NVIDIA GPU with NVIDIA drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
 
 For more information about installation prerequisites, see the [Set up H2O LLM Studio](https://docs.h2o.ai/h2o-llmstudio/get-started/set-up-llm-studio#prerequisites) guide in the documentation.
 
@@ -81,7 +81,7 @@ The recommended way to install H2O LLM Studio is using `uv` with Python 3.10. To
 
 #### Installing NVIDIA Drivers (if required)
 
-If deploying on a 'bare metal' machine running Ubuntu, one may need to install the required Nvidia drivers and CUDA. The following commands show how to retrieve the latest drivers for a machine running Ubuntu 20.04 as an example. One can update the following based on their OS.
+If deploying on a 'bare metal' machine running Ubuntu, one may need to install the required NVIDIA drivers and CUDA. The following commands show how to retrieve the latest drivers for a machine running Ubuntu 20.04 as an example. One can update the following based on their OS.
 
 ```bash
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
@@ -122,7 +122,7 @@ You can start H2O LLM Studio using the following command:
 make llmstudio
 ```
 
-This command will start the [H2O wave](https://github.com/h2oai/wave) server and app.
+This command will start the [H2O Wave](https://github.com/h2oai/wave) server and app.
 Navigate to <http://localhost:10101/> (we recommend using Chrome) to access H2O LLM Studio and start fine-tuning your models!
 
 If you are running H2O LLM Studio with a custom environment other than `uv`, you need to start the app as follows:
@@ -138,7 +138,7 @@ wave run llm_studio.app
 
 Install Docker first by following instructions from [NVIDIA Containers](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker). Make sure to have `nvidia-container-toolkit` installed on your machine as outlined in the instructions.
 
-H2O LLM Studio images are stored in the h2oai dockerhub container repository.
+H2O LLM Studio images are stored in the h2oai Docker Hub container repository.
 
 ```bash
 mkdir -p `pwd`/llmstudio_mnt
@@ -187,7 +187,7 @@ docker run \
 
 ## Run H2O LLM Studio with command line interface (CLI)
 
-You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration .yaml file that contains all the experiment parameters. To finetune using H2O LLM Studio with CLI use the following command:
+You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration .yaml file that contains all the experiment parameters. To fine-tune using H2O LLM Studio with CLI use the following command:
 
 ```bash
 uv run python llm_studio/train.py -Y {path_to_config_yaml_file}
@@ -208,7 +208,7 @@ uv run python llm_studio/prompt.py -e {experiment_name}
 ```
 
 where `experiment_name` is the output folder of the experiment you want to chat with (see configuration).
-The interactive chat will also work with model that were finetuned using the UI.
+The interactive chat will also work with model that were fine-tuned using the UI.
 
 To publish the model to Hugging Face, use the following command:
 
@@ -218,14 +218,14 @@ uv run python llm_studio/publish_to_hugging_face.py -p {path_to_experiment} -d {
 
 `path_to_experiment` is the output folder of the experiment.
 `device` is the target device for running the model, either 'cpu' or 'cuda:0'. Default is 'cuda:0'.
-`api_key` is the Hugging Face API Key. If user logged in, it can be omitted.
-`user_id` is the Hugging Face user ID. If user logged in, it can be omitted.
+`api_key` is the Hugging Face API Key. If the user is logged in, it can be omitted.
+`user_id` is the Hugging Face user ID. If the user is logged in, it can be omitted.
 `model_name` is the name of the model to be published on Hugging Face. It can be omitted.
 `safe_serialization` is a flag indicating whether safe serialization should be used. Default is True.
 
 ## Troubleshooting
 
-If running on cloud based machines such as runpod, you may need to set the following environment variable to allow the H2O Wave server to accept connections from the proxy:
+If running on cloud-based machines such as runpod, you may need to set the following environment variable to allow the H2O Wave server to accept connections from the proxy:
 
 ```bash
 H2O_WAVE_ALLOWED_ORIGINS="*"
