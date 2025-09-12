@@ -1,10 +1,10 @@
-accelerate==1.6.0
+accelerate==1.10.1
     # via
     #   h2o-llmstudio
     #   peft
-aioboto3==15.0.0
+aioboto3==15.1.0
     # via h2o-drive
-aiobotocore==2.23.0
+aiobotocore==2.24.0
     # via
     #   aioboto3
     #   h2o-drive
@@ -23,7 +23,7 @@ aiosignal==1.4.0
 annotated-types==0.7.0
     # via pydantic
     # via jinxed
-anyio==4.9.0
+anyio==4.10.0
     # via
     #   httpx
     #   openai
@@ -37,7 +37,7 @@ attrs==25.3.0
     #   aiohttp
     #   jsonschema
     #   referencing
-azure-core==1.35.0
+azure-core==1.35.1
     # via
     #   azure-storage-blob
     #   azure-storage-file-datalake
@@ -47,22 +47,22 @@ azure-storage-file-datalake==12.21.0
     # via h2o-llmstudio
 backports-tarfile==1.2.0
     # via jaraco-context
-beautifulsoup4==4.13.4
+beautifulsoup4==4.13.5
     # via h2o-llmstudio
-bitsandbytes==0.45.4
+bitsandbytes==0.47.0
     # via h2o-llmstudio
 bleach==6.2.0
     # via kaggle
 blessed==1.21.0
     # via inquirer
-bokeh==3.7.3
+bokeh==3.8.0
     # via h2o-llmstudio
-boto3==1.38.27
+boto3==1.39.11
     # via
     #   aiobotocore
     #   h2o-llmstudio
     #   neptune
-botocore==1.38.27
+botocore==1.39.11
     # via
     #   aiobotocore
     #   boto3
@@ -72,16 +72,16 @@ bravado==11.1.0
     # via neptune
 bravado-core==6.1.1
     # via bravado
-certifi==2025.7.14
+certifi==2025.8.3
     # via
     #   httpcore
     #   httpx
     #   kaggle
     #   requests
     #   sentry-sdk
-cffi==1.17.1 
+cffi==2.0.0 
     # via cryptography
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via
     #   kaggle
     #   requests
@@ -102,13 +102,13 @@ coolname==2.2.0
     # via h2o-llmstudio
 cramjam==2.11.0
     # via fastparquet
-cryptography==45.0.5
+cryptography==45.0.7
     # via
     #   azure-storage-blob
     #   secretstorage
 datasets==3.6.0
     # via h2o-llmstudio
-deepspeed==0.16.5
+deepspeed==0.17.5
     # via h2o-llmstudio
 dill==0.3.8
     # via
@@ -129,7 +129,7 @@ exceptiongroup==1.3.0
     # via anyio
 fastparquet==2024.11.0
     # via h2o-llmstudio
-filelock==3.18.0
+filelock==3.19.1
     # via
     #   datasets
     #   huggingface-hub
@@ -165,16 +165,18 @@ h11==0.16.0
     #   uvicorn
 h2o-authn==3.1.0
     # via h2o-drive
-h2o-cloud-discovery==3.1.0
+h2o-cloud-discovery==3.2.0
     # via
     #   h2o-authn
     #   h2o-drive
 h2o-drive==3.0.0
     # via h2o-llmstudio
-h2o-wave==1.7.2
+h2o-wave==1.7.4
     # via h2o-llmstudio
 hf-transfer==0.1.9
     # via h2o-llmstudio
+hf-xet==1.1.9 
+    # via huggingface-hub
 hjson==3.1.0
     # via deepspeed
 httpcore==1.0.9
@@ -185,7 +187,7 @@ httpx==0.28.1
     #   h2o-cloud-discovery
     #   h2o-wave
     #   openai
-huggingface-hub==0.30.1
+huggingface-hub==0.34.4
     # via
     #   accelerate
     #   datasets
@@ -205,7 +207,7 @@ importlib-metadata==8.7.0
     # via keyring
 importlib-resources==6.5.2
     # via swagger-spec-validator
-inquirer==3.4.0
+inquirer==3.4.1
     # via h2o-wave
 isodate==0.7.2
     # via
@@ -217,7 +219,7 @@ jaraco-classes==3.4.0
     # via keyring
 jaraco-context==6.0.1
     # via keyring
-jaraco-functools==4.2.1
+jaraco-functools==4.3.0
     # via keyring
 jeepney==0.9.0 
     # via
@@ -236,17 +238,17 @@ jmespath==1.0.1
     #   aiobotocore
     #   boto3
     #   botocore
-joblib==1.5.1
+joblib==1.5.2
     # via scikit-learn
 jsonpointer==3.0.0
     # via jsonschema
 jsonref==1.1.0
     # via bravado-core
-jsonschema==4.25.0
+jsonschema==4.25.1
     # via
     #   bravado-core
     #   swagger-spec-validator
-jsonschema-specifications==2025.4.1
+jsonschema-specifications==2025.9.1
     # via jsonschema
 kaggle==1.7.4.5
     # via h2o-llmstudio
@@ -254,13 +256,13 @@ keyring==25.6.0
     # via h2o-llmstudio
 lark==1.2.2
     # via rfc3987-syntax
-lxml==6.0.0
+lxml==6.0.1
     # via sacrebleu
 markupsafe==3.0.2
     # via jinja2
 monotonic==1.6
     # via bravado
-more-itertools==10.7.0
+more-itertools==10.8.0
     # via
     #   jaraco-classes
     #   jaraco-functools
@@ -271,20 +273,20 @@ msgpack==1.1.1
     #   bravado
     #   bravado-core
     #   deepspeed
-multidict==6.6.3
+multidict==6.6.4
     # via
     #   aiobotocore
     #   aiohttp
     #   yarl
 multiprocess==0.70.16
     # via datasets
-narwhals==2.0.1
+narwhals==2.4.0
     # via bokeh
 neptune==1.14.0
     # via h2o-llmstudio
 networkx==3.4.2
     # via torch
-ninja==1.11.1.4
+ninja==1.13.0
     # via deepspeed
 numpy==1.26.4
     # via
@@ -302,48 +304,48 @@ numpy==1.26.4
     #   scikit-learn
     #   scipy
     #   transformers
-nvidia-cublas-cu12==12.4.5.8 
+nvidia-cublas-cu12==12.6.4.1 
     # via
     #   nvidia-cudnn-cu12
     #   nvidia-cusolver-cu12
     #   torch
-nvidia-cuda-cupti-cu12==12.4.127 
+nvidia-cuda-cupti-cu12==12.6.80 
     # via torch
-nvidia-cuda-nvrtc-cu12==12.4.127 
+nvidia-cuda-nvrtc-cu12==12.6.77 
     # via torch
-nvidia-cuda-runtime-cu12==12.4.127 
+nvidia-cuda-runtime-cu12==12.6.77 
     # via torch
-nvidia-cudnn-cu12==9.1.0.70 
+nvidia-cudnn-cu12==9.5.1.17 
     # via torch
-nvidia-cufft-cu12==11.2.1.3 
+nvidia-cufft-cu12==11.3.0.4 
     # via torch
-nvidia-curand-cu12==10.3.5.147 
+nvidia-cufile-cu12==1.11.1.6 
     # via torch
-nvidia-cusolver-cu12==11.6.1.9 
+nvidia-curand-cu12==10.3.7.77 
     # via torch
-nvidia-cusparse-cu12==12.3.1.170 
+nvidia-cusolver-cu12==11.7.1.2 
+    # via torch
+nvidia-cusparse-cu12==12.5.4.2 
     # via
     #   nvidia-cusolver-cu12
     #   torch
-nvidia-cusparselt-cu12==0.6.2 
+nvidia-cusparselt-cu12==0.6.3 
     # via torch
-nvidia-ml-py==12.575.51
-    # via deepspeed
-nvidia-nccl-cu12==2.21.5 
+nvidia-nccl-cu12==2.26.2 
     # via torch
-nvidia-nvjitlink-cu12==12.4.127 
+nvidia-nvjitlink-cu12==12.6.85 
     # via
     #   nvidia-cufft-cu12
     #   nvidia-cusolver-cu12
     #   nvidia-cusparse-cu12
     #   torch
-nvidia-nvtx-cu12==12.4.127 
+nvidia-nvtx-cu12==12.6.77 
     # via torch
 oauthlib==3.3.1
     # via
     #   neptune
     #   requests-oauthlib
-openai==1.97.1
+openai==1.107.1
     # via h2o-llmstudio
 packaging==25.0
     # via
@@ -357,20 +359,20 @@ packaging==25.0
     #   peft
     #   transformers
     #   wandb
-pandas==2.3.1
+pandas==2.3.2
     # via
     #   bokeh
     #   datasets
     #   fastparquet
     #   h2o-llmstudio
     #   neptune
-peft==0.15.1
+peft==0.17.1
     # via h2o-llmstudio
 pillow==11.3.0
     # via
     #   bokeh
     #   neptune
-platformdirs==4.3.8
+platformdirs==4.4.0
     # via wandb
 portalocker==3.2.0
     # via sacrebleu
@@ -378,7 +380,7 @@ propcache==0.3.2
     # via
     #   aiohttp
     #   yarl
-protobuf==6.31.1
+protobuf==6.32.1
     # via
     #   h2o-llmstudio
     #   kaggle
@@ -395,7 +397,7 @@ pyarrow==21.0.0
     # via
     #   datasets
     #   h2o-llmstudio
-pycparser==2.22 
+pycparser==2.23 
     # via cffi
 pydantic==2.11.7
     # via
@@ -443,12 +445,12 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-regex==2025.7.31
+regex==2025.9.1
     # via
     #   sacrebleu
     #   tiktoken
     #   transformers
-requests==2.32.4
+requests==2.32.5
     # via
     #   azure-core
     #   bravado
@@ -469,7 +471,7 @@ rfc3986-validator==0.1.1
     # via jsonschema
 rfc3987-syntax==1.1.0
     # via jsonschema
-rpds-py==0.26.0
+rpds-py==0.27.1
     # via
     #   jsonschema
     #   referencing
@@ -479,23 +481,25 @@ s3transfer==0.13.1
     # via boto3
 sacrebleu==2.5.1
     # via h2o-llmstudio
-safetensors==0.5.3
+safetensors==0.6.2
     # via
     #   accelerate
     #   peft
     #   transformers
-scikit-learn==1.7.1
+scikit-learn==1.7.2
     # via h2o-llmstudio
 scipy==1.15.3
     # via scikit-learn
-secretstorage==3.3.3 
+secretstorage==3.4.0 
     # via keyring
-sentencepiece==0.2.0
+sentencepiece==0.2.1
     # via h2o-llmstudio
-sentry-sdk==2.34.0
+sentry-sdk==2.37.1
     # via wandb
 setuptools==80.9.0
-    # via kaggle
+    # via
+    #   kaggle
+    #   triton
 simplejson==3.20.1
     # via
     #   bravado
@@ -515,17 +519,17 @@ sniffio==1.3.1
     # via
     #   anyio
     #   openai
-soupsieve==2.7
+soupsieve==2.8
     # via beautifulsoup4
-sqlalchemy==2.0.42
+sqlalchemy==2.0.43
     # via h2o-llmstudio
-starlette==0.47.2
+starlette==0.47.3
     # via h2o-wave
 swagger-spec-validator==3.0.4
     # via
     #   bravado-core
     #   neptune
-sympy==1.13.1
+sympy==1.14.0
     # via torch
 tabulate==0.9.0
     # via sacrebleu
@@ -537,20 +541,20 @@ threadpoolctl==3.6.0
     # via scikit-learn
 tiktoken==0.9.0
     # via h2o-llmstudio
-tokenizers==0.21.4
+tokenizers==0.22.0
     # via transformers
 toml==0.10.2
     # via h2o-llmstudio
 tomli==2.2.1
     # via h2o-cloud-discovery
-torch==2.6.0
+torch==2.7.1
     # via
     #   accelerate
     #   bitsandbytes
     #   deepspeed
     #   h2o-llmstudio
     #   peft
-tornado==6.5.1 
+tornado==6.5.2 
     # via bokeh
 tqdm==4.67.1
     # via
@@ -562,15 +566,15 @@ tqdm==4.67.1
     #   openai
     #   peft
     #   transformers
-transformers==4.50.3
+transformers==4.56.1
     # via
     #   h2o-llmstudio
     #   peft
-triton==3.2.0 
+triton==3.3.1 
     # via torch
-types-python-dateutil==2.9.0.20250708
+types-python-dateutil==2.9.0.20250822
     # via arrow
-typing-extensions==4.14.1
+typing-extensions==4.15.0
     # via
     #   aiosignal
     #   anyio
@@ -609,7 +613,7 @@ urllib3==2.5.0
     #   sentry-sdk
 uvicorn==0.35.0
     # via h2o-wave
-wandb==0.21.0
+wandb==0.21.4
     # via h2o-llmstudio
 wcwidth==0.2.13
     # via blessed
@@ -621,7 +625,7 @@ webencodings==0.5.1
     #   kaggle
 websocket-client==1.8.0
     # via neptune
-wrapt==1.17.2
+wrapt==1.17.3
     # via aiobotocore
 xmod==1.8.1
     # via
