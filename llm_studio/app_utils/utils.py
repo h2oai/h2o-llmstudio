@@ -2078,7 +2078,8 @@ def get_frame_stats(frame):
     is_str_cols = [
         x
         for x in non_numeric_cols
-        if frame[x].dropna().size and (frame[x].dropna().apply(type) is str)
+        if frame[x].dropna().size
+        and frame[x].dropna().apply(lambda x: isinstance(x, str)).all()
     ]
     cols_to_drop = [x for x in non_numeric_cols if x not in is_str_cols]
 
