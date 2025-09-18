@@ -523,6 +523,8 @@ soupsieve==2.8
     # via beautifulsoup4
 sqlalchemy==2.0.43
     # via h2o-llmstudio
+sqlitedict==2.1.0
+    # via h2o-llmstudio
 starlette==0.47.3
     # via h2o-wave
 swagger-spec-validator==3.0.4

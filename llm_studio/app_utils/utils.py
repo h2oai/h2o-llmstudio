@@ -34,6 +34,7 @@ from datasets import load_dataset
 from diskcache import Cache
 from h2o_wave import Choice, Q, ui
 from pandas.core.frame import DataFrame
+from sqlitedict import SqliteDict
 
 from llm_studio.app_utils.db import Experiment
 from llm_studio.python_configs.base import DefaultConfigProblemBase
@@ -1643,9 +1644,21 @@ def get_experiments_info(df: DataFrame, q: Q) -> defaultdict:
                 loss_function = ""
 
         charts_db_path = os.path.join(row.path, "charts_cache")
+        old_db_path = os.path.join(row.path, "charts.db")
         if os.path.exists(charts_db_path):
             with Cache(charts_db_path) as cache:
                 logs = {key: cache.get(key) for key in cache}
+
+                if not logs and os.path.exists(old_db_path):
+                    # migrate the old DB over to the new diskcache, should only need to be run once
+                    # we could delete the old charts.db, but we don't want to risk the user stopping
+                    # the service during the migration and therefore causing permanent data loss
+                    with SqliteDict(old_db_path) as sqlite_logs:
+                        keys = list(sqlite_logs.iterkeys())
+                        for key in keys:
+                            cache.add(key, sqlite_logs[key])
+                        logs = {key: cache.get(key) for key in cache}
+
                 if "internal" in logs.keys():
                     if "current_step" in logs["internal"].keys():
                         curr_step = int(logs["internal"]["current_step"]["values"][-1])
