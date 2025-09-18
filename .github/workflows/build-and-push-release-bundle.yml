@@ -10,6 +10,8 @@ jobs:
   # Build the Wave bundle once and share it between jobs
   build_bundle:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Minimal permission needed
     outputs:
       version: ${{ steps.extract_version.outputs.version }}
     steps:
