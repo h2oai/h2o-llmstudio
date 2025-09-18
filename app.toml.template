@@ -15,7 +15,7 @@ CPUReservation = "10"
 MemoryReservation = "118Gi"
 MemoryLimit = "118Gi"
 GPUCount = 1
-VolumeMount = "/home/llmstudio/mount"
+VolumeMount = "/mount"
 VolumeSize = "1Ti"
 ResourceVolumeSize = "1Ti"
 EnableSHM = true
@@ -24,7 +24,7 @@ RoutingMode = "BASE_URL"
 
 [[Env]]
 Name = "H2O_LLM_STUDIO_WORKDIR"
-Value = "/home/llmstudio/mount"
+Value = "/mount"
 
 [[Env]]
 Name = "HOME"
@@ -36,7 +36,7 @@ Value = "True"
 
 [[Env]]
 Name = "H2O_WAVE_PRIVATE_DIR"
-Value = "/download/@/home/llmstudio/mount/output/download"
+Value = "/download/@/mount/output/download"
 
 [[Env]]
 Name = "HF_HUB_ENABLE_HF_TRANSFER"

@@ -156,8 +156,7 @@ docker run \
     -it \
     -u `id -u`:`id -g` \
     -p 10101:10101 \
-    -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
-    -v ~/.cache:/home/llmstudio/.cache \
+    -v `pwd`/llmstudio_mnt:/mount \
     h2oairelease/h2oai-llmstudio-app:latest
 ```
 
@@ -180,8 +179,7 @@ docker run \
     -it \
     -u `id -u`:`id -g` \
     -p 10101:10101 \
-    -v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
-    -v ~/.cache:/home/llmstudio/.cache \
+    -v `pwd`/llmstudio_mnt:/mount \
     h2o-llmstudio
 ```
 

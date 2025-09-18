@@ -46,9 +46,9 @@ RUN make setup && chmod -R 777 /workspace/.venv
 ENV PATH=/workspace/.venv/bin:$PATH
 
 # We need to create a mount point for the user to mount their volume
-# All persistent data lives in /home/llmstudio/mount
-RUN mkdir -p /home/llmstudio/mount
-ENV H2O_LLM_STUDIO_WORKDIR=/home/llmstudio/mount
+# All persistent data lives in /mount
+# RUN mkdir -p /mount
+ENV H2O_LLM_STUDIO_WORKDIR=/mount
 
 # Download the demo datasets and place in the /workspace/demo directory
 # Set the environment variable for the demo datasets
@@ -56,7 +56,11 @@ ENV H2O_LLM_STUDIO_DEMO_DATASETS=/workspace/demo
 COPY llm_studio/download_default_datasets.py /workspace/
 RUN python download_default_datasets.py
 
-COPY . /workspace
+COPY ./llm_studio /workspace/llm_studio
+COPY ./prompts /workspace/prompts
+COPY ./model_cards /workspace/model_cards
+COPY ./LICENSE /workspace/LICENSE
+COPY ./entrypoint.sh /workspace/entrypoint.sh
 
 # Remove unnecessary packages remove build packages again
 # Prevent removal of cuda packages
@@ -67,6 +71,9 @@ RUN apt-get purge -y git curl python3.10-distutils software-properties-common \
 
 USER llmstudio
 
+ENV HF_HOME=/mount/huggingface
+ENV TRITON_CACHE_DIR=/mount/.triton/cache
+
 ENV HF_HUB_DISABLE_TELEMETRY=1
 ENV DO_NOT_TRACK=1
 
@@ -74,14 +81,9 @@ ENV DO_NOT_TRACK=1
 ENV H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756
 ENV H2O_WAVE_MAX_REQUEST_SIZE=25MB
 ENV H2O_WAVE_NO_LOG=true
-ENV H2O_WAVE_PRIVATE_DIR="/download/@/home/llmstudio/mount/output/download"
+ENV H2O_WAVE_PRIVATE_DIR="/download/@/mount/output/download"
 
 USER root
-
-# Make all of the files in the llmstudio directory read & writable for all users so that the
-# application can install other (non-persisted) new packages and other things
-# if it wants to. e.g. triton uses /home/llmstudio/.triton as a cache directory.
-RUN chmod -R 777 /home/llmstudio
 
 # Make the entrypoint.sh script executable by all users
 RUN chmod 755 /workspace/entrypoint.sh

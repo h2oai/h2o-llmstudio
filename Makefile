@@ -3,7 +3,7 @@ SHELL := /bin/bash
 UV ?= uv
 RUN ?= $(UV) run
 PWD = $(shell pwd)
-DOCKER_IMAGE ?= gcr.io/vorvan/h2oai/h2o-llmstudio:nightly
+DOCKER_IMAGE ?= h2oairelease/h2oai-llmstudio-app:nightly
 APP_VERSION=$(shell sed -n 's/^version = //p' pyproject.toml | tr -d '"')
 
 ifeq ($(origin H2O_LLM_STUDIO_WORKDIR), environment)
@@ -188,7 +188,7 @@ endif
 		-it \
 		-u `id -u`:`id -g` \
 		-p 10101:10101 \
-		-v `pwd`/llmstudio_mnt:/home/llmstudio/mount \
+		-v `pwd`/llmstudio_mnt:/mount \
 		$(DOCKER_IMAGE)
 
 # Perform a local Trivy scan for CVEs
