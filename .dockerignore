@@ -2,8 +2,8 @@
 .github
 .mypy_cache
 .neptune
-bundles
 wandb
+llmstudio_mnt/
 .pytest_cache
 data
 documentation

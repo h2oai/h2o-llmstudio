@@ -3,7 +3,7 @@ import os
 from hac_playwright.pages.base import BasePage
 from playwright.sync_api import expect
 
-CLOUD_FILESYSTEM_PATH = "/home/llmstudio/mount/data/user/oasst"
+CLOUD_FILESYSTEM_PATH = "/mount/data/user/oasst"
 LOCAL_FILESYSTEM_PATH = os.path.join(os.getcwd(), "data/user/oasst")
 
 
