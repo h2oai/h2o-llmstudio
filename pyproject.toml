@@ -3,7 +3,7 @@ name = "h2o-llmstudio"
 version = "1.14.4"
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = "==3.10.*"
+requires-python = ">=3.10, <=3.13"
 dependencies = [
     "torch==2.7.1",
     "tqdm>=4.65.0,<5.0.0",
@@ -45,6 +45,7 @@ dependencies = [
     "deepspeed==0.17.5",
     "keyring>=25.2.1, <26.0.0",
     "pydantic>=2.8.2, <3.0.0",
+    "sqlitedict>=2.1.0, <3.0.0",
 ]
 
 [dependency-groups]
