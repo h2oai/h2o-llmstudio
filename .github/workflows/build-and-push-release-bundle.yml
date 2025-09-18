@@ -1,56 +1,102 @@
-name: Build and Push Bundle to MC S3 - Release
+name: Build and Push Bundles - Release
 
 on:
   push:
     tags:
-      - '**'
+      - 'v*'  # Only trigger on tags starting with 'v'
   workflow_dispatch:
 
 jobs:
-  build_mc:
+  # Build the Wave bundle once and share it between jobs
+  build_bundle:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Minimal permission needed
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Extract version
+        id: extract_version
+        run: |
+          REF_NAME="${{ github.ref_name }}"
+          VERSION=${REF_NAME:1}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+      
+      - name: Build Wave Bundle
+        run: make bundles
+      
+      - name: Upload Wave bundle as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave-bundle
+          path: bundles/ai.h2o.llmstudio.${{ steps.extract_version.outputs.version }}.wave
+          retention-days: 1
+
+  # Publish Wave bundle to managed cloud S3
+  publish_mc:
+    needs: build_bundle
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Download Wave bundle artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wave-bundle
+          path: bundles/
+      
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.LLM_STUDIO_AWS_ROLE }}
           role-session-name: ${{ secrets.LLM_STUDIO_AWS_ROLE_SESSION_NAME }}
           aws-region: ${{ secrets.LLM_STUDIO_AWS_REGION }}
-      - name: Build Wave Bundle
-        run: |-
-          make bundles
-      - name: Push wave bundle to S3
-        run: |-
-          REF_NAME="${{ github.ref_name }}"
-          VERSION=${REF_NAME:1}
-          aws s3 cp bundles/ai.h2o.llmstudio.$VERSION.wave ${{ secrets.MC_S3_LLMSTUDIO_BUCKET }}.$VERSION.wave
-  build_internal:
+      
+      - name: Push Wave bundle to S3
+        run: |
+          VERSION=${{ needs.build_bundle.outputs.version }}
+          aws s3 cp "bundles/ai.h2o.llmstudio.${VERSION}.wave" "${{ secrets.MC_S3_LLMSTUDIO_BUCKET }}.${VERSION}.wave"
+
+  # Publish Bundle Image to internal ECR
+  publish_internal:
+    needs: build_bundle
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
     steps:
-      - name: Checkout code
+      - name: Checkout code (Dockerfile only)
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            Dockerfile.bundle
+      
+      - name: Download Wave bundle artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wave-bundle
+          path: bundles/
+      
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ROLE }}
           role-session-name: ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ROLE_SESSION_NAME }}
           aws-region: ${{ secrets.LLM_STUDIO_INTERNAL_AWS_REGION }}
-      - name: Build Wave Bundle
-        run: |-
-          make bundles
-      - name: Docker Build Image
-        run: |-
-          REF_NAME="${{ github.ref_name }}"
-          VERSION=${REF_NAME:1}
-          docker build -t ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ECR }}:${{ github.ref_name }}-bundle --build-arg VERSION=$VERSION -f Dockerfile.bundle .
-      - name: Push to AWS
-        run: |-
-          docker push ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ECR }}:${{ github.ref_name }}-bundle
+      
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Build Bundle Image
+        run: |
+          VERSION=${{ needs.build_bundle.outputs.version }}
+          docker build -t "${{ secrets.LLM_STUDIO_INTERNAL_AWS_ECR }}:${{ github.ref_name }}-bundle" --build-arg "VERSION=${VERSION}" -f Dockerfile.bundle .
+      
+      - name: Push Bundle Image to ECR
+        run: |
+          docker push "${{ secrets.LLM_STUDIO_INTERNAL_AWS_ECR }}:${{ github.ref_name }}-bundle"
