@@ -111,7 +111,7 @@ If you wish to use another virtual environment, you can also install the depende
 
 ```bash
 pip install -r requirements.txt
-pip install flash-attn==2.7.4.post1 --no-build-isolation  # optional for Flash Attention 2
+pip install flash-attn==2.8.3 --no-build-isolation  # optional for Flash Attention 2
 ```
 
 ## Run H2O LLM Studio GUI

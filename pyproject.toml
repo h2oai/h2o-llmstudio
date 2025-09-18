@@ -5,9 +5,9 @@ readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = "==3.10.*"
 dependencies = [
-    "torch==2.6.0",
+    "torch==2.7.1",
     "tqdm>=4.65.0,<5.0.0",
-    "transformers==4.50.3",
+    "transformers==4.56.1",
     "numpy>=1.26.0, <2.0.0",
     "pandas>=2.2.0, <3.0.0",
     "scikit-learn>=1.5.1, <2.0.0",
@@ -27,9 +27,9 @@ dependencies = [
     "protobuf>=3.20.3",
     "fastparquet>=2023.7.0",
     "gputil>=1.4.0, <2.0.0",
-    "huggingface-hub==0.30.1",
-    "bitsandbytes==0.45.4",
-    "accelerate==1.6.0",
+    "huggingface-hub==0.34.4",
+    "bitsandbytes==0.47.0",
+    "accelerate==1.10.1",
     "openai>=1.12.0, <2.0.0",
     "einops==0.8.1",
     "datasets>=3.5.0, <4.0.0",
@@ -40,9 +40,9 @@ dependencies = [
     "h2o-wave>=1.6.0, <2.0.0",
     "tiktoken==0.9.0",
     "hf-transfer==0.1.9",
-    "peft==0.15.1",
+    "peft==0.17.1",
     "azure-storage-file-datalake>=12.12.0",
-    "deepspeed==0.16.5",
+    "deepspeed==0.17.5",
     "keyring>=25.2.1, <26.0.0",
     "pydantic>=2.8.2, <3.0.0",
 ]
@@ -66,7 +66,7 @@ dev = [
 ]
 
 [project.optional-dependencies]
-flash = ["flash-attn==2.7.4.post1"]
+flash = ["flash-attn==2.8.3"]
 
 [tool.uv]
 no-build-isolation-package = ["flash-attn"]
