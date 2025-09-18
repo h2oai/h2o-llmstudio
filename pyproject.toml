@@ -1,6 +1,6 @@
 [project]
 name = "h2o-llmstudio"
-version = "1.14.3"
+version = "1.14.4"
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = "==3.10.*"
