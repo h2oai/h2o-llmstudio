@@ -1,4 +1,5 @@
 FROM nvidia/cuda:12.6.0-devel-ubuntu24.04
+# Devel (nvcc) is needed for deepspeed at runtime
 
 ARG DEBIAN_FRONTEND=noninteractive
 
