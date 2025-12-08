@@ -171,7 +171,7 @@ h2o-cloud-discovery==3.2.0
     #   h2o-drive
 h2o-drive==3.0.0
     # via h2o-llmstudio
-h2o-wave==1.7.4
+h2o-wave==1.7.5
     # via h2o-llmstudio
 hf-transfer==0.1.9
     # via h2o-llmstudio
@@ -523,7 +523,7 @@ soupsieve==2.8
     # via beautifulsoup4
 sqlalchemy==2.0.43
     # via h2o-llmstudio
-starlette==0.47.3
+starlette==0.50.0
     # via h2o-wave
 swagger-spec-validator==3.0.4
     # via
@@ -604,7 +604,7 @@ tzdata==2025.2
     # via pandas
 uri-template==1.3.0
     # via jsonschema
-urllib3==2.5.0
+urllib3==2.6.1
     # via
     #   botocore
     #   kaggle
@@ -613,7 +613,7 @@ urllib3==2.5.0
     #   sentry-sdk
 uvicorn==0.35.0
     # via h2o-wave
-wandb==0.21.4
+wandb==0.23.1
     # via h2o-llmstudio
 wcwidth==0.2.13
     # via blessed
