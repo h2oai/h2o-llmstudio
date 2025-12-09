@@ -997,7 +997,7 @@ requires-dist = [
     { name = "flash-attn", marker = "extra == 'flash'", specifier = "==2.8.3" },
     { name = "gputil", specifier = ">=1.4.0,<2.0.0" },
     { name = "h2o-drive", specifier = ">=3.0.0,<4.0.0" },
-    { name = "h2o-wave", specifier = ">=1.7.5,<2.0.0" },
+    { name = "h2o-wave", specifier = ">=1.7.6,<2.0.0" },
     { name = "hf-transfer", specifier = "==0.1.9" },
     { name = "huggingface-hub", specifier = "==0.34.4" },
     { name = "jinja2", specifier = ">=3.1.3,<4.0.0" },
@@ -1045,7 +1045,7 @@ dev = [
 
 [[package]]
 name = "h2o-wave"
-version = "1.7.5"
+version = "1.7.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -1055,12 +1055,12 @@ dependencies = [
     { name = "uvicorn" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f9/f2/20366aeda149fc04654abd899dfd5c19451626960bf7f570d8a0247f4015/h2o_wave-1.7.5-py3-none-any.whl", hash = "sha256:4667649a17a2cb8587a930a3deeffe542d6f67d943a6e97bcab7169dd5f79457", size = 144551, upload-time = "2025-11-07T13:56:29.288Z" },
-    { url = "https://files.pythonhosted.org/packages/ac/9e/cf33d655e247eeba834ca7a06b3063eb53a3a67087f780ba686dc2eaee71/h2o_wave-1.7.5-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:91a13f8e69c84a3dea4ad02f3b1bb22f9152b9a320adfc3404f8c2b498469943", size = 11623738, upload-time = "2025-11-07T13:56:30.771Z" },
-    { url = "https://files.pythonhosted.org/packages/46/b6/6bdfef3ce182a1a1a63f562172ecc139f55d9226b152c5a2436face938a0/h2o_wave-1.7.5-py3-none-macosx_11_0_arm64.whl", hash = "sha256:a76209894283665cea48222555b9e2a6f5e5dc2ca244d37fbd2527f20076a7b6", size = 11211788, upload-time = "2025-11-07T13:56:32.635Z" },
-    { url = "https://files.pythonhosted.org/packages/a0/ee/88528360e703b5d3cbedd1c7a5ba7caa1f0efc88e7856c3466a121aa008e/h2o_wave-1.7.5-py3-none-macosx_12_0_arm64.whl", hash = "sha256:ee02eb7c03dd95343ae9d1330cc8ef1d45a05afde6ff67ab4ef72db9f05e9883", size = 11211789, upload-time = "2025-11-07T13:56:34.632Z" },
-    { url = "https://files.pythonhosted.org/packages/10/56/1e098cfb9db04a3e1f97a6467acb2a412f7b82bf43c1222ed124be1e3da8/h2o_wave-1.7.5-py3-none-manylinux1_x86_64.whl", hash = "sha256:7512471bf9864cd415dd64e49fddf8da683a1696f250212f6078bdaefb773348", size = 12724146, upload-time = "2025-11-07T13:56:36.496Z" },
-    { url = "https://files.pythonhosted.org/packages/86/99/91bcd685146a94360a2b6b17114bded0ddb5903de8b2f6eb9bbd6c00012a/h2o_wave-1.7.5-py3-none-win_amd64.whl", hash = "sha256:f2df52237b3c8b8f831a9317460443be981cd390a4f708186e22934163ad5de8", size = 11727676, upload-time = "2025-11-07T13:56:38.33Z" },
+    { url = "https://files.pythonhosted.org/packages/95/43/53870643c56a61b4b1a0da336f9d1e1b04ad3cd033a4cfe068724c62bc41/h2o_wave-1.7.6-py3-none-any.whl", hash = "sha256:77d77b6ad0cc55027ea17a88c7e35df3c1e3c154c1be83faad651fa5d7b9c4f6", size = 144550, upload-time = "2025-12-09T11:00:21.543Z" },
+    { url = "https://files.pythonhosted.org/packages/41/2c/32613a3a18481b316b76341e2b0c328afd87834b2142d28f1c3a6afb741d/h2o_wave-1.7.6-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:b7ab69c5c6accdef05ee3ac049c681ca8c485e4f85f03e3353eace8933ffc836", size = 11625233, upload-time = "2025-12-09T11:00:22.967Z" },
+    { url = "https://files.pythonhosted.org/packages/4b/1c/e2feaef887d5ae17455452588226e351d77a2e6fca8bc21b89e91c2b54ab/h2o_wave-1.7.6-py3-none-macosx_11_0_arm64.whl", hash = "sha256:d0e052635629136a902cb81c2ba8ddf8397231036cb82d76b320c659d46ffb67", size = 11212641, upload-time = "2025-12-09T11:00:24.686Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/f9/7b571a1a29f3aa85005774fb4c44eb97bb9835e17394c32d3f04d587a6ce/h2o_wave-1.7.6-py3-none-macosx_12_0_arm64.whl", hash = "sha256:e34207ddf137f516f52373d782e9f97dc08495b7f2b05288e6216e80a8ba08b5", size = 11212641, upload-time = "2025-12-09T11:00:26.772Z" },
+    { url = "https://files.pythonhosted.org/packages/18/d4/32b222783b61e1f686b75987390672924e9238d5c8e8002dde2d912f237b/h2o_wave-1.7.6-py3-none-manylinux1_x86_64.whl", hash = "sha256:635413b22b898629af32a7ff526356b40d6ad030c7bb0ee75ea9735f9d0857d3", size = 12726030, upload-time = "2025-12-09T11:00:33.983Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/e6/3d8d5142ea585c4c97c0aac1ee8040dc2113db0be5c3dad3f58e324de748/h2o_wave-1.7.6-py3-none-win_amd64.whl", hash = "sha256:b3204b088387bb62d0ff2a8242dbaf30a19aae8423736dadbaf70861f7b66c5d", size = 11730306, upload-time = "2025-12-09T11:00:36.07Z" },
 ]
 
 [[package]]
