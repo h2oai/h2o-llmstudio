@@ -1,80 +1,73 @@
-FROM nvidia/cuda:12.6.0-devel-ubuntu24.04
-# Devel (nvcc) is needed for deepspeed at runtime
+FROM 353750902984.dkr.ecr.us-east-1.amazonaws.com/thirdparty-chainguard-python310:latest-fips-dev
 
 ARG DEBIAN_FRONTEND=noninteractive
+ARG CUDA_MAJOR_VERSION=12
+ARG CUDA_MINOR_VERSION=6
 
-# git is needed for flash-attention
-# curl is needed to download get-pip.py
-# software-properties-common is needed for add-apt-repository
-# python3.10-dev is needed for triton as it includes the Python.h header file
-# We get python 3.10 from the deadsnakes PPA to have the latest version
-# We install pip from the get-pip.py script to have the latest version
-RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt-get install -y \
-    git \
+ENV NVIDIA_DRIVER_CAPABILITIES="compute,utility"
+ENV NVIDIA_VISIBLE_DEVICES="all"
+
+USER root
+
+RUN apk update \
+    && apk upgrade \
+    && apk add wget \
+    && wget -O /etc/apk/keys/chainguard-extras.rsa.pub https://packages.cgr.dev/extras/chainguard-extras.rsa.pub \
+    && echo "https://packages.cgr.dev/extras" | tee -a /etc/apk/repositories \
+    && apk update \
+    && apk add --no-cache \
+    nvidia-cudnn-8 \
+    nvidia-cudnn-8-cuda-${CUDA_MAJOR_VERSION} \
+    nvidia-cudnn-8-cuda-${CUDA_MAJOR_VERSION}-dev \
+    nvidia-cuda-cudart-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
+    nvidia-cuda-cudart-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION}-dev \
+    nvidia-cuda-nvcc-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
+    nvidia-libcublas-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
+    cuda-toolkit-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION}-dev \
+    make \
     curl \
-    software-properties-common \
-    && add-apt-repository ppa:deadsnakes/ppa \
-    && apt-get update \
-    && apt install -y \
-    python3.10 \
-    python3.10-dev \
-    python3.10-distutils \
-    && rm -rf /var/lib/apt/lists/*
+    git
 
-# Pick an unusual UID for the llmstudio user.
-# In particular, don't pick 1000, which is the default ubuntu user number.
-# Force ourselves to test with UID mismatches in the common case.
-RUN adduser --uid 1999 llmstudio
-USER llmstudio
-ENV HOME=/home/llmstudio
-
-# Static application code lives in /workspace/
 WORKDIR /workspace
 
-ENV PATH=/home/llmstudio/.local/bin:$PATH
-RUN \
-    curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 && \
-    chmod -R a+w /home/llmstudio
-COPY Makefile pyproject.toml uv.lock /workspace/
+ENV CUDA_HOME=/usr/local/cuda-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION}
+ENV PATH=$CUDA_HOME/bin:$PATH
+ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64
 
-# Python virtualenv is installed in /workspace/.venv/
-# give read and write permissions to the /workspace/.venv/ directory for all users to allow wave to write files
-RUN make setup && chmod -R 777 /workspace/.venv
+RUN python -m venv /workspace/venv
+ENV PATH="/workspace/venv/bin:$PATH"
+
+# Install uv and python dependencies
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+RUN --mount=type=bind,src=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,src=uv.lock,target=uv.lock \
+    /root/.local/bin/uv sync --frozen --no-cache
 
 # Add the venv to the PATH
 ENV PATH=/workspace/.venv/bin:$PATH
 
 # We need to create a mount point for the user to mount their volume
 # All persistent data lives in /mount
-# RUN mkdir -p /mount
+RUN mkdir -p /mount 
+RUN mkdir -p /mount && chown -R nonroot:nonroot /mount
 ENV H2O_LLM_STUDIO_WORKDIR=/mount
 
 # Download the demo datasets and place in the /workspace/demo directory
 # Set the environment variable for the demo datasets
 ENV H2O_LLM_STUDIO_DEMO_DATASETS=/workspace/demo
-COPY llm_studio/download_default_datasets.py /workspace/
+COPY --chown=nonroot:nonroot ./llm_studio/download_default_datasets.py /workspace/
 RUN python download_default_datasets.py
 
-COPY ./llm_studio /workspace/llm_studio
-COPY ./prompts /workspace/prompts
-COPY ./model_cards /workspace/model_cards
-COPY ./LICENSE /workspace/LICENSE
-COPY ./entrypoint.sh /workspace/entrypoint.sh
-
-# Remove unnecessary packages remove build packages again
-# Prevent removal of cuda packages
-USER root
-RUN apt-get purge -y git curl python3.10-distutils software-properties-common linux-libc-dev \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
-
-USER llmstudio
+COPY --chown=nonroot:nonroot ./llm_studio /workspace/llm_studio
+COPY --chown=nonroot:nonroot ./prompts /workspace/prompts
+COPY --chown=nonroot:nonroot ./model_cards /workspace/model_cards
+COPY --chown=nonroot:nonroot ./LICENSE /workspace/LICENSE
+COPY --chown=nonroot:nonroot ./entrypoint.sh /workspace/entrypoint.sh
+COPY --chown=nonroot:nonroot ./pyproject.toml /workspace/pyproject.toml
 
 ENV HF_HOME=/mount/huggingface
 ENV TRITON_CACHE_DIR=/mount/.triton/cache
-
+ENV H2O_WAVE_DATA_DIR=/mount/wave_data
 ENV HF_HUB_DISABLE_TELEMETRY=1
 ENV DO_NOT_TRACK=1
 
@@ -84,13 +77,11 @@ ENV H2O_WAVE_MAX_REQUEST_SIZE=25MB
 ENV H2O_WAVE_NO_LOG=true
 ENV H2O_WAVE_PRIVATE_DIR="/download/@/mount/output/download"
 
-USER root
-
-# Make the entrypoint.sh script executable by all users
+# Make the entrypoint.sh script executable
 RUN chmod 755 /workspace/entrypoint.sh
 
-USER llmstudio
-
 EXPOSE 10101
+
+USER nonroot
 
 ENTRYPOINT [ "/workspace/entrypoint.sh" ]
