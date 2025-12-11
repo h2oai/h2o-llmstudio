@@ -917,7 +917,7 @@ wheels = [
 
 [[package]]
 name = "h2o-llmstudio"
-version = "1.14.5"
+version = "1.14.6"
 source = { virtual = "." }
 dependencies = [
     { name = "accelerate" },
