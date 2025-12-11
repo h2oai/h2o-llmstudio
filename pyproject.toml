@@ -1,6 +1,6 @@
 [project]
 name = "h2o-llmstudio"
-version = "1.14.4"
+version = "1.14.5"
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = "==3.10.*"
@@ -34,10 +34,10 @@ dependencies = [
     "einops==0.8.1",
     "datasets>=3.5.0, <4.0.0",
     "neptune>=1.10.4, <2.0.0",
-    "wandb>=0.17.5, <1.0.0",
+    "wandb>=0.23.1, <1.0.0",
     "Jinja2>=3.1.3, <4.0.0",
     "h2o-drive>=3.0.0, <4.0.0",
-    "h2o-wave>=1.6.0, <2.0.0",
+    "h2o-wave>=1.7.6, <2.0.0",
     "tiktoken==0.9.0",
     "hf-transfer==0.1.9",
     "peft==0.17.1",
