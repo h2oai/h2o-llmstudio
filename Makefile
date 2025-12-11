@@ -30,7 +30,7 @@ setup: uv  # Install dependencies
 .PHONY: setup-dev
 setup-dev: uv  # Install dependencies including dev dependencies
 	$(UV) sync --frozen --group dev
-	-$(UV) sync --frozen --group dev --extra flash 
+	-$(UV) sync --frozen --group dev --extra flash
 	$(UV) run playwright install
 
 .PHONY: requirements

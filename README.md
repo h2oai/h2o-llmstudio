@@ -164,25 +164,6 @@ Navigate to <http://localhost:10101/> (we recommend using Chrome) to access H2O 
 
 (Note other helpful docker commands are `docker ps` and `docker kill`.)
 
-If you prefer to build your own Docker image from source, follow the instructions below.
-
-```bash
-docker build -t h2o-llmstudio .
-
-mkdir -p `pwd`/llmstudio_mnt
-
-docker run \
-    --runtime=nvidia \
-    --shm-size=64g \
-    --init \
-    --rm \
-    -it \
-    -u `id -u`:`id -g` \
-    -p 10101:10101 \
-    -v `pwd`/llmstudio_mnt:/mount \
-    h2o-llmstudio
-```
-
 ## Run H2O LLM Studio with command line interface (CLI)
 
 You can also use H2O LLM Studio with the command line interface (CLI) and specify the configuration .yaml file that contains all the experiment parameters. To fine-tune using H2O LLM Studio with CLI use the following command:
