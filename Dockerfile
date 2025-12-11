@@ -66,7 +66,7 @@ COPY ./entrypoint.sh /workspace/entrypoint.sh
 # Remove unnecessary packages remove build packages again
 # Prevent removal of cuda packages
 USER root
-RUN apt-get purge -y git curl python3.10-distutils software-properties-common \
+RUN apt-get purge -y git curl python3.10-distutils software-properties-common linux-libc-dev \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
