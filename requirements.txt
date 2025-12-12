@@ -545,7 +545,7 @@ toml==0.10.2
     # via h2o-llmstudio
 tomli==2.3.0
     # via h2o-cloud-discovery
-torch==2.7.1
+torch==2.7.1+cu126
     # via
     #   accelerate
     #   bitsandbytes

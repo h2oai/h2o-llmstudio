@@ -72,11 +72,12 @@ flash = ["flash-attn==2.8.3"]
 no-build-isolation-package = ["flash-attn"]
 
 [tool.uv.sources]
+torch = { index = "pytorch" }
 hac_playwright = { url = "https://h2oai-qa-test-assets.s3.amazonaws.com/wheels/h2o_playwright/hac_playwright-1.48.0-py3-none-any.whl" }
 
 [[tool.uv.index]]
 name = "pytorch"
-url = "https://download.pytorch.org/whl/cu124/"
+url = "https://download.pytorch.org/whl/cu126/"
 explicit = true
 
 [tool.ruff]
