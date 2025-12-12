@@ -1024,7 +1024,7 @@ requires-dist = [
     { name = "sqlalchemy", specifier = ">=2.0.25,<3.0.0" },
     { name = "tiktoken", specifier = "==0.9.0" },
     { name = "toml", specifier = ">=0.10.2,<0.11.0" },
-    { name = "torch", specifier = "==2.7.1" },
+    { name = "torch", specifier = "==2.7.1", index = "https://download.pytorch.org/whl/cu126/" },
     { name = "tqdm", specifier = ">=4.65.0,<5.0.0" },
     { name = "transformers", specifier = "==4.56.1" },
     { name = "wandb", specifier = ">=0.23.1,<1.0.0" },
@@ -2921,8 +2921,8 @@ wheels = [
 
 [[package]]
 name = "torch"
-version = "2.7.1"
-source = { registry = "https://pypi.org/simple" }
+version = "2.7.1+cu126"
+source = { registry = "https://download.pytorch.org/whl/cu126/" }
 dependencies = [
     { name = "filelock" },
     { name = "fsspec" },
@@ -2947,10 +2947,8 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6a/27/2e06cb52adf89fe6e020963529d17ed51532fc73c1e6d1b18420ef03338c/torch-2.7.1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:a103b5d782af5bd119b81dbcc7ffc6fa09904c423ff8db397a1e6ea8fd71508f", size = 99089441, upload-time = "2025-06-04T17:38:48.268Z" },
-    { url = "https://files.pythonhosted.org/packages/0a/7c/0a5b3aee977596459ec45be2220370fde8e017f651fecc40522fd478cb1e/torch-2.7.1-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:fe955951bdf32d182ee8ead6c3186ad54781492bf03d547d31771a01b3d6fb7d", size = 821154516, upload-time = "2025-06-04T17:36:28.556Z" },
-    { url = "https://files.pythonhosted.org/packages/f9/91/3d709cfc5e15995fb3fe7a6b564ce42280d3a55676dad672205e94f34ac9/torch-2.7.1-cp310-cp310-win_amd64.whl", hash = "sha256:885453d6fba67d9991132143bf7fa06b79b24352f4506fd4d10b309f53454162", size = 216093147, upload-time = "2025-06-04T17:39:38.132Z" },
-    { url = "https://files.pythonhosted.org/packages/92/f6/5da3918414e07da9866ecb9330fe6ffdebe15cb9a4c5ada7d4b6e0a6654d/torch-2.7.1-cp310-none-macosx_11_0_arm64.whl", hash = "sha256:d72acfdb86cee2a32c0ce0101606f3758f0d8bb5f8f31e7920dc2809e963aa7c", size = 68630914, upload-time = "2025-06-04T17:39:31.162Z" },
+    { url = "https://download.pytorch.org/whl/cu126/torch-2.7.1%2Bcu126-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:03b83a0f2c1e90afafd7a5728b956e211bb3e6c56ea3d7d8c7638a659e448d5f" },
+    { url = "https://download.pytorch.org/whl/cu126/torch-2.7.1%2Bcu126-cp310-cp310-win_amd64.whl", hash = "sha256:30119a54e1b4ccefe20dfe5d4b13f6aef76c17ec605b40e26d39789db00906f2" },
 ]
 
 [[package]]
