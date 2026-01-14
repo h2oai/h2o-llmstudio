@@ -3,16 +3,13 @@ name: Deploy documentation to GitHub pages
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   deploy:
     name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           always-auth: true
           registry-url: https://npm.pkg.github.com/
@@ -31,5 +28,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./documentation/tmp/build
-          user_name: shaunyogeshwaran ##swap username out with the username of someone with admin access to the repo
-          user_email: shaun.yogeshwaran@h2o.ai ##swap email out with the email of someone with admin access to the repo
+          user_name: sherenem ##swap username out with the username of someone with admin access to the repo 
+          user_email: sherene.mahanama@h2o.ai ##swap email out with the email of someone with admin access to the repo 
