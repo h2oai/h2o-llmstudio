@@ -1340,7 +1340,9 @@ async def show_summary_tab(q: Q, dataset_id):
 
 
 async def show_statistics_tab(q: Q, dataset_filename, config_filename):
-    cfg_hash = hashlib.md5(open(config_filename, "rb").read()).hexdigest()
+    cfg_hash = hashlib.md5(
+        open(config_filename, "rb").read(), usedforsecurity=False
+    ).hexdigest()
     stats_dict = compute_dataset_statistics(dataset_filename, config_filename, cfg_hash)
 
     for chat_type in ["prompts", "answers"]:
