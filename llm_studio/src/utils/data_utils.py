@@ -61,14 +61,12 @@ def read_dataframe(
     if meta_only and os.path.exists(meta_info_path):
         path = meta_info_path
 
-    if path.endswith(".csv"):
+    path_lower = path.lower()
+    if path_lower.endswith(".csv"):
         df = pd.read_csv(path, lineterminator="\n").reset_index(drop=True)
-    elif path.endswith(".pq") or path.endswith(".parquet"):
-        try:
-            df = pd.read_parquet(path, engine="pyarrow").reset_index(drop=True)
-        except Exception:
-            df = pd.read_parquet(path, engine="fastparquet").reset_index(drop=True)
-    elif path.endswith(".json") or path == "":
+    elif path_lower.endswith(".pq") or path_lower.endswith(".parquet"):
+        df = pd.read_parquet(path, engine="pyarrow").reset_index(drop=True)
+    elif path == "":
         return pd.DataFrame()
     else:
         raise ValueError(
@@ -170,9 +168,10 @@ def is_valid_data_frame(path: str, csv_rows: int = 100) -> bool:
 
     """
     try:
-        if path.endswith(".csv"):
+        path_lower = path.lower()
+        if path_lower.endswith(".csv"):
             pd.read_csv(path, nrows=csv_rows, lineterminator="\n")
-        elif path.endswith(".pq") or path.endswith(".parquet"):
+        elif path_lower.endswith(".pq") or path_lower.endswith(".parquet"):
             pq.ParquetFile(path)
         else:
             raise ValueError(

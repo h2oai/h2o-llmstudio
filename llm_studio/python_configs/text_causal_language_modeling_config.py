@@ -61,7 +61,14 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
     mask_prompt_labels: bool = True
     only_last_answer: bool = False
 
-    _allowed_file_extensions: tuple[str, ...] = ("csv", "pq", "parquet")
+    _allowed_file_extensions: tuple[str, ...] = (
+        "csv",
+        "CSV",
+        "pq",
+        "PQ",
+        "parquet",
+        "PARQUET",
+    )
 
     def __post_init__(self):
         self.prompt_column = (

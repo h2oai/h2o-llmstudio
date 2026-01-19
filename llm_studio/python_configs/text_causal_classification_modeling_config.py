@@ -43,7 +43,14 @@ class ConfigNLPCausalClassificationDataset(ConfigNLPCausalLMDataset):
     add_eos_token_to_prompt: bool = False
     add_eos_token_to_answer: bool = False
 
-    _allowed_file_extensions: tuple[str, ...] = ("csv", "pq", "parquet")
+    _allowed_file_extensions: tuple[str, ...] = (
+        "csv",
+        "CSV",
+        "pq",
+        "PQ",
+        "parquet",
+        "PARQUET",
+    )
 
     def __post_init__(self):
         self.prompt_column = (

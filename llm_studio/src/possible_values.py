@@ -25,7 +25,15 @@ def _scan_dirs(dirname: str) -> list[str]:
 
 
 def _scan_files(
-    dirname: str, extensions: tuple[str, ...] = (".csv", ".pq", ".parquet", ".json")
+    dirname: str,
+    extensions: tuple[str, ...] = (
+        ".csv",
+        ".CSV",
+        ".pq",
+        ".PQ",
+        ".parquet",
+        ".PARQUET",
+    ),
 ) -> list[str]:
     """
     Scans a directory for files with given extension
@@ -43,7 +51,7 @@ def _scan_files(
         os.path.join(dirpath, filename)
         for dirpath, _, filenames in os.walk(dirname)
         for filename in filenames
-        if any(map(filename.__contains__, extensions))
+        if any([filename.endswith(ext) for ext in extensions])
         and not filename.startswith("__meta_info__")
     ]
     return sorted(path_list)
