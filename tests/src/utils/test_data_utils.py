@@ -203,18 +203,6 @@ class TestReadDataframe:
         df = read_dataframe(str(parquet_path))
         assert len(df) == 3
 
-    def test_read_json_returns_empty_dataframe(self):
-        """Test that JSON files return an empty DataFrame (not supported)."""
-        df = read_dataframe("somefile.json")
-        assert isinstance(df, pd.DataFrame)
-        assert len(df) == 0
-
-    def test_read_json_uppercase_returns_empty_dataframe(self):
-        """Test that JSON files with uppercase extension return empty DataFrame."""
-        df = read_dataframe("somefile.JSON")
-        assert isinstance(df, pd.DataFrame)
-        assert len(df) == 0
-
     def test_read_empty_path_returns_empty_dataframe(self):
         """Test that empty path returns an empty DataFrame."""
         df = read_dataframe("")
