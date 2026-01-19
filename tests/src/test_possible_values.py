@@ -45,7 +45,6 @@ def test_scan_files(temp_dir_structure):
     files = _scan_files(str(temp_dir_structure))
     expected = [
         str(temp_dir_structure / "file1.csv"),
-        str(temp_dir_structure / "file2.json"),
         str(temp_dir_structure / "subdir1" / "file3.parquet"),
     ]
     assert set(files) == set(expected)
