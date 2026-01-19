@@ -61,8 +61,8 @@ style: reports uv
 
 .PHONY: format
 format:  # Format and check code with ruff
-	uv tool run ruff format
-	uv tool run ruff check --fix
+	$(UV) tool run ruff format
+	$(UV) tool run ruff check --fix
 
 .PHONY: format-check
 format-check:  # Check format and check code with ruff (fails if changes are needed)

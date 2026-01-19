@@ -45,7 +45,7 @@ class Plots:
             + str(cfg.dataset.rejected_answer_column)
             + str(cfg.dataset.parent_id_column)
         )
-        config_hash = hashlib.md5(config_id.encode()).hexdigest()
+        config_hash = hashlib.md5(config_id.encode(), usedforsecurity=False).hexdigest()
         path = os.path.join(
             os.path.dirname(cfg.dataset.train_dataframe),
             f"__meta_info__{config_hash}_data_viz.parquet",

@@ -35,7 +35,6 @@ ENV PATH=$CUDA_HOME/bin:$PATH
 ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64
 
 RUN python -m venv /workspace/venv
-ENV PATH="/workspace/venv/bin:$PATH"
 
 # Install uv and python dependencies
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
