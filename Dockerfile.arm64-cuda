@@ -1,0 +1,98 @@
+# Dockerfile for H2O LLM Studio on ARM64 with NVIDIA CUDA support
+# Optimized for Grace Hopper (GH200), Grace Blackwell (GB200), and Jetson platforms
+# CUDA 12.8 for ARM64 compatibility
+
+FROM nvidia/cuda:12.8.0-cudnn9-devel-ubuntu22.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG PYTHON_VERSION=3.10
+
+# NVIDIA driver configuration
+ENV NVIDIA_DRIVER_CAPABILITIES="compute,utility"
+ENV NVIDIA_VISIBLE_DEVICES="all"
+
+# System dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python${PYTHON_VERSION} \
+    python${PYTHON_VERSION}-venv \
+    python${PYTHON_VERSION}-dev \
+    make \
+    curl \
+    wget \
+    git \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Python 3.10 as default
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python${PYTHON_VERSION} 1 \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1
+
+WORKDIR /workspace
+
+# CUDA environment
+ENV CUDA_HOME=/usr/local/cuda
+ENV PATH=$CUDA_HOME/bin:$PATH
+ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+
+# Create Python virtual environment
+RUN python -m venv /workspace/.venv
+
+# Install uv package manager
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH=/root/.local/bin:$PATH
+
+# Install Python dependencies using uv
+# Uses multi-stage build mount to avoid copying lock files into final image
+RUN --mount=type=bind,src=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,src=uv.lock,target=uv.lock \
+    /root/.local/bin/uv sync --frozen --no-cache --no-dev
+
+# Activate venv in PATH
+ENV PATH=/workspace/.venv/bin:$PATH
+
+# Create mount point for persistent data
+# All user data, models, and outputs live in /mount
+RUN mkdir -p /mount && chmod 777 /mount
+ENV H2O_LLM_STUDIO_WORKDIR=/mount
+
+# Download demo datasets
+ENV H2O_LLM_STUDIO_DEMO_DATASETS=/workspace/demo
+COPY ./llm_studio/download_default_datasets.py /workspace/
+RUN python download_default_datasets.py
+
+# Copy application code
+COPY ./llm_studio /workspace/llm_studio
+COPY ./prompts /workspace/prompts
+COPY ./model_cards /workspace/model_cards
+COPY ./LICENSE /workspace/LICENSE
+COPY ./entrypoint.sh /workspace/entrypoint.sh
+COPY ./pyproject.toml /workspace/pyproject.toml
+
+# Configure application environment
+ENV HF_HOME=/mount/huggingface
+ENV TRITON_CACHE_DIR=/mount/.triton/cache
+ENV H2O_WAVE_DATA_DIR=/mount/wave_data
+ENV HF_HUB_DISABLE_TELEMETRY=1
+ENV DO_NOT_TRACK=1
+
+# Wave server configuration
+ENV H2O_WAVE_APP_ADDRESS=http://127.0.0.1:8756
+ENV H2O_WAVE_MAX_REQUEST_SIZE=25MB
+ENV H2O_WAVE_NO_LOG=true
+ENV H2O_WAVE_PRIVATE_DIR="/download/@/mount/output/download"
+
+# Make entrypoint executable
+RUN chmod 755 /workspace/entrypoint.sh
+
+# Expose Wave server port
+EXPOSE 10101
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:10101/ || exit 1
+
+# Run as non-root for security (optional, can be enabled if needed)
+# RUN useradd -m -u 1000 llmstudio && chown -R llmstudio:llmstudio /workspace /mount
+# USER llmstudio
+
+ENTRYPOINT [ "/workspace/entrypoint.sh" ]

@@ -207,6 +207,42 @@ docker-clean-all:
 	fi
 	docker rmi $(DOCKER_IMAGE)
 
+# ARM64 + NVIDIA CUDA Docker targets
+DOCKER_IMAGE_ARM64 ?= h2oairelease/h2oai-llmstudio-app:nightly-arm64-cuda
+
+.PHONY: docker-build-arm64-cuda
+docker-build-arm64-cuda:
+	docker buildx build \
+		--platform linux/arm64 \
+		-f Dockerfile.arm64-cuda \
+		-t $(DOCKER_IMAGE_ARM64) \
+		.
+
+.PHONY: docker-run-arm64-cuda
+docker-run-arm64-cuda:
+ifeq (,$(wildcard ./llmstudio_mnt))
+	mkdir llmstudio_mnt
+endif
+	docker run \
+		--runtime=nvidia \
+		--platform linux/arm64 \
+		--shm-size=64g \
+		--init \
+		--rm \
+		-it \
+		-p 10101:10101 \
+		-v `pwd`/llmstudio_mnt:/mount \
+		$(DOCKER_IMAGE_ARM64)
+
+.PHONY: docker-clean-arm64-cuda
+docker-clean-arm64-cuda:
+	@CONTAINERS=$$(docker ps -a -q --filter ancestor=$(DOCKER_IMAGE_ARM64)); \
+	if [ -n "$$CONTAINERS" ]; then \
+		docker stop $$CONTAINERS; \
+		docker rm $$CONTAINERS; \
+	fi
+	docker rmi $(DOCKER_IMAGE_ARM64)
+
 .PHONY: bundles
 bundles:
 	rm -f -r bundles
