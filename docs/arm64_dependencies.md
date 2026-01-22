@@ -90,6 +90,88 @@ else:
 
 ---
 
+## NVIDIA CUDA Library Dependencies (ARM64)
+
+**Research Date:** 2026-01-22
+**Status:** ✓ Available
+
+### Overview
+
+NVIDIA CUDA library packages (nvidia-cuda-*, nvidia-cudnn-*, nvidia-cublas-*, etc.) are **transitive dependencies** of PyTorch. They are automatically resolved when installing PyTorch from the cu128 index and should **NOT** be explicitly listed in pyproject.toml.
+
+### ARM64 Availability
+
+All major NVIDIA CUDA packages now provide ARM64 (aarch64) wheels on PyPI:
+
+| Package | Latest Version (Jan 2026) | ARM64 Support | Notes |
+|---------|---------------------------|---------------|-------|
+| nvidia-cuda-runtime-cu12 | 12.9.79 | ✓ Yes | Available since June 2025 |
+| nvidia-cudnn-cu12 | 9.18.0.77 | ✓ Yes | Latest Jan 16, 2026 |
+| nvidia-nccl-cu12 | 2.26.2 | ✓ Yes | Multi-GPU communication |
+| nvidia-cuda-nvrtc-cu12 | 12.9.86 | ✓ Yes | Runtime compilation |
+| nvidia-cublas-cu12 | 12.6.4.1 | ✓ Yes | Linear algebra |
+| nvidia-nvshmem-cu12 | 3.5.19 | ✓ Yes | Shared memory |
+
+### PyTorch 2.7.1 CUDA Dependencies
+
+PyTorch 2.7.1 with CUDA 12.8 (cu128) on ARM64 automatically includes:
+
+```
+nvidia-cuda-nvrtc-cu12==12.8.61
+nvidia-cuda-runtime-cu12==12.8.57
+nvidia-cuda-cupti-cu12==12.8.57
+nvidia-cudnn-cu12==9.7.1.26
+nvidia-nccl-cu12==2.26.2
+```
+
+### Platform-Specific Resolution
+
+The requirements.txt file may show different CUDA library versions depending on the platform where it was generated:
+
+- **x86_64 systems**: May resolve to CUDA 12.6.x dependencies
+- **ARM64 systems**: Will resolve to CUDA 12.8.x dependencies
+
+This is **expected behavior** - uv resolves platform-specific wheels automatically.
+
+### Configuration
+
+**No action required** in pyproject.toml. The CUDA libraries are pulled transitively from PyTorch:
+
+```toml
+dependencies = [
+    "torch==2.7.1",
+    # CUDA dependencies resolved automatically
+]
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu128/"
+# CUDA libs available on both cu128 index and PyPI
+```
+
+### Verification
+
+To verify CUDA libraries are correctly installed on ARM64:
+
+```bash
+python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA version: {torch.version.cuda}')"
+```
+
+Expected output on ARM64 with CUDA:
+```
+CUDA available: True
+CUDA version: 12.8
+```
+
+### References
+
+- [nvidia-cuda-runtime-cu12 on PyPI](https://pypi.org/project/nvidia-cuda-runtime-cu12/)
+- [nvidia-cudnn-cu12 on PyPI](https://pypi.org/project/nvidia-cudnn-cu12/)
+- [PyTorch 2.7 Release Notes](https://pytorch.org/blog/pytorch-2-7/)
+- [AWS Deep Learning Containers PyTorch 2.7](https://docs.aws.amazon.com/deep-learning-containers/latest/devguide/dlc-pytorch-2-7-training-sagemaker.html)
+
+---
+
 ## Recommended PyTorch Configuration
 
 ### For pyproject.toml
