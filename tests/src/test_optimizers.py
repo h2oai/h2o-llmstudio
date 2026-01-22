@@ -78,32 +78,25 @@ class TestOptimizers:
 class TestOptimizersWithMockedImport:
     """Tests for Optimizers with mocked bitsandbytes import."""
 
-    def test_import_failure_handled_gracefully(self, monkeypatch):
+    def test_import_failure_handled_gracefully(self):
         """Test that ImportError for bitsandbytes is handled gracefully."""
-        # Remove the module if it exists
+        import importlib
         import sys
 
-        if "llm_studio.src.optimizers" in sys.modules:
-            del sys.modules["llm_studio.src.optimizers"]
-        if "bitsandbytes" in sys.modules:
-            monkeypatch.setitem(sys.modules, "bitsandbytes", None)
+        # First import llm_studio to ensure it exists in sys.modules
+        import llm_studio.src.optimizers
 
-        # Mock bitsandbytes to raise ImportError
-        def mock_import(name, *args, **kwargs):
-            if name == "bitsandbytes":
-                raise ImportError("No module named 'bitsandbytes'")
-            return original_import(name, *args, **kwargs)
+        # Now patch sys.modules and reload
+        with patch.dict("sys.modules", {"bitsandbytes": None}):
+            # Reload the module with bitsandbytes mocked out
+            importlib.reload(llm_studio.src.optimizers)
 
-        original_import = __builtins__.__import__
-        monkeypatch.setattr(__builtins__, "__import__", mock_import)
+            # When import fails, bitsandbytes should not be available
+            assert isinstance(llm_studio.src.optimizers.HAS_BITSANDBYTES, bool)
 
-        # Import should not raise, but HAS_BITSANDBYTES should be False
-        from llm_studio.src.optimizers import HAS_BITSANDBYTES, Optimizers
+            # Base optimizers should still be available
+            assert "Adam" in llm_studio.src.optimizers.Optimizers.names()
+            assert "AdamW" in llm_studio.src.optimizers.Optimizers.names()
 
-        # When import fails, bitsandbytes should not be available
-        # (This might pass or fail depending on whether bitsandbytes is installed)
-        assert isinstance(HAS_BITSANDBYTES, bool)
-
-        # Base optimizers should still be available
-        assert "Adam" in Optimizers.names()
-        assert "AdamW" in Optimizers.names()
+        # Reload again to restore original state
+        importlib.reload(llm_studio.src.optimizers)
