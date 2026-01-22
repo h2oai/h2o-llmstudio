@@ -162,7 +162,7 @@ PyTorch will automatically install the appropriate version:
 - `flash-attn`: May not be available. Optional feature.
 
 **Apple Silicon:**
-- `bitsandbytes`: Limited functionality (CUDA-only features don't work with MPS). Quantization features disabled.
+- `bitsandbytes`: Not installed on macOS ARM64. 8-bit optimizer (AdamW8bit) and quantization features unavailable.
 - `deepspeed`: Not supported (requires CUDA). Distributed training unavailable.
 - `flash-attn`: Not supported (CUDA-only). Optional feature.
 - `triton`: Not supported. PyTorch uses native Metal codegen instead.
