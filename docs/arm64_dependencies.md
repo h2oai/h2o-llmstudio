@@ -196,9 +196,85 @@ pip install bitsandbytes==0.49.1
 
 ---
 
-### deepspeed
-- **Status:** Research required (Task h2o-llmstudio-7wg)
-- **Current version:** 0.17.5
+### deepspeed (Distributed Training Library)
+
+**Current version in project:** 0.17.5
+**Latest stable:** 0.17.5 (as of Jan 2026)
+
+#### NVIDIA ARM64 (Linux aarch64) + CUDA
+
+**Status:** ⚠️ Build from Source Required
+
+**Official Support:**
+- No official ARM64 wheels on PyPI
+- DeepSpeed officially supports: Intel Xeon CPU, Intel Data Center Max Series XPU, Intel Gaudi HPU, Huawei Ascend NPU
+- Primary testing on NVIDIA GPUs (Pascal, Volta, Ampere, Hopper) - x86_64 only
+- **Linux ARM64/aarch64 not officially listed** as supported platform
+
+**Build Requirements:**
+- PyTorch >= 1.9 (must be installed first)
+- CUDA or ROCm compiler (nvcc or hipcc) required
+- DeepSpeed includes C++/CUDA extensions that build just-in-time (JIT)
+- Significant compilation time and dependencies
+
+**Known Issues:**
+- Issue #950: Build fails on AArch64 systems (reported on Fedora 33)
+- Some users attempting to run on Jetson Orin AGX (ARM64) as of Aug 2025
+- No prebuilt wheels available from any source (piwheels, third-party repos)
+
+**Fallback Strategy:**
+- Make deepspeed optional dependency for ARM64
+- Use platform markers: `deepspeed==0.17.5 ; platform_machine != 'aarch64' and platform_machine != 'arm64'`
+- Disable distributed training features on ARM64
+- Alternative: Use PyTorch native DistributedDataParallel (DDP) instead
+
+**References:**
+- [deepspeed PyPI](https://pypi.org/project/deepspeed/)
+- [DeepSpeed Installation Details](https://www.deepspeed.ai/tutorials/advanced-install/)
+- [Issue #950: build fails on AArch64](https://github.com/microsoft/DeepSpeed/issues/950)
+- [Issue #5308: build prebuilt wheels (REQUEST)](https://github.com/deepspeedai/DeepSpeed/issues/5308)
+
+---
+
+#### Apple Silicon (macOS ARM64) + MPS
+
+**Status:** ✗ Not Supported
+
+**Official Position:**
+- DeepSpeed does not officially support macOS or Apple Silicon
+- Not listed in supported platforms documentation
+
+**Critical Limitations:**
+- Requires CUDA or ROCm compiler (nvcc/hipcc) - **not available on macOS**
+- C++/CUDA extensions cannot be compiled without CUDA toolkit
+- MPS backend not supported by DeepSpeed
+- Features like bitsandbytes, QLoRA, and DeepSpeed explicitly listed as "not available on M-series Macs"
+
+**Community Efforts:**
+- Issue #130: DeepSpeed install on Mac (opened but no resolution)
+- Issue #1580: M1 Max support request (Nov 2021, not implemented)
+- Issue #3364: Unable to install deepspeed with M2 arm64 (reported bug)
+- PR #3907: Create accelerator for Apple Silicon GPU (attempted but not merged as of Jan 2026)
+
+**Recommended Alternatives for macOS:**
+- **PyTorch DDP**: Native distributed training without DeepSpeed
+- **Apple MLX**: Apple's ML framework for Apple Silicon
+- **PyTorch MPS backend**: GPU acceleration without distributed features
+- **Remove deepspeed dependency** for macOS builds
+
+**Fallback Strategy:**
+- Use platform markers: `deepspeed==0.17.5 ; sys_platform != 'darwin'`
+- Exclude deepspeed entirely from macOS installations
+- Disable all DeepSpeed-dependent features in code when on macOS
+
+**References:**
+- [Issue #130: DeepSpeed install in Mac](https://github.com/microsoft/DeepSpeed/issues/130)
+- [Issue #1580: M1 Max support REQUEST](https://github.com/microsoft/DeepSpeed/issues/1580)
+- [Issue #3364: Unable to install deepspeed with M2 arm64](https://github.com/deepspeedai/DeepSpeed/issues/3364)
+- [PR #3907: Apple Silicon GPU Acceleration](https://github.com/deepspeedai/DeepSpeed/pull/3907)
+- [DeepSpeed Getting Started](https://www.deepspeed.ai/getting-started/)
+
+---
 
 ### triton
 - **Status:** Research required (Task h2o-llmstudio-9mt)
@@ -212,10 +288,11 @@ pip install bitsandbytes==0.49.1
 1. ✓ PyTorch ARM64+CUDA: Use cu128 index
 2. ✓ PyTorch Apple Silicon: Standard install with MPS
 3. ✓ bitsandbytes ARM64: Available for NVIDIA ARM64, make optional for Apple Silicon
-4. TODO: Research deepspeed ARM64 availability (Task 7wg)
+4. ✓ deepspeed ARM64: Not available, make optional for all ARM64 platforms
 5. TODO: Research triton ARM64 availability (Task 9mt)
-6. TODO: Update pyproject.toml with platform markers for bitsandbytes
-7. TODO: Test installation on both platforms (Tasks 568, pol)
+6. ✓ Update pyproject.toml with platform markers for bitsandbytes (done)
+7. TODO: Update pyproject.toml with platform markers for deepspeed
+8. TODO: Test installation on both platforms (Tasks 568, pol)
 
 ---
 
@@ -226,7 +303,7 @@ pip install bitsandbytes==0.49.1
 | **PyTorch** | ✓ Available | ✓ Fully Supported | Use cu128 index for NVIDIA ARM64 |
 | **torchvision** | ✓ Available | ✓ Supported | Follows PyTorch installation |
 | **bitsandbytes** | ✓ Available (v0.49.1+) | ⚠️ Limited (make optional) | CUDA-only features don't work on macOS |
-| **deepspeed** | ? Research needed | ? Research needed | Distributed training |
+| **deepspeed** | ⚠️ Build from source | ✗ Not supported | Make optional on all ARM64 |
 | **triton** | ? Research needed | ? Research needed | GPU kernels (via PyTorch?) |
 
 **Legend:**
