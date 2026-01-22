@@ -140,3 +140,13 @@ ignore_missing_imports = true
 allow_redefinition = true
 strict_optional = false
 exclude = "(build|output|data|tests)"
+
+[tool.pytest.ini_options]
+markers = [
+    "arm64_cuda: Tests specific to ARM64 architecture with NVIDIA CUDA backend (Linux aarch64 + CUDA)",
+    "arm64_mps: Tests specific to ARM64 architecture with Apple Metal Performance Shaders (macOS + MPS)",
+    "x86_64: Tests specific to x86_64 architecture",
+    "requires_gpu: Tests that require GPU hardware (CUDA or MPS)",
+    "requires_cuda: Tests that specifically require NVIDIA CUDA",
+    "requires_mps: Tests that specifically require Apple MPS",
+]
