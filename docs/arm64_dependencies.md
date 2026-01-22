@@ -276,10 +276,96 @@ pip install bitsandbytes==0.49.1
 
 ---
 
-### triton
-- **Status:** Research required (Task h2o-llmstudio-9mt)
-- **Current version:** 3.3.1
-- **Note:** May be bundled with PyTorch
+### triton (GPU Kernel Compiler)
+
+**Current version in project:** 3.3.1 (transitive dependency from PyTorch)
+**Latest stable:** 3.5.1 (with ARM64 wheels as of Jan 2026)
+
+#### NVIDIA ARM64 (Linux aarch64) + CUDA
+
+**Status:** ⚠️ Emerging Support (wheels available, integration incomplete)
+
+**Official Wheels:**
+- PyPI has ARM64 wheels as of triton 3.5.1
+- `triton-3.5.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl`
+- Major improvement from previous lack of aarch64 support
+
+**Known Limitations:**
+- AWS Deep Learning Containers (PyTorch 2.6, 2.7) still document: "There is no official Triton distribution for ARM64/aarch64 yet"
+- Some `torch.compile` workloads fail with: `RuntimeError: Cannot find a working triton installation`
+- Integration with PyTorch ARM64 CUDA builds still being refined
+
+**Recent Developments:**
+- Issue #147857: Triton aarch64 and SBSA support for GH200, Jetson Thor
+- NVIDIA merging SBSA (Server Base System Architecture) and ARM64 together
+- PyTorch 2.9 includes "Expanded and optimized convolution, activation, and quantized ops on AArch64"
+
+**Historical Context:**
+- Issue #130558 (July 2024): Triton not built for aarch64, making torch.compile unavailable on Grace-Hopper and Graviton+GPU
+- Situation improved significantly in late 2024/early 2025
+
+**Installation:**
+```bash
+pip install triton==3.5.1  # ARM64 wheels available
+```
+
+**Impact on flash-attn:**
+- Flash Attention depends on triton for efficient attention kernels
+- ARM64 support for triton enables potential flash-attn ARM64 support
+- As of Jan 2026, integration still evolving
+
+**References:**
+- [triton PyPI](https://pypi.org/project/triton/)
+- [Issue #130558: Build Triton for aarch64](https://github.com/pytorch/pytorch/issues/130558)
+- [Issue #147857: Triton aarch64 and triton sbsa](https://github.com/pytorch/pytorch/issues/147857)
+- [AWS DLC PyTorch 2.7 ARM64 Training](https://docs.aws.amazon.com/deep-learning-containers/latest/devguide/dlc-pytorch-2-7-arm64-training-ec2.html)
+
+---
+
+#### Apple Silicon (macOS ARM64) + MPS
+
+**Status:** ✗ Not Supported (CUDA-only)
+
+**Official Position:**
+- No official Apple Silicon support as of Jan 2026
+- Triton compiler architecture is "quite tailored to NVIDIA" GPUs
+- Requires CUDA device for full functionality
+
+**Technical Limitations:**
+- Triton targets NVIDIA PTX (Parallel Thread Execution) assembly
+- Designed for CUDA programming model, not Metal/MPS
+- No backend for Metal Performance Shaders
+- Cannot generate Metal shader code
+
+**Community Efforts:**
+- Issue #3443: Build Triton on MacOS with Apple silicon
+- Some experimental builds possible (CPU-only, many tests fail)
+- Requires build system modifications, non-trivial compilation
+- Even when compiled, only runs CPU code (no GPU acceleration)
+- No substantial upstream PRs for Apple Silicon support
+
+**PyTorch Alternative:**
+- PyTorch implemented **native Metal codegen** in TorchInductor (2024-2025)
+- Metal codegen replaces Triton's role for PyTorch on macOS
+- Users get `torch.compile` optimization without Triton dependency
+- Performance improvements via Metal-native code generation
+
+**The Gap:**
+- No Python-based custom kernel authoring tool on macOS (equivalent to CUDA/Triton)
+- Users must write Metal shaders directly or use PyTorch's built-in ops
+- Libraries like Numba/Triton not available for GPU work on Apple Silicon
+
+**Fallback Strategy:**
+- Let triton install on macOS (if PyTorch pulls it), but expect limited functionality
+- PyTorch's Metal backend handles optimization without Triton
+- Disable Triton-dependent features (flash-attn) on macOS
+- Use PyTorch native ops instead of custom triton kernels
+
+**References:**
+- [Issue #3443: Build Triton on MacOS with Apple silicon](https://github.com/triton-lang/triton/issues/3443)
+- [Does TRITON work on Apple Silicon?](https://doesitarm.com/app/triton)
+- [Issue #1465: Package does not exist on macOS (intel)](https://github.com/triton-lang/triton/issues/1465)
+- [Triton Installation Documentation](https://triton-lang.org/main/getting-started/installation.html)
 
 ---
 
@@ -289,7 +375,7 @@ pip install bitsandbytes==0.49.1
 2. ✓ PyTorch Apple Silicon: Standard install with MPS
 3. ✓ bitsandbytes ARM64: Available for NVIDIA ARM64, make optional for Apple Silicon
 4. ✓ deepspeed ARM64: Not available, make optional for all ARM64 platforms
-5. TODO: Research triton ARM64 availability (Task 9mt)
+5. ✓ triton ARM64: Wheels available for NVIDIA ARM64, not for Apple Silicon (PyTorch handles Metal)
 6. ✓ Update pyproject.toml with platform markers for bitsandbytes (done)
 7. TODO: Update pyproject.toml with platform markers for deepspeed
 8. TODO: Test installation on both platforms (Tasks 568, pol)
@@ -304,7 +390,7 @@ pip install bitsandbytes==0.49.1
 | **torchvision** | ✓ Available | ✓ Supported | Follows PyTorch installation |
 | **bitsandbytes** | ✓ Available (v0.49.1+) | ⚠️ Limited (make optional) | CUDA-only features don't work on macOS |
 | **deepspeed** | ⚠️ Build from source | ✗ Not supported | Make optional on all ARM64 |
-| **triton** | ? Research needed | ? Research needed | GPU kernels (via PyTorch?) |
+| **triton** | ⚠️ Emerging (v3.5.1+) | ✗ Not supported | PyTorch Metal codegen used on macOS |
 
 **Legend:**
 - ✓ = Confirmed available and functional
