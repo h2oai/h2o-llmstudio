@@ -164,6 +164,87 @@ class TestCombinedPlatformAndBackend:
         assert backend == "cpu"
 
 
+class TestCudaOutOfMemory:
+    """Tests for CUDA out-of-memory detection across architectures."""
+
+    def test_cuda_oom_standard_message(self):
+        """Test detection of standard CUDA OOM error."""
+        from llm_studio.src.utils.gpu_utils import is_cuda_out_of_memory
+
+        exception = RuntimeError("CUDA out of memory")
+        assert is_cuda_out_of_memory(exception)
+
+    def test_cuda_oom_detailed_message(self):
+        """Test detection of CUDA OOM with detailed message."""
+        from llm_studio.src.utils.gpu_utils import is_cuda_out_of_memory
+
+        exception = RuntimeError(
+            "CUDA out of memory. Tried to allocate 2.00 GiB (GPU 0; 15.78 GiB total capacity)"
+        )
+        assert is_cuda_out_of_memory(exception)
+
+    def test_cuda_oom_case_insensitive(self):
+        """Test CUDA OOM detection is case insensitive."""
+        from llm_studio.src.utils.gpu_utils import is_cuda_out_of_memory
+
+        # Test various case combinations
+        exception1 = RuntimeError("cuda out of memory")
+        exception2 = RuntimeError("CUDA OUT OF MEMORY")
+        exception3 = RuntimeError("Cuda Out Of Memory")
+
+        assert is_cuda_out_of_memory(exception1)
+        assert is_cuda_out_of_memory(exception2)
+        assert is_cuda_out_of_memory(exception3)
+
+    def test_cuda_oom_arm64_message(self):
+        """Test CUDA OOM detection with ARM64-specific context.
+
+        While CUDA error messages are standardized across architectures,
+        this test validates the function works with ARM64-context messages.
+        """
+        from llm_studio.src.utils.gpu_utils import is_cuda_out_of_memory
+
+        exception = RuntimeError(
+            "CUDA out of memory on ARM64 device. Tried to allocate 1.50 GiB"
+        )
+        assert is_cuda_out_of_memory(exception)
+
+    def test_non_runtime_error_not_detected(self):
+        """Test that non-RuntimeError exceptions are not detected."""
+        from llm_studio.src.utils.gpu_utils import is_cuda_out_of_memory
+
+        exception = ValueError("CUDA out of memory")
+        assert not is_cuda_out_of_memory(exception)
+
+    def test_runtime_error_without_cuda_not_detected(self):
+        """Test that RuntimeError without CUDA keyword is not detected."""
+        from llm_studio.src.utils.gpu_utils import is_cuda_out_of_memory
+
+        exception = RuntimeError("out of memory")
+        assert not is_cuda_out_of_memory(exception)
+
+    def test_runtime_error_without_oom_not_detected(self):
+        """Test that RuntimeError with CUDA but without OOM is not detected."""
+        from llm_studio.src.utils.gpu_utils import is_cuda_out_of_memory
+
+        exception = RuntimeError("CUDA error: device-side assert triggered")
+        assert not is_cuda_out_of_memory(exception)
+
+    def test_runtime_error_empty_args_not_detected(self):
+        """Test that RuntimeError with empty args is not detected."""
+        from llm_studio.src.utils.gpu_utils import is_cuda_out_of_memory
+
+        exception = RuntimeError()
+        assert not is_cuda_out_of_memory(exception)
+
+    def test_runtime_error_non_string_args_not_detected(self):
+        """Test that RuntimeError with non-string args is not detected."""
+        from llm_studio.src.utils.gpu_utils import is_cuda_out_of_memory
+
+        exception = RuntimeError(12345)
+        assert not is_cuda_out_of_memory(exception)
+
+
 class TestMPSOutOfMemory:
     """Tests for MPS out-of-memory detection."""
 

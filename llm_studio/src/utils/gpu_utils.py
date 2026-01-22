@@ -83,12 +83,24 @@ def sync_across_processes(
 
 # based on https://github.com/BlackHC/toma/blob/master/toma/torch_cuda_memory.py
 def is_cuda_out_of_memory(exception: BaseException) -> bool:
-    return (
-        isinstance(exception, RuntimeError)
-        and len(exception.args) == 1
-        and "CUDA" in exception.args[0]
-        and "out of memory" in exception.args[0]
-    )
+    """Check if exception is a CUDA out of memory error.
+
+    Works uniformly across x86_64 and ARM64 (aarch64) CUDA platforms.
+    CUDA error messages are standardized across architectures.
+    """
+    if not isinstance(exception, RuntimeError):
+        return False
+
+    if len(exception.args) < 1 or not isinstance(exception.args[0], str):
+        return False
+
+    error_message = exception.args[0].lower()
+
+    # Check for CUDA OOM patterns that work across all architectures
+    has_cuda = "cuda" in error_message
+    has_oom = "out of memory" in error_message
+
+    return has_cuda and has_oom
 
 
 # based on https://github.com/BlackHC/toma/blob/master/toma/cpu_memory.py
