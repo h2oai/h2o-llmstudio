@@ -124,12 +124,77 @@ pip install torch  # standard PyPI, includes MPS
 
 ---
 
-## Other Critical Dependencies (To Be Researched)
+## Other Critical Dependencies
 
-### bitsandbytes
-- **Status:** Research required (Task h2o-llmstudio-8tf)
-- **Current version:** 0.47.0
-- **Known issue:** No macOS ARM64 wheel on PyPI (see error in project setup)
+### bitsandbytes (Quantization Library)
+
+**Current version in project:** 0.47.0
+**Latest stable:** 0.49.1 (released Jan 8, 2026)
+
+#### NVIDIA ARM64 (Linux aarch64) + CUDA
+
+**Status:** ✓ Fully Available
+
+**Installation:**
+```bash
+pip install bitsandbytes==0.49.1
+```
+
+**Wheel availability:**
+- PyPI has official wheels: `bitsandbytes-0.49.1-py3-none-manylinux_2_24_aarch64.whl`
+- Built with GCC 11.4, minimum glibc 2.24
+- CUDA support for Linux aarch64 (sbsa architecture)
+- Supports NVIDIA ARM64 platforms: Grace Hopper (GH200), NVL32/NV72
+
+**Preview/development builds:**
+```bash
+pip install --force-reinstall https://github.com/bitsandbytes-foundation/bitsandbytes/releases/download/continuous-release_main/bitsandbytes-1.33.7.preview-py3-none-manylinux_2_24_aarch64.whl
+```
+
+**References:**
+- [bitsandbytes PyPI](https://pypi.org/project/bitsandbytes/)
+- [bitsandbytes Releases](https://github.com/bitsandbytes-foundation/bitsandbytes/releases)
+- [Installation Guide](https://huggingface.co/docs/bitsandbytes/main/en/installation)
+- [Issue #1437: aarch64 whl in PyPi](https://github.com/bitsandbytes-foundation/bitsandbytes/issues/1437)
+
+---
+
+#### Apple Silicon (macOS ARM64) + MPS
+
+**Status:** ⚠️ Limited Support (Experimental)
+
+**Installation:**
+```bash
+pip install bitsandbytes==0.49.1
+```
+
+**Wheel availability:**
+- PyPI has macOS ARM64 wheels: `bitsandbytes-0.49.1-py3-none-macosx_14_0_arm64.whl`
+- Can be installed, but functionality is limited
+
+**Critical Limitations:**
+- **CUDA-only features do NOT work on macOS** - bitsandbytes core quantization depends on CUDA
+- MPS backend not supported for 8-bit optimizations
+- Experimental support only - not recommended for production use
+- Installation succeeds but runtime errors expected for quantization operations
+
+**Recommended Alternatives for Apple Silicon:**
+- **MLX**: Apple's ML framework optimized for Apple Silicon
+- **llama.cpp**: Efficient CPU/Metal inference with quantization
+- **Ollama**: Local LLM runtime with built-in quantization
+- **GGUF format**: Quantized model format with better macOS support
+
+**Fallback Strategy:**
+- Make bitsandbytes optional dependency for macOS ARM64
+- Disable quantization features when running on Apple Silicon
+- Use platform markers in pyproject.toml: `bitsandbytes==0.49.1 ; sys_platform != 'darwin' or platform_machine != 'arm64'`
+
+**References:**
+- [Issue #1460: bitsandbytes for macos M1/M2/M3 chips](https://github.com/bitsandbytes-foundation/bitsandbytes/issues/1460)
+- [Issue #252: Support for Apple silicon](https://github.com/bitsandbytes-foundation/bitsandbytes/issues/252)
+- [Discussion #1340: Multi-backend support: Apple Silicon / Mac](https://github.com/bitsandbytes-foundation/bitsandbytes/discussions/1340)
+
+---
 
 ### deepspeed
 - **Status:** Research required (Task h2o-llmstudio-7wg)
@@ -146,10 +211,11 @@ pip install torch  # standard PyPI, includes MPS
 
 1. ✓ PyTorch ARM64+CUDA: Use cu128 index
 2. ✓ PyTorch Apple Silicon: Standard install with MPS
-3. TODO: Research bitsandbytes ARM64 availability (Task 8tf)
+3. ✓ bitsandbytes ARM64: Available for NVIDIA ARM64, make optional for Apple Silicon
 4. TODO: Research deepspeed ARM64 availability (Task 7wg)
 5. TODO: Research triton ARM64 availability (Task 9mt)
-6. TODO: Test installation on both platforms (Tasks 568, pol)
+6. TODO: Update pyproject.toml with platform markers for bitsandbytes
+7. TODO: Test installation on both platforms (Tasks 568, pol)
 
 ---
 
@@ -159,11 +225,12 @@ pip install torch  # standard PyPI, includes MPS
 |------------|-------------------|-------------------|-------|
 | **PyTorch** | ✓ Available | ✓ Fully Supported | Use cu128 index for NVIDIA ARM64 |
 | **torchvision** | ✓ Available | ✓ Supported | Follows PyTorch installation |
-| **bitsandbytes** | ? Research needed | ✗ No wheel | Quantization library |
+| **bitsandbytes** | ✓ Available (v0.49.1+) | ⚠️ Limited (make optional) | CUDA-only features don't work on macOS |
 | **deepspeed** | ? Research needed | ? Research needed | Distributed training |
 | **triton** | ? Research needed | ? Research needed | GPU kernels (via PyTorch?) |
 
 **Legend:**
-- ✓ = Confirmed available
+- ✓ = Confirmed available and functional
+- ⚠️ = Available but with limitations (see notes)
 - ✗ = Known to be unavailable
 - ? = Research required
