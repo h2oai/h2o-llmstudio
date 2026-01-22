@@ -337,10 +337,12 @@ class TestSyncAcrossProcesses:
     @patch("torch.distributed.all_gather")
     def test_sync_cuda_tensor(self, mock_all_gather, mock_barrier):
         """Test syncing CUDA tensors uses all_gather."""
+        import torch
+
         from llm_studio.src.utils.gpu_utils import sync_across_processes
 
-        # Create a mock CUDA tensor
-        mock_tensor = MagicMock()
+        # Create a mock CUDA tensor - use spec to pass isinstance check
+        mock_tensor = MagicMock(spec=torch.Tensor)
         mock_tensor.is_cuda = True
         mock_tensor.is_mps = False
 
@@ -357,10 +359,12 @@ class TestSyncAcrossProcesses:
     @patch("torch.distributed.all_gather")
     def test_sync_mps_tensor(self, mock_all_gather, mock_barrier):
         """Test syncing MPS tensors uses all_gather."""
+        import torch
+
         from llm_studio.src.utils.gpu_utils import sync_across_processes
 
-        # Create a mock MPS tensor
-        mock_tensor = MagicMock()
+        # Create a mock MPS tensor - use spec to pass isinstance check
+        mock_tensor = MagicMock(spec=torch.Tensor)
         mock_tensor.is_cuda = False
         mock_tensor.is_mps = True
 
@@ -377,10 +381,12 @@ class TestSyncAcrossProcesses:
     @patch("torch.distributed.all_gather_object")
     def test_sync_cpu_tensor(self, mock_all_gather_object, mock_barrier):
         """Test syncing CPU tensors uses all_gather_object."""
+        import torch
+
         from llm_studio.src.utils.gpu_utils import sync_across_processes
 
-        # Create a mock CPU tensor
-        mock_tensor = MagicMock()
+        # Create a mock CPU tensor - use spec to pass isinstance check
+        mock_tensor = MagicMock(spec=torch.Tensor)
         mock_tensor.is_cuda = False
         mock_tensor.is_mps = False
 
