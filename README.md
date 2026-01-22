@@ -17,6 +17,7 @@
 - [Setup](#setup)
   - [Recommended Install](#recommended-install)
   - [Virtual Environments](#virtual-environments)
+  - [ARM64 Support](#arm64-support)
 - [Run H2O LLM Studio GUI](#run-h2o-llm-studio-gui)
 - [Run H2O LLM Studio GUI using Docker](#run-h2o-llm-studio-gui-using-docker)
 - [Run H2O LLM Studio with command line interface (CLI)](#run-h2o-llm-studio-with-command-line-interface-cli)
@@ -69,7 +70,14 @@ Please note that due to current rapid development we cannot guarantee full backw
 
 ## Setup
 
-H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent NVIDIA GPU with NVIDIA drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
+H2O LLM Studio requires a machine with Ubuntu 16.04+ (or macOS 12.3+ for Apple Silicon) and at least one recent NVIDIA GPU with NVIDIA drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
+
+**Supported Platforms:**
+- Linux x86_64 with NVIDIA GPUs (primary platform)
+- Linux ARM64/aarch64 with NVIDIA GPUs (Grace Hopper, Jetson, etc.)
+- macOS ARM64 with Apple Silicon (M1/M2/M3/M4) using Metal Performance Shaders
+
+For ARM64-specific setup instructions, see [ARM64 Support](#arm64-support).
 
 For more information about installation prerequisites, see the [Set up H2O LLM Studio](https://docs.h2o.ai/h2o-llmstudio/get-started/set-up-llm-studio#prerequisites) guide in the documentation.
 
@@ -113,6 +121,76 @@ If you wish to use another virtual environment, you can also install the depende
 pip install -r requirements.txt
 pip install flash-attn==2.8.3 --no-build-isolation  # optional for Flash Attention 2
 ```
+
+### ARM64 Support
+
+H2O LLM Studio supports ARM64 platforms with GPU acceleration:
+- **NVIDIA ARM64 + CUDA**: Linux ARM64/aarch64 systems with NVIDIA GPUs (Grace Hopper GH200, Jetson, etc.)
+- **Apple Silicon + Metal**: macOS ARM64 with M1/M2/M3/M4 chips using Metal Performance Shaders (MPS)
+
+#### Platform-Specific Requirements
+
+**NVIDIA ARM64 (Linux aarch64):**
+- Ubuntu 20.04+ ARM64
+- NVIDIA ARM64 GPU with drivers >= 470.57.02
+- CUDA 12.8 toolkit (installed via PyTorch cu128 wheels)
+- Python 3.10
+
+**Apple Silicon (macOS ARM64):**
+- macOS 12.3+ (for MPS support)
+- Apple Silicon Mac (M1/M2/M3/M4)
+- Python 3.10
+- No CUDA required (uses Metal Performance Shaders)
+
+#### Installation on ARM64
+
+The standard installation commands work on ARM64 platforms:
+
+```bash
+make setup
+```
+
+PyTorch will automatically install the appropriate version:
+- **NVIDIA ARM64**: PyTorch with CUDA 12.8 support from `download.pytorch.org/whl/cu128/`
+- **Apple Silicon**: PyTorch with MPS support from PyPI
+
+#### Known Limitations on ARM64
+
+**NVIDIA ARM64:**
+- `deepspeed`: Not officially supported on ARM64. Distributed training features may be unavailable. Use PyTorch DDP as alternative.
+- `triton`: Emerging support (wheels available since v3.5.1), integration still evolving.
+- `flash-attn`: May not be available. Optional feature.
+
+**Apple Silicon:**
+- `bitsandbytes`: Limited functionality (CUDA-only features don't work with MPS). Quantization features disabled.
+- `deepspeed`: Not supported (requires CUDA). Distributed training unavailable.
+- `flash-attn`: Not supported (CUDA-only). Optional feature.
+- `triton`: Not supported. PyTorch uses native Metal codegen instead.
+
+#### Verifying ARM64 Installation
+
+After installation, verify your setup:
+
+```python
+import torch
+import platform
+
+print(f"Platform: {platform.machine()}")
+print(f"PyTorch version: {torch.__version__}")
+
+if torch.cuda.is_available():
+    print(f"CUDA available: {torch.cuda.get_device_name(0)}")
+elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+    print("MPS (Metal) available")
+else:
+    print("CPU-only mode")
+```
+
+Expected output:
+- **NVIDIA ARM64**: `Platform: aarch64`, `CUDA available: <GPU name>`
+- **Apple Silicon**: `Platform: arm64`, `MPS (Metal) available`
+
+For more details on ARM64 dependencies, see [docs/arm64_dependencies.md](docs/arm64_dependencies.md).
 
 ## Run H2O LLM Studio GUI
 
