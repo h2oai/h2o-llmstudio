@@ -162,3 +162,172 @@ class TestCombinedPlatformAndBackend:
 
         assert platform == "arm64"
         assert backend == "cpu"
+
+
+class TestMPSOutOfMemory:
+    """Tests for MPS out-of-memory detection."""
+
+    def test_mps_oom_error(self):
+        """Test detection of MPS out of memory error."""
+        from llm_studio.src.utils.gpu_utils import is_mps_out_of_memory
+
+        exception = RuntimeError("MPS backend out of memory")
+        assert is_mps_out_of_memory(exception)
+
+    def test_mps_oom_failed_to_allocate(self):
+        """Test detection of MPS failed to allocate error."""
+        from llm_studio.src.utils.gpu_utils import is_mps_out_of_memory
+
+        exception = RuntimeError("MPS failed to allocate memory")
+        assert is_mps_out_of_memory(exception)
+
+    def test_mps_oom_case_insensitive(self):
+        """Test MPS OOM detection is case insensitive."""
+        from llm_studio.src.utils.gpu_utils import is_mps_out_of_memory
+
+        exception = RuntimeError("MPS backend Out Of Memory")
+        assert is_mps_out_of_memory(exception)
+
+    def test_non_mps_error_not_detected(self):
+        """Test that non-MPS errors are not detected as MPS OOM."""
+        from llm_studio.src.utils.gpu_utils import is_mps_out_of_memory
+
+        exception = RuntimeError("Some other error")
+        assert not is_mps_out_of_memory(exception)
+
+    def test_cuda_error_not_detected_as_mps(self):
+        """Test that CUDA errors are not detected as MPS OOM."""
+        from llm_studio.src.utils.gpu_utils import is_mps_out_of_memory
+
+        exception = RuntimeError("CUDA out of memory")
+        assert not is_mps_out_of_memory(exception)
+
+    def test_wrong_exception_type(self):
+        """Test that non-RuntimeError exceptions are not detected."""
+        from llm_studio.src.utils.gpu_utils import is_mps_out_of_memory
+
+        exception = ValueError("MPS out of memory")
+        assert not is_mps_out_of_memory(exception)
+
+
+class TestUnifiedOOMError:
+    """Tests for unified OOM error detection across all backends."""
+
+    def test_cuda_oom_detected(self):
+        """Test that CUDA OOM is detected by is_oom_error."""
+        from llm_studio.src.utils.gpu_utils import is_oom_error
+
+        exception = RuntimeError("CUDA out of memory")
+        assert is_oom_error(exception)
+
+    def test_mps_oom_detected(self):
+        """Test that MPS OOM is detected by is_oom_error."""
+        from llm_studio.src.utils.gpu_utils import is_oom_error
+
+        exception = RuntimeError("MPS backend out of memory")
+        assert is_oom_error(exception)
+
+    def test_cpu_oom_detected(self):
+        """Test that CPU OOM is detected by is_oom_error."""
+        from llm_studio.src.utils.gpu_utils import is_oom_error
+
+        exception = RuntimeError("DefaultCPUAllocator: can't allocate memory")
+        assert is_oom_error(exception)
+
+    def test_cudnn_error_detected(self):
+        """Test that cuDNN errors are detected by is_oom_error."""
+        from llm_studio.src.utils.gpu_utils import is_oom_error
+
+        exception = RuntimeError("cuDNN error: CUDNN_STATUS_NOT_SUPPORTED.")
+        assert is_oom_error(exception)
+
+    def test_non_oom_error_not_detected(self):
+        """Test that non-OOM errors are not detected."""
+        from llm_studio.src.utils.gpu_utils import is_oom_error
+
+        exception = RuntimeError("Some other error")
+        assert not is_oom_error(exception)
+
+
+class TestSyncAcrossProcesses:
+    """Tests for sync_across_processes with multiple backends."""
+
+    @patch("torch.distributed.barrier")
+    @patch("torch.distributed.all_gather")
+    def test_sync_cuda_tensor(self, mock_all_gather, mock_barrier):
+        """Test syncing CUDA tensors uses all_gather."""
+        from llm_studio.src.utils.gpu_utils import sync_across_processes
+
+        # Create a mock CUDA tensor
+        mock_tensor = MagicMock()
+        mock_tensor.is_cuda = True
+        mock_tensor.is_mps = False
+
+        # Mock torch.cat to return the tensor
+        with patch("torch.cat", return_value=mock_tensor):
+            with patch("torch.ones_like", return_value=mock_tensor):
+                result = sync_across_processes(mock_tensor, world_size=2)
+
+        # Verify all_gather was called (not all_gather_object)
+        assert mock_all_gather.called
+        assert result == mock_tensor
+
+    @patch("torch.distributed.barrier")
+    @patch("torch.distributed.all_gather")
+    def test_sync_mps_tensor(self, mock_all_gather, mock_barrier):
+        """Test syncing MPS tensors uses all_gather."""
+        from llm_studio.src.utils.gpu_utils import sync_across_processes
+
+        # Create a mock MPS tensor
+        mock_tensor = MagicMock()
+        mock_tensor.is_cuda = False
+        mock_tensor.is_mps = True
+
+        # Mock torch.cat to return the tensor
+        with patch("torch.cat", return_value=mock_tensor):
+            with patch("torch.ones_like", return_value=mock_tensor):
+                result = sync_across_processes(mock_tensor, world_size=2)
+
+        # Verify all_gather was called (not all_gather_object)
+        assert mock_all_gather.called
+        assert result == mock_tensor
+
+    @patch("torch.distributed.barrier")
+    @patch("torch.distributed.all_gather_object")
+    def test_sync_cpu_tensor(self, mock_all_gather_object, mock_barrier):
+        """Test syncing CPU tensors uses all_gather_object."""
+        from llm_studio.src.utils.gpu_utils import sync_across_processes
+
+        # Create a mock CPU tensor
+        mock_tensor = MagicMock()
+        mock_tensor.is_cuda = False
+        mock_tensor.is_mps = False
+
+        # Mock torch.cat to return the tensor
+        with patch("torch.cat", return_value=mock_tensor):
+            with patch("torch.ones_like", return_value=mock_tensor):
+                result = sync_across_processes(mock_tensor, world_size=2)
+
+        # Verify all_gather_object was called (not all_gather)
+        assert mock_all_gather_object.called
+        assert result == mock_tensor
+
+    @patch("torch.distributed.barrier")
+    @patch("torch.distributed.all_gather_object")
+    def test_sync_numpy_array(self, mock_all_gather_object, mock_barrier):
+        """Test syncing numpy arrays uses all_gather_object."""
+        from llm_studio.src.utils.gpu_utils import sync_across_processes
+
+        import numpy as np
+
+        # Create a mock numpy array
+        mock_array = np.array([1, 2, 3])
+
+        # Mock np.concatenate to return the array
+        with patch("numpy.concatenate", return_value=mock_array):
+            with patch("numpy.ones_like", return_value=mock_array):
+                result = sync_across_processes(mock_array, world_size=2)
+
+        # Verify all_gather_object was called
+        assert mock_all_gather_object.called
+        assert isinstance(result, np.ndarray)

@@ -44,6 +44,8 @@ def sync_across_processes(
 ) -> torch.Tensor | np.ndarray:
     """Concatenates tensors across processes.
 
+    Supports CUDA, MPS, and CPU backends uniformly.
+
     Args:
         t: input tensor or numpy array
         world_size: world size
@@ -59,7 +61,11 @@ def sync_across_processes(
     if isinstance(t, torch.Tensor):
         gather_t_tensor = [torch.ones_like(t) for _ in range(world_size)]
 
-        if t.is_cuda:
+        # Use all_gather for GPU tensors (CUDA, MPS, etc.), all_gather_object for CPU
+        # Check if tensor is on a GPU device (not just CUDA, but any GPU backend)
+        is_gpu_tensor = t.is_cuda or (hasattr(t, "is_mps") and t.is_mps)
+
+        if is_gpu_tensor:
             dist.all_gather(gather_t_tensor, t)
         else:
             dist.all_gather_object(gather_t_tensor, t, group=group)
@@ -104,10 +110,31 @@ def is_cudnn_snafu(exception: BaseException) -> bool:
     )
 
 
+def is_mps_out_of_memory(exception: BaseException) -> bool:
+    """Check if exception is an MPS (Metal Performance Shaders) out of memory error.
+
+    MPS OOM errors on Apple Silicon typically manifest as RuntimeError with
+    messages containing 'MPS' and memory-related keywords.
+    """
+    return (
+        isinstance(exception, RuntimeError)
+        and len(exception.args) >= 1
+        and isinstance(exception.args[0], str)
+        and "MPS" in exception.args[0]
+        and ("out of memory" in exception.args[0].lower()
+             or "failed to allocate" in exception.args[0].lower())
+    )
+
+
 # based on https://github.com/BlackHC/toma/blob/master/toma/torch_cuda_memory.py
 def is_oom_error(exception: BaseException) -> bool:
+    """Check if exception is an out-of-memory error across all backends.
+
+    Supports CUDA, MPS, and CPU memory errors uniformly.
+    """
     return (
         is_cuda_out_of_memory(exception)
         or is_cudnn_snafu(exception)
+        or is_mps_out_of_memory(exception)
         or is_out_of_cpu_memory(exception)
     )
