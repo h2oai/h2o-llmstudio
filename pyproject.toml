@@ -81,7 +81,11 @@ hac_playwright = { url = "https://h2oai-qa-test-assets.s3.amazonaws.com/wheels/h
 
 [[tool.uv.index]]
 name = "pytorch"
-url = "https://download.pytorch.org/whl/cu126/"
+# CUDA 12.8 index provides wheels for both x86_64 and ARM64 (aarch64) platforms
+# ARM64 wheels: manylinux_2_17_aarch64 (for NVIDIA ARM64 + CUDA on Linux)
+# x86_64 wheels: manylinux_2_17_x86_64 (for standard NVIDIA CUDA on Linux)
+# Note: macOS ARM64 uses standard PyPI PyTorch with MPS support (no CUDA)
+url = "https://download.pytorch.org/whl/cu128/"
 explicit = true
 
 [tool.ruff]
