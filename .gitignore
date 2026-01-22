@@ -156,3 +156,6 @@ h2o_wave.state
 
 # playwright
 test-results/
+
+# bv (beads viewer) local config and caches
+.bv/
