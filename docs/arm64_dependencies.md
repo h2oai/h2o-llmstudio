@@ -143,11 +143,22 @@ dependencies = [
     # CUDA dependencies resolved automatically
 ]
 
+[tool.uv]
+# Use unsafe-best-match to allow selecting best version across all indexes
+# This is required because the PyTorch cu128 index may have older versions
+# of common packages (e.g., requests==2.28.1) that conflict with requirements
+# from other packages (e.g., datasets>=4.4.1 requires requests>=2.32.2)
+index-strategy = "unsafe-best-match"
+
 [[tool.uv.index]]
 name = "pytorch"
 url = "https://download.pytorch.org/whl/cu128/"
 # CUDA libs available on both cu128 index and PyPI
 ```
+
+### Dependency Resolution
+
+The PyTorch cu128 index contains some common packages (like `requests`) at older versions than required by other dependencies. Using `index-strategy = "unsafe-best-match"` allows uv to select the best matching version from any index (PyPI or cu128), resolving version conflicts while still getting PyTorch with CUDA support.
 
 ### Verification
 

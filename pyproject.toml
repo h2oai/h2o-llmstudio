@@ -74,6 +74,10 @@ flash = ["flash-attn==2.8.3 ; sys_platform != 'darwin'"]
 
 [tool.uv]
 no-build-isolation-package = ["flash-attn"]
+# Allow selecting best package version across all indexes
+# This resolves conflicts when PyTorch cu128 index has older versions
+# of common packages (e.g., requests) than PyPI
+index-strategy = "unsafe-best-match"
 
 [tool.uv.sources]
 torch = { index = "pytorch" }
