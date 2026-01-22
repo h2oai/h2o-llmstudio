@@ -158,7 +158,8 @@ wave:
 
 .PHONY: llmstudio
 llmstudio:
-	nvidia-smi && \
+	@echo "Checking GPU availability..."
+	@which nvidia-smi > /dev/null 2>&1 && nvidia-smi || echo "nvidia-smi not found (non-NVIDIA GPU or CPU-only mode)"
 	HF_HUB_DISABLE_TELEMETRY=1 \
 	H2O_WAVE_MAX_REQUEST_SIZE=25MB \
 	H2O_WAVE_NO_LOG=true \
