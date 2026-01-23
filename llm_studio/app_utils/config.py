@@ -94,7 +94,7 @@ default_cfg = {
         os.getenv("MIN_DISK_SPACE_FOR_EXPERIMENTS", "2GB")
     ),
     "allowed_file_extensions": os.getenv(
-        "ALLOWED_FILE_EXTENSIONS", ".zip,.csv,.pq,.parquet"
+        "ALLOWED_FILE_EXTENSIONS", ".zip,.ZIP,.csv,.CSV,.pq,.PQ,.parquet,.PARQUET"
     ).split(","),
     "llm_studio_workdir": f"{os.getenv('H2O_LLM_STUDIO_WORKDIR', os.getcwd())}",
     "heap_mode": os.getenv("H2O_LLM_STUDIO_ENABLE_HEAP", "False") == "True",

@@ -11,7 +11,11 @@ from llm_studio.app_utils.default_datasets import (
     prepare_default_dataset_causal_language_modeling,
 )
 from llm_studio.src.datasets.conversation_chain_handler import ConversationChainHandler
-from llm_studio.src.utils.data_utils import load_train_valid_data
+from llm_studio.src.utils.data_utils import (
+    is_valid_data_frame,
+    load_train_valid_data,
+    read_dataframe,
+)
 
 
 @pytest.fixture
@@ -116,3 +120,212 @@ def test_oasst_data_automatic_split(tmp_path: pathlib.Path):
                 assert (len(val_df) / (len(train_df) + len(val_df))) == pytest.approx(
                     validation_size, 0.05
                 )
+
+
+class TestReadDataframe:
+    """Tests for read_dataframe function covering file ingestion."""
+
+    @pytest.fixture
+    def sample_dataframe(self):
+        """Create a sample dataframe for testing."""
+        return pd.DataFrame(
+            {
+                "prompt": ["Hello", "World", "Test"],
+                "answer": ["Hi", "Earth", "Check"],
+                "id": [1, 2, 3],
+            }
+        )
+
+    def test_read_csv_lowercase(self, tmp_path, sample_dataframe):
+        """Test reading a CSV file with lowercase extension."""
+        csv_path = tmp_path / "test.csv"
+        sample_dataframe.to_csv(csv_path, index=False)
+
+        df = read_dataframe(str(csv_path))
+        assert len(df) == 3
+        assert list(df.columns) == ["prompt", "answer", "id"]
+
+    def test_read_csv_uppercase(self, tmp_path, sample_dataframe):
+        """Test reading a CSV file with uppercase extension."""
+        csv_path = tmp_path / "test.CSV"
+        sample_dataframe.to_csv(csv_path, index=False)
+
+        df = read_dataframe(str(csv_path))
+        assert len(df) == 3
+        assert list(df.columns) == ["prompt", "answer", "id"]
+
+    def test_read_csv_mixed_case(self, tmp_path, sample_dataframe):
+        """Test reading a CSV file with mixed case extension."""
+        csv_path = tmp_path / "test.Csv"
+        sample_dataframe.to_csv(csv_path, index=False)
+
+        df = read_dataframe(str(csv_path))
+        assert len(df) == 3
+
+    def test_read_parquet_lowercase_pq(self, tmp_path, sample_dataframe):
+        """Test reading a Parquet file with .pq extension."""
+        pq_path = tmp_path / "test.pq"
+        sample_dataframe.to_parquet(pq_path)
+
+        df = read_dataframe(str(pq_path))
+        assert len(df) == 3
+        assert list(df.columns) == ["prompt", "answer", "id"]
+
+    def test_read_parquet_uppercase_pq(self, tmp_path, sample_dataframe):
+        """Test reading a Parquet file with .PQ extension."""
+        pq_path = tmp_path / "test.PQ"
+        sample_dataframe.to_parquet(pq_path)
+
+        df = read_dataframe(str(pq_path))
+        assert len(df) == 3
+
+    def test_read_parquet_lowercase_parquet(self, tmp_path, sample_dataframe):
+        """Test reading a Parquet file with .parquet extension."""
+        parquet_path = tmp_path / "test.parquet"
+        sample_dataframe.to_parquet(parquet_path)
+
+        df = read_dataframe(str(parquet_path))
+        assert len(df) == 3
+
+    def test_read_parquet_uppercase_parquet(self, tmp_path, sample_dataframe):
+        """Test reading a Parquet file with .PARQUET extension."""
+        parquet_path = tmp_path / "test.PARQUET"
+        sample_dataframe.to_parquet(parquet_path)
+
+        df = read_dataframe(str(parquet_path))
+        assert len(df) == 3
+
+    def test_read_parquet_mixed_case(self, tmp_path, sample_dataframe):
+        """Test reading a Parquet file with mixed case extension."""
+        parquet_path = tmp_path / "test.Parquet"
+        sample_dataframe.to_parquet(parquet_path)
+
+        df = read_dataframe(str(parquet_path))
+        assert len(df) == 3
+
+    def test_read_empty_path_returns_empty_dataframe(self):
+        """Test that empty path returns an empty DataFrame."""
+        df = read_dataframe("")
+        assert isinstance(df, pd.DataFrame)
+        assert len(df) == 0
+
+    def test_unsupported_extension_raises_error(self):
+        """Test that unsupported file extensions raise ValueError."""
+        with pytest.raises(ValueError, match="Could not determine type of file"):
+            read_dataframe("somefile.xlsx")
+
+    def test_unsupported_extension_txt_raises_error(self):
+        """Test that .txt extension raises ValueError."""
+        with pytest.raises(ValueError, match="Could not determine type of file"):
+            read_dataframe("somefile.txt")
+
+    def test_read_csv_with_n_rows_limit(self, tmp_path):
+        """Test reading CSV with row limit."""
+        df_large = pd.DataFrame(
+            {"col1": range(100), "col2": [f"val{i}" for i in range(100)]}
+        )
+        csv_path = tmp_path / "large.csv"
+        df_large.to_csv(csv_path, index=False)
+
+        df = read_dataframe(str(csv_path), n_rows=10)
+        assert len(df) == 10
+
+    def test_read_parquet_with_n_rows_limit(self, tmp_path):
+        """Test reading Parquet with row limit."""
+        df_large = pd.DataFrame(
+            {"col1": range(100), "col2": [f"val{i}" for i in range(100)]}
+        )
+        parquet_path = tmp_path / "large.parquet"
+        df_large.to_parquet(parquet_path)
+
+        df = read_dataframe(str(parquet_path), n_rows=10)
+        assert len(df) == 10
+
+    def test_fill_columns(self, tmp_path):
+        """Test that fill_columns fills NaN values."""
+        df_with_nan = pd.DataFrame(
+            {"prompt": ["Hello", None, "Test"], "answer": ["Hi", "Earth", None]}
+        )
+        csv_path = tmp_path / "with_nan.csv"
+        df_with_nan.to_csv(csv_path, index=False)
+
+        df = read_dataframe(str(csv_path), fill_columns=["prompt", "answer"])
+        assert df["prompt"].isna().sum() == 0
+        assert df["answer"].isna().sum() == 0
+        assert df.loc[1, "prompt"] == ""
+        assert df.loc[2, "answer"] == ""
+
+    def test_non_missing_columns_drops_rows(self, tmp_path):
+        """Test that non_missing_columns drops rows with NaN in specified columns."""
+        df_with_nan = pd.DataFrame(
+            {"prompt": ["Hello", None, "Test"], "answer": ["Hi", "Earth", "Check"]}
+        )
+        csv_path = tmp_path / "with_nan.csv"
+        df_with_nan.to_csv(csv_path, index=False)
+
+        df = read_dataframe(str(csv_path), non_missing_columns=["prompt"])
+        assert len(df) == 2
+        assert "Hello" in df["prompt"].values
+        assert "Test" in df["prompt"].values
+
+
+class TestIsValidDataFrame:
+    """Tests for is_valid_data_frame function."""
+
+    @pytest.fixture
+    def sample_dataframe(self):
+        """Create a sample dataframe for testing."""
+        return pd.DataFrame({"col1": [1, 2, 3], "col2": ["a", "b", "c"]})
+
+    def test_valid_csv_lowercase(self, tmp_path, sample_dataframe):
+        """Test validation of CSV with lowercase extension."""
+        csv_path = tmp_path / "test.csv"
+        sample_dataframe.to_csv(csv_path, index=False)
+        assert is_valid_data_frame(str(csv_path)) is True
+
+    def test_valid_csv_uppercase(self, tmp_path, sample_dataframe):
+        """Test validation of CSV with uppercase extension."""
+        csv_path = tmp_path / "test.CSV"
+        sample_dataframe.to_csv(csv_path, index=False)
+        assert is_valid_data_frame(str(csv_path)) is True
+
+    def test_valid_parquet_lowercase_pq(self, tmp_path, sample_dataframe):
+        """Test validation of Parquet with .pq extension."""
+        pq_path = tmp_path / "test.pq"
+        sample_dataframe.to_parquet(pq_path)
+        assert is_valid_data_frame(str(pq_path)) is True
+
+    def test_valid_parquet_uppercase_pq(self, tmp_path, sample_dataframe):
+        """Test validation of Parquet with .PQ extension."""
+        pq_path = tmp_path / "test.PQ"
+        sample_dataframe.to_parquet(pq_path)
+        assert is_valid_data_frame(str(pq_path)) is True
+
+    def test_valid_parquet_lowercase_parquet(self, tmp_path, sample_dataframe):
+        """Test validation of Parquet with .parquet extension."""
+        parquet_path = tmp_path / "test.parquet"
+        sample_dataframe.to_parquet(parquet_path)
+        assert is_valid_data_frame(str(parquet_path)) is True
+
+    def test_valid_parquet_uppercase_parquet(self, tmp_path, sample_dataframe):
+        """Test validation of Parquet with .PARQUET extension."""
+        parquet_path = tmp_path / "test.PARQUET"
+        sample_dataframe.to_parquet(parquet_path)
+        assert is_valid_data_frame(str(parquet_path)) is True
+
+    def test_invalid_extension_returns_false(self, tmp_path):
+        """Test that unsupported extensions return False."""
+        txt_path = tmp_path / "test.txt"
+        txt_path.write_text("some content")
+        assert is_valid_data_frame(str(txt_path)) is False
+
+    def test_nonexistent_csv_returns_false(self, tmp_path):
+        """Test that non-existent CSV returns False."""
+        csv_path = tmp_path / "nonexistent.csv"
+        assert is_valid_data_frame(str(csv_path)) is False
+
+    def test_corrupted_parquet_returns_false(self, tmp_path):
+        """Test that corrupted Parquet returns False."""
+        parquet_path = tmp_path / "corrupted.parquet"
+        parquet_path.write_bytes(b"\x00\x01\x02\x03")
+        assert is_valid_data_frame(str(parquet_path)) is False

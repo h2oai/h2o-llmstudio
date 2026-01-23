@@ -100,8 +100,6 @@ contourpy==1.3.2
     # via bokeh
 coolname==2.2.0
     # via h2o-llmstudio
-cramjam==2.11.0
-    # via fastparquet
 cryptography==46.0.3
     # via
     #   azure-storage-blob
@@ -127,8 +125,6 @@ einops==0.8.1
     #   h2o-llmstudio
 exceptiongroup==1.3.1
     # via anyio
-fastparquet==2024.11.0
-    # via h2o-llmstudio
 filelock==3.20.0
     # via
     #   datasets
@@ -144,7 +140,6 @@ frozenlist==1.8.0
 fsspec==2025.10.0
     # via
     #   datasets
-    #   fastparquet
     #   huggingface-hub
     #   torch
 future==1.0.0
@@ -297,7 +292,6 @@ numpy==1.26.4
     #   contourpy
     #   datasets
     #   deepspeed
-    #   fastparquet
     #   h2o-llmstudio
     #   pandas
     #   peft
@@ -354,7 +348,6 @@ packaging==25.0
     #   bokeh
     #   datasets
     #   deepspeed
-    #   fastparquet
     #   huggingface-hub
     #   neptune
     #   peft
@@ -364,7 +357,6 @@ pandas==2.3.3
     # via
     #   bokeh
     #   datasets
-    #   fastparquet
     #   h2o-llmstudio
     #   neptune
 peft==0.17.1

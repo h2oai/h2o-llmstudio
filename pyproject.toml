@@ -25,7 +25,6 @@ dependencies = [
     "toml>=0.10.2, <0.11.0",
     "pyyaml>=6.0.0, <7.0.0",
     "protobuf>=3.20.3",
-    "fastparquet>=2023.7.0",
     "gputil>=1.4.0, <2.0.0",
     "huggingface-hub==0.34.4",
     "bitsandbytes==0.47.0",
