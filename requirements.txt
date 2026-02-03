@@ -595,7 +595,7 @@ tzdata==2025.2
     #   pandas
 uri-template==1.3.0
     # via jsonschema
-urllib3==2.6.1
+urllib3==2.6.3
     # via
     #   botocore
     #   kaggle
