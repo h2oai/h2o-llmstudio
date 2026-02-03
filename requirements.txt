@@ -604,7 +604,7 @@ urllib3==2.6.3
     #   sentry-sdk
 uvicorn==0.38.0
     # via h2o-wave
-wandb==0.23.1
+wandb==0.24.1
     # via h2o-llmstudio
 wcwidth==0.2.14
     # via blessed
