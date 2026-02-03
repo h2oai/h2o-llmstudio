@@ -37,7 +37,7 @@ attrs==25.4.0
     #   aiohttp
     #   jsonschema
     #   referencing
-azure-core==1.36.0
+azure-core==1.38.0
     # via
     #   azure-storage-blob
     #   azure-storage-file-datalake
