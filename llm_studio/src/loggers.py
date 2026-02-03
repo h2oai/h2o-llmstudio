@@ -7,6 +7,7 @@ import numpy as np
 from diskcache import Cache
 
 from llm_studio.src.utils.plot_utils import PLOT_ENCODINGS
+from tests.src.datasets.test_conversation_chain_handler import cfg
 
 logger = logging.getLogger(__name__)
 
@@ -68,9 +69,6 @@ class NeptuneLogger:
 
     def log(self, subset: str, name: str, value: Any, step: int | None = None):
         name = f"{subset}/{name}"
-        if step is not None:
-            # NOTE: Explicit cast is needed, as training sometimes reports float steps
-            step = int(step)
         self.logger[name].append(value, step=step)
 
 
@@ -96,8 +94,12 @@ class WandbLogger:
     def log(self, subset: str, name: str, value: Any, step: int | None = None):
         name = f"{subset}/{name}"
         if step is not None:
+            if cfg.logging.log_step_size == "relative":
+                raise ValueError("Relative step size logging is not supported with W&B.")
+
             # NOTE: Explicit cast is needed, as training sometimes reports float steps
             step = int(step)
+
         self.logger.log({name: value}, step=step)
 
 
