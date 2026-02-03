@@ -23,10 +23,14 @@ def check_config_for_errors(cfg: DefaultConfigProblemBase) -> dict:
     - "message": A list of error messages.
     """
     errors = check_for_common_errors(cfg)
+    logging_errors = check_for_logging_errors(cfg)
     problem_type_errors = cfg.check()
     errors["title"].extend(problem_type_errors["title"])
     errors["message"].extend(problem_type_errors["message"])
     errors["type"].extend(problem_type_errors["type"])
+    errors["title"].extend(logging_errors["title"])
+    errors["message"].extend(logging_errors["message"])
+    errors["type"].extend(logging_errors["type"])
     return errors
 
 
@@ -107,4 +111,17 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
             "Please select more than one GPU or disable deepspeed."
         ]
         errors["type"].append("error")
+    return errors
+
+def check_for_logging_errors(cfg: DefaultConfigProblemBase) -> dict:
+    errors: dict[str, list] = {"title": [], "message": [], "type": []}
+
+    if cfg.logging.logger == "W&B" and cfg.logging.log_step_size == "relative":
+        errors["title"] += ["WandB relative step size logging not supported."]
+        errors["message"] += [
+            "WandB logging does not support relative step size logging. "
+            "Please set log_step_size to 'absolute' when using WandB logging."
+        ]
+        errors["type"].append("error")
+
     return errors

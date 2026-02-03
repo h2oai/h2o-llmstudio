@@ -94,9 +94,6 @@ class WandbLogger:
     def log(self, subset: str, name: str, value: Any, step: int | None = None):
         name = f"{subset}/{name}"
         if step is not None:
-            if cfg.logging.log_step_size == "relative":
-                raise ValueError("Relative step size logging is not supported with W&B.")
-
             # NOTE: Explicit cast is needed, as training sometimes reports float steps
             step = int(step)
 
