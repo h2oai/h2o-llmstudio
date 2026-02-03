@@ -125,7 +125,7 @@ einops==0.8.1
     #   h2o-llmstudio
 exceptiongroup==1.3.1
     # via anyio
-filelock==3.20.0
+filelock==3.20.3
     # via
     #   datasets
     #   huggingface-hub
