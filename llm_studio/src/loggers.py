@@ -7,7 +7,6 @@ import numpy as np
 from diskcache import Cache
 
 from llm_studio.src.utils.plot_utils import PLOT_ENCODINGS
-from tests.src.datasets.test_conversation_chain_handler import cfg
 
 logger = logging.getLogger(__name__)
 
