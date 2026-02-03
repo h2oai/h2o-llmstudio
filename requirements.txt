@@ -373,7 +373,7 @@ propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
-protobuf==6.33.2
+protobuf==6.33.5
     # via
     #   h2o-llmstudio
     #   kaggle
