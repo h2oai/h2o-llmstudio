@@ -304,7 +304,7 @@ wheels = [
 
 [[package]]
 name = "bokeh"
-version = "3.8.1"
+version = "3.8.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "contourpy" },
@@ -318,9 +318,9 @@ dependencies = [
     { name = "tornado", marker = "sys_platform != 'emscripten'" },
     { name = "xyzservices" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/de/42/777c0627dbd78a2a7c6c6a1c3327e8a787ec99a4b84ae93245ce49c96af7/bokeh-3.8.1.tar.gz", hash = "sha256:40df8e632de367399d06979cbd76c9e68a133a3138e1adde37c4a4715ecb4d6e", size = 6529791, upload-time = "2025-11-07T20:50:59.565Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/31/7ee0c4dfd0255631b0624ce01be178704f91f763f02a1879368eb109befd/bokeh-3.8.2.tar.gz", hash = "sha256:8e7dcacc21d53905581b54328ad2705954f72f2997f99fc332c1de8da53aa3cc", size = 6529251, upload-time = "2026-01-06T00:20:06.568Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5d/e7/b18bee0772d49c0f78d57f15a68e85257abf7224d9b910706abe8bd1dc0f/bokeh-3.8.1-py3-none-any.whl", hash = "sha256:89a66cb8bfe85e91bce144e3ccf3c4a6f0f1347e7006282972568ea0ecacbb00", size = 7206137, upload-time = "2025-11-07T20:50:58.108Z" },
+    { url = "https://files.pythonhosted.org/packages/f6/a8/877f306720bc114c612579c5af36bcb359026b83d051226945499b306b1a/bokeh-3.8.2-py3-none-any.whl", hash = "sha256:5e2c0d84f75acb25d60efb9e4d2f434a791c4639b47d685534194c4e07bd0111", size = 7207131, upload-time = "2026-01-06T00:20:04.917Z" },
 ]
 
 [[package]]

@@ -55,7 +55,7 @@ bleach==6.3.0
     # via kaggle
 blessed==1.25.0
     # via inquirer
-bokeh==3.8.1
+bokeh==3.8.2
     # via h2o-llmstudio
 boto3==1.40.61
     # via
