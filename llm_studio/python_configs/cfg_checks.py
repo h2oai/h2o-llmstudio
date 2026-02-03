@@ -113,6 +113,7 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
         errors["type"].append("error")
     return errors
 
+
 def check_for_logging_errors(cfg: DefaultConfigProblemBase) -> dict:
     errors: dict[str, list] = {"title": [], "message": [], "type": []}
 
