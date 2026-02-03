@@ -57,7 +57,7 @@ dev = [
     "types-pyyaml>=6.0",
     "types-requests>=2.31",
     "types-toml>=0.10",
-    "wheel==0.43.0",
+    "wheel==0.46.2",
     "pytest-bdd==7.1.2",
     "pytest-base-url==2.1.0",
     "pytest-mock==3.14.0",
