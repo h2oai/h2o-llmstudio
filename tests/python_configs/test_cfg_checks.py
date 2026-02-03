@@ -14,6 +14,7 @@ class MockConfig(DefaultConfigProblemBase):
         self.environment = MagicMock()
         self.architecture = MagicMock()
         self.training = MagicMock()
+        self.logging = MagicMock()
 
     def check(self):
         return {"title": [], "message": [], "type": []}

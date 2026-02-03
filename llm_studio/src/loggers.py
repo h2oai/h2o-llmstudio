@@ -92,6 +92,10 @@ class WandbLogger:
 
     def log(self, subset: str, name: str, value: Any, step: int | None = None):
         name = f"{subset}/{name}"
+        if step is not None:
+            # NOTE: Explicit cast is needed, as training sometimes reports float steps
+            step = int(step)
+
         self.logger.log({name: value}, step=step)
 
 
