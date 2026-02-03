@@ -489,7 +489,7 @@ sentencepiece==0.2.1
     # via h2o-llmstudio
 sentry-sdk==2.47.0
     # via wandb
-setuptools==80.9.0
+setuptools==80.10.2
     # via
     #   kaggle
     #   triton
