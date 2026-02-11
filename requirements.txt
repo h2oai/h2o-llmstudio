@@ -171,7 +171,7 @@ h2o-cloud-discovery==3.2.0
     #   h2o-drive
 h2o-drive==3.0.0
     # via h2o-llmstudio
-h2o-wave==1.7.6
+h2o-wave==1.8.0
     # via h2o-llmstudio
 hf-transfer==0.1.9
     # via h2o-llmstudio
