@@ -166,7 +166,7 @@ h2o-cloud-discovery==3.2.0
     #   h2o-drive
 h2o-drive==3.0.0
     # via h2o-llmstudio
-h2o-wave==1.7.8
+h2o-wave==1.8.1
     # via h2o-llmstudio
 hf-transfer==0.1.9
     # via h2o-llmstudio
@@ -310,7 +310,7 @@ nvidia-cuda-nvrtc-cu12==12.6.77
     # via torch
 nvidia-cuda-runtime-cu12==12.6.77 
     # via torch
-nvidia-cudnn-cu12==9.5.1.17 
+nvidia-cudnn-cu12==9.10.2.21 
     # via torch
 nvidia-cufft-cu12==11.3.0.4 
     # via torch
@@ -324,9 +324,9 @@ nvidia-cusparse-cu12==12.5.4.2
     # via
     #   nvidia-cusolver-cu12
     #   torch
-nvidia-cusparselt-cu12==0.6.3 
+nvidia-cusparselt-cu12==0.7.1 
     # via torch
-nvidia-nccl-cu12==2.26.2 
+nvidia-nccl-cu12==2.27.3 
     # via torch
 nvidia-nvjitlink-cu12==12.6.85 
     # via
@@ -537,7 +537,7 @@ toml==0.10.2
     # via h2o-llmstudio
 tomli==2.3.0
     # via h2o-cloud-discovery
-torch==2.7.1+cu126
+torch==2.8.0+cu126
     # via
     #   accelerate
     #   bitsandbytes
@@ -560,7 +560,7 @@ transformers==4.56.1
     # via
     #   h2o-llmstudio
     #   peft
-triton==3.3.1 
+triton==3.4.0 
     # via torch
 typing-extensions==4.15.0
     # via

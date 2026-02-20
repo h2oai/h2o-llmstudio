@@ -100,12 +100,14 @@ class ConfigNLPCausalLMDataset(DefaultConfig):
             prefer_with=lambda column: column in ("system",), add_none=True
         )
         self._possible_values["prompt_column"] = possible_values.Columns(
-            prefer_with=lambda column: column
-            in ("instruction", "prompt", "question", "input", "user")
+            prefer_with=lambda column: (
+                column in ("instruction", "prompt", "question", "input", "user")
+            )
         )
         self._possible_values["answer_column"] = possible_values.Columns(
-            prefer_with=lambda column: column
-            in ("answer", "output", "response", "assistant", "chosen")
+            prefer_with=lambda column: (
+                column in ("answer", "output", "response", "assistant", "chosen")
+            )
         )
         self._possible_values["parent_id_column"] = possible_values.Columns(
             prefer_with=lambda column: column in ("parent", "parent_id"), add_none=True
