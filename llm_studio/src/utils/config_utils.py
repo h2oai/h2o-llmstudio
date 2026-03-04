@@ -131,6 +131,11 @@ def convert_nested_dictionary_to_cfg_base(
     Inverse operation of convert_cfg_base_to_nested_dictionary
     """
     problem_type = cfg_dict["problem_type"]
+    allowed_types = GENERATION_PROBLEM_TYPES + NON_GENERATION_PROBLEM_TYPES + ["text_sequence_to_sequence_modeling"]
+    
+    if problem_type not in allowed_types:
+        raise NotImplementedError(f"Problem Type {problem_type} not implemented or allowed")
+
     module_name = f"llm_studio.python_configs.{problem_type}_config"
     try:
         module = importlib.import_module(module_name)
