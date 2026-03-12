@@ -544,7 +544,7 @@ torch==2.8.0+cu126
     #   deepspeed
     #   h2o-llmstudio
     #   peft
-tornado==6.5.4 
+tornado==6.5.5 
     # via bokeh
 tqdm==4.67.3
     # via
