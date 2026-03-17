@@ -400,7 +400,7 @@ pydantic==2.12.5
     #   wandb
 pydantic-core==2.41.5
     # via pydantic
-pyjwt==2.11.0
+pyjwt==2.12.1
     # via neptune
 python-dateutil==2.9.0.post0
     # via
@@ -544,7 +544,7 @@ torch==2.8.0+cu126
     #   deepspeed
     #   h2o-llmstudio
     #   peft
-tornado==6.5.4 
+tornado==6.5.5 
     # via bokeh
 tqdm==4.67.3
     # via
@@ -579,6 +579,7 @@ typing-extensions==4.15.0
     #   openai
     #   pydantic
     #   pydantic-core
+    #   pyjwt
     #   referencing
     #   sqlalchemy
     #   starlette
