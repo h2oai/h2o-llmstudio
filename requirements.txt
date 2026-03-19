@@ -166,7 +166,7 @@ h2o-cloud-discovery==3.3.0
     #   h2o-drive
 h2o-drive==3.0.0
     # via h2o-llmstudio
-h2o-wave==1.8.1
+h2o-wave==1.8.2
     # via h2o-llmstudio
 hf-transfer==0.1.9
     # via h2o-llmstudio
@@ -605,7 +605,7 @@ urllib3==2.6.3
     #   sentry-sdk
 uvicorn==0.41.0
     # via h2o-wave
-wandb==0.25.0
+wandb==0.25.1
     # via h2o-llmstudio
 wcwidth==0.6.0
     # via blessed
