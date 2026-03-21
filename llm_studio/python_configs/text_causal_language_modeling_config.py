@@ -448,6 +448,9 @@ class ConfigNLPCausalLMPrediction(DefaultConfig):
                 "gpt-4-0314",
                 "gpt-4-0613",
                 "gpt-4-1106-preview",
+                "MiniMax-M2.7",
+                "MiniMax-M2.5",
+                "MiniMax-M2.5-highspeed",
             ),
             allow_custom=True,
         )

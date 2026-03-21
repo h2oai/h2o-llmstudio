@@ -32,12 +32,18 @@ def set_seed(seed: int = 1234) -> None:
 
 def check_metric(cfg):
     """
-    Checks if the metric is set to GPT and if the OpenAI API key is set.
-    If not, sets the metric to BLEU and logs a warning.
+    Checks if the metric is set to GPT and if an LLM API key is set.
+    Supports OpenAI and MiniMax API keys.
+    If neither is set, falls back the metric to BLEU and logs a warning.
     """
 
-    if "GPT" in cfg.prediction.metric and os.getenv("OPENAI_API_KEY", "") == "":
-        logger.warning("No OpenAI API Key set. Setting metric to BLEU. ")
+    if "GPT" in cfg.prediction.metric and (
+        os.getenv("OPENAI_API_KEY", "") == ""
+        and os.getenv("MINIMAX_API_KEY", "") == ""
+    ):
+        logger.warning(
+            "No OpenAI or MiniMax API Key set. Setting metric to BLEU."
+        )
         cfg.prediction.metric = "BLEU"
     return cfg
 

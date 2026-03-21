@@ -70,7 +70,9 @@ def sacrebleu_score(
 
 
 def get_openai_client() -> AzureOpenAI | OpenAI:
-    if os.getenv("OPENAI_API_TYPE", "open_ai") == "azure":
+    api_type = os.getenv("OPENAI_API_TYPE", "open_ai")
+
+    if api_type == "azure":
         endpoint = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
         client: AzureOpenAI | OpenAI = AzureOpenAI(
             api_key=os.getenv("OPENAI_API_KEY", ""),
@@ -84,6 +86,20 @@ def get_openai_client() -> AzureOpenAI | OpenAI:
         )
         logger.info("Using Microsoft Azure Endpoint for OpenAI API")
         logger.info(f"Endpoint: {endpoint}")
+    elif api_type == "minimax" or (
+        api_type == "open_ai"
+        and os.getenv("MINIMAX_API_KEY", "")
+        and not os.getenv("OPENAI_API_KEY", "")
+    ):
+        client = OpenAI(
+            api_key=os.getenv("MINIMAX_API_KEY", ""),
+            base_url=os.getenv(
+                "OPENAI_API_BASE", "https://api.minimax.io/v1"
+            ),
+            max_retries=LLM_RETRY_ATTEMPTS,
+            timeout=LLM_TIMEOUT,  # unit is seconds
+        )
+        logger.info("Using MiniMax API for LLM evaluation")
     else:
         client = OpenAI(
             api_key=os.getenv("OPENAI_API_KEY", ""),

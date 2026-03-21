@@ -348,6 +348,23 @@ async def settings(q: Q) -> None:
             ),
             ui.inline(
                 items=[
+                    ui.label("MiniMax API Token", width=label_width),
+                    ui.textbox(
+                        name="default_minimax_api_token",
+                        label=None,
+                        value=q.client["default_minimax_api_token"],
+                        width=textbox_width,
+                        password=True,
+                        trigger=False,
+                        tooltip="Set the value for the MiniMax API token. "
+                        "When set without an OpenAI API token, MiniMax "
+                        "will be used automatically for GPT evaluation "
+                        "with models like MiniMax-M2.7.",
+                    ),
+                ]
+            ),
+            ui.inline(
+                items=[
                     ui.label("GPT evaluation max samples", width=label_width),
                     ui.spinbox(
                         name="default_gpt_eval_max",

@@ -166,6 +166,7 @@ default_cfg = {
         "default_hf_hub_enable_hf_transfer": _is_true(
             os.getenv("HF_HUB_ENABLE_HF_TRANSFER", "1")
         ),
+        "default_minimax_api_token": os.getenv("MINIMAX_API_KEY", ""),
         "default_openai_azure": os.getenv("OPENAI_API_TYPE", "open_ai") == "azure",
         "default_openai_api_token": os.getenv("OPENAI_API_KEY", ""),
         "default_openai_api_base": os.getenv(
