@@ -1,25 +1,24 @@
-
 name: Generate PDF Documentation
 
 on:
   pull_request:
     branches:
-      - 'main'
-      - 'pdf-documentation'
+      - "main"
+      - "pdf-documentation"
   workflow_dispatch:
     inputs:
       folder_path:
-        description: 'Path to the documentation folder'
+        description: "Path to the documentation folder"
         required: true
-        default: './docs'
+        default: "./docs"
       sidebar_path:
-        description: 'Path to the sidebar.js file'
+        description: "Path to the sidebar.js file"
         required: true
-        default: './sidebars.js'
+        default: "./sidebars.js"
       combined_md_file_path:
-        description: 'Path to the combined docs markdown file'
+        description: "Path to the combined docs markdown file"
         required: true
-        default: './combined_docs.md'
+        default: "./combined_docs.md"
 
 permissions:
   id-token: write
@@ -38,7 +37,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'  # Specify the Node.js version you need
+          node-version: "20" # Specify the Node.js version you need
 
       - name: Install Python
         run: |
@@ -58,7 +57,7 @@ jobs:
       - name: Install Ghostscript
         run: |
           sudo apt-get install -y ghostscript
-      
+
       - name: Verify Ghostscript Installation
         run: |
           gs --version
@@ -67,9 +66,9 @@ jobs:
 
       - name: Set environment variables
         env:
-          FOLDER_PATH: ${{ github.event.inputs.folder_path || './docs' }}  # For manual runs or PR body
-          SIDEBAR_PATH: ${{ github.event.inputs.sidebar_path || './sidebars.js' }}  # For manual runs or PR body
-          COMBINED_DOC_PATH: ${{ github.event.inputs.combined_md_file_path || './combined_docs.md' }}  # For manual runs or PR body
+          FOLDER_PATH: ${{ github.event.inputs.folder_path || './docs' }} # For manual runs or PR body
+          SIDEBAR_PATH: ${{ github.event.inputs.sidebar_path || './sidebars.js' }} # For manual runs or PR body
+          COMBINED_DOC_PATH: ${{ github.event.inputs.combined_md_file_path || './combined_docs.md' }} # For manual runs or PR body
           BRANCH_NAME: ${{ github.head_ref || github.ref }}
         run: |
           echo "FOLDER_PATH=${FOLDER_PATH}" >> $GITHUB_ENV
@@ -79,22 +78,23 @@ jobs:
 
       # Fallback: Set the repository name as the documentation name if no title is found
       - name: Set repository name as documentation name fallback
-        run: | # Extracts the repository name (everything after the slash in org/repo)
+        run:
+          | # Extracts the repository name (everything after the slash in org/repo)
           echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV
 
       # Extract documentation title and determine the version number dynamically
       - name: Extract title and version
         run: |
           DOC_TITLE=$(node -p "require('./documentation/makersaurus.config.js').title || ''")
-          
+
           if [[ "${{ env.FOLDER_PATH }}" == "./docs" ]]; then
             VERSION=$(node -p "require('./documentation/makersaurus.config.js').versions?.current?.label || '0.0.0'")
           else
             VERSION=$(basename "${{ env.FOLDER_PATH }}" | sed 's/version-//')
           fi
-          
+
           SAFE_TITLE=$(echo "$DOC_TITLE" | tr ' ' '_' | tr -dc 'A-Za-z0-9._-')
-          
+
           echo "DOC_TITLE=${DOC_TITLE}" >> $GITHUB_ENV
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "SAFE_TITLE=${SAFE_TITLE}" >> $GITHUB_ENV
@@ -141,7 +141,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::905418351423:role/GitHub-OIDC-Role
+          role-to-assume: arn:aws:iam::905418351423:role/Github-OIDC-Role-h2o-llmstudio
           role-session-name: h2o-llm-studio
           aws-region: us-east-1
 
