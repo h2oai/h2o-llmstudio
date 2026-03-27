@@ -443,7 +443,7 @@ regex==2026.2.28
     #   sacrebleu
     #   tiktoken
     #   transformers
-requests==2.32.5
+requests==2.33.0
     # via
     #   azure-core
     #   bravado
