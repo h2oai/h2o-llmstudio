@@ -49,28 +49,6 @@ def get_cfg(cfg: Any) -> dict:
     return items
 
 
-class NeptuneLogger:
-    def __init__(self, cfg: Any):
-        import neptune as neptune
-        from neptune.utils import stringify_unsupported
-
-        self.logger = neptune.init_run(
-            project=cfg.logging.neptune_project,
-            api_token=os.getenv("NEPTUNE_API_TOKEN", ""),
-            name=cfg.experiment_name,
-            mode="debug" if cfg.logging._neptune_debug else "async",
-            capture_stdout=False,
-            capture_stderr=False,
-            source_files=[],
-        )
-
-        self.logger["cfg"] = stringify_unsupported(get_cfg(cfg))
-
-    def log(self, subset: str, name: str, value: Any, step: int | None = None):
-        name = f"{subset}/{name}"
-        self.logger[name].append(value, step=step)
-
-
 class WandbLogger:
     def __init__(self, cfg: Any) -> None:
         os.environ["WANDB_DISABLE_CODE"] = "true"
@@ -183,7 +161,7 @@ class MainLogger:
 class ExternalLoggers:
     """ExternalLoggers factory."""
 
-    _loggers = {"None": DummyLogger, "Neptune": NeptuneLogger, "W&B": WandbLogger}
+    _loggers = {"None": DummyLogger, "W&B": WandbLogger}
 
     @classmethod
     def names(cls) -> list[str]:

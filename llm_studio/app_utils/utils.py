@@ -2025,7 +2025,6 @@ def start_experiment(
     process_queue = list(set(all_process_queue))
 
     env_vars = {
-        "NEPTUNE_API_TOKEN": q.client["default_neptune_api_token"],
         "WANDB_API_KEY": q.client["default_wandb_api_token"],
         "OPENAI_API_KEY": q.client["default_openai_api_token"],
         "GPT_EVAL_MAX": str(q.client["default_gpt_eval_max"]),

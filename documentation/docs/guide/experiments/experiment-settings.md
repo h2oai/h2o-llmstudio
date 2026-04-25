@@ -83,7 +83,6 @@ import ESseed from '../../tooltips/experiments/_seed.mdx';
 import LSlogstepsize from '../../tooltips/experiments/_log-step-size.mdx';
 import LSlogallranks from '../../tooltips/experiments/_log-all-ranks.mdx';
 import LSlogger from '../../tooltips/experiments/_logger.mdx';
-import LSneptuneproject from '../../tooltips/experiments/_neptune-project.mdx';
 import LSwandbproject from '../../tooltips/experiments/_wandb-project.mdx';
 import LSwandbentity from '../../tooltips/experiments/_wandb-entity.mdx';
 import NumClasses from '../../tooltips/experiments/_num-classes.mdx';
@@ -454,10 +453,6 @@ By default, H2O LLM Studio applies **Differential learning rate Layers**, with t
 ### Logger
 
 <LSlogger/>
-
-### Neptune project
-
-<LSneptuneproject/>
 
 ### W&B project
 

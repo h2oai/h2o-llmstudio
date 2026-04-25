@@ -1,7 +1,6 @@
 .git
 .github
 .mypy_cache
-.neptune
 wandb
 llmstudio_mnt/
 .pytest_cache

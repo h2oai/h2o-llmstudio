@@ -115,7 +115,6 @@ experiment_name: default-8-a10g
 llm_backbone: h2oai/h2ogpt-4096-llama2-7b
 logging:
     logger: None
-    neptune_project: ''
 output_directory: /output/...
 prediction:
     batch_size_inference: 0

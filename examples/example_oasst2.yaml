@@ -55,7 +55,6 @@ experiment_name: example_oasst2
 llm_backbone: h2oai/h2o-danube2-1.8b-base
 logging:
     logger: None
-    neptune_project: test_org/test_project
 output_directory: examples/output_oasst2
 prediction:
     batch_size_inference: 0

@@ -600,10 +600,8 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
     log_step_size: str = "absolute"
     log_all_ranks: bool = False
     logger: str = "None"
-    neptune_project: str = ""
     wandb_project: str = ""
     wandb_entity: str = ""
-    _neptune_debug: bool = False
 
     plots_class: Any = text_causal_language_modeling_plots.Plots
 
@@ -621,10 +619,6 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
         )
         self._possible_values["logger"] = ExternalLoggers.names()
 
-        self._nesting.add(
-            ["neptune_project"],
-            [Dependency(key="logger", value="Neptune", is_set=True)],
-        )
         self._nesting.add(
             ["wandb_project", "wandb_entity"],
             [Dependency(key="logger", value="W&B", is_set=True)],

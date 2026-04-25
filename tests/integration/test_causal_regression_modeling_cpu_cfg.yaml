@@ -54,7 +54,6 @@ experiment_name: solid-spaniel
 llm_backbone: h2oai/llama2-0b-unit-test
 logging:
     logger: None
-    neptune_project: ''
 output_directory: /tmp/output
 prediction:
     batch_size_inference: 0

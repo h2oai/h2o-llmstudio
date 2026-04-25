@@ -47,7 +47,6 @@ experiment_name: test-sequence-to-sequence-modeling-oasst
 llm_backbone: t5-small
 logging:
     logger: None
-    neptune_project: test_org/test_project
 output_directory: /tmp/output
 prediction:
     batch_size_inference: 0

@@ -225,35 +225,6 @@ async def settings(q: Q) -> None:
             ),
             ui.inline(
                 items=[
-                    ui.label("Neptune Project", width=label_width),
-                    ui.textbox(
-                        name="default_neptune_project",
-                        label=None,
-                        value=q.client["default_neptune_project"],
-                        width=textbox_width,
-                        trigger=False,
-                        tooltip="Set the value for the neptune project \
-                            in the experiment setup.",
-                    ),
-                ]
-            ),
-            ui.inline(
-                items=[
-                    ui.label("Neptune API Token", width=label_width),
-                    ui.textbox(
-                        name="default_neptune_api_token",
-                        label=None,
-                        value=q.client["default_neptune_api_token"],
-                        width=textbox_width,
-                        password=True,
-                        trigger=False,
-                        tooltip="Set the value for the Neptune API token \
-                            in the experiment setup.",
-                    ),
-                ]
-            ),
-            ui.inline(
-                items=[
                     ui.label("Wandb Project", width=label_width),
                     ui.textbox(
                         name="default_wandb_project",

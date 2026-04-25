@@ -41,7 +41,6 @@ def test_load_config_yaml():
     assert cfg.environment.seed == -1
 
     assert cfg.logging.logger == "None"
-    assert cfg.logging.neptune_project == ""
 
     assert cfg.prediction.batch_size_inference == 0
     assert cfg.prediction.do_sample is False

@@ -157,8 +157,6 @@ default_cfg = {
         "gpu_used_for_chat": 1,
         "default_number_of_workers": 8,
         "default_logger": "None",
-        "default_neptune_project": os.getenv("NEPTUNE_PROJECT", ""),
-        "default_neptune_api_token": os.getenv("NEPTUNE_API_TOKEN", ""),
         "default_wandb_api_token": os.getenv("WANDB_API_KEY", ""),
         "default_wandb_project": os.getenv("WANDB_PROJECT", ""),
         "default_wandb_entity": os.getenv("WANDB_ENTITY", ""),

@@ -16,7 +16,6 @@ def temp_dir():
 def mock_cfg():
     cfg = MagicMock()
     cfg.logging.logger = "None"
-    cfg.logging._neptune_debug = False
     return cfg
 
 
