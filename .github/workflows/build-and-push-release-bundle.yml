@@ -16,7 +16,7 @@ jobs:
       version: ${{ steps.extract_version.outputs.version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: Extract version
         id: extract_version
@@ -71,7 +71,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout code (Dockerfile only)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             Dockerfile.bundle

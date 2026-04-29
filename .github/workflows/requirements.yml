@@ -3,14 +3,21 @@ name: Requirements
 on:
   pull_request:
 
+# Restrictive default for any job that doesn't override it.
+permissions:
+  contents: read
+
 jobs:
   requirements:
     runs-on: ubuntu-latest
+    # The commit step below needs to push back to the PR branch.
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
         with:
           version: "0.7.20"
 
@@ -24,7 +31,7 @@ jobs:
         run: make requirements
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9  # v7.1.0
         with:
           commit_message: "Update requirements.txt"
         env:
