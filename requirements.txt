@@ -129,7 +129,7 @@ fsspec==2026.2.0
     #   torch
 gitdb==4.0.12
     # via gitpython
-gitpython==3.1.46
+gitpython==3.1.49
     # via wandb
 gputil==1.4.0
     # via h2o-llmstudio
