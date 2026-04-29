@@ -44,9 +44,6 @@ def initialize_logging(cfg: Any | None = None):
         format = "%(asctime)s - %(levelname)s: %(message)s"
     formatter = logging.Formatter(format)
 
-    # Suppress diskcache logs (charts_cache)
-    logging.getLogger("diskcache").setLevel(logging.ERROR)
-
     actual_logger = logging.root
     actual_logger.setLevel(logging.INFO)
 

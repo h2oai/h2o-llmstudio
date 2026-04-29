@@ -195,7 +195,7 @@ endif
 # Get Trivy from https://aquasecurity.github.io/trivy/v0.53/getting-started/installation/
 .PHONY: trivy-local
 trivy-local: docker-build-nightly
-	trivy image --scanners vuln --severity CRITICAL,HIGH,MEDIUM --timeout 60m $(DOCKER_IMAGE)
+	trivy image --scanners vuln --severity CRITICAL,HIGH,MEDIUM,LOW --timeout 60m $(DOCKER_IMAGE)
 
 .PHONY: docker-clean-all
 docker-clean-all:

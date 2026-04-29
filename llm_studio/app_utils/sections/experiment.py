@@ -19,7 +19,6 @@ import pandas as pd
 import torch
 import transformers
 import yaml
-from diskcache import Cache
 from h2o_wave import Q, data, ui
 
 from llm_studio.app_utils.config import default_cfg
@@ -64,6 +63,7 @@ from llm_studio.src.utils.config_utils import (
     load_config_yaml,
     save_config_yaml,
 )
+from llm_studio.src.utils.disk_kv import Cache
 from llm_studio.src.utils.exceptions import LLMResourceException
 from llm_studio.src.utils.export_utils import (
     check_available_space,

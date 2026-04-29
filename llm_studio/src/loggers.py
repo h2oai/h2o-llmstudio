@@ -4,8 +4,8 @@ import os
 from typing import Any
 
 import numpy as np
-from diskcache import Cache
 
+from llm_studio.src.utils.disk_kv import Cache
 from llm_studio.src.utils.plot_utils import PLOT_ENCODINGS
 
 logger = logging.getLogger(__name__)
@@ -79,8 +79,6 @@ class WandbLogger:
 
 class LocalLogger:
     def __init__(self, cfg: Any):
-        logging.getLogger("diskcache").setLevel(logging.ERROR)
-
         self.logs = os.path.join(cfg.output_directory, "charts_cache")
 
         params = get_cfg(cfg)

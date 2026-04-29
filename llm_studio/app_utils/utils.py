@@ -31,7 +31,6 @@ from azure.storage.filedatalake import DataLakeServiceClient
 from boto3.session import Session
 from botocore.handlers import disable_signing
 from datasets import load_dataset
-from diskcache import Cache
 from h2o_wave import Choice, Q, ui
 from pandas.core.frame import DataFrame
 
@@ -45,6 +44,7 @@ from llm_studio.src.utils.config_utils import (
     save_config_yaml,
 )
 from llm_studio.src.utils.data_utils import is_valid_data_frame, read_dataframe
+from llm_studio.src.utils.disk_kv import Cache
 from llm_studio.src.utils.export_utils import get_size_str
 from llm_studio.src.utils.type_annotations import KNOWN_TYPE_ANNOTATIONS
 

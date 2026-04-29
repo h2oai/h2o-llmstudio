@@ -102,8 +102,6 @@ dill==0.3.9
     #   datasets
     #   h2o-llmstudio
     #   multiprocess
-diskcache==5.6.3
-    # via h2o-llmstudio
 distro==1.9.0
     # via openai
 editor==1.7.0
