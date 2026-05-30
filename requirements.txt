@@ -172,7 +172,7 @@ huggingface-hub==0.34.4
     #   peft
     #   tokenizers
     #   transformers
-idna==3.11
+idna==3.17
     # via
     #   anyio
     #   httpx
