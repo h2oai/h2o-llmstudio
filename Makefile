@@ -33,11 +33,6 @@ setup-dev: uv  # Install dependencies including dev dependencies
 	-$(UV) sync --frozen --group dev --extra flash
 	$(UV) run playwright install
 
-.PHONY: requirements
-requirements: uv  # uv pip compile requirements.txt
-	$(UV) export --no-hashes --no-dev --no-header --frozen --format requirements-txt > requirements.txt
-	grep -v "sys_platform == 'win32'" requirements.txt | awk -F ';' '{print $$1}' > tmp_requirements.txt && mv tmp_requirements.txt requirements.txt
-
 clean-env:
 	rm -rf .venv
 

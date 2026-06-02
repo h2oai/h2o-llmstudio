@@ -105,15 +105,6 @@ The following command will create a virtual environment using `uv` and will inst
 make setup
 ```
 
-#### Using requirements.txt
-
-If you wish to use another virtual environment, you can also install the dependencies using the requirements.txt file:
-
-```bash
-pip install -r requirements.txt
-pip install flash-attn==2.8.3 --no-build-isolation  # optional for Flash Attention 2
-```
-
 ## Run H2O LLM Studio GUI
 
 You can start H2O LLM Studio using the following command:

@@ -80,16 +80,6 @@ H2O LLM Studio requires the following minimum requirements:
       </pre>
     </p>
   </TabItem>
-  <TabItem value="using-requirements" label="Using requirements.txt">
-    <p>
-      If you wish to use conda or another virtual environment, you can also
-      install the dependencies using the <code>requirements.txt</code>{" "}
-      file.{" "}
-    </p>
-    <pre>
-      <code>pip install -r requirements.txt</code>
-    </pre>
-  </TabItem>
   <TabItem value="wsl2-install" label="Windows installation" default>
     <p>
       Follow the steps below to install H2O LLM Studio on a Windows machine
@@ -176,9 +166,9 @@ H2O LLM Studio requires the following minimum requirements:
       </pre>
     </p>
     <p>
-      10. Install H2O LLM Studio using the `requirements.txt`.
+      10. Install H2O LLM Studio dependencies.
       <pre>
-        <code>pip install -r requirements.txt</code>
+        <code>make setup</code>
       </pre>
     </p>
     <p>
