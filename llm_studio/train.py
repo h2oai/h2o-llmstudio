@@ -278,8 +278,12 @@ def run_train(
             model.require_backward_grad_sync = itr % cfg.training.grad_accumulation == 0
 
             # Forward pass
+            # When using DeepSpeed, mixed precision is handled by the engine via
+            # its bf16/fp16 config, so a nested torch.autocast must not be active
+            # (newer DeepSpeed asserts against it).
             with autocast(
-                enabled=cfg.environment.mixed_precision,
+                enabled=cfg.environment.mixed_precision
+                and not cfg.environment.use_deepspeed,
                 dtype=get_torch_dtype(cfg.environment.mixed_precision_dtype),
             ):
                 output_dict = model.forward(batch)
