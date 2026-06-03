@@ -297,7 +297,6 @@ def get_ds_config(cfg: DefaultConfigProblemBase):
         },
         "bf16": {
             "enabled": True if cfg.architecture.backbone_dtype == "bfloat16" else False,
-            "loss_scale_window": 100,
         },
         # https://www.deepspeed.ai/docs/config-json/#zero-optimizations-for-fp16-training
         "zero_force_ds_cpu_optimizer": False,
