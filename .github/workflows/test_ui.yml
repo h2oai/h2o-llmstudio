@@ -88,3 +88,4 @@ jobs:
           github-token: ${{ secrets.GH_RUNNER_PAT }}
           label: ${{ needs.start-runner.outputs.label }}
           ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
+          
