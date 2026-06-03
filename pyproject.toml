@@ -5,7 +5,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = "==3.10.*"
 dependencies = [
-    "torch==2.8.0",
+    "torch==2.11.0",
     "tqdm>=4.65.0,<5.0.0",
     "transformers==4.56.1",
     "numpy>=1.26.0, <2.0.0",
@@ -26,7 +26,7 @@ dependencies = [
     "protobuf>=3.20.3",
     "gputil>=1.4.0, <2.0.0",
     "huggingface-hub==0.34.4",
-    "bitsandbytes==0.47.0",
+    "bitsandbytes==0.49.1",
     "accelerate==1.10.1",
     "openai>=1.12.0, <2.0.0",
     "einops==0.8.1",
@@ -74,7 +74,7 @@ hac_playwright = { url = "https://h2oai-qa-test-assets.s3.amazonaws.com/wheels/h
 
 [[tool.uv.index]]
 name = "pytorch"
-url = "https://download.pytorch.org/whl/cu126/"
+url = "https://download.pytorch.org/whl/cu130/"
 explicit = true
 
 [tool.ruff]
