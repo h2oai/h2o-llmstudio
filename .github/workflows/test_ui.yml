@@ -23,7 +23,7 @@ jobs:
         with:
           aws-region: us-east-1
           role-session-name: h2o-llmstudio-ec2
-          role-to-assume: arn:aws:iam::870498644798:role/GitHub-OIDC-Role
+          role-to-assume: ${{ secrets.GH_OIDC_ROLE_LLM_STUDIO_ENTERPRISE }}
 
       - name: Start EC2 runner
         id: start-ec2-runner
@@ -80,7 +80,7 @@ jobs:
         with:
           aws-region: us-east-1
           role-session-name: h2o-llmstudio-ec2
-          role-to-assume: arn:aws:iam::870498644798:role/GitHub-OIDC-Role
+          role-to-assume: ${{ secrets.GH_OIDC_ROLE_LLM_STUDIO_ENTERPRISE }}
       - name: Stop EC2 runner
         uses: machulav/ec2-github-runner@v2.3.8
         with:
