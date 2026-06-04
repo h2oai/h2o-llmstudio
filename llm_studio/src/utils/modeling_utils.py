@@ -421,53 +421,60 @@ def get_optimizer(
     """
     no_decay = ["bias", "LayerNorm.weight"]
     differential_layers = cfg.training.differential_learning_rate_layers
+    param_groups = [
+        {
+            "params": [
+                param
+                for name, param in model.named_parameters()
+                if (not any(layer in name for layer in differential_layers))
+                and (not any(nd in name for nd in no_decay))
+                and param.requires_grad
+            ],
+            "lr": cfg.training.learning_rate,
+            "weight_decay": cfg.training.weight_decay,
+        },
+        {
+            "params": [
+                param
+                for name, param in model.named_parameters()
+                if (not any(layer in name for layer in differential_layers))
+                and (any(nd in name for nd in no_decay))
+                and param.requires_grad
+            ],
+            "lr": cfg.training.learning_rate,
+            "weight_decay": 0,
+        },
+        {
+            "params": [
+                param
+                for name, param in model.named_parameters()
+                if (any(layer in name for layer in differential_layers))
+                and (not any(nd in name for nd in no_decay))
+                and param.requires_grad
+            ],
+            "lr": cfg.training.differential_learning_rate,
+            "weight_decay": cfg.training.weight_decay,
+        },
+        {
+            "params": [
+                param
+                for name, param in model.named_parameters()
+                if (any(layer in name for layer in differential_layers))
+                and (any(nd in name for nd in no_decay))
+                and param.requires_grad
+            ],
+            "lr": cfg.training.differential_learning_rate,
+            "weight_decay": 0,
+        },
+    ]
+
+    # Drop empty param groups so the optimizer's group count stays aligned with
+    # the LR scheduler: torch>=2.11 zips them with strict=True, and DeepSpeed
+    # cannot partition an empty group.
+    param_groups = [group for group in param_groups if group["params"]]
+
     optimizer = Optimizers.get(cfg.training.optimizer)(
-        [
-            {
-                "params": [
-                    param
-                    for name, param in model.named_parameters()
-                    if (not any(layer in name for layer in differential_layers))
-                    and (not any(nd in name for nd in no_decay))
-                    and param.requires_grad
-                ],
-                "lr": cfg.training.learning_rate,
-                "weight_decay": cfg.training.weight_decay,
-            },
-            {
-                "params": [
-                    param
-                    for name, param in model.named_parameters()
-                    if (not any(layer in name for layer in differential_layers))
-                    and (any(nd in name for nd in no_decay))
-                    and param.requires_grad
-                ],
-                "lr": cfg.training.learning_rate,
-                "weight_decay": 0,
-            },
-            {
-                "params": [
-                    param
-                    for name, param in model.named_parameters()
-                    if (any(layer in name for layer in differential_layers))
-                    and (not any(nd in name for nd in no_decay))
-                    and param.requires_grad
-                ],
-                "lr": cfg.training.differential_learning_rate,
-                "weight_decay": cfg.training.weight_decay,
-            },
-            {
-                "params": [
-                    param
-                    for name, param in model.named_parameters()
-                    if (any(layer in name for layer in differential_layers))
-                    and (any(nd in name for nd in no_decay))
-                    and param.requires_grad
-                ],
-                "lr": cfg.training.differential_learning_rate,
-                "weight_decay": 0,
-            },
-        ],
+        param_groups,
         lr=cfg.training.learning_rate,
         weight_decay=cfg.training.weight_decay,
     )
