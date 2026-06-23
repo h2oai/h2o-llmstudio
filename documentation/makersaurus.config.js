@@ -18,10 +18,10 @@ module.exports = {
   dependencies: {
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
-    // "@material-ui/core": "^5.0.0",
     "@material/card": "^14.0.0",
-    "@mui/icons-material": "^5.16.14",
     "@mui/material": "^5.15.17",
-    "react-player": "^2.16.0",
+    "react-player": "^2.11.0",
+    "@docusaurus/theme-mermaid": "3.6.3",
+    "webpack": "5.105.4"
   },
 };
