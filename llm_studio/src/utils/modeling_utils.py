@@ -432,6 +432,7 @@ def get_optimizer(
             ],
             "lr": cfg.training.learning_rate,
             "weight_decay": cfg.training.weight_decay,
+            "differential": False,
         },
         {
             "params": [
@@ -443,6 +444,7 @@ def get_optimizer(
             ],
             "lr": cfg.training.learning_rate,
             "weight_decay": 0,
+            "differential": False,
         },
         {
             "params": [
@@ -454,6 +456,7 @@ def get_optimizer(
             ],
             "lr": cfg.training.differential_learning_rate,
             "weight_decay": cfg.training.weight_decay,
+            "differential": True,
         },
         {
             "params": [
@@ -465,6 +468,7 @@ def get_optimizer(
             ],
             "lr": cfg.training.differential_learning_rate,
             "weight_decay": 0,
+            "differential": True,
         },
     ]
 

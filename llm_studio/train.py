@@ -356,13 +356,23 @@ def run_train(
                     / cfg.environment._step_log_denominator,
                 )
                 if cfg.training.differential_learning_rate_layers:
-                    cfg.logging._logger.log(
-                        "meta",
-                        "lr_diff",
-                        optimizer.param_groups[2]["lr"],
-                        step=cfg.environment._curr_step
-                        / cfg.environment._step_log_denominator,
-                    )
+                    # The differential param group is identified by a stable
+                    # marker rather than a fixed index: empty groups are dropped
+                    # in get_optimizer (torch>=2.11 alignment), so its position is
+                    # not guaranteed and it may be absent entirely.
+                    differential_lrs = [
+                        group["lr"]
+                        for group in optimizer.param_groups
+                        if group.get("differential")
+                    ]
+                    if differential_lrs:
+                        cfg.logging._logger.log(
+                            "meta",
+                            "lr_diff",
+                            differential_lrs[0],
+                            step=cfg.environment._curr_step
+                            / cfg.environment._step_log_denominator,
+                        )
 
                 cfg.logging._logger.log(
                     "internal",
