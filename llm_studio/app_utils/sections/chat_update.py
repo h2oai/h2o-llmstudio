@@ -248,8 +248,9 @@ class WaveChatStreamer(TextStreamer):
 
 
 def generate(model: Model, inputs: dict, cfg: Any, streamer: TextStreamer = None):
-    with torch.cuda.amp.autocast(
-        dtype=get_torch_dtype(cfg.environment.mixed_precision_dtype)
+    with torch.amp.autocast(
+        "cuda",
+        dtype=get_torch_dtype(cfg.environment.mixed_precision_dtype),
     ):
         output = model.generate(batch=inputs, cfg=cfg, streamer=streamer).detach().cpu()
     return output

@@ -23,7 +23,6 @@ import deepspeed
 import numpy as np
 import pandas as pd
 import torch
-from torch.cuda.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers.integrations import HfDeepSpeedConfig
@@ -193,10 +192,11 @@ def run_train(
     ):
         activate_neftune(model, cfg.augmentation.neftune_noise_alpha)
 
-    scaler: GradScaler | None = None
+    scaler: torch.amp.GradScaler | None = None
     if cfg.environment.mixed_precision:
-        scaler = GradScaler(
-            enabled=(cfg.environment.mixed_precision_dtype == "float16")
+        scaler = torch.amp.GradScaler(
+            "cuda",
+            enabled=(cfg.environment.mixed_precision_dtype == "float16"),
         )
 
     optimizer.zero_grad(set_to_none=True)
@@ -281,7 +281,8 @@ def run_train(
             # When using DeepSpeed, mixed precision is handled by the engine via
             # its bf16/fp16 config, so a nested torch.autocast must not be active
             # (newer DeepSpeed asserts against it).
-            with autocast(
+            with torch.amp.autocast(
+                "cuda",
                 enabled=cfg.environment.mixed_precision
                 and not cfg.environment.use_deepspeed,
                 dtype=get_torch_dtype(cfg.environment.mixed_precision_dtype),
