@@ -16,14 +16,8 @@ RUN apk update \
     && echo "https://packages.cgr.dev/extras" | tee -a /etc/apk/repositories \
     && apk update \
     && apk add --no-cache \
-    nvidia-cudnn-8 \
-    nvidia-cudnn-8-cuda-${CUDA_MAJOR_VERSION} \
-    nvidia-cudnn-8-cuda-${CUDA_MAJOR_VERSION}-dev \
     nvidia-cuda-cudart-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
-    nvidia-cuda-cudart-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION}-dev \
     nvidia-cuda-nvcc-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
-    nvidia-libcublas-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
-    cuda-toolkit-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION}-dev \
     make \
     curl \
     git
@@ -47,7 +41,6 @@ ENV PATH=/workspace/.venv/bin:$PATH
 
 # We need to create a mount point for the user to mount their volume
 # All persistent data lives in /mount
-RUN mkdir -p /mount 
 RUN mkdir -p /mount && chown -R nonroot:nonroot /mount
 ENV H2O_LLM_STUDIO_WORKDIR=/mount
 
