@@ -5,7 +5,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = "==3.10.*"
 dependencies = [
-    "torch==2.11.0",
+    "torch==2.13.0",
     "tqdm>=4.65.0,<5.0.0",
     "transformers==4.56.1",
     "numpy>=1.26.0, <2.0.0",
