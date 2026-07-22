@@ -168,6 +168,42 @@ When it comes to hardware requirements, it is important to note that the primary
 
 ----
 
+### How does H2O LLM Studio download models? Do I need a Hugging Face token?
+
+H2O LLM Studio does not ship with model weights. The LLM backbone weights are downloaded from the [Hugging Face Hub](https://huggingface.co) at runtime when an experiment that uses them is started, so the machine running H2O LLM Studio needs outbound access to `huggingface.co` (see [the FAQ below](#can-i-run-h2o-llm-studio-in-an-offline-or-airgapped-environment) for offline environments).
+
+Many of the default backbones (e.g., the `h2oai` models) are public and require no authentication. However, some models are gated (e.g., the `meta-llama` and `google/gemma` families) and require a Hugging Face token from an account that has been granted access to them. You can set the token in the app under **Settings** > **Hugging Face API Token** (the `HF_TOKEN` environment variable pre-populates this setting). The token is passed to experiments as `HF_TOKEN`.
+
+---
+
+### Can I change the models that are listed in the LLM Backbone dropdown?
+
+Yes. The default model lists are defined in [`llm_studio/app_utils/config.py`](https://github.com/h2oai/h2o-llmstudio/blob/main/llm_studio/app_utils/config.py) and can be overridden with comma-separated lists of Hugging Face model names using the following environment variables:
+
+- `H2O_LLM_STUDIO_DEFAULT_LM_MODELS`: default models for causal language modeling problem types
+- `H2O_LLM_STUDIO_DEFAULT_S2S_MODELS`: default models for sequence-to-sequence problem types
+
+For example:
+
+```sh
+H2O_LLM_STUDIO_DEFAULT_LM_MODELS="h2oai/h2o-danube3-500m-chat,h2oai/h2o-danube3-4b-chat" make llmstudio
+```
+
+Note that the **LLM Backbone** field also accepts custom values, so any Hugging Face model name can be typed in regardless of what the dropdown lists.
+
+---
+
+### Can I run H2O LLM Studio in an offline or airgapped environment?
+
+Yes, with preparation while you still have internet access:
+
+- **Pre-populate the local cache:** While connected, download every model you need (e.g., by starting a small experiment per backbone, or with `huggingface-cli download`) so the weights are stored in the local Hugging Face cache (configurable via the `HF_HOME` environment variable). Once cached, set `HF_HUB_OFFLINE=1` so the Hugging Face libraries use the cache without attempting network calls.
+- **Or use an internal mirror:** Mirror the required models to an internal Hugging Face-compatible endpoint (for example, an artifact mirror or, in H2O AI Cloud deployments, [Model Hub](https://github.com/h2oai/modelhub)) and point the app at it by setting the `HF_ENDPOINT` environment variable. Note that a Hugging Face token with granted access is needed at mirroring time for gated models.
+
+In both cases, it is recommended to override the default model lists (see [the FAQ above](#can-i-change-the-models-that-are-listed-in-the-llm-backbone-dropdown)) so that the dropdown only offers models that are actually available offline.
+
+---
+
 ### I am seeing an OS error during the H2O LLM Studio training session. What should I do? 
 
 If you receive the following error, it is most likely because of network issues either with your own connection or on the Hugging Face Hub side. 
