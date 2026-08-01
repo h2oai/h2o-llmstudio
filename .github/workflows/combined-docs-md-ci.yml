@@ -1,10 +1,6 @@
 name: Generate PDF Documentation
 
 on:
-  pull_request:
-    branches:
-      - "main"
-      - "pdf-documentation"
   workflow_dispatch:
     inputs:
       folder_path:
@@ -66,9 +62,9 @@ jobs:
 
       - name: Set environment variables
         env:
-          FOLDER_PATH: ${{ github.event.inputs.folder_path || './docs' }} # For manual runs or PR body
-          SIDEBAR_PATH: ${{ github.event.inputs.sidebar_path || './sidebars.js' }} # For manual runs or PR body
-          COMBINED_DOC_PATH: ${{ github.event.inputs.combined_md_file_path || './combined_docs.md' }} # For manual runs or PR body
+          FOLDER_PATH: ${{ github.event.inputs.folder_path || './docs' }} # Falls back to the input default
+          SIDEBAR_PATH: ${{ github.event.inputs.sidebar_path || './sidebars.js' }} # Falls back to the input default
+          COMBINED_DOC_PATH: ${{ github.event.inputs.combined_md_file_path || './combined_docs.md' }} # Falls back to the input default
           BRANCH_NAME: ${{ github.head_ref || github.ref }}
         run: |
           echo "FOLDER_PATH=${FOLDER_PATH}" >> $GITHUB_ENV
