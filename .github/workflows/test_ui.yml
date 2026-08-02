@@ -62,6 +62,7 @@ jobs:
   test-ui:
     needs: start-runner
     runs-on: ${{ needs.start-runner.outputs.label }}
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
 
@@ -75,8 +76,8 @@ jobs:
         with:
           python-version: "3.10.11"
       - run: nvidia-smi
-      - run: make setup-dev
-      - run: make test-ui-github-actions
+      - run: make setup-dev FLASH=0
+      - run: make test-ui-github-actions FLASH=0
 
       # Post-Action Cleanup
       - name: Clean workspace after action
