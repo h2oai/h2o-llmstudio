@@ -58,6 +58,9 @@ jobs:
   test:
     needs: start-runner
     runs-on: ${{ needs.start-runner.outputs.label }}
+    # Bounded so a hung job releases the EC2 runner instead of burning the
+    # 6h default.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
 
@@ -71,7 +74,10 @@ jobs:
         with:
           python-version: "3.10.11"
       - run: nvidia-smi
-      - run: make setup-dev
+      # FLASH=0: flash-attn has no wheel for torch 2.11+cu130 and its source
+      # build OOM-kills this runner. It is an optional backend the test suite
+      # never exercises. See the FLASH comment in the Makefile.
+      - run: make setup-dev FLASH=0
       - run: make test
 
       # Post-Action Cleanup

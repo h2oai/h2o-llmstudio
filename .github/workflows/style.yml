@@ -24,5 +24,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: 3.10.11
-      - run: make setup-dev
+      # FLASH=0: this runner has no CUDA toolchain, so the flash-attn source
+      # build can only fail here. See the FLASH comment in the Makefile.
+      - run: make setup-dev FLASH=0
       - run: make format-check
