@@ -34,7 +34,8 @@ Use the following code snippet to utilize the converted model in Jupyter Noteboo
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-model_name = "path_to_downloaded_model"  # either local folder or Hugging Face model name
+# either local folder or Hugging Face model name
+model_name = "path_to_downloaded_model"
 
 # Important: The prompt needs to be in the same format the model was trained with.
 # You can find an example prompt in the experiment logs.
@@ -51,9 +52,9 @@ tokens = model.generate(
     max_new_tokens=256,
     temperature=0.3,
     repetition_penalty=1.2,
-    num_beams=1
+    num_beams=1,
 )[0]
-tokens = tokens[inputs["input_ids"].shape[1]:]
+tokens = tokens[inputs["input_ids"].shape[1] :]
 answer = tokenizer.decode(tokens, skip_special_tokens=True)
 print(answer)
 ```
