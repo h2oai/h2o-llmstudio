@@ -18,13 +18,7 @@ else
     PW_DEBUG =
 endif
 
-# flash-attn publishes no wheel for our torch/CUDA pair: 2.8.3's CUDA-13 builds
-# stop at torch 2.10, and we are on 2.11.0+cu130. `--extra flash` therefore always
-# falls back to compiling from source -- 73 nvcc units across four GPU archs
-# (sm_80/90/100/120) -- which OOM-kills CI's 8-vCPU/32GB runner after hours having
-# reached unit 4 of 73. Set FLASH=0 to skip it; CI does. The `-` prefix stays so a
-# failed build is never fatal: flash-attn is an optional runtime attention backend
-# and nothing in the test suite exercises it.
+# flash-attn is an optional runtime attention backend
 FLASH ?= 1
 
 .PHONY: uv
