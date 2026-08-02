@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && format('{0}', github.run_id) || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   style:
     runs-on: ubuntu-latest
