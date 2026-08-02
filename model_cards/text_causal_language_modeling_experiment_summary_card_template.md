@@ -36,9 +36,6 @@ generate_text = pipeline(
 
 messages = {{sample_messages}}
 
-res = generate_text(
-    messages,
-    renormalize_logits=True
-)
-print(res[0]["generated_text"][-1]['content'])
+res = generate_text(messages, renormalize_logits=True)
+print(res[0]["generated_text"][-1]["content"])
 ```
