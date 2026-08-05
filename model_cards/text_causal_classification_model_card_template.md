@@ -56,12 +56,16 @@ tokenizer = AutoTokenizer.from_pretrained(
     model_name,
     trust_remote_code={{trust_remote_code}},
 )
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    torch_dtype="auto",
-    device_map={"": "cuda:0"},
-    trust_remote_code={{trust_remote_code}},
-).cuda().eval()
+model = (
+    AutoModelForCausalLM.from_pretrained(
+        model_name,
+        torch_dtype="auto",
+        device_map={"": "cuda:0"},
+        trust_remote_code={{trust_remote_code}},
+    )
+    .cuda()
+    .eval()
+)
 
 head_weights = torch.load("classification_head.pth", map_location="cuda")
 # settings can be arbitrary here as we overwrite with saved weights
@@ -72,7 +76,7 @@ inputs = tokenizer(prompt, return_tensors="pt", add_special_tokens=False).to("cu
 
 out = model(**inputs).logits
 
-logits = head(out[:,-1])
+logits = head(out[:, -1])
 
 print(logits)
 ```

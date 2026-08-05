@@ -57,21 +57,20 @@ generate_text = pipeline(
 
 messages = {{sample_messages}}
 
-res = generate_text(
-    messages,
-    renormalize_logits=True
-)
-print(res[0]["generated_text"][-1]['content'])
+res = generate_text(messages, renormalize_logits=True)
+print(res[0]["generated_text"][-1]["content"])
 ```
 
 You can print a sample prompt after applying chat template to see how it is feed to the tokenizer:
 
 ```python
-print(generate_text.tokenizer.apply_chat_template(
-    messages,
-    tokenize=False,
-    add_generation_prompt=True,
-))
+print(
+    generate_text.tokenizer.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True,
+    )
+)
 ```
 
 You may also construct the pipeline from the loaded model and tokenizer yourself and consider the preprocessing steps:
@@ -115,10 +114,10 @@ inputs = tokenizer.apply_chat_template(
 tokens = model.generate(
     input_ids=inputs["input_ids"],
     attention_mask=inputs["attention_mask"],
-    renormalize_logits=True
+    renormalize_logits=True,
 )[0]
 
-tokens = tokens[inputs["input_ids"].shape[1]:]
+tokens = tokens[inputs["input_ids"].shape[1] :]
 answer = tokenizer.decode(tokens, skip_special_tokens=True)
 print(answer)
 ```

@@ -9,6 +9,10 @@ permissions:
   id-token: write
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && format('{0}', github.run_id) || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   start-runner:
     name: Start self-hosted EC2 runner
@@ -19,7 +23,7 @@ jobs:
       ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
     steps:
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c  # v6.2.3
         with:
           aws-region: us-east-1
           role-session-name: h2o-llmstudio-ec2
@@ -27,14 +31,25 @@ jobs:
 
       - name: Start EC2 runner
         id: start-ec2-runner
-        uses: machulav/ec2-github-runner@v2.3.8
+        uses: machulav/ec2-github-runner@343a1b2ae682e681c3cec9a235d882da17ff04ef  # v2.6.1
         with:
           mode: start
           github-token: ${{ secrets.GH_RUNNER_PAT }}
-          ec2-image-id: ${{ secrets.GH_RUNNER_EC2_IMAGE_ID }}
           ec2-instance-type: ${{ secrets.GH_RUNNER_EC2_INSTANCE_TYPE }}
-          subnet-id: ${{ secrets.GH_RUNNER_SUBNET_ID }}
-          security-group-id: ${{ secrets.GH_RUNNER_SECURITY_GROUP_ID }}
+          # Try each AZ in turn until one has capacity. Launching into a single
+          # subnet failed the whole run on InsufficientInstanceCapacity; these are
+          # the same four us-east-1 subnets h2o-llmstudio-enterprise and
+          # hydrogen_torch fall back across. availability-zones-config takes
+          # precedence over ec2-image-id / subnet-id / security-group-id, which
+          # are dropped. All four subnet secrets must be set — an unset one
+          # renders as an empty subnetId and that AZ's launch attempt errors.
+          availability-zones-config: >
+            [
+              {"imageId": "${{ secrets.GH_RUNNER_EC2_IMAGE_ID }}", "subnetId": "${{ secrets.GH_RUNNER_SUBNET_ID }}", "securityGroupId": "${{ secrets.GH_RUNNER_SECURITY_GROUP_ID }}"},
+              {"imageId": "${{ secrets.GH_RUNNER_EC2_IMAGE_ID }}", "subnetId": "${{ secrets.GH_RUNNER_SUBNET_ID_2 }}", "securityGroupId": "${{ secrets.GH_RUNNER_SECURITY_GROUP_ID }}"},
+              {"imageId": "${{ secrets.GH_RUNNER_EC2_IMAGE_ID }}", "subnetId": "${{ secrets.GH_RUNNER_SUBNET_ID_3 }}", "securityGroupId": "${{ secrets.GH_RUNNER_SECURITY_GROUP_ID }}"},
+              {"imageId": "${{ secrets.GH_RUNNER_EC2_IMAGE_ID }}", "subnetId": "${{ secrets.GH_RUNNER_SUBNET_ID_4 }}", "securityGroupId": "${{ secrets.GH_RUNNER_SECURITY_GROUP_ID }}"}
+            ]
           aws-resource-tags: >
             [
               {"Key": "h2o/gitHub-repository", "Value": "${{ github.repository }}"},
@@ -47,6 +62,7 @@ jobs:
   test-ui:
     needs: start-runner
     runs-on: ${{ needs.start-runner.outputs.label }}
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
 
@@ -60,8 +76,8 @@ jobs:
         with:
           python-version: "3.10.11"
       - run: nvidia-smi
-      - run: make setup-dev
-      - run: make test-ui-github-actions
+      - run: make setup-dev FLASH=0
+      - run: make test-ui-github-actions FLASH=0
 
       # Post-Action Cleanup
       - name: Clean workspace after action
@@ -76,13 +92,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials for EC2 Runner Management
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c  # v6.2.3
         with:
           aws-region: us-east-1
           role-session-name: h2o-llmstudio-ec2
           role-to-assume: ${{ secrets.GH_OIDC_ROLE_LLM_STUDIO_ENTERPRISE }}
       - name: Stop EC2 runner
-        uses: machulav/ec2-github-runner@v2.3.8
+        uses: machulav/ec2-github-runner@343a1b2ae682e681c3cec9a235d882da17ff04ef  # v2.6.1
         with:
           mode: stop
           github-token: ${{ secrets.GH_RUNNER_PAT }}

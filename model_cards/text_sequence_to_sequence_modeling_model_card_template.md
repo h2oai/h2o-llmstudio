@@ -60,7 +60,7 @@ tokens = model.generate(
     num_beams={{num_beams}},
     temperature=float({{temperature}}),
     repetition_penalty=float({{repetition_penalty}}),
-    renormalize_logits=True
+    renormalize_logits=True,
 )[0]
 
 answer = tokenizer.decode(tokens, skip_special_tokens=True)
