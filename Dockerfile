@@ -58,7 +58,7 @@ COPY --chown=nonroot:nonroot ./entrypoint.sh /workspace/entrypoint.sh
 COPY --chown=nonroot:nonroot ./pyproject.toml /workspace/pyproject.toml
 
 ENV HF_HOME=/mount/huggingface
-ENV TRITON_CACHE_DIR=/mount/.triton/cache
+ENV TRITON_CACHE_DIR=/tmp/.triton/cache
 ENV H2O_WAVE_DATA_DIR=/mount/wave_data
 ENV HF_HUB_DISABLE_TELEMETRY=1
 ENV DO_NOT_TRACK=1
