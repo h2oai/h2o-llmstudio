@@ -17,7 +17,7 @@ BusyBox honours both -P and -T. Verified on an affected node:
     df -T  /mount  -> second line has 1 field  (device wrapped)
     df -PT /mount  -> second line has 7 fields (single line)
 
-Upstream issue: https://github.com/deepspeedai/DeepSpeed/issues/TBD
+Upstream issue: https://github.com/deepspeedai/DeepSpeed/issues/8249
 
 --- a/deepspeed/ops/transformer/inference/triton/matmul_ext.py
 +++ b/deepspeed/ops/transformer/inference/triton/matmul_ext.py
