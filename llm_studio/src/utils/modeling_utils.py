@@ -7,12 +7,9 @@ from collections import OrderedDict
 from typing import Any
 
 import coolname
-import deepspeed
 import numpy as np
 import torch
 import transformers
-from deepspeed.runtime.dataloader import DeepSpeedDataLoader
-from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
 from peft import LoraConfig, PeftModel, get_peft_model
 from torch.nn.parallel import DistributedDataParallel
 from tqdm import tqdm
@@ -146,6 +143,10 @@ def save_checkpoint(
             )
             model.save_checkpoint(os.path.join(path, "ds_checkpoint"))
             if cfg.environment._local_rank == 0:
+                from deepspeed.utils.zero_to_fp32 import (
+                    get_fp32_state_dict_from_zero_checkpoint,
+                )
+
                 # load to cpu
                 state_dict = get_fp32_state_dict_from_zero_checkpoint(
                     os.path.join(path, "ds_checkpoint")
@@ -361,6 +362,9 @@ def wrap_model_distributed(
     cfg: DefaultConfigProblemBase,
 ):
     if cfg.environment.use_deepspeed:
+        import deepspeed
+        from deepspeed.runtime.dataloader import DeepSpeedDataLoader
+
         ds_config = get_ds_config(cfg)
         if not cfg.training.lora:
             ds_engine, optimizer, train_dataloader, lr_scheduler = deepspeed.initialize(
