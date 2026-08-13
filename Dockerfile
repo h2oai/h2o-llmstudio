@@ -20,7 +20,8 @@ RUN apk update \
     nvidia-cuda-nvcc-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION} \
     make \
     curl \
-    git
+    git \
+    patch
 
 WORKDIR /workspace
 
@@ -33,6 +34,17 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 RUN --mount=type=bind,src=pyproject.toml,target=pyproject.toml \
     --mount=type=bind,src=uv.lock,target=uv.lock \
     /root/.local/bin/uv sync --frozen --no-cache --no-dev
+
+# Apply source patches to installed third-party packages. See patches/ for why
+# each one exists; they are removed once the fix is released upstream.
+RUN --mount=type=bind,src=patches,target=/tmp/patches \
+    SITE_PACKAGES=$(/workspace/.venv/bin/python -c "import sysconfig; print(sysconfig.get_paths()['purelib'])") \
+    && for p in /tmp/patches/*.patch; do \
+        [ -e "$p" ] || continue; \
+        echo "Applying $(basename "$p") ..."; \
+        patch -d "$SITE_PACKAGES" -p1 --forward -r - < "$p" \
+            || { [ $? -eq 1 ] && echo "  (already applied, skipping)"; }; \
+    done
 
 # Add the venv to the PATH
 ENV PATH=/workspace/.venv/bin:$PATH

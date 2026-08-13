@@ -1,0 +1,32 @@
+Fix IndexError in is_nfs_path when `df` wraps a long device name.
+
+DeepSpeed runs `df -T <path>` and reads the filesystem type from the second
+column of the second line. BusyBox `df` wraps a device name longer than ~20
+characters onto its own line, so that line holds only the device, `.split()`
+returns a single element, and `[1]` raises IndexError.
+
+This kills the process at `import deepspeed`, because the call sits at module
+scope in matmul_ext.py -- and it only ever exists to print an NFS warning.
+
+Long device names are normal on AWS: the EBS device name is derived from the
+volume id, e.g. vol-05d356c8837b6754f -> /dev/dvol05d356c8837b6754f (25 chars).
+
+`df -P` is POSIX and guarantees one line per filesystem, suppressing the wrap.
+BusyBox honours both -P and -T. Verified on an affected node:
+
+    df -T  /mount  -> second line has 1 field  (device wrapped)
+    df -PT /mount  -> second line has 7 fields (single line)
+
+Upstream issue: https://github.com/deepspeedai/DeepSpeed/issues/8249
+
+--- a/deepspeed/ops/transformer/inference/triton/matmul_ext.py
++++ b/deepspeed/ops/transformer/inference/triton/matmul_ext.py
+@@ -27,7 +27,7 @@
+ 
+     # Use the 'df' command to find the file system type for the given path
+     try:
+-        output = subprocess.check_output(['df', '-T', path], encoding='utf-8')
++        output = subprocess.check_output(['df', '-PT', path], encoding='utf-8')
+     except subprocess.CalledProcessError:
+         return False  # Command failed
+ 

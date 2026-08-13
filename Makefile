@@ -31,6 +31,7 @@ setup: uv  # Install dependencies
 ifeq ($(FLASH),1)
 	-$(UV) sync --frozen --no-dev --extra flash
 endif
+	@$(MAKE) apply-patches
 
 .PHONY: setup-dev
 setup-dev: uv  # Install dependencies including dev dependencies
@@ -39,6 +40,25 @@ ifeq ($(FLASH),1)
 	-$(UV) sync --frozen --group dev --extra flash
 endif
 	$(UV) run playwright install
+	@$(MAKE) apply-patches
+
+SITE_PACKAGES ?= $(shell $(RUN) python -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")
+
+.PHONY: apply-patches
+apply-patches:  # apply source patches to installed third-party packages
+	@for p in patches/*.patch; do \
+		[ -e "$$p" ] || continue; \
+		echo "Applying $$p ..."; \
+		patch -d $(SITE_PACKAGES) -p1 --forward -r - < "$$p" || \
+			{ [ $$? -eq 1 ] && echo "  (already applied, skipping)"; }; \
+	done
+
+.PHONY: revert-patches
+revert-patches:  # revert source patches from installed third-party packages
+	@for p in $$(ls -r patches/*.patch 2>/dev/null); do \
+		echo "Reverting $$p ..."; \
+		patch -d $(SITE_PACKAGES) -p1 -R --forward -r - < "$$p" || true; \
+	done
 
 clean-env:
 	rm -rf .venv
