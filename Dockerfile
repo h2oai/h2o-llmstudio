@@ -10,7 +10,6 @@ ENV NVIDIA_VISIBLE_DEVICES="all"
 USER root
 
 RUN apk update \
-    && apk upgrade \
     && apk add wget \
     && wget -O /etc/apk/keys/chainguard-extras.rsa.pub https://packages.cgr.dev/extras/chainguard-extras.rsa.pub \
     && echo "https://packages.cgr.dev/extras" | tee -a /etc/apk/repositories \
