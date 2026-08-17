@@ -56,12 +56,11 @@ Please make sure your pull request fulfills the following checklist:
 
 ## Installing custom packages
 
-If you need to install additional Python packages into the environment, you can do so using pip after activating your virtual environment via ```make shell```. For example, to install flash-attention, you would use the following commands:
+If you need to install additional Python packages into the environment, you can do so using pip after activating your virtual environment via ```make shell```. For example:
 
 ```bash
 make shell
-pip install flash-attn --no-build-isolation
-pip install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
+pip install package_name
 ```
 
 For a PR, update the pyproject.toml and the uv.lock via ```uv add package_name```.

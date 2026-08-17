@@ -18,9 +18,6 @@ else
     PW_DEBUG =
 endif
 
-# flash-attn is an optional runtime attention backend
-FLASH ?= 1
-
 .PHONY: uv
 uv:
 	curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -28,17 +25,11 @@ uv:
 .PHONY: setup
 setup: uv  # Install dependencies
 	$(UV) sync --frozen --no-dev
-ifeq ($(FLASH),1)
-	-$(UV) sync --frozen --no-dev --extra flash
-endif
 	@$(MAKE) apply-patches
 
 .PHONY: setup-dev
 setup-dev: uv  # Install dependencies including dev dependencies
 	$(UV) sync --frozen --group dev
-ifeq ($(FLASH),1)
-	-$(UV) sync --frozen --group dev --extra flash
-endif
 	$(UV) run playwright install
 	@$(MAKE) apply-patches
 
