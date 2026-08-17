@@ -3,7 +3,6 @@ import socket
 from types import SimpleNamespace
 
 import toml
-from huggingface_hub.constants import _is_true
 
 toml_root_dir = os.path.abspath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "../..")
@@ -161,9 +160,6 @@ default_cfg = {
         "default_wandb_project": os.getenv("WANDB_PROJECT", ""),
         "default_wandb_entity": os.getenv("WANDB_ENTITY", ""),
         "default_huggingface_api_token": os.getenv("HF_TOKEN", ""),
-        "default_hf_hub_enable_hf_transfer": _is_true(
-            os.getenv("HF_HUB_ENABLE_HF_TRANSFER", "1")
-        ),
         "default_openai_azure": os.getenv("OPENAI_API_TYPE", "open_ai") == "azure",
         "default_openai_api_token": os.getenv("OPENAI_API_KEY", ""),
         "default_openai_api_base": os.getenv(
