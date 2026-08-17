@@ -4,7 +4,12 @@ from llm_studio.python_configs.text_causal_language_modeling_config import (
     ConfigProblemBase,
 )
 from llm_studio.src.models.text_causal_language_modeling_model import Model
-from llm_studio.src.utils.modeling_utils import TokenStoppingCriteria, activate_neftune
+from llm_studio.src.utils.modeling_utils import (
+    TokenStoppingCriteria,
+    activate_neftune,
+    load_checkpoint,
+    save_checkpoint,
+)
 
 
 def test_token_stopping_criteria():
@@ -81,3 +86,29 @@ def test_neftune_is_disabled_in_inference():
 
     # state dict does not contain neftune noise
     assert [key for key in model.state_dict() if "neftune" in key] == []
+
+
+def test_lora_checkpoint_round_trip(tmp_path):
+    cfg = ConfigProblemBase(llm_backbone="h2oai/llama2-0b-unit-test")
+    cfg.architecture.backbone_dtype = "float32"
+    model = Model(cfg)
+
+    parameter_name, parameter = next(
+        (name, parameter)
+        for name, parameter in model.named_parameters()
+        if parameter.requires_grad
+    )
+    with torch.no_grad():
+        parameter.add_(1)
+    expected = parameter.detach().clone()
+
+    save_checkpoint(model, str(tmp_path), cfg)
+    reloaded = Model(cfg)
+    load_checkpoint(
+        cfg,
+        reloaded,
+        strict=True,
+        weights_path=str(tmp_path / "checkpoint.pth"),
+    )
+
+    assert torch.equal(dict(reloaded.named_parameters())[parameter_name], expected)

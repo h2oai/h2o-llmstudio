@@ -191,6 +191,10 @@ def _load_model_weights(
     orig_num_items = len(model_weights)
     model_state_dict = model.state_dict()
 
+    model_weights = {re.sub(r"^module\.", "", k): v for k, v in model_weights.items()}
+    model_weights = {k.replace("_orig_mod.", ""): v for k, v in model_weights.items()}
+    model_weights = _remap_transformers_checkpoint_keys(model_weights, model_state_dict)
+
     # needed to load models trained in int4/int8 with other dtypes
     model_weights = {
         k: (
@@ -211,9 +215,6 @@ def _load_model_weights(
     # Need to ignore int4/int8 weights so undo strict loading requirement
     if len(model_weights) != orig_num_items:
         strict = False
-
-    model_weights = {re.sub(r"^module\.", "", k): v for k, v in model_weights.items()}
-    model_weights = {k.replace("_orig_mod.", ""): v for k, v in model_weights.items()}
 
     # manual fix for int8 weights
     if cfg.architecture.backbone_dtype == "int8":
@@ -238,6 +239,25 @@ def _load_model_weights(
                 model_weights.pop(layer_name, None)
             model.load_state_dict(OrderedDict(model_weights), strict=False)
     return model
+
+
+def _remap_transformers_checkpoint_keys(model_weights, model_state_dict):
+    """Map raw LLM Studio checkpoints across upstream module renames."""
+    remapped_weights = dict(model_weights)
+    for key in tuple(remapped_weights):
+        new_key = re.sub(r"(^|\.)embed_out(?=\.)", r"\1lm_head", key)
+        if (
+            new_key != key
+            and new_key in model_state_dict
+            and new_key not in remapped_weights
+        ):
+            remapped_weights[new_key] = remapped_weights.pop(key)
+            logger.warning(
+                "Remapped legacy Transformers checkpoint key %s to %s.",
+                key,
+                new_key,
+            )
+    return remapped_weights
 
 
 def load_checkpoint(
@@ -726,14 +746,19 @@ def update_backbone_config(config: Any, cfg: DefaultConfigProblemBase):
 
     tokenizer = get_tokenizer(cfg)
 
-    if config.eos_token_id != tokenizer.eos_token_id:
+    # Transformers 5 removed shared token defaults from PretrainedConfig.
+    if hasattr(config, "eos_token_id") and (
+        config.eos_token_id != tokenizer.eos_token_id
+    ):
         logger.warning(
             "EOS token id not matching between config and tokenizer. "
             f"Overwriting {config.eos_token_id} with "
             f"tokenizer id {tokenizer.eos_token_id}."
         )
         config.eos_token_id = tokenizer.eos_token_id
-    if config.pad_token_id != tokenizer.pad_token_id:
+    if hasattr(config, "pad_token_id") and (
+        config.pad_token_id != tokenizer.pad_token_id
+    ):
         logger.warning(
             "PAD token id not matching between config and tokenizer. "
             f"Overwriting {config.pad_token_id} with "
@@ -741,7 +766,9 @@ def update_backbone_config(config: Any, cfg: DefaultConfigProblemBase):
         )
         config.pad_token_id = tokenizer.pad_token_id
     # no warning needed as not used
-    if config.bos_token_id != tokenizer.bos_token_id:
+    if hasattr(config, "bos_token_id") and (
+        config.bos_token_id != tokenizer.bos_token_id
+    ):
         config.bos_token_id = tokenizer.bos_token_id
 
     if "mpt-" in cfg.llm_backbone:
@@ -861,9 +888,12 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
 
     backbone.model_parallel = False
 
-    logger.info(
-        f"Attention implementation: {backbone.config._attn_implementation_internal}"
+    attention_implementation = getattr(
+        backbone.config,
+        "_attn_implementation_internal",
+        getattr(backbone.config, "_attn_implementation", None),
     )
+    logger.info(f"Attention implementation: {attention_implementation}")
 
     if cfg.training.lora:
         # if used, gradient checkpointing will be enabled below
@@ -902,20 +932,26 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
         )
 
     # initialize the generation config
-    if backbone.generation_config.eos_token_id != config.eos_token_id:
+    if hasattr(config, "eos_token_id") and (
+        backbone.generation_config.eos_token_id != config.eos_token_id
+    ):
         logger.warning(
             "EOS token id not matching between generation config and tokenizer. "
             "Overwriting with tokenizer id."
         )
         backbone.generation_config.eos_token_id = config.eos_token_id
-    if backbone.generation_config.pad_token_id != config.pad_token_id:
+    if hasattr(config, "pad_token_id") and (
+        backbone.generation_config.pad_token_id != config.pad_token_id
+    ):
         logger.warning(
             "PAD token id not matching between generation config and tokenizer. "
             "Overwriting with tokenizer id."
         )
         backbone.generation_config.pad_token_id = config.pad_token_id
     # no warning needed as not used
-    if backbone.generation_config.bos_token_id != config.bos_token_id:
+    if hasattr(config, "bos_token_id") and (
+        backbone.generation_config.bos_token_id != config.bos_token_id
+    ):
         backbone.generation_config.bos_token_id = config.bos_token_id
 
     if cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES:

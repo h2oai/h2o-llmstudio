@@ -220,7 +220,8 @@ def test_getitem():
 
     assert (
         dataset.tokenizer.decode(result["input_ids"], skip_special_tokens=False)
-        == "<|endoftext|>" * 475
+        # Transformers 5 recognizes Pythia's dedicated padding token.
+        == "<|padding|>" * 475
         + "System:system 1"
         "<|endoftext|>"
         "Prompt:prompt 1"

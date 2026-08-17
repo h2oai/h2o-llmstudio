@@ -37,7 +37,3 @@ Value = "True"
 [[Env]]
 Name = "H2O_WAVE_PRIVATE_DIR"
 Value = "/download/@/mount/output/download"
-
-[[Env]]
-Name = "HF_HUB_ENABLE_HF_TRANSFER"
-Value = "0"
