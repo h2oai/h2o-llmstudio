@@ -227,7 +227,6 @@ class ConfigNLPCausalLMTraining(DefaultConfig):
             values=(
                 ("auto", "Auto"),
                 ("eager", "Eager"),
-                ("flash_attention_2", "Flash Attention 2"),
                 ("sdpa", "SDPA"),
             ),
             allow_custom=False,

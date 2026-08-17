@@ -1,14 +1,17 @@
 import os
 import tempfile
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
 import torch
 
 from llm_studio.src.utils.modeling_utils import (
+    _load_model_weights,
     check_disk_space,
     load_checkpoint,
     save_checkpoint,
+    update_backbone_config,
     unwrap_model,
 )
 
@@ -111,3 +114,40 @@ def test_load_checkpoint_mismatch():
         with pytest.raises(RuntimeError):
             load_checkpoint(cfg, model, strict=True)
         load_checkpoint(cfg, model, strict=False)
+
+
+def test_load_transformers_4_gpt_neox_checkpoint_key():
+    model = torch.nn.Module()
+    model.backbone = torch.nn.Module()
+    model.backbone.lm_head = torch.nn.Linear(2, 2, bias=False)
+    expected = torch.arange(4, dtype=torch.float32).reshape(2, 2)
+    legacy_weights = {"module.backbone.embed_out.weight": expected}
+    cfg = SimpleNamespace(
+        architecture=SimpleNamespace(backbone_dtype="float32"),
+        environment=SimpleNamespace(_device=torch.device("cpu")),
+    )
+
+    _load_model_weights(model, legacy_weights, strict=True, cfg=cfg)
+
+    assert torch.equal(model.backbone.lm_head.weight, expected)
+
+
+def test_update_backbone_config_handles_missing_special_token_attributes():
+    config = SimpleNamespace(eos_token_id=7, pad_token_id=8)
+    tokenizer = SimpleNamespace(eos_token_id=1, pad_token_id=0, bos_token_id=2)
+    cfg = SimpleNamespace(
+        llm_backbone="t5-small",
+        architecture=SimpleNamespace(intermediate_dropout=0),
+        environment=SimpleNamespace(_device=torch.device("cpu")),
+        training=SimpleNamespace(lora=False),
+    )
+
+    with patch(
+        "llm_studio.src.utils.modeling_utils.get_tokenizer",
+        return_value=tokenizer,
+    ):
+        update_backbone_config(config, cfg)
+
+    assert config.eos_token_id == tokenizer.eos_token_id
+    assert config.pad_token_id == tokenizer.pad_token_id
+    assert not hasattr(config, "bos_token_id")

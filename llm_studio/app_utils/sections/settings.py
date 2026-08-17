@@ -283,27 +283,6 @@ async def settings(q: Q) -> None:
             ),
             ui.inline(
                 items=[
-                    ui.label("Hugging Face Hub Enable HF Transfer", width=label_width),
-                    ui.toggle(
-                        name="default_hf_hub_enable_hf_transfer",
-                        value=(
-                            True
-                            if q.client["default_hf_hub_enable_hf_transfer"]
-                            else False
-                        ),
-                        tooltip=(
-                            "Toggle to enable \
-                            <a href='https://github.com/huggingface/hf_transfer' \
-                            target='_blank'>HF Transfer</a> for faster \
-                            downloads. Toggle, if you are experiencing issues on down-\
-                            or upload. EXPERIMENTAL."
-                        ),
-                        trigger=False,
-                    ),
-                ]
-            ),
-            ui.inline(
-                items=[
                     ui.label("OpenAI API Token", width=label_width),
                     ui.textbox(
                         name="default_openai_api_token",

@@ -4,7 +4,8 @@ import logging
 import os
 
 from pandas import DataFrame
-from transformers import AutoTokenizer
+from tokenizers import normalizers, pre_tokenizers
+from transformers import AutoTokenizer, TokenizersBackend
 
 from llm_studio.python_configs.base import DefaultConfigProblemBase
 
@@ -31,6 +32,112 @@ def get_texts(df: DataFrame, cfg: DefaultConfigProblemBase):
     return texts
 
 
+def remove_prefix_space(tokenizer) -> bool:
+    """Stop a tokenizer from prepending a space to every encoded text.
+
+    LLM Studio encodes conversation components separately and concatenates their
+    token ids. Transformers 5 no longer synchronizes add_prefix_space with
+    every loaded tokenizer backend, so an ignored value would insert word
+    boundaries between system, prompt, and answer components.
+
+    Returns:
+        Whether a prefix-space behavior was removed from the backend.
+    """
+    backend = getattr(tokenizer, "backend_tokenizer", None)
+    if backend is None:
+        return False
+
+    removed = _remove_pre_tokenizer_prefix_space(backend)
+
+    # A Prepend normalizer cannot be reconfigured, so remove it.
+    normalizer = backend.normalizer
+    if type(normalizer).__name__ == "Prepend":
+        backend.normalizer = None
+        removed = True
+    elif isinstance(normalizer, normalizers.Sequence):
+        kept = [
+            component
+            for component in normalizer
+            if type(component).__name__ != "Prepend"
+        ]
+        if len(kept) < len(normalizer):
+            backend.normalizer = normalizers.Sequence(kept)
+            removed = True
+
+    return removed
+
+
+def _remove_pre_tokenizer_prefix_space(backend) -> bool:
+    """Reconfigure a tokenizers backend not to add a prefix space."""
+    pre_tokenizer = backend.pre_tokenizer
+    if pre_tokenizer is None:
+        return False
+
+    # Sequence is iterable but exposes no useful public components attribute.
+    try:
+        components = list(pre_tokenizer)
+        is_sequence = True
+    except TypeError:
+        components = [pre_tokenizer]
+        is_sequence = False
+
+    removed = False
+    prepending = [
+        component
+        for component in components
+        if getattr(component, "prepend_scheme", "never") != "never"
+    ]
+    for component in prepending:
+        component.prepend_scheme = "never"
+        removed = True
+
+    for component in components:
+        if getattr(component, "add_prefix_space", False):
+            component.add_prefix_space = False
+            removed = True
+
+    if prepending:
+        # WhitespaceSplit hides whether the first word really had leading
+        # whitespace. Let Metaspace see the original whitespace instead.
+        components = [
+            component
+            for component in components
+            if type(component).__name__ != "WhitespaceSplit"
+        ]
+
+    if is_sequence:
+        backend.pre_tokenizer = pre_tokenizers.Sequence(components)
+
+    return removed
+
+
+def _as_serializable_tokenizer_backend(tokenizer):
+    """Preserve an edited backend when model-specific classes rebuild on load."""
+    tokenizer_class = type(tokenizer)
+    if (
+        tokenizer_class is TokenizersBackend
+        or "__init__" not in tokenizer_class.__dict__
+    ):
+        return tokenizer
+
+    kwargs = dict(tokenizer.init_kwargs)
+    kwargs.update(tokenizer.special_tokens_map)
+    for key in (
+        "added_tokens_decoder",
+        "is_local",
+        "local_files_only",
+        "name_or_path",
+        "tokenizer_file",
+        "vocab_file",
+    ):
+        kwargs.pop(key, None)
+
+    return TokenizersBackend(
+        tokenizer_object=tokenizer.backend_tokenizer,
+        **kwargs,
+    )
+
+
 def get_tokenizer(cfg: DefaultConfigProblemBase):
     kwargs = dict(
         revision=cfg.environment.huggingface_branch,
@@ -38,15 +145,8 @@ def get_tokenizer(cfg: DefaultConfigProblemBase):
         token=os.getenv("HF_TOKEN"),
     )
 
-    # We will be able to remove this after
-    # https://github.com/huggingface/transformers/pull/30964
-    tokenizer_class = AutoTokenizer.from_pretrained(
-        cfg.llm_backbone, **kwargs
-    ).__class__
-    if tokenizer_class.__name__ in ["LlamaTokenizer", "LlamaTokenizerFast"]:
-        kwargs["from_slow"] = True
-
     kwargs.update(json.loads(cfg.tokenizer.tokenizer_kwargs.strip()))
+    add_prefix_space = kwargs.get("add_prefix_space", True)
 
     try:
         tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
@@ -60,10 +160,17 @@ def get_tokenizer(cfg: DefaultConfigProblemBase):
         elif "not a string" in error_message:
             # https://github.com/h2oai/h2o-llmstudio/issues/623
             kwargs.pop("add_prefix_space", None)
-            kwargs.pop("from_slow", None)
             tokenizer = AutoTokenizer.from_pretrained(cfg.llm_backbone, **kwargs)
         else:
             raise e
+
+    if not add_prefix_space and remove_prefix_space(tokenizer):
+        tokenizer = _as_serializable_tokenizer_backend(tokenizer)
+        logger.info(
+            "Tokenizer of %s ignored add_prefix_space=False; its backend was "
+            "updated and made serialization-safe.",
+            cfg.llm_backbone,
+        )
 
     tokenizer.padding_side = getattr(
         cfg.tokenizer, "_padding_side", tokenizer.padding_side
