@@ -21,12 +21,12 @@ Upstream issue: https://github.com/deepspeedai/DeepSpeed/issues/8249
 
 --- a/deepspeed/ops/transformer/inference/triton/matmul_ext.py
 +++ b/deepspeed/ops/transformer/inference/triton/matmul_ext.py
-@@ -27,7 +27,7 @@
+@@ -35,7 +35,7 @@
  
      # Use the 'df' command to find the file system type for the given path
      try:
--        output = subprocess.check_output(['df', '-T', path], encoding='utf-8')
-+        output = subprocess.check_output(['df', '-PT', path], encoding='utf-8')
-     except subprocess.CalledProcessError:
-         return False  # Command failed
+-        output = subprocess.check_output(['df', '-T', path], encoding='utf-8', stderr=subprocess.DEVNULL)
++        output = subprocess.check_output(['df', '-PT', path], encoding='utf-8', stderr=subprocess.DEVNULL)
+     except (subprocess.CalledProcessError, FileNotFoundError):
+         return False  # Command failed or 'df' not available
  

@@ -450,6 +450,29 @@ def run_train(
     return val_loss, val_metric
 
 
+def _initialize_distributed_environment(cfg: DefaultConfigProblemBase) -> None:
+    cfg.environment._device = f"cuda:{cfg.environment._local_rank}"
+    device = torch.device(cfg.environment._device)
+    torch.cuda.set_device(device)
+
+    if cfg.environment.use_deepspeed:
+        deepspeed.init_distributed()
+    else:
+        torch.distributed.init_process_group(
+            backend="nccl", init_method="env://", device_id=device
+        )
+    cfg.environment._cpu_comm = torch.distributed.new_group(backend="gloo")
+    cfg.environment._world_size = torch.distributed.get_world_size()
+    cfg.environment._rank = torch.distributed.get_rank()
+
+    logger.info(
+        f"Training in distributed mode with multiple processes, "
+        f"1 GPU per process. Process {cfg.environment._rank}, "
+        f"total: {cfg.environment._world_size} "
+        f"local rank: {cfg.environment._local_rank}."
+    )
+
+
 def run(cfg: DefaultConfigProblemBase) -> float:
     """Runs the routine.
 
@@ -504,22 +527,7 @@ def run(cfg: DefaultConfigProblemBase) -> float:
         )
 
     if cfg.environment._distributed:
-        cfg.environment._device = "cuda:%d" % cfg.environment._local_rank
-        if cfg.environment.use_deepspeed:
-            deepspeed.init_distributed()
-        else:
-            torch.distributed.init_process_group(backend="nccl", init_method="env://")
-        cfg.environment._cpu_comm = torch.distributed.new_group(backend="gloo")
-
-        cfg.environment._world_size = torch.distributed.get_world_size()
-        cfg.environment._rank = torch.distributed.get_rank()
-        torch.cuda.set_device(cfg.environment._rank)
-        logger.info(
-            f"Training in distributed mode with multiple processes, "
-            f"1 GPU per process. Process {cfg.environment._rank}, "
-            f"total: {cfg.environment._world_size} "
-            f"local rank: {cfg.environment._local_rank}."
-        )
+        _initialize_distributed_environment(cfg)
 
         # Sync the random seed
         cfg.environment._seed = int(
@@ -774,3 +782,6 @@ if __name__ == "__main__":
             kill_sibling_ddp_processes()
         else:
             kill_child_processes_and_current()
+    else:
+        if torch.distributed.is_initialized():
+            torch.distributed.destroy_process_group()
