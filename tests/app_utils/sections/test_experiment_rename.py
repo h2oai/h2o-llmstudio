@@ -11,6 +11,15 @@ from llm_studio.src.utils.disk_kv import Cache
 CHARTS_CACHE = "charts_cache"
 
 
+def _run_async(coro):
+    """Run a coroutine without clearing pytest's current event loop."""
+    loop = asyncio.new_event_loop()
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
+
+
 def _make_experiment(tmp_path, name: str):
     """Create an experiment directory with charts and a populated charts cache."""
     path = os.path.join(str(tmp_path), "output", "user", name)
@@ -52,7 +61,7 @@ def test_rename_persists_rewritten_chart_paths(tmp_path) -> None:
     q, renames = _make_q()
     new_path = experiment.path.replace("old-name", "new-name")
 
-    asyncio.run(experiment_rename_action(q, experiment, "new-name"))
+    _run_async(experiment_rename_action(q, experiment, "new-name"))
 
     with Cache(os.path.join(new_path, CHARTS_CACHE)) as cache:
         charts = {key: cache[key] for key in cache}
@@ -83,7 +92,7 @@ def test_rename_without_charts_does_not_raise(tmp_path) -> None:
         cache["cfg"] = {"experiment_name": "old-name"}
 
     q, renames = _make_q()
-    asyncio.run(experiment_rename_action(q, experiment, "new-name"))
+    _run_async(experiment_rename_action(q, experiment, "new-name"))
 
     with Cache(os.path.join(new_path, CHARTS_CACHE)) as cache:
         assert "df" not in cache
@@ -96,7 +105,7 @@ def test_rename_to_same_name_is_a_noop(tmp_path) -> None:
     experiment = _make_experiment(tmp_path, "old-name")
     q, renames = _make_q()
 
-    asyncio.run(experiment_rename_action(q, experiment, "old-name"))
+    _run_async(experiment_rename_action(q, experiment, "old-name"))
 
     assert os.path.exists(experiment.path)
     assert renames == []
@@ -108,7 +117,7 @@ def test_rename_charts_resolve_for_various_names(tmp_path, new_name) -> None:
     q, _ = _make_q()
     new_path = experiment.path.replace("old-name", new_name)
 
-    asyncio.run(experiment_rename_action(q, experiment, new_name))
+    _run_async(experiment_rename_action(q, experiment, new_name))
 
     with Cache(os.path.join(new_path, CHARTS_CACHE)) as cache:
         for path in cache["df"].values():
