@@ -193,9 +193,7 @@ def _load_model_weights(
 
     model_weights = {re.sub(r"^module\.", "", k): v for k, v in model_weights.items()}
     model_weights = {k.replace("_orig_mod.", ""): v for k, v in model_weights.items()}
-    model_weights = _remap_transformers_checkpoint_keys(
-        model_weights, model_state_dict
-    )
+    model_weights = _remap_transformers_checkpoint_keys(model_weights, model_state_dict)
 
     # needed to load models trained in int4/int8 with other dtypes
     model_weights = {
