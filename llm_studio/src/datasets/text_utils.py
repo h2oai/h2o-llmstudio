@@ -142,7 +142,7 @@ def get_tokenizer(cfg: DefaultConfigProblemBase):
     kwargs = dict(
         revision=cfg.environment.huggingface_branch,
         trust_remote_code=cfg.environment.trust_remote_code,
-        token=os.getenv("HF_TOKEN"),
+        token=os.getenv("HF_TOKEN") or None,
     )
 
     kwargs.update(json.loads(cfg.tokenizer.tokenizer_kwargs.strip()))
