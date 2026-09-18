@@ -27,7 +27,7 @@ dependencies = [
     "gputil>=1.4.0, <2.0.0",
     "huggingface-hub==1.27.0",
     "bitsandbytes==0.49.1",
-    "accelerate==1.10.1",
+    "accelerate==1.15.0",
     "openai>=1.12.0, <2.0.0",
     "einops==0.8.1",
     "datasets>=4.4.1, <5.0.0",
