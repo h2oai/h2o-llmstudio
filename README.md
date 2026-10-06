@@ -69,7 +69,7 @@ Please note that due to current rapid development we cannot guarantee full backw
 
 ## Setup
 
-H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent NVIDIA GPU with NVIDIA drivers version >= 470.57.02. For larger models, we recommend at least 24GB of GPU memory.
+H2O LLM Studio requires a machine with Ubuntu 16.04+ and at least one recent NVIDIA GPU with NVIDIA drivers version >= 580 (PyTorch runs on CUDA 13). For larger models, we recommend at least 24GB of GPU memory.
 
 For more information about installation prerequisites, see the [Set up H2O LLM Studio](https://docs.h2o.ai/h2o-llmstudio/get-started/set-up-llm-studio#prerequisites) guide in the documentation.
 
@@ -81,16 +81,14 @@ The recommended way to install H2O LLM Studio is using `uv` with Python 3.10. To
 
 #### Installing NVIDIA Drivers (if required)
 
-If deploying on a 'bare metal' machine running Ubuntu, one may need to install the required NVIDIA drivers and CUDA. The following commands show how to retrieve the latest drivers for a machine running Ubuntu 20.04 as an example. One can update the following based on their OS.
+If deploying on a 'bare metal' machine running Ubuntu, one may need to install the required NVIDIA drivers and CUDA. The following commands show how to retrieve the latest drivers and CUDA 13.0 for a machine running Ubuntu 22.04 as an example. One can update the following based on their OS.
 
 ```bash
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
-sudo mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600
-wget https://developer.download.nvidia.com/compute/cuda/12.4.0/local_installers/cuda-repo-ubuntu2204-12-4-local_12.4.0-550.54.14-1_amd64.deb
-sudo dpkg -i cuda-repo-ubuntu2204-12-4-local_12.4.0-550.54.14-1_amd64.deb
-sudo cp /var/cuda-repo-ubuntu2204-12-4-local/cuda-*-keyring.gpg /usr/share/keyrings/
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
 sudo apt-get update
-sudo apt-get -y install cuda-toolkit-12-4
+sudo apt-get -y install cuda-toolkit-13-0
+sudo apt-get -y install cuda-drivers
 ```
 
 ### Virtual environments
