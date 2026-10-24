@@ -29,7 +29,7 @@ ENV PATH=$CUDA_HOME/bin:$PATH
 ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64
 
 # Install uv and python dependencies
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+RUN curl -LsSf https://astral.sh/uv/0.13.5/install.sh | sh
 RUN --mount=type=bind,src=pyproject.toml,target=pyproject.toml \
     --mount=type=bind,src=uv.lock,target=uv.lock \
     /root/.local/bin/uv sync --frozen --no-cache --no-dev

@@ -20,7 +20,7 @@ endif
 
 .PHONY: uv
 uv:
-	curl -LsSf https://astral.sh/uv/install.sh | sh
+	curl -LsSf https://astral.sh/uv/0.13.5/install.sh | sh
 
 .PHONY: setup
 setup: uv  # Install dependencies
