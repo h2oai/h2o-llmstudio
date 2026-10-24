@@ -181,7 +181,7 @@ The interactive chat will also work with model that were fine-tuned using the UI
 To publish the model to Hugging Face, use the following command:
 
 ```bash
-uv run python llm_studio/publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_key} -u {user_id} -m {model_name} -s {safe_serialization}
+uv run python llm_studio/publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_key} -u {user_id} -m {model_name}
 ```
 
 `path_to_experiment` is the output folder of the experiment.
@@ -189,7 +189,6 @@ uv run python llm_studio/publish_to_hugging_face.py -p {path_to_experiment} -d {
 `api_key` is the Hugging Face API Key. If the user is logged in, it can be omitted.
 `user_id` is the Hugging Face user ID. If the user is logged in, it can be omitted.
 `model_name` is the name of the model to be published on Hugging Face. It can be omitted.
-`safe_serialization` is a flag indicating whether safe serialization should be used. Default is True.
 
 ## Troubleshooting
 
