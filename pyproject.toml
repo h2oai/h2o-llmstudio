@@ -62,6 +62,12 @@ dev = [
     "hac_playwright",
 ]
 
+[tool.uv]
+required-version = ">=0.13.5"
+environments = [
+    "platform_machine == 'x86_64' and sys_platform == 'linux'",
+]
+
 [tool.uv.sources]
 torch = { index = "pytorch" }
 hac_playwright = { url = "https://h2oai-qa-test-assets.s3.amazonaws.com/wheels/h2o_playwright/hac_playwright-1.48.0-py3-none-any.whl" }
