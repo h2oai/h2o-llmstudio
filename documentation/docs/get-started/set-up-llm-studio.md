@@ -42,7 +42,7 @@ H2O LLM Studio requires the following minimum requirements:
   >
     <p>
       The recommended way to install H2O LLM Studio is using `uv` with Python
-      3.10. To install Python 3.10 on Ubuntu 16.04+, execute the following
+      3.12. To install Python 3.12 on Ubuntu 16.04+, execute the following
       commands.
     </p>
     <p>
@@ -131,13 +131,12 @@ H2O LLM Studio requires the following minimum requirements:
       </pre>
     </p>
     <p>
-      7. Set up the required python system installs (Python 3.10).
+      7. Set up the required python system installs (Python 3.12).
       <pre>
         <code>
           sudo add-apt-repository ppa:deadsnakes/ppa <br></br>
-          sudo apt install python3.10 <br></br>
-          sudo apt-get install python3.10-distutils <br></br>
-          curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+          sudo apt install python3.12 <br></br>
+          curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12
         </code>
       </pre>
     </p>
@@ -145,7 +144,7 @@ H2O LLM Studio requires the following minimum requirements:
       8. Create the virtual environment.
       <pre>
         <code>
-          sudo apt install -y python3.10-venv<br></br>
+          sudo apt install -y python3.12-venv<br></br>
           python3 -m venv llmstudio<br></br>
           source llmstudio/bin/activate<br></br>
         </code>

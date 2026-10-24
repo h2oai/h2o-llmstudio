@@ -3,7 +3,7 @@ name = "h2o-llmstudio"
 version = "1.16.0-dev"
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = "==3.10.*"
+requires-python = "==3.12.*"
 dependencies = [
     "torch==2.13.0",
     "tqdm>=4.65.0,<5.0.0",
@@ -74,7 +74,7 @@ explicit = true
 [tool.ruff]
 line-length = 88
 indent-width = 4
-target-version = "py310"
+target-version = "py312"
 exclude = [
     ".eggs",
     ".git",

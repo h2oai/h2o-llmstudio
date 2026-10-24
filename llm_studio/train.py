@@ -16,7 +16,6 @@ import logging
 import sys
 import time
 from collections.abc import Callable
-from distutils import util
 from typing import Any
 
 import deepspeed
@@ -75,6 +74,15 @@ from llm_studio.src.utils.utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _str_to_bool(value: str) -> bool:
+    value = value.lower()
+    if value in ("y", "yes", "t", "true", "on", "1"):
+        return True
+    if value in ("n", "no", "f", "false", "off", "0"):
+        return False
+    raise argparse.ArgumentTypeError(f"invalid truth value {value!r}")
 
 
 def run_eval(
@@ -760,7 +768,7 @@ if __name__ == "__main__":
             except (AttributeError, KeyError):
                 continue
             if arg_type is bool:
-                parser.add_argument(arg_orig, type=util.strtobool)
+                parser.add_argument(arg_orig, type=_str_to_bool)
             else:
                 parser.add_argument(arg_orig, type=arg_type)
             extra_args.append(arg)

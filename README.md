@@ -77,7 +77,7 @@ For a performance comparison of different GPUs, see the [H2O LLM Studio performa
 
 ### Recommended Install
 
-The recommended way to install H2O LLM Studio is using `uv` with Python 3.10. To install Python 3.10 on Ubuntu 20.04+, execute the following commands:
+The recommended way to install H2O LLM Studio is using `uv` with Python 3.12. To install Python 3.12 on Ubuntu 20.04+, execute the following commands:
 
 #### Installing NVIDIA Drivers (if required)
 

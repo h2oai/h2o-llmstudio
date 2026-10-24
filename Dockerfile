@@ -1,4 +1,4 @@
-FROM 353750902984.dkr.ecr.us-east-1.amazonaws.com/thirdparty-chainguard-python310:latest-fips-dev
+FROM 353750902984.dkr.ecr.us-east-1.amazonaws.com/thirdparty-chainguard-python312:latest-fips-dev
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG CUDA_MAJOR_VERSION=13
