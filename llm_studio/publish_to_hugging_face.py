@@ -50,19 +50,10 @@ if __name__ == "__main__":
         default=argparse.SUPPRESS,
     )
 
-    parser.add_argument(
-        "-s",
-        "--safe_serialization",
-        required=False,
-        help="A flag indicating whether safe serialization should be used.",
-        default=True,
-    )
-
     parser_args, unknown = parser.parse_known_args(sys.argv)
 
     path_to_experiment = parser_args.path_to_experiment
     device = parser_args.device
-    safe_serialization = parser_args.safe_serialization
 
     api_key = getattr(parser_args, "api_key", "")
     user_id = getattr(parser_args, "user_id", "")
@@ -81,7 +72,6 @@ if __name__ == "__main__":
             api_key=api_key,
             user_id=user_id,
             model_name=model_name,
-            safe_serialization=safe_serialization,
         )
     except Exception:
         logging.error("Exception occurred during the run:", exc_info=True)
