@@ -31,9 +31,9 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: "20" # Specify the Node.js version you need
+          node-version: "26"
 
       - name: Install Python
         run: |
@@ -127,7 +127,7 @@ jobs:
           fi
 
       - name: Upload generated documentation
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: documentation_artifacts
           path: |
@@ -135,7 +135,7 @@ jobs:
             documentation/${{ env.SAFE_TITLE }}_${{ env.VERSION }}.pdf
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd  # v6.3.0
         with:
           role-to-assume: ${{ secrets.GH_OIDC_ROLE_SHARED_SERVICES_DEV }}
           role-session-name: h2o-llm-studio

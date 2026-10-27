@@ -12,11 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           always-auth: true
           registry-url: https://npm.pkg.github.com/
-          node-version: 18
+          node-version: 26
           cache: npm
           cache-dependency-path: documentation/package-lock.json
 
@@ -27,7 +27,7 @@ jobs:
       - name: Build docs
         run: cd documentation && npm run build
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453  # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./documentation/tmp/build

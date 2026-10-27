@@ -23,7 +23,7 @@ jobs:
       ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
     steps:
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c  # v6.2.3
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd  # v6.3.0
         with:
           aws-region: us-east-1
           role-session-name: h2o-llmstudio-ec2
@@ -72,9 +72,9 @@ jobs:
           version: "0.13.5"
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
-          python-version: "3.12.9"
+          python-version: "3.12.16"
       - run: nvidia-smi
       - run: make setup-dev FLASH=0
       - run: make test-ui-github-actions FLASH=0
@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials for EC2 Runner Management
-        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c  # v6.2.3
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd  # v6.3.0
         with:
           aws-region: us-east-1
           role-session-name: h2o-llmstudio-ec2

@@ -30,7 +30,7 @@ jobs:
         run: make bundles
       
       - name: Upload Wave bundle as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wave-bundle
           path: bundles/ai.h2o.llmstudio.${{ steps.extract_version.outputs.version }}.wave
@@ -45,13 +45,13 @@ jobs:
       contents: read
     steps:
       - name: Download Wave bundle artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: wave-bundle
           path: bundles/
       
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd  # v6.3.0
         with:
           role-to-assume: ${{ secrets.LLM_STUDIO_AWS_ROLE }}
           role-session-name: ${{ secrets.LLM_STUDIO_AWS_ROLE_SESSION_NAME }}
@@ -77,20 +77,20 @@ jobs:
             Dockerfile.bundle
       
       - name: Download Wave bundle artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: wave-bundle
           path: bundles/
       
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd  # v6.3.0
         with:
           role-to-assume: ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ROLE }}
           role-session-name: ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ROLE_SESSION_NAME }}
           aws-region: ${{ secrets.LLM_STUDIO_INTERNAL_AWS_REGION }}
       
       - name: Login to ECR
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd  # v2.1.7
       
       - name: Build Bundle Image
         run: |
