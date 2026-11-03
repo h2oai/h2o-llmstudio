@@ -32,8 +32,6 @@ environment:
     seed: -1
 experiment_name: test
 llm_backbone: EleutherAI/pythia-12b-deduped
-logging:
-    logger: None
 output_directory: output/user/test/
 prediction:
     batch_size_inference: 0

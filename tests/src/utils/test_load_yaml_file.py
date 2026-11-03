@@ -40,8 +40,6 @@ def test_load_config_yaml():
     assert cfg.environment.number_of_workers == 8
     assert cfg.environment.seed == -1
 
-    assert cfg.logging.logger == "None"
-
     assert cfg.prediction.batch_size_inference == 0
     assert cfg.prediction.do_sample is False
     assert cfg.prediction.max_length_inference == 256

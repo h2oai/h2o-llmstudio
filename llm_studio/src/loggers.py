@@ -1,5 +1,4 @@
 import dataclasses
-import logging
 import os
 from typing import Any
 
@@ -7,8 +6,6 @@ import numpy as np
 
 from llm_studio.src.utils.disk_kv import Cache
 from llm_studio.src.utils.plot_utils import PLOT_ENCODINGS
-
-logger = logging.getLogger(__name__)
 
 
 def get_cfg(cfg: Any) -> dict:
@@ -49,34 +46,6 @@ def get_cfg(cfg: Any) -> dict:
     return items
 
 
-class WandbLogger:
-    def __init__(self, cfg: Any) -> None:
-        os.environ["WANDB_DISABLE_CODE"] = "true"
-        os.environ["WANDB_DISABLE_GIT"] = "true"
-        os.environ["WANDB_ERROR_REPORTING"] = "false"
-        os.environ["WANDB_CONSOLE"] = "off"
-        os.environ["WANDB_IGNORE_GLOBS"] = "*.*"
-        os.environ["WANDB_HOST"] = "H2O LLM Studio"
-
-        import wandb
-
-        self.logger = wandb.init(
-            project=cfg.logging.wandb_project,
-            entity=cfg.logging.wandb_entity,
-            name=cfg.experiment_name,
-            config=get_cfg(cfg),
-            save_code=False,
-        )
-
-    def log(self, subset: str, name: str, value: Any, step: int | None = None):
-        name = f"{subset}/{name}"
-        if step is not None:
-            # NOTE: Explicit cast is needed, as training sometimes reports float steps
-            step = int(step)
-
-        self.logger.log({name: value}, step=step)
-
-
 class LocalLogger:
     def __init__(self, cfg: Any):
         self.logs = os.path.join(cfg.output_directory, "charts_cache")
@@ -114,65 +83,3 @@ class LocalLogger:
             subset_dict[name]["values"].append(value)
 
             cache[subset] = subset_dict
-
-
-class DummyLogger:
-    def __init__(self, cfg: Any | None = None):
-        return
-
-    def log(self, subset: str, name: str, value: Any, step: int | None = None):
-        return
-
-
-class MainLogger:
-    """Main logger"""
-
-    def __init__(self, cfg: Any):
-        self.loggers = {
-            "local": LocalLogger(cfg),
-            "external": ExternalLoggers.get(cfg.logging.logger),
-        }
-
-        try:
-            self.loggers["external"] = self.loggers["external"](cfg)
-        except Exception as e:
-            logger.warning(
-                f"Error when initializing logger. "
-                f"Disabling custom logging functionality. "
-                f"Please ensure logger configuration is correct and "
-                f"you have a stable Internet connection: {e}"
-            )
-            self.loggers["external"] = DummyLogger(cfg)
-
-    def reset_external(self):
-        self.loggers["external"] = DummyLogger()
-
-    def log(self, subset: str, name: str, value: str | float, step: float = None):
-        for k, logger in self.loggers.items():
-            if "validation_predictions" in name and k == "external":
-                continue
-            if subset == "internal" and not isinstance(logger, LocalLogger):
-                continue
-            logger.log(subset=subset, name=name, value=value, step=step)
-
-
-class ExternalLoggers:
-    """ExternalLoggers factory."""
-
-    _loggers = {"None": DummyLogger, "W&B": WandbLogger}
-
-    @classmethod
-    def names(cls) -> list[str]:
-        return list(cls._loggers.keys())
-
-    @classmethod
-    def get(cls, name: str) -> Any:
-        """Access to ExternalLoggers.
-
-        Args:
-            name: external loggers name
-        Returns:
-            A class to build the ExternalLoggers
-        """
-
-        return cls._loggers.get(name, DummyLogger)

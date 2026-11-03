@@ -1,7 +1,6 @@
 .git
 .github
 .mypy_cache
-wandb
 llmstudio_mnt/
 .pytest_cache
 data
