@@ -35,9 +35,11 @@ class LLMStudioPage(BasePage):
     KAGGLE_USERNAME = "dataset/import/kaggle_username"
     KAGGLE_SECRET_KEY = "dataset/import/kaggle_secret_key"
     DATA_SAMPLING = "experiment/start/cfg/data_sample"
+    DATA_SAMPLING_CHOICE = "experiment/start/cfg/data_sample_choice"
     MAX_LENGTH = "experiment/start/cfg/max_length"
     MAX_LENGTH_INFERENCE = "experiment/start/cfg/max_length_inference"
     MIXED_PRECISION = "experiment/start/cfg/mixed_precision"
+    MIXED_PRECISION_DTYPE = "experiment/start/cfg/mixed_precision_dtype"
     EXPERIMENT_REFRESH_SELECTOR = "experiment/list/refresh"
     GPU_WARNING_SELECTOR = "experiment/start/error/proceed"
 
@@ -134,43 +136,12 @@ class LLMStudioPage(BasePage):
         self.page.get_by_role("button", name="Create experiment").click()
         self.experiment_name(name)
 
-    def slider(self, slider_selector, target_value: str, step: float = 0.1):
-        """
-        Moves the slider to the target value.
-
-        WARNING: step = 1.0 works only without headless mode.
-        Possible bug in playwright!
-
-        Args:
-            slider_selector (str): The selector for the slider element.
-            target_value (str): The target value for the slider.
-            step (float, optional): The step size for moving the slider.
-        """
-        is_completed = False
-        i = 0.0
-        # Get the slider element
+    def slider(self, slider_selector, target_value: str):
         slider = self.get_by_test_id(slider_selector)
-        slider.click()
-        # Get the bounding box of the slider
-        bounding_box = slider.bounding_box()
-        x1 = bounding_box["x"]
-        y = bounding_box["y"] + bounding_box["height"] / 2
-
-        while not is_completed:
-            if i > 100:
-                raise Exception("Could not find the target value")
-            self.page.mouse.move(x1, y)
-            self.page.mouse.down()
-            x2 = bounding_box["x"] + bounding_box["width"] * float(i) / 100
-            self.page.mouse.move(x2, y)
-            self.page.mouse.up()
-            value_now = slider.get_attribute("aria-valuenow")
-            if float(value_now) == float(target_value):
-                is_completed = True
-            else:
-                # Move the slider a little bit (adjust the step as needed)
-                x1 = x2
-                i += step
+        slider.press("Home")
+        while float(slider.get_attribute("aria-valuenow")) < float(target_value):
+            slider.press("ArrowRight")
+        expect(slider).to_have_attribute("aria-valuenow", target_value)
 
     def run_experiment(self):
         self.get_by_test_id(self.EXPERIMENT_RUN_SELECTOR).click()
@@ -193,9 +164,15 @@ class LLMStudioPage(BasePage):
 
         if old_toggle_value != value:
             self.get_by_test_id(self.MIXED_PRECISION).click()
+        # The trigger re-render resets fields that change before it lands
+        expect(self.get_by_test_id(self.MIXED_PRECISION_DTYPE)).to_be_visible(
+            visible=value == "true"
+        )
 
     def data_sample(self, value):
         self.slider(self.DATA_SAMPLING, value)
+        # Wave pushes the slider trigger 1s after the last key press
+        expect(self.get_by_test_id(self.DATA_SAMPLING_CHOICE)).to_be_visible()
 
     def max_length(self, value):
         self.slider(self.MAX_LENGTH, value)
