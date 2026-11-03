@@ -782,7 +782,7 @@ requires-dist = [
     { name = "einops", specifier = "==0.8.1" },
     { name = "gputil", specifier = ">=1.4.0,<2.0.0" },
     { name = "h2o-drive", specifier = ">=3.0.0,<4.0.0" },
-    { name = "h2o-wave", specifier = ">=1.8.16,<2.0.0" },
+    { name = "h2o-wave", specifier = ">=1.8.17,<2.0.0" },
     { name = "huggingface-hub", specifier = "==1.27.0" },
     { name = "jinja2", specifier = ">=3.1.3,<4.0.0" },
     { name = "kaggle", specifier = ">=1.7.4,<2.0.0" },
@@ -828,7 +828,7 @@ dev = [
 
 [[package]]
 name = "h2o-wave"
-version = "1.8.16"
+version = "1.8.17"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -838,8 +838,8 @@ dependencies = [
     { name = "uvicorn" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/65/69/a5219407ec420bb2a74d0b0da167b986d807139140dcf55bfbfb73e45ae4/h2o_wave-1.8.16-py3-none-any.whl", hash = "sha256:b99a5a6f11e6a4eba2426a8b854adb93a1f167e6d169cb9437eccc36f6f9553d", size = 144795, upload-time = "2026-10-22T06:53:08.366Z" },
-    { url = "https://files.pythonhosted.org/packages/e8/46/45b8ed31feb4b86cb73da45260af16fa2f0154bef9780ab0d0b502d492fe/h2o_wave-1.8.16-py3-none-manylinux1_x86_64.whl", hash = "sha256:8a0d8a9c76595a5a4f87a7b4ac17dec6cab0c72508f777e650e56c26532faea5", size = 12788452, upload-time = "2026-10-22T06:53:16.028Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/7f/c3cfd93fcfb7f07dbbb8da97bb40af2b653fbf88ff4d56e4e33d3a271446/h2o_wave-1.8.17-py3-none-any.whl", hash = "sha256:4dc92b852ee2d8d19e86b1de9c53cc01249e9a406301e101934aea56f10c23c7", size = 144794, upload-time = "2026-11-03T15:41:14.931Z" },
+    { url = "https://files.pythonhosted.org/packages/78/93/183d76ba64973690a11208d0882621879117e929649522f4b3aa929faef8/h2o_wave-1.8.17-py3-none-manylinux1_x86_64.whl", hash = "sha256:a2a2a4ac9f22b0b733ce70f236e99675bc0e588bdb55b146f00942a405e11c00", size = 12794366, upload-time = "2026-11-03T15:41:24.095Z" },
 ]
 
 [[package]]
