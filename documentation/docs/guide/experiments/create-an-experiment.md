@@ -65,5 +65,5 @@ python llm_studio/prompt.py -e examples/output_oasst2
 4. To publish the model to Hugging Face, use the following command:
 
  ```bash
- python llm_studio/publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_key} -u {user_id} -m {model_name} -s {safe_serialization}
+ python llm_studio/publish_to_hugging_face.py -p {path_to_experiment} -d {device} -a {api_key} -u {user_id} -m {model_name}
  ```

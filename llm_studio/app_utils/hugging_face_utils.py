@@ -179,7 +179,6 @@ def publish_model_to_hugging_face(
     user_id: str = None,
     api_key: str = None,
     device: str = "cuda:0",
-    safe_serialization: bool = True,
 ) -> None:
     """
     Method to publish the model to Hugging Face.
@@ -191,7 +190,6 @@ def publish_model_to_hugging_face(
         user_id: The Hugging Face user ID.
         api_key: The Hugging Face API Key.
         model_name: The name of the model to be published on Hugging Face.
-        safe_serialization: A flag indicating whether safe serialization should be used.
 
     Returns:
         None. The model is published to the specified Hugging Face repository.
@@ -272,7 +270,6 @@ def publish_model_to_hugging_face(
         repo_id=repo_id,
         private=True,
         commit_message="Upload model",
-        safe_serialization=safe_serialization,
     )
 
     # Storing HF attributes
