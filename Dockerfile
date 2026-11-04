@@ -28,11 +28,19 @@ ENV CUDA_HOME=/usr/local/cuda-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION}
 ENV PATH=$CUDA_HOME/bin:$PATH
 ENV LD_LIBRARY_PATH=$CUDA_HOME/lib64
 
-# Install uv and python dependencies
+# Install uv and python dependencies. Unused native libraries are removed:
+# pyarrow Flight bundles gRPC, OpenSSL and a hardcoded certificate, and Pillow's
+# FreeType font support bundles a vulnerable Brotli decoder.
 RUN curl -LsSf https://astral.sh/uv/0.13.7/install.sh | sh
 RUN --mount=type=bind,src=pyproject.toml,target=pyproject.toml \
     --mount=type=bind,src=uv.lock,target=uv.lock \
-    /root/.local/bin/uv sync --frozen --no-cache --no-dev
+    /root/.local/bin/uv sync --frozen --no-cache --no-dev \
+    && cd /workspace/.venv/lib/python3.12/site-packages \
+    && rm pyarrow/*flight*.so* \
+    PIL/_imagingft*.so \
+    pillow.libs/libfreetype-*.so* \
+    pillow.libs/libharfbuzz-*.so* \
+    pillow.libs/libbrotli*.so*
 
 # Apply source patches to installed third-party packages. See patches/ for why
 # each one exists; they are removed once the fix is released upstream.
