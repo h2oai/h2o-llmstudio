@@ -11,7 +11,6 @@ from llm_studio.app_utils.config import default_cfg
 from llm_studio.python_configs.base import DefaultConfig, DefaultConfigProblemBase
 from llm_studio.src import possible_values
 from llm_studio.src.augmentations.nlp_aug import BaseNLPAug
-from llm_studio.src.loggers import ExternalLoggers
 from llm_studio.src.losses import text_causal_language_modeling_losses
 from llm_studio.src.metrics import text_causal_language_modeling_metrics
 from llm_studio.src.models import text_causal_language_modeling_model
@@ -598,9 +597,6 @@ class ConfigNLPCausalLMEnvironment(DefaultConfig):
 class ConfigNLPCausalLMLogging(DefaultConfig):
     log_step_size: str = "absolute"
     log_all_ranks: bool = False
-    logger: str = "None"
-    wandb_project: str = ""
-    wandb_entity: str = ""
 
     plots_class: Any = text_causal_language_modeling_plots.Plots
 
@@ -615,12 +611,6 @@ class ConfigNLPCausalLMLogging(DefaultConfig):
                 ("relative", "Relative"),
             ),
             allow_custom=False,
-        )
-        self._possible_values["logger"] = ExternalLoggers.names()
-
-        self._nesting.add(
-            ["wandb_project", "wandb_entity"],
-            [Dependency(key="logger", value="W&B", is_set=True)],
         )
 
         self._visibility["plots_class"] = -1

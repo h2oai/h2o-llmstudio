@@ -5,7 +5,6 @@ from h2o_wave import Q, ui
 
 from llm_studio.app_utils.sections.common import clean_dashboard
 from llm_studio.app_utils.setting_utils import Secrets
-from llm_studio.src.loggers import ExternalLoggers
 
 
 async def settings(q: Q) -> None:
@@ -206,63 +205,6 @@ async def settings(q: Q) -> None:
                         trigger=False,
                         tooltip="Set the value for the number of workers \
                             sliders in the experiment setup.",
-                    ),
-                ]
-            ),
-            ui.inline(
-                items=[
-                    ui.label("Logger", width=label_width),
-                    ui.dropdown(
-                        name="default_logger",
-                        value=q.client["default_logger"],
-                        choices=[
-                            ui.choice(name, name) for name in ExternalLoggers.names()
-                        ],
-                        trigger=False,
-                        width="100px",
-                    ),
-                ]
-            ),
-            ui.inline(
-                items=[
-                    ui.label("Wandb Project", width=label_width),
-                    ui.textbox(
-                        name="default_wandb_project",
-                        label=None,
-                        value=q.client["default_wandb_project"],
-                        width=textbox_width,
-                        trigger=False,
-                        tooltip="Set the value for the Wandb project \
-                            in the experiment setup.",
-                    ),
-                ]
-            ),
-            ui.inline(
-                items=[
-                    ui.label("Wandb Entity", width=label_width),
-                    ui.textbox(
-                        name="default_wandb_entity",
-                        label=None,
-                        value=q.client["default_wandb_entity"],
-                        width=textbox_width,
-                        trigger=False,
-                        tooltip="Set the value for the Wandb entity \
-                            in the experiment setup.",
-                    ),
-                ]
-            ),
-            ui.inline(
-                items=[
-                    ui.label("Wandb API Token", width=label_width),
-                    ui.textbox(
-                        name="default_wandb_api_token",
-                        label=None,
-                        value=q.client["default_wandb_api_token"],
-                        width=textbox_width,
-                        password=True,
-                        trigger=False,
-                        tooltip="Set the value for the Wandb API token \
-                            in the experiment setup.",
                     ),
                 ]
             ),

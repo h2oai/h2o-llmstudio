@@ -23,7 +23,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-wandb/
 .vscode/
 
 # C extensions

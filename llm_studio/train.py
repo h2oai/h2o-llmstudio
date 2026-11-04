@@ -28,7 +28,7 @@ from transformers.integrations import HfDeepSpeedConfig
 
 from llm_studio.python_configs.base import DefaultConfigProblemBase
 from llm_studio.python_configs.cfg_checks import check_config_for_errors
-from llm_studio.src.loggers import MainLogger
+from llm_studio.src.loggers import LocalLogger
 from llm_studio.src.utils.config_utils import (
     load_config_py,
     load_config_yaml,
@@ -676,7 +676,7 @@ def run(cfg: DefaultConfigProblemBase) -> float:
         # re-save cfg
         save_config_yaml(f"{cfg.output_directory}/cfg.yaml", cfg)
 
-        cfg.logging._logger = MainLogger(cfg)
+        cfg.logging._logger = LocalLogger(cfg)
 
         cfg.logging._logger.log(
             "internal", "total_training_steps", total_training_steps
@@ -704,10 +704,6 @@ def run(cfg: DefaultConfigProblemBase) -> float:
         val_dataloader=val_dataloader,
         val_df=val_df,
     )
-
-    # reset external logging
-    if cfg.environment._local_rank == 0:
-        cfg.logging._logger.reset_external()
 
     experiment_path = f"{cfg.output_directory}"
 

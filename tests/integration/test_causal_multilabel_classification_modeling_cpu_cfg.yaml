@@ -53,8 +53,6 @@ environment:
     use_deepspeed: false
 experiment_name: test-classification-modeling
 llm_backbone: h2oai/llama2-0b-unit-test
-logging:
-    logger: None
 output_directory: /tmp/output
 prediction:
     batch_size_inference: 0

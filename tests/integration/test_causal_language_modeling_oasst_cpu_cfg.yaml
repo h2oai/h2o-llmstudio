@@ -45,8 +45,6 @@ environment:
   trust_remote_code: true
 experiment_name: test-causal-language-modeling-oasst-cpu
 llm_backbone: h2oai/llama2-0b-unit-test
-logging:
-  logger: None
 output_directory: /tmp/output
 prediction:
   batch_size_inference: 0
