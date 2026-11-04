@@ -95,7 +95,7 @@ jobs:
       - name: Build Bundle Image
         run: |
           VERSION=${{ needs.build_bundle.outputs.version }}
-          docker build -t "${{ secrets.LLM_STUDIO_INTERNAL_AWS_ECR }}:${{ github.ref_name }}-bundle" --build-arg "VERSION=${VERSION}" -f Dockerfile.bundle .
+          docker build --provenance=false -t "${{ secrets.LLM_STUDIO_INTERNAL_AWS_ECR }}:${{ github.ref_name }}-bundle" --build-arg "VERSION=${VERSION}" -f Dockerfile.bundle .
       
       - name: Push Bundle Image to ECR
         run: |

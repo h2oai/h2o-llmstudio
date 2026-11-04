@@ -36,7 +36,7 @@ jobs:
           df -h
       - name: Docker Build Image
         run: |-
-          docker build -t ${{ secrets.LLM_STUDIO_AWS_ECR }}:${{ github.ref_name }} .
+          docker build --provenance=false -t ${{ secrets.LLM_STUDIO_AWS_ECR }}:${{ github.ref_name }} .
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd  # v6.3.0
         with:
@@ -77,7 +77,7 @@ jobs:
           df -h
       - name: Docker Build Image
         run: |-
-          docker build -t ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ECR }}:${{ github.ref_name }} .
+          docker build --provenance=false -t ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ECR }}:${{ github.ref_name }} .
       - name: Push to AWS
         run: |-
           docker push ${{ secrets.LLM_STUDIO_INTERNAL_AWS_ECR }}:${{ github.ref_name }}
