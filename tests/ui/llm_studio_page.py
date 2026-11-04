@@ -54,7 +54,8 @@ class LLMStudioPage(BasePage):
         return self.page.locator(selector)
 
     def open_home_page(self):
-        self.page.get_by_role("button", name="Home").click()
+        # The first visit imports the default datasets behind a blocking dialog
+        self.page.get_by_role("button", name="Home").click(timeout=120_000)
 
     def open_app_settings(self):
         self.page.get_by_role("button", name="Settings").click()
