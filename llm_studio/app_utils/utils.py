@@ -119,6 +119,11 @@ def start_process(
     config_name = os.path.join(cfg.output_directory, "cfg.yaml")
     env = {**os.environ, **env_vars}
 
+    # Launchers replace CUDA_VISIBLE_DEVICES, so map app-relative ids to physical
+    visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES")
+    if visible_devices:
+        gpu_list = [visible_devices.split(",")[int(x)] for x in gpu_list]
+
     if num_gpus == 0:
         cmd = [
             "python",
