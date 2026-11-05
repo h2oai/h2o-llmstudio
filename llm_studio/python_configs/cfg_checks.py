@@ -10,19 +10,24 @@ from llm_studio.src.utils.export_utils import get_size_str
 logger = logging.getLogger(__name__)
 
 
-def check_config_for_errors(cfg: DefaultConfigProblemBase) -> dict:
+def check_config_for_errors(
+    cfg: DefaultConfigProblemBase, check_gpu_ids: bool = False
+) -> dict:
     """
     Checks the configuration for consistency.
         Parameters:
     - cfg (DefaultConfigProblemBase):
     The config object to be checked.
+    - check_gpu_ids (bool):
+    Whether to check that the selected GPU ids exist. Only valid in the app,
+    as training processes see the selected GPUs renumbered from 0.
 
     Returns:
     A dictionary with two keys:
     - "title": A list of error titles.
     - "message": A list of error messages.
     """
-    errors = check_for_common_errors(cfg)
+    errors = check_for_common_errors(cfg, check_gpu_ids)
     problem_type_errors = cfg.check()
     errors["title"].extend(problem_type_errors["title"])
     errors["message"].extend(problem_type_errors["message"])
@@ -30,7 +35,9 @@ def check_config_for_errors(cfg: DefaultConfigProblemBase) -> dict:
     return errors
 
 
-def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
+def check_for_common_errors(
+    cfg: DefaultConfigProblemBase, check_gpu_ids: bool = False
+) -> dict:
     errors: dict[str, list] = {"title": [], "message": [], "type": []}
     if not len(cfg.environment.gpus) > 0:
         errors["title"] += ["No GPU selected"]
@@ -39,11 +46,13 @@ def check_for_common_errors(cfg: DefaultConfigProblemBase) -> dict:
         ]
         errors["type"].append("error")
 
-    if len(cfg.environment.gpus) > torch.cuda.device_count():
-        errors["title"] += ["More GPUs selected than available"]
+    num_gpus = torch.cuda.device_count()
+    if len(cfg.environment.gpus) > num_gpus or (
+        check_gpu_ids and any(int(gpu) >= num_gpus for gpu in cfg.environment.gpus)
+    ):
+        errors["title"] += ["Selected GPUs not available"]
         errors["message"] += [
-            f"There are {cfg.environment.gpus} GPUs selected but only "
-            f"{torch.cuda.device_count()} GPUs available."
+            f"The selected GPUs are not available, only {num_gpus} GPUs detected. "
             "This error can happen when you start from an experiment configuration "
             "that was created on a different machine. Please deselect all GPUs and "
             "select the GPUs you want to use again. "

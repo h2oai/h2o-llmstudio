@@ -563,7 +563,7 @@ async def experiment_run(q: Q):
     grid_search = get_grid_search(cfg=cfg, q=q, pre=pre)
 
     if len(grid_search) == 0:
-        errors = check_config_for_errors(cfg)
+        errors = check_config_for_errors(cfg, check_gpu_ids=True)
         if errors["title"] and not q.args["experiment/start/error/proceed"]:
             title = (
                 errors["title"][0]

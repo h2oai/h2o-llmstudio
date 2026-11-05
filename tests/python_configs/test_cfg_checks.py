@@ -56,7 +56,17 @@ def test_check_for_common_errors_too_many_gpus(mock_config):
     with patch("torch.cuda.device_count", return_value=2):
         result = check_for_common_errors(mock_config)
 
-        assert "More GPUs selected than available" in result["title"]
+        assert "Selected GPUs not available" in result["title"]
+
+
+def test_check_for_common_errors_unavailable_gpu_id(mock_config):
+    mock_config.environment.gpus = ["1"]
+    with patch("torch.cuda.device_count", return_value=1):
+        app_result = check_for_common_errors(mock_config, check_gpu_ids=True)
+        train_result = check_for_common_errors(mock_config)
+
+        assert "Selected GPUs not available" in app_result["title"]
+        assert "Selected GPUs not available" not in train_result["title"]
 
 
 @patch("os.statvfs")
