@@ -66,6 +66,7 @@ def test_check_for_common_errors_unavailable_gpu_id(mock_config):
         train_result = check_for_common_errors(mock_config)
 
         assert "Selected GPUs not available" in app_result["title"]
+        assert "GPU #2 not available" in app_result["message"][0]
         assert "Selected GPUs not available" not in train_result["title"]
 
 
