@@ -47,12 +47,18 @@ def check_for_common_errors(
         errors["type"].append("error")
 
     num_gpus = torch.cuda.device_count()
-    if len(cfg.environment.gpus) > num_gpus or (
-        check_gpu_ids and any(int(gpu) >= num_gpus for gpu in cfg.environment.gpus)
-    ):
+    unavailable_gpus = [
+        f"GPU #{int(gpu) + 1}"
+        for gpu in cfg.environment.gpus
+        if check_gpu_ids and int(gpu) >= num_gpus
+    ]
+    if len(cfg.environment.gpus) > num_gpus or unavailable_gpus:
         errors["title"] += ["Selected GPUs not available"]
+        detail = (
+            f", {', '.join(unavailable_gpus)} not available" if unavailable_gpus else ""
+        )
         errors["message"] += [
-            f"The selected GPUs are not available, only {num_gpus} GPUs detected. "
+            f"Only {num_gpus} GPU(s) detected{detail}. "
             "This error can happen when you start from an experiment configuration "
             "that was created on a different machine. Please deselect all GPUs and "
             "select the GPUs you want to use again. "
