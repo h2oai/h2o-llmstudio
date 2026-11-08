@@ -41,6 +41,7 @@ from llm_studio.app_utils.utils import (
     get_experiments,
     get_grid_search,
     get_model_types,
+    get_output_dir,
     get_problem_categories,
     get_problem_types,
     get_ui_elements_for_cfg,
@@ -564,7 +565,35 @@ async def experiment_run(q: Q):
 
     if len(grid_search) == 0:
         errors = check_config_for_errors(cfg, check_gpu_ids=True)
-        if errors["title"] and not q.args["experiment/start/error/proceed"]:
+        name_error = ""
+        if not cfg.experiment_name:
+            name_error = "Please enter an experiment name."
+        elif os.path.exists(os.path.join(get_output_dir(q), cfg.experiment_name)):
+            name_error = (
+                f"An experiment named {cfg.experiment_name} already exists. "
+                "Please choose a different name."
+            )
+
+        if name_error:
+            q.page["meta"].dialog = ui.dialog(
+                title="Invalid experiment name",
+                name="experiment/start/error/dialog",
+                items=[
+                    ui.text(name_error),
+                    ui.buttons(
+                        [
+                            ui.button(
+                                name="experiment/start/error/ok",
+                                label="Ok",
+                                primary=True,
+                            )
+                        ]
+                    ),
+                ],
+                closable=True,
+            )
+            q.client["keep_meta"] = True
+        elif errors["title"] and not q.args["experiment/start/error/proceed"]:
             title = (
                 errors["title"][0]
                 if len(errors["title"]) == 1
