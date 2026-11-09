@@ -8,6 +8,6 @@
         "deploy": "makersaurus deploy"
     },
     "dependencies": {
-        "@h2oai/makersaurus": "^0.11.14"
+        "@h2oai/makersaurus": "^0.13.3"
     }
 }
