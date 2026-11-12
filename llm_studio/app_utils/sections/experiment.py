@@ -1264,9 +1264,22 @@ async def insights_tab(charts, q):
                 #
                 if key == "train_data":
                     min_widths["Content"] = "800"
+                notice = []
+                table_offset = 267
+                num_samples = df.attrs.get("num_samples", len(df))
+                if num_samples > len(df):
+                    notice.append(
+                        ui.message_bar(
+                            type="info",
+                            text=f"Showing {len(df)} of {num_samples} validation "
+                            "samples. Use Download predictions to get all of them.",
+                        )
+                    )
+                    table_offset += 40
                 q.page[f"experiment/display/charts/{k1}_{k2}"] = ui.form_card(
                     box="first",
                     items=[
+                        *notice,
                         ui_table_from_df(
                             q=q,
                             df=df,
@@ -1283,10 +1296,10 @@ async def insights_tab(charts, q):
                             downloadable=True,
                             resettable=True,
                             min_widths=min_widths,
-                            height="calc(100vh - 267px)",
+                            height=f"calc(100vh - {table_offset}px)",
                             max_char_length=50_000,
                             cell_overflow="tooltip",
-                        )
+                        ),
                     ],
                 )
                 q.client.delete_cards.add(f"experiment/display/charts/{k1}_{k2}")

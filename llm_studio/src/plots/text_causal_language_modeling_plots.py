@@ -161,6 +161,7 @@ def plot_validation_predictions(
     df["Target Text"] = df["Target Text"].apply(format_for_markdown_visualization)
     df["Predicted Text"] = df["Predicted Text"].apply(format_for_markdown_visualization)
 
+    num_samples = len(df)
     if val_outputs.get("metrics") is not None:
         metric_column_name = f"Metric ({cfg.prediction.metric})"
         df[metric_column_name] = val_outputs["metrics"]
@@ -181,6 +182,7 @@ def plot_validation_predictions(
     if val_outputs.get("explanations") is not None:
         df["Explanation"] = val_outputs["explanations"]
 
+    df.attrs["num_samples"] = num_samples
     path = os.path.join(cfg.output_directory, f"{mode}_viz.parquet")
     df.to_parquet(path)
     return PlotData(data=path, encoding="df")
