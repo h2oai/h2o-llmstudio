@@ -1608,20 +1608,31 @@ async def charts_tab(q, charts_list, legend_labels):
 
             d = data(fields=fields, rows=rows, pack=True)
 
+            # A single step or value collapses its axis into the plot corner
+            single_step = len({row[0] for row in rows}) == 1
+            single_value = len({row[-1] for row in rows}) == 1
+            mark_types = ["line", "point"] if k1 == "validation" else ["line"]
+
             viz = ui.visualization(
                 plot=ui.plot(
                     [
                         ui.mark(
-                            type="line",
+                            type=mark_type,
                             x_title="step",
                             x_scale="linear",
                             y_scale="linear",
                             x="=step",
                             y="=value",
                             color=color,
-                            y_min=0 if k1 == "meta" and k2 == "lr" else None,
+                            x_min=0 if single_step else None,
+                            y_min=(
+                                0
+                                if (k1 == "meta" and k2 == "lr") or single_value
+                                else None
+                            ),
                             color_range=wave_theme.color_range,
                         )
+                        for mark_type in mark_types
                     ]
                 ),
                 data=d,  # type: ignore
