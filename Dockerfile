@@ -22,6 +22,10 @@ RUN apk update \
     git \
     patch
 
+# The -dev base's system pip is unused; scanners read its vendored SBOM
+# (pip/_vendor/bom.cdx.json) as installed setuptools 70.3.0. py3-pip-wheel stays for ensurepip.
+RUN apk del py3.12-pip py3.12-pip-base
+
 WORKDIR /workspace
 
 ENV CUDA_HOME=/usr/local/cuda-${CUDA_MAJOR_VERSION}.${CUDA_MINOR_VERSION}
