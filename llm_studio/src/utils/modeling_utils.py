@@ -729,14 +729,23 @@ def save_predictions(
     val_df.to_csv(csv_preds_name, index=False, quoting=csv.QUOTE_ALL)
 
 
+def _get_text_config(config: Any) -> Any:
+    if hasattr(config, "get_text_config") and callable(config.get_text_config):
+        return config.get_text_config()
+    if hasattr(config, "text_config") and config.text_config is not None:
+        return config.text_config
+    return config
+
+
 def update_backbone_config(config: Any, cfg: DefaultConfigProblemBase):
-    if hasattr(config, "hidden_dropout_prob"):
-        config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
-    if hasattr(config, "attention_probs_dropout_prob"):
-        config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
+    text_config = _get_text_config(config)
+    if hasattr(text_config, "hidden_dropout_prob"):
+        text_config.hidden_dropout_prob = cfg.architecture.intermediate_dropout
+    if hasattr(text_config, "attention_probs_dropout_prob"):
+        text_config.attention_probs_dropout_prob = cfg.architecture.intermediate_dropout
     if (
-        not hasattr(config, "hidden_dropout_prob")
-        and not hasattr(config, "attention_probs_dropout_prob")
+        not hasattr(text_config, "hidden_dropout_prob")
+        and not hasattr(text_config, "attention_probs_dropout_prob")
         and cfg.architecture.intermediate_dropout > 0
     ):
         logger.warning(
@@ -748,37 +757,37 @@ def update_backbone_config(config: Any, cfg: DefaultConfigProblemBase):
     tokenizer = get_tokenizer(cfg)
 
     # Transformers 5 removed shared token defaults from PretrainedConfig.
-    if hasattr(config, "eos_token_id") and (
-        config.eos_token_id != tokenizer.eos_token_id
+    if hasattr(text_config, "eos_token_id") and (
+        text_config.eos_token_id != tokenizer.eos_token_id
     ):
         logger.warning(
             "EOS token id not matching between config and tokenizer. "
-            f"Overwriting {config.eos_token_id} with "
+            f"Overwriting {text_config.eos_token_id} with "
             f"tokenizer id {tokenizer.eos_token_id}."
         )
-        config.eos_token_id = tokenizer.eos_token_id
-    if hasattr(config, "pad_token_id") and (
-        config.pad_token_id != tokenizer.pad_token_id
+        text_config.eos_token_id = tokenizer.eos_token_id
+    if hasattr(text_config, "pad_token_id") and (
+        text_config.pad_token_id != tokenizer.pad_token_id
     ):
         logger.warning(
             "PAD token id not matching between config and tokenizer. "
-            f"Overwriting {config.pad_token_id} with "
+            f"Overwriting {text_config.pad_token_id} with "
             f"tokenizer id {tokenizer.pad_token_id}."
         )
-        config.pad_token_id = tokenizer.pad_token_id
+        text_config.pad_token_id = tokenizer.pad_token_id
     # no warning needed as not used
-    if hasattr(config, "bos_token_id") and (
-        config.bos_token_id != tokenizer.bos_token_id
+    if hasattr(text_config, "bos_token_id") and (
+        text_config.bos_token_id != tokenizer.bos_token_id
     ):
-        config.bos_token_id = tokenizer.bos_token_id
+        text_config.bos_token_id = tokenizer.bos_token_id
 
     if "mpt-" in cfg.llm_backbone:
         config.init_device = cfg.environment._device
 
     # See: https://github.com/huggingface/transformers/pull/24906
-    if hasattr(config, "pretraining_tp") and cfg.training.lora:
+    if hasattr(text_config, "pretraining_tp") and cfg.training.lora:
         logger.info("Setting pretraining_tp of model config to 1.")
-        config.pretraining_tp = 1
+        text_config.pretraining_tp = 1
 
     return config
 
@@ -883,7 +892,9 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
         kwargs.pop("token", None)
         backbone = model_class.from_config(config, **kwargs)
 
-    if cfg.tokenizer._vocab_length > config.vocab_size:
+    text_config = _get_text_config(config)
+
+    if cfg.tokenizer._vocab_length > text_config.vocab_size:
         logger.info(f"Resizing token embeddings to {cfg.tokenizer._vocab_length}")
         backbone.resize_token_embeddings(cfg.tokenizer._vocab_length)
 
@@ -933,32 +944,32 @@ def create_nlp_backbone(cfg: DefaultConfigProblemBase, model_class=AutoModel) ->
         )
 
     # initialize the generation config
-    if hasattr(config, "eos_token_id") and (
-        backbone.generation_config.eos_token_id != config.eos_token_id
+    if hasattr(text_config, "eos_token_id") and (
+        backbone.generation_config.eos_token_id != text_config.eos_token_id
     ):
         logger.warning(
             "EOS token id not matching between generation config and tokenizer. "
             "Overwriting with tokenizer id."
         )
-        backbone.generation_config.eos_token_id = config.eos_token_id
-    if hasattr(config, "pad_token_id") and (
-        backbone.generation_config.pad_token_id != config.pad_token_id
+        backbone.generation_config.eos_token_id = text_config.eos_token_id
+    if hasattr(text_config, "pad_token_id") and (
+        backbone.generation_config.pad_token_id != text_config.pad_token_id
     ):
         logger.warning(
             "PAD token id not matching between generation config and tokenizer. "
             "Overwriting with tokenizer id."
         )
-        backbone.generation_config.pad_token_id = config.pad_token_id
+        backbone.generation_config.pad_token_id = text_config.pad_token_id
     # no warning needed as not used
-    if hasattr(config, "bos_token_id") and (
-        backbone.generation_config.bos_token_id != config.bos_token_id
+    if hasattr(text_config, "bos_token_id") and (
+        backbone.generation_config.bos_token_id != text_config.bos_token_id
     ):
-        backbone.generation_config.bos_token_id = config.bos_token_id
+        backbone.generation_config.bos_token_id = text_config.bos_token_id
 
     if cfg.problem_type not in NON_GENERATION_PROBLEM_TYPES:
         backbone = set_generation_config(backbone, cfg.prediction)
 
-    return backbone, config
+    return backbone, text_config
 
 
 # Adapted from https://github.com/huggingface/trl/blob/

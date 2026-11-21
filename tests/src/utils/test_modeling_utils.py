@@ -7,12 +7,14 @@ import pytest
 import torch
 
 from llm_studio.src.utils.modeling_utils import (
+    _get_text_config,
     _load_model_weights,
     check_disk_space,
+    create_nlp_backbone,
     load_checkpoint,
     save_checkpoint,
-    update_backbone_config,
     unwrap_model,
+    update_backbone_config,
 )
 
 
@@ -151,3 +153,110 @@ def test_update_backbone_config_handles_missing_special_token_attributes():
     assert config.eos_token_id == tokenizer.eos_token_id
     assert config.pad_token_id == tokenizer.pad_token_id
     assert not hasattr(config, "bos_token_id")
+
+
+def test_update_backbone_config_syncs_composite_text_config():
+    text_config = SimpleNamespace(
+        vocab_size=151936,
+        eos_token_id=7,
+        pad_token_id=8,
+        bos_token_id=9,
+        hidden_dropout_prob=0.0,
+        pretraining_tp=2,
+    )
+    composite_config = SimpleNamespace(
+        text_config=text_config,
+        get_text_config=lambda: text_config,
+    )
+    tokenizer = SimpleNamespace(eos_token_id=1, pad_token_id=0, bos_token_id=2)
+    cfg = SimpleNamespace(
+        llm_backbone="Qwen/Qwen3.8-27B",
+        architecture=SimpleNamespace(intermediate_dropout=0.1),
+        environment=SimpleNamespace(_device=torch.device("cpu")),
+        training=SimpleNamespace(lora=True),
+    )
+
+    with patch(
+        "llm_studio.src.utils.modeling_utils.get_tokenizer",
+        return_value=tokenizer,
+    ):
+        returned = update_backbone_config(composite_config, cfg)
+
+    assert returned is composite_config
+    assert _get_text_config(composite_config) is text_config
+    assert text_config.eos_token_id == tokenizer.eos_token_id
+    assert text_config.pad_token_id == tokenizer.pad_token_id
+    assert text_config.bos_token_id == tokenizer.bos_token_id
+    assert text_config.hidden_dropout_prob == 0.1
+    assert text_config.pretraining_tp == 1
+
+
+def test_create_nlp_backbone_uses_text_config_for_composite_config():
+    text_config = SimpleNamespace(
+        vocab_size=100,
+        eos_token_id=10,
+        pad_token_id=11,
+        bos_token_id=12,
+    )
+    composite_config = SimpleNamespace(
+        text_config=text_config,
+        get_text_config=lambda: text_config,
+    )
+    tokenizer = SimpleNamespace(eos_token_id=1, pad_token_id=0, bos_token_id=2)
+    fake_backbone = MagicMock()
+    fake_backbone.config = composite_config
+    fake_backbone.generation_config = SimpleNamespace(
+        eos_token_id=10,
+        pad_token_id=11,
+        bos_token_id=12,
+    )
+    fake_backbone.named_parameters.return_value = []
+    fake_model_class = MagicMock()
+    fake_model_class.from_config.return_value = fake_backbone
+
+    cfg = SimpleNamespace(
+        llm_backbone="Qwen/Qwen3.8-27B",
+        problem_type="text_causal_classification_modeling",
+        tokenizer=SimpleNamespace(_vocab_length=128),
+        architecture=SimpleNamespace(
+            pretrained=False,
+            backbone_dtype="float32",
+            intermediate_dropout=0,
+            gradient_checkpointing=False,
+        ),
+        environment=SimpleNamespace(
+            trust_remote_code=False,
+            huggingface_branch="main",
+            gpus=[],
+            _device=torch.device("cpu"),
+            mixed_precision=False,
+        ),
+        training=SimpleNamespace(
+            attention_implementation="auto",
+            lora=False,
+            freeze_layers=[],
+        ),
+        prediction=SimpleNamespace(),
+    )
+
+    with (
+        patch(
+            "llm_studio.src.utils.modeling_utils.AutoConfig.from_pretrained",
+            return_value=composite_config,
+        ),
+        patch(
+            "llm_studio.src.utils.modeling_utils.get_tokenizer",
+            return_value=tokenizer,
+        ),
+    ):
+        backbone, backbone_config = create_nlp_backbone(
+            cfg, model_class=fake_model_class
+        )
+
+    assert backbone is fake_backbone
+    assert backbone_config is text_config
+    assert backbone_config.vocab_size == 100
+    fake_backbone.resize_token_embeddings.assert_called_once_with(128)
+    assert fake_backbone.generation_config.eos_token_id == 1
+    assert fake_backbone.generation_config.pad_token_id == 0
+    assert fake_backbone.generation_config.bos_token_id == 2
